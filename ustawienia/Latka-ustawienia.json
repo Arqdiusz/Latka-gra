@@ -1,0 +1,532 @@
+{
+  "version": "3.0",
+  "activeTab": "ui",
+  "a01": {
+    "name": "Latka-arkusz-animacji-oryginal-ANIMACJE-01_wyrownany.png",
+    "preview": false,
+    "cols": 6,
+    "rows": 12,
+    "ground": 113,
+    "offsets": {
+      "17": {
+        "x": 0,
+        "y": 4,
+        "scale": 100
+      },
+      "18": {
+        "x": 1,
+        "y": 8,
+        "scale": 101
+      },
+      "25": {
+        "x": 0,
+        "y": -1,
+        "scale": 100
+      },
+      "31": {
+        "x": 0,
+        "y": -1,
+        "scale": 100
+      },
+      "32": {
+        "x": 0,
+        "y": -1,
+        "scale": 100
+      },
+      "33": {
+        "x": 0,
+        "y": -3,
+        "scale": 100
+      },
+      "34": {
+        "x": 0,
+        "y": -1,
+        "scale": 102
+      }
+    },
+    "presets": [
+      {
+        "name": "01. Skok / podskok",
+        "seq": "1,2,43,8",
+        "ms": 220,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "02. Bieg / sus",
+        "seq": "3,4,9,10",
+        "ms": 180,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "03. Picie",
+        "seq": "5,6,5,6,5,6,5,6,5,6,58,58",
+        "ms": 180,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "04. Rozglądanie się",
+        "seq": "13,13,14,14,19,20,20,20",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "05. Turlanie A",
+        "seq": "15,38,65,22",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "06. Jedzenie",
+        "seq": "17,18,17,18,17,18,23,30",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "07. Marsz",
+        "seq": "25,31,32",
+        "ms": 180,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "08. Uszy / mrugnięcie",
+        "seq": "27,28,33,34",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "09. Siad / stanie",
+        "seq": "29,30,35,36",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "10. Turlanie B",
+        "seq": "37,38,43,44",
+        "ms": 180,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "11. Na grzbiecie",
+        "seq": "39,40,39,39,40,45,46",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "12. Węszenie / toaleta",
+        "seq": "20,41,42,47,47,42,65,65,48",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "13. Drapanie",
+        "seq": "49,50,55,49,50,49,50,56",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "14. Otrząsanie",
+        "seq": "51,52,57,58",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "15. Mycie / piana",
+        "seq": "59,60,54,59,60,54,53",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "16. Patrzenie w górę / łapa",
+        "seq": "61,62,67,68",
+        "ms": 340,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "17. Spokojne stanie",
+        "seq": "63,27,63,65,63,27,65",
+        "ms": 380,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "18. Radość / podskok",
+        "seq": "65,66,71,72",
+        "ms": 280,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "Siad — spokojnie",
+        "seq": "29,29,29,61,29,29,29,49",
+        "ms": 650,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "Węszenie bez toalety",
+        "seq": "41,41",
+        "ms": 400,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "Toaleta osobno",
+        "seq": "47,48,47",
+        "ms": 650,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "Radość z powrotem",
+        "seq": "63,65,66,71,72,63",
+        "ms": 220,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      },
+      {
+        "name": "Marsz i skok",
+        "seq": "25,26,31,32,1,2,7,8,25",
+        "ms": 150,
+        "intro": "",
+        "outro": "",
+        "repeat": true
+      }
+    ]
+  },
+  "a02": {
+    "name": "Latka-arkusz-animacji-oryginal-ANIMACJE-02_wyrownany.png",
+    "preview": false,
+    "cols": 6,
+    "rows": 12,
+    "ground": 113,
+    "offsets": {
+      "3": {
+        "x": 0,
+        "y": 4,
+        "scale": 100
+      },
+      "4": {
+        "x": 0,
+        "y": 4,
+        "scale": 100
+      },
+      "17": {
+        "x": 0,
+        "y": 0,
+        "scale": 102
+      },
+      "23": {
+        "x": 0,
+        "y": -1,
+        "scale": 100
+      },
+      "24": {
+        "x": 0,
+        "y": -2,
+        "scale": 100
+      },
+      "66": {
+        "x": 0,
+        "y": 8,
+        "scale": 100
+      },
+      "71": {
+        "x": 0,
+        "y": -4,
+        "scale": 100
+      },
+      "72": {
+        "x": 0,
+        "y": -2,
+        "scale": 100
+      }
+    },
+    "presets": [
+      {
+        "name": "01. Stanie / „NIE” — ruch głową",
+        "intro": "",
+        "seq": "1,2,7,8",
+        "outro": "",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "02. Siad — spokojny / smutny",
+        "intro": "",
+        "seq": "3,4,9,10",
+        "outro": "",
+        "ms": 350,
+        "repeat": true
+      },
+      {
+        "name": "03. Smutek na stojąco / uszy",
+        "intro": "",
+        "seq": "5,6,11,12",
+        "outro": "",
+        "ms": 350,
+        "repeat": true
+      },
+      {
+        "name": "04. Szczotkowanie — wariant A",
+        "intro": "",
+        "seq": "13,14,19,20",
+        "outro": "",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "05. Szczotkowanie — wariant B",
+        "intro": "",
+        "seq": "15,16,21,22",
+        "outro": "",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "06. Siad tyłem / rozglądanie",
+        "intro": "",
+        "seq": "17,18,23,24",
+        "outro": "",
+        "ms": 350,
+        "repeat": true
+      },
+      {
+        "name": "07. Sen w legowisku",
+        "intro": "",
+        "seq": "25,26,31,32",
+        "outro": "",
+        "ms": 700,
+        "repeat": true
+      },
+      {
+        "name": "08. Ziewanie i przeciąganie",
+        "intro": "1",
+        "seq": "27,28,33,34",
+        "outro": "1",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "09. Piłka — zachęta do zabawy",
+        "intro": "",
+        "seq": "29,30,35,36",
+        "outro": "",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "10. Piłka — trącanie łapą",
+        "intro": "",
+        "seq": "37,38,43,44",
+        "outro": "",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "11. Piłka — zabawa na leżąco",
+        "intro": "",
+        "seq": "39,40,45,46",
+        "outro": "",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "12. Aport — ruch z piłką",
+        "intro": "",
+        "seq": "41,42,47,48",
+        "outro": "",
+        "ms": 220,
+        "repeat": true
+      },
+      {
+        "name": "13. Piłka — podrzut i podskok",
+        "intro": "",
+        "seq": "49,50,55,56",
+        "outro": "",
+        "ms": 220,
+        "repeat": true
+      },
+      {
+        "name": "14. Piłka — trzymanie i opuszczanie",
+        "intro": "",
+        "seq": "51,52,57,58",
+        "outro": "",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "15. Motyl — skoki i pogoń",
+        "intro": "",
+        "seq": "53,54,59,60",
+        "outro": "",
+        "ms": 220,
+        "repeat": true
+      },
+      {
+        "name": "16. Motyl — obserwowanie przy ziemi",
+        "intro": "",
+        "seq": "61,62,67,68",
+        "outro": "",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "17. Motyl — obserwowanie na siedząco",
+        "intro": "",
+        "seq": "63,64,69,70",
+        "outro": "",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "18. Motyl — ląduje przy nosie",
+        "intro": "",
+        "seq": "65,66,71,72",
+        "outro": "",
+        "ms": 280,
+        "repeat": true
+      },
+      {
+        "name": "19. Neutralne stanie — baza",
+        "intro": "",
+        "seq": "1,8,1,8",
+        "outro": "",
+        "ms": 650,
+        "repeat": true
+      },
+      {
+        "name": "20. „NIE” — próba z powrotem",
+        "intro": "1",
+        "seq": "2,7,2,7",
+        "outro": "8",
+        "ms": 230,
+        "repeat": true
+      },
+      {
+        "name": "21. Smutek — siad",
+        "intro": "3",
+        "seq": "4,10,4,10",
+        "outro": "9",
+        "ms": 600,
+        "repeat": true
+      },
+      {
+        "name": "22. Szczotkowanie — połączone",
+        "intro": "1",
+        "seq": "13,14,19,20,15,16,21,22,22,22",
+        "outro": "8",
+        "ms": 240,
+        "repeat": true
+      },
+      {
+        "name": "23. Ziewnięcie — krótko",
+        "intro": "27",
+        "seq": "28",
+        "outro": "34",
+        "ms": 500,
+        "repeat": false
+      }
+    ],
+    "selected": 17
+  },
+  "ui": {
+    "name": "Latka-ikonki-ATLAS.png",
+    "preview": false,
+    "cols": 6,
+    "rows": 6,
+    "map": {
+      "food": 1,
+      "water": 2,
+      "fun": 3,
+      "sleep": 4,
+      "clean": 5,
+      "bone": 6,
+      "mole": 7,
+      "butterfly": 8,
+      "memory": 9,
+      "bubbles": 10,
+      "cup": 11,
+      "star": 12,
+      "speech": 13,
+      "thought": 14,
+      "parents": 15,
+      "lock": 16,
+      "clock": 17,
+      "plus": 18,
+      "garden": 19,
+      "living": 20,
+      "kitchen": 21,
+      "bathroom": 22,
+      "den": 23,
+      "pets": 24,
+      "heart": 25,
+      "brush": 26,
+      "bark": 27,
+      "treat": 28,
+      "cloth": 29,
+      "paw": 30,
+      "options": 31,
+      "sound": 32,
+      "mute": 33,
+      "bell": 34,
+      "help": 35,
+      "home": 36
+    },
+    "needs": {
+      "food": 50,
+      "water": 50,
+      "fun": 50,
+      "sleep": 50,
+      "clean": 50
+    },
+    "statusSize": 44,
+    "menuSize": 69,
+    "bubbleType": "thought",
+    "bubbleIcon": "fun",
+    "bubbleSize": 110,
+    "bubbleSymbolSize": 53,
+    "menuGroup": "care",
+    "topH": 154,
+    "bottomH": 230,
+    "heartMode": "mean"
+  },
+  "reference": null
+}
