@@ -2338,7 +2338,7 @@
                 const min = Math.min(...allowed.map(score)),
                     tied = allowed.filter((i) => score(i) === min);
                 selected = tied.some((i) => i.id === selected) ? selected : tied[0].id;
-                menu?.select(selected, { animate: false });
+                // menu?.select(selected, { animate: false });
             }
 
             function casual() {
