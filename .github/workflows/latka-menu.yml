@@ -6,7 +6,7 @@ on:
       dock_height:
         description: "Wysokość stopki z tłem w px (obecnie 400)"
         required: true
-        default: "400"
+        default: "800"
         type: string
 
       menu_shift_y:
