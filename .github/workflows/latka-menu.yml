@@ -176,7 +176,7 @@ jobs:
               (
                   r"(\.dock\{[^}]*?border-top\s*:\s*)2px\s+solid\s+#fff8(\s*;)",
                   rf"\g<1>{border_width}px solid {border_color}\g<2>",
-                  "górna linia menu"
+                  "gorna-linia-menu"
               ),
               (
                   r"(\.arc-menu__icon\{[^}]*?width\s*:\s*)66px(\s*;)",
@@ -191,12 +191,12 @@ jobs:
               (
                   r"(\.arc-menu__button\s*\{[^}]*?padding\s*:\s*)10px(\s*;)",
                   rf"\g<1>{icon_padding}px\g<2>",
-                  "wewnętrzny odstęp ikony"
+                  "wewnętrzny-odstep-ikony"
               ),
               (
                   r"(\.arc-menu__button\s*\{[^}]*?border\s*:\s*)3px\s+solid\s+white(\s*;)",
                   rf"\g<1>{icon_border_width}px solid {icon_border_color}\g<2>",
-                  "obwódka ikony"
+                  "obwodka-ikony"
               )
           ]
 
