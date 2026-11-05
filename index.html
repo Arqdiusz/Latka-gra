@@ -1,226 +1,3175 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Łatka v0.2.94</title><style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}body{background:#dcd5cf;color:#59485d;font:16px system-ui}#game{position:fixed;width:384px;height:768px;transform-origin:top left;background:#f8eee7;display:grid;grid-template-rows:106px 550px 112px;overflow:hidden}.status{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:5px 6px;align-content:center;background:#efe1d7}.stat{min-width:0;text-align:center;padding:7px 3px;background:#fff9f2;border-radius:14px}.stat img{display:block;margin:auto;image-rendering:pixelated;object-fit:contain}.bar{height:6px;border-radius:5px;background:#ded0ca;overflow:hidden;margin:6px 2px 2px}.bar i{display:block;width:50%;height:100%;background:var(--c)}.stat small{font-size:9px;color:#8c7c8c}.scene{position:relative;overflow:hidden;touch-action:none;background:#dde7d8}.roomTrack{position:absolute;inset:0;pointer-events:none;will-change:transform}.roomPanel{position:absolute;top:0;width:100%;height:100%;overflow:hidden}.roomPanel svg{width:100%;height:100%;display:block;shape-rendering:crispEdges}#sceneCanvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}.roomBadge{position:absolute;left:9px;top:9px;width:38px;height:38px;padding:5px;background:#fff9;border-radius:11px;pointer-events:none}.roomBadge img{width:100%;height:100%;image-rendering:pixelated}.full{position:absolute;right:9px;top:9px;z-index:5;border:2px solid white;border-radius:11px;background:#fff9e9dd;font-size:23px;width:40px;height:40px;cursor:pointer}.arrow{position:absolute;top:44%;z-index:4;width:40px;height:52px;border:3px solid white;border-radius:16px;background:#fff8e9df;color:#88758f;font-size:32px;cursor:pointer;transition:opacity .12s}.arrow.prev{left:5px}.arrow.next{right:5px}.arrow:disabled{opacity:.3}.arrow.near{opacity:.1!important}.arrow:focus-visible{opacity:1!important;outline:3px solid #9674ab}.arrow[hidden]{display:none}.dock{
-  display:grid;
-  align-content:center;
-  background:transparent;
-}.menu{position:relative;width:100%;height:112px;overflow:visible;touch-action:pan-y;user-select:none;-webkit-user-select:none;isolation:isolate}.arc-menu__button{position:absolute;display:grid;place-items:center;padding:10px;margin:0;border:3px solid white;border-radius:50%;background:var(--item-color);box-shadow:0 3px #0001;cursor:pointer;touch-action:pan-y}.arc-menu__icon{
-  display:block;
-  width:60px;
-  height:60px;
-  max-width:100%;
-  max-height:100%;
-  pointer-events:none;
-}.arc-menu__icon img{width:100%;height:100%;display:block;object-fit:contain;image-rendering:pixelated;pointer-events:none}.arc-menu__button:focus-visible{outline:3px solid #9674ab;outline-offset:2px}.locked .menu{opacity:.65;pointer-events:none}.popup{position:absolute;inset:0;background:#3b2e3c38;z-index:20;display:grid;place-items:center}.popup[hidden]{display:none}.card{width:250px;background:#fff8ea;border:5px solid white;border-radius:30px;box-shadow:0 6px #0002;text-align:center;overflow:hidden}.card canvas{width:100%;display:block;image-rendering:pixelated}.reward{display:block;width:55px;height:55px;margin:0 auto 12px;image-rendering:pixelated}.load{position:absolute;inset:0;z-index:30;display:grid;place-content:center;background:#fff3df;font-size:24px;text-align:center;padding:20px}.load[hidden]{display:none}.rotate{position:fixed;inset:0;z-index:50;display:none;place-content:center;text-align:center;padding:20px;background:#fff3df;font:22px system-ui}.rotate span{font-size:60px}.toast{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);max-width:90vw;z-index:60;background:#493850ef;color:white;padding:12px;border-radius:12px;font-size:14px}.toast[hidden]{display:none}.petAccess,.poopAccess{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden}.petAccess:focus-visible,.poopAccess:focus-visible{clip-path:none;width:auto;height:auto;left:50%;bottom:25%;z-index:10;transform:translateX(-50%);padding:10px;background:#fff8e9;border:2px solid #9674ab;border-radius:10px}@media(orientation:landscape) and (pointer:coarse){.rotate{display:grid}}@media(prefers-reduced-motion:reduce){.arrow{transition:none}}</style></head><body><main id="game" aria-label="Łatka — gra"><header class="status" aria-label="Potrzeby i samopoczucie"></header><section class="scene" aria-label="Pomieszczenie"><div class="roomTrack"></div><canvas id="sceneCanvas" width="384" height="550"></canvas><div class="roomBadge"><img alt=""></div><button class="full" aria-label="Pełny ekran">⛶</button><button class="arrow prev" aria-label="Poprzednie pomieszczenie">‹</button><button class="arrow next" aria-label="Następne pomieszczenie">›</button><button class="petAccess">Pogłaszcz Łatkę</button><button class="poopAccess" hidden>Posprzątaj kupkę</button></section><footer class="dock"><nav class="menu" aria-label="Opieka i aktywności"></nav></footer><div class="popup" hidden><div class="card"><canvas width="300" height="300"></canvas><img class="reward" alt="Nagroda"></div></div><div class="load">Wczytywanie Łatki…</div></main><div class="rotate"><span>📱 ↻</span>Obróć urządzenie do pionu.<small>Gra jest wstrzymana.</small></div><div class="toast" hidden role="status"></div><script id="payload" type="application/json">{"config":{"version":"3.0","activeTab":"ui","a01":{"name":"Latka-arkusz-animacji-oryginal-ANIMACJE-01_wyrownany.png","preview":false,"cols":6,"rows":12,"ground":113,"offsets":{"17":{"x":0,"y":4,"scale":100},"18":{"x":1,"y":8,"scale":101},"25":{"x":0,"y":-1,"scale":100},"31":{"x":0,"y":-1,"scale":100},"32":{"x":0,"y":-1,"scale":100},"33":{"x":0,"y":-3,"scale":100},"34":{"x":0,"y":-1,"scale":102}},"presets":[{"name":"01. Skok / podskok","seq":"1,2,43,8","ms":220,"intro":"","outro":"","repeat":true},{"name":"02. Bieg / sus","seq":"3,4,9,10","ms":180,"intro":"","outro":"","repeat":true},{"name":"03. Picie","seq":"5,6,5,6,5,6,5,6,5,6,58,58","ms":180,"intro":"","outro":"","repeat":true},{"name":"04. Rozglądanie się","seq":"13,13,14,14,19,20,20,20","ms":280,"intro":"","outro":"","repeat":true},{"name":"05. Turlanie A","seq":"15,38,65,22","ms":280,"intro":"","outro":"","repeat":true},{"name":"06. Jedzenie","seq":"17,18,17,18,17,18,23,30","ms":280,"intro":"","outro":"","repeat":true},{"name":"07. Marsz","seq":"25,31,32","ms":180,"intro":"","outro":"","repeat":true},{"name":"08. Uszy / mrugnięcie","seq":"27,28,33,34","ms":280,"intro":"","outro":"","repeat":true},{"name":"09. Siad / stanie","seq":"29,30,35,36","ms":280,"intro":"","outro":"","repeat":true},{"name":"10. Turlanie B","seq":"37,38,43,44","ms":180,"intro":"","outro":"","repeat":true},{"name":"11. Na grzbiecie","seq":"39,40,39,39,40,45,46","ms":280,"intro":"","outro":"","repeat":true},{"name":"12. Węszenie / toaleta","seq":"20,41,42,47,47,42,65,65,48","ms":280,"intro":"","outro":"","repeat":true},{"name":"13. Drapanie","seq":"49,50,55,49,50,49,50,56","ms":280,"intro":"","outro":"","repeat":true},{"name":"14. Otrząsanie","seq":"51,52,57,58","ms":280,"intro":"","outro":"","repeat":true},{"name":"15. Mycie / piana","seq":"59,60,54,59,60,54,53","ms":280,"intro":"","outro":"","repeat":true},{"name":"16. Patrzenie w górę / łapa","seq":"61,62,67,68","ms":340,"intro":"","outro":"","repeat":true},{"name":"17. Spokojne stanie","seq":"63,27,63,65,63,27,65","ms":380,"intro":"","outro":"","repeat":true},{"name":"18. Radość / podskok","seq":"65,66,71,72","ms":280,"intro":"","outro":"","repeat":true},{"name":"Siad — spokojnie","seq":"29,29,29,61,29,29,29,49","ms":650,"intro":"","outro":"","repeat":true},{"name":"Węszenie bez toalety","seq":"41,41","ms":400,"intro":"","outro":"","repeat":true},{"name":"Toaleta osobno","seq":"47,48,47","ms":650,"intro":"","outro":"","repeat":true},{"name":"Radość z powrotem","seq":"63,65,66,71,72,63","ms":220,"intro":"","outro":"","repeat":true},{"name":"Marsz i skok","seq":"25,26,31,32,1,2,7,8,25","ms":150,"intro":"","outro":"","repeat":true}]},"a02":{"name":"Latka-arkusz-animacji-oryginal-ANIMACJE-02_wyrownany.png","preview":false,"cols":6,"rows":12,"ground":113,"offsets":{"3":{"x":0,"y":4,"scale":100},"4":{"x":0,"y":4,"scale":100},"17":{"x":0,"y":0,"scale":102},"23":{"x":0,"y":-1,"scale":100},"24":{"x":0,"y":-2,"scale":100},"66":{"x":0,"y":8,"scale":100},"71":{"x":0,"y":-4,"scale":100},"72":{"x":0,"y":-2,"scale":100}},"presets":[{"name":"01. Stanie / „NIE” — ruch głową","intro":"","seq":"1,2,7,8","outro":"","ms":280,"repeat":true},{"name":"02. Siad — spokojny / smutny","intro":"","seq":"3,4,9,10","outro":"","ms":350,"repeat":true},{"name":"03. Smutek na stojąco / uszy","intro":"","seq":"5,6,11,12","outro":"","ms":350,"repeat":true},{"name":"04. Szczotkowanie — wariant A","intro":"","seq":"13,14,19,20","outro":"","ms":280,"repeat":true},{"name":"05. Szczotkowanie — wariant B","intro":"","seq":"15,16,21,22","outro":"","ms":280,"repeat":true},{"name":"06. Siad tyłem / rozglądanie","intro":"","seq":"17,18,23,24","outro":"","ms":350,"repeat":true},{"name":"07. Sen w legowisku","intro":"","seq":"25,26,31,32","outro":"","ms":700,"repeat":true},{"name":"08. Ziewanie i przeciąganie","intro":"1","seq":"27,28,33,34","outro":"1","ms":280,"repeat":true},{"name":"09. Piłka — zachęta do zabawy","intro":"","seq":"29,30,35,36","outro":"","ms":280,"repeat":true},{"name":"10. Piłka — trącanie łapą","intro":"","seq":"37,38,43,44","outro":"","ms":280,"repeat":true},{"name":"11. Piłka — zabawa na leżąco","intro":"","seq":"39,40,45,46","outro":"","ms":280,"repeat":true},{"name":"12. Aport — ruch z piłką","intro":"","seq":"41,42,47,48","outro":"","ms":220,"repeat":true},{"name":"13. Piłka — podrzut i podskok","intro":"","seq":"49,50,55,56","outro":"","ms":220,"repeat":true},{"name":"14. Piłka — trzymanie i opuszczanie","intro":"","seq":"51,52,57,58","outro":"","ms":280,"repeat":true},{"name":"15. Motyl — skoki i pogoń","intro":"","seq":"53,54,59,60","outro":"","ms":220,"repeat":true},{"name":"16. Motyl — obserwowanie przy ziemi","intro":"","seq":"61,62,67,68","outro":"","ms":280,"repeat":true},{"name":"17. Motyl — obserwowanie na siedząco","intro":"","seq":"63,64,69,70","outro":"","ms":280,"repeat":true},{"name":"18. Motyl — ląduje przy nosie","intro":"","seq":"65,66,71,72","outro":"","ms":280,"repeat":true},{"name":"19. Neutralne stanie — baza","intro":"","seq":"1,8,1,8","outro":"","ms":650,"repeat":true},{"name":"20. „NIE” — próba z powrotem","intro":"1","seq":"2,7,2,7","outro":"8","ms":230,"repeat":true},{"name":"21. Smutek — siad","intro":"3","seq":"4,10,4,10","outro":"9","ms":600,"repeat":true},{"name":"22. Szczotkowanie — połączone","intro":"1","seq":"13,14,19,20,15,16,21,22,22,22","outro":"8","ms":240,"repeat":true},{"name":"23. Ziewnięcie — krótko","intro":"27","seq":"28","outro":"34","ms":500,"repeat":false}],"selected":17},"ui":{"name":"Latka-ikonki-ATLAS.png","preview":false,"cols":6,"rows":6,"map":{"food":1,"water":2,"fun":3,"sleep":4,"clean":5,"bone":6,"mole":7,"butterfly":8,"memory":9,"bubbles":10,"cup":11,"star":12,"speech":13,"thought":14,"parents":15,"lock":16,"clock":17,"plus":18,"garden":19,"living":20,"kitchen":21,"bathroom":22,"den":23,"pets":24,"heart":25,"brush":26,"bark":27,"treat":28,"cloth":29,"paw":30,"options":31,"sound":32,"mute":33,"bell":34,"help":35,"home":36},"needs":{"food":50,"water":50,"fun":50,"sleep":50,"clean":50},"statusSize":44,"menuSize":69,"bubbleType":"thought","bubbleIcon":"fun","bubbleSize":110,"bubbleSymbolSize":53,"menuGroup":"care","topH":154,"bottomH":230,"heartMode":"mean"},"reference":null},"assets":{"a01":"animacje/latka-animacje-01.png","a02":"animacje/latka-animacje-02.png","ui":"ikony/latka-ikony.png","butterflies":["animacje/motyl-1.png","animacje/motyl-2.png"],"poop":"inne/kupka.png","rooms":{"living":"tla/004.png","kitchen":"tla/005.png","bathroom":"tla/006.png","garden":"tla/003.png","yard":"tla/002.png","attic":"tla/001.png"}},"meta":{"a01":[{"box":[4,32,124,116],"head":[95.2,34]},{"box":[5,0,123,118],"head":[94.68,0]},{"box":[3,27,125,116],"head":[95.72,30]},{"box":[5,20,123,116],"head":[94.68,22]},{"box":[3,27,125,116],"head":[95.72,30]},{"box":[4,21,124,116],"head":[95.2,24]},{"box":[8,4,120,116],"head":[93.12,6]},{"box":[8,11,120,116],"head":[93.12,13]},{"box":[8,29,120,116],"head":[93.12,34]},{"box":[8,14,120,116],"head":[93.12,17]},{"box":[6,11,123,116],"head":[94.92,13]},{"box":[8,11,125,116],"head":[96.92,13]},{"box":[4,9,124,116],"head":[95.2,11]},{"box":[6,6,121,116],"head":[93.4,8]},{"box":[14,32,113,116],"head":[89.24,37]},{"box":[5,9,123,116],"head":[94.68,12]},{"box":[3,19,125,116],"head":[95.72,29]},{"box":[5,15,123,114],"head":[94.68,27]},{"box":[10,11,119,116],"head":[92.84,13]},{"box":[8,11,120,116],"head":[93.12,13]},{"box":[6,29,121,116],"head":[93.4,52]},{"box":[8,11,120,116],"head":[93.12,13]},{"box":[6,9,123,116],"head":[94.92,11]},{"box":[12,11,124,116],"head":[97.12,13]},{"box":[4,12,124,116],"head":[95.2,14]},{"box":[5,15,123,116],"head":[94.68,17]},{"box":[6,10,124,116],"head":[95.68,12]},{"box":[7,10,125,116],"head":[96.68,12]},{"box":[4,10,124,116],"head":[95.2,12]},{"box":[8,9,120,116],"head":[93.12,12]},{"box":[9,11,119,116],"head":[92.6,13]},{"box":[10,17,119,116],"head":[92.84,19]},{"box":[16,0,120,116],"head":[95.04,1]},{"box":[11,10,123,116],"head":[96.12,12]},{"box":[9,6,119,116],"head":[92.6,8]},{"box":[8,10,120,116],"head":[93.12,12]},{"box":[16,39,113,116],"head":[89.72,44]},{"box":[20,25,109,116],"head":[87.64,27]},{"box":[3,20,125,116],"head":[95.72,22]},{"box":[4,15,124,116],"head":[95.2,22]},{"box":[9,19,119,116],"head":[92.6,55]},{"box":[6,20,121,116],"head":[93.4,22]},{"box":[10,17,119,116],"head":[92.84,29]},{"box":[8,11,120,116],"head":[93.12,13]},{"box":[4,17,124,116],"head":[95.2,19]},{"box":[8,11,120,116],"head":[93.12,13]},{"box":[8,12,120,116],"head":[93.12,14]},{"box":[6,12,121,116],"head":[93.4,14]},{"box":[8,12,121,116],"head":[93.88,14]},{"box":[6,12,121,116],"head":[93.4,14]},{"box":[4,7,124,116],"head":[95.2,9]},{"box":[5,12,123,116],"head":[94.68,27]},{"box":[6,10,123,116],"head":[94.92,12]},{"box":[6,4,121,116],"head":[93.4,17]},{"box":[6,12,121,116],"head":[93.4,14]},{"box":[8,12,120,116],"head":[93.12,14]},{"box":[6,5,121,116],"head":[93.4,7]},{"box":[8,12,120,116],"head":[93.12,14]},{"box":[8,14,120,116],"head":[93.12,16]},{"box":[10,4,123,116],"head":[95.88,20]},{"box":[9,10,119,116],"head":[92.6,12]},{"box":[9,12,119,116],"head":[92.6,14]},{"box":[4,10,124,116],"head":[95.2,12]},{"box":[5,10,123,116],"head":[94.68,12]},{"box":[5,10,123,116],"head":[94.68,12]},{"box":[9,3,119,116],"head":[92.6,4]},{"box":[11,10,123,116],"head":[96.12,12]},{"box":[6,12,121,116],"head":[93.4,14]},{"box":[8,12,120,116],"head":[93.12,14]},{"box":[8,12,120,116],"head":[93.12,14]},{"box":[9,19,119,116],"head":[92.6,21]},{"box":[11,12,123,116],"head":[96.12,14]}],"a02":[{"box":[6,9,121,116],"head":[93.4,11]},{"box":[6,9,121,116],"head":[93.4,11]},{"box":[6,4,121,116],"head":[93.4,6]},{"box":[6,12,121,116],"head":[93.4,14]},{"box":[4,9,124,116],"head":[95.2,11]},{"box":[4,22,124,116],"head":[95.2,24]},{"box":[8,12,121,116],"head":[93.88,14]},{"box":[8,12,121,116],"head":[93.88,14]},{"box":[8,9,121,116],"head":[93.88,11]},{"box":[8,9,121,116],"head":[93.88,11]},{"box":[8,12,121,116],"head":[93.88,14]},{"box":[8,12,121,116],"head":[93.88,14]},{"box":[4,1,124,116],"head":[95.2,4]},{"box":[7,9,124,116],"head":[95.92,11]},{"box":[4,9,124,116],"head":[95.2,11]},{"box":[6,9,123,116],"head":[94.92,11]},{"box":[6,14,123,116],"head":[94.92,17]},{"box":[6,4,121,116],"head":[93.4,6]},{"box":[5,12,123,116],"head":[94.68,14]},{"box":[8,12,121,116],"head":[93.88,14]},{"box":[8,1,121,116],"head":[93.88,4]},{"box":[8,12,121,116],"head":[93.88,14]},{"box":[6,9,121,116],"head":[93.4,11]},{"box":[6,9,123,116],"head":[94.92,11]},{"box":[6,34,123,116],"head":[94.92,37]},{"box":[6,34,123,116],"head":[94.92,37]},{"box":[4,9,124,116],"head":[95.2,11]},{"box":[6,9,123,116],"head":[94.92,11]},{"box":[11,16,121,116],"head":[94.6,49]},{"box":[6,27,121,116],"head":[93.4,29]},{"box":[6,31,123,116],"head":[94.92,34]},{"box":[6,31,123,116],"head":[94.92,34]},{"box":[9,6,119,116],"head":[92.6,37]},{"box":[6,12,119,116],"head":[91.88,14]},{"box":[6,21,111,114],"head":[85.8,24]},{"box":[8,17,121,116],"head":[93.88,19]},{"box":[5,19,123,116],"head":[94.68,39]},{"box":[6,14,123,116],"head":[94.92,16]},{"box":[6,32,123,116],"head":[94.92,34]},{"box":[8,32,120,116],"head":[93.12,44]},{"box":[6,19,123,116],"head":[94.92,45]},{"box":[6,11,123,116],"head":[94.92,14]},{"box":[4,21,116,108],"head":[89.12,24]},{"box":[9,14,119,116],"head":[92.6,16]},{"box":[5,22,123,116],"head":[94.68,42]},{"box":[13,11,121,116],"head":[95.08,14]},{"box":[9,9,119,116],"head":[92.6,11]},{"box":[11,9,121,116],"head":[94.6,11]},{"box":[4,9,124,116],"head":[95.2,16]},{"box":[10,9,118,116],"head":[92.08,11]},{"box":[4,29,124,116],"head":[95.2,32]},{"box":[9,13,124,116],"head":[96.4,16]},{"box":[6,14,111,116],"head":[85.8,16]},{"box":[6,15,103,117],"head":[79.72,18]},{"box":[5,12,123,116],"head":[94.68,14]},{"box":[8,17,121,116],"head":[93.88,19]},{"box":[5,19,123,116],"head":[94.68,21]},{"box":[8,12,121,116],"head":[93.88,14]},{"box":[8,4,115,116],"head":[89.32000000000001,32]},{"box":[6,12,121,116],"head":[93.4,14]},{"box":[4,34,101,116],"head":[77.72,54]},{"box":[5,11,122,116],"head":[93.92,13]},{"box":[6,6,121,116],"head":[93.4,19]},{"box":[10,14,105,116],"head":[82.2,16]},{"box":[4,9,123,116],"head":[94.44,11]},{"box":[6,0,121,107],"head":[93.4,2]},{"box":[5,12,118,116],"head":[90.88,14]},{"box":[5,22,108,116],"head":[83.28,37]},{"box":[6,12,116,116],"head":[89.6,14]},{"box":[7,17,112,116],"head":[86.8,19]},{"box":[4,18,117,120],"head":[89.88,21]},{"box":[6,3,109,120],"head":[84.28,5]}]},"bubbleCenters":{"speech":[0.4985,0.425],"thought":[0.4974,0.3924]},"cleanup":{"65":0,"66":47,"71":63,"72":1}}</script><script>
-(function(global){
-'use strict';
-const mod=(value,n)=>((value%n)+n)%n;
-const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
-class ArcCarousel{
-  constructor(root,{items,selectedId=null}={}){
-    if(!(root instanceof HTMLElement))throw new TypeError('ArcCarousel: wymagany element HTML.');
-    this.root=root;this.items=[];this.position=0;this.target=0;
-    this.drag=null;this.raf=0;this.lastTime=0;this.changedId=null;
-    this.focusAfterSnap=false;this.flashTimer=0;this.destroyed=false;
-    this.abort=new AbortController();this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-    root.classList.add('arc-menu');root.setAttribute('role','group');
-    if(!root.hasAttribute('aria-label'))root.setAttribute('aria-label','Menu aktywności');
-    root.replaceChildren();
-    this.slots=[-1,0,1].map(offset=>{
-      const button=document.createElement('button');button.type='button';
-      button.className='arc-menu__button';button.draggable=false;
-      const icon=document.createElement('span');icon.className='arc-menu__icon';icon.setAttribute('aria-hidden','true');
-      button.append(icon);root.append(button);return {offset,button,icon,currentId:null};
-    });
-    const on=(name,fn,options={})=>root.addEventListener(name,fn,{...options,signal:this.abort.signal});
-    on('pointerdown',e=>this.pointerDown(e));
-    on('pointermove',e=>this.pointerMove(e),{passive:false});
-    on('pointerup',e=>this.pointerUp(e));
-    on('pointercancel',e=>this.pointerCancel(e));
-    on('lostpointercapture',e=>this.pointerCancel(e));
-    on('dragstart',e=>e.preventDefault());
-    // Pointer gestures are handled above. Detail=0 preserves keyboard/assistive activation.
-    on('click',e=>{if(e.detail!==0)return;const b=e.target.closest('.arc-menu__button');if(b&&root.contains(b))this.tap(Number(b.dataset.logicalIndex));});
-    on('keydown',e=>this.keyDown(e));
-    if('ResizeObserver'in global){this.observer=new ResizeObserver(()=>{if(this.drag){this.drag=null;root.classList.remove('is-dragging');this.target=Math.round(this.position)}this.measure();this.render();this.animate();});this.observer.observe(root);}
-    else global.addEventListener('resize',()=>{this.measure();this.render();},{signal:this.abort.signal});
-    this.measure();this.setItems(items,{selectedId});
-  }
-  validate(items){
-    if(!Array.isArray(items)||items.length<1)throw new TypeError('ArcCarousel: podaj co najmniej jedną ikonę.');
-    const seen=new Set();return items.map(item=>{if(!item||item.id==null)throw new TypeError('Każda ikona potrzebuje id.');const id=String(item.id);if(!id||seen.has(id))throw new TypeError('Id ikon muszą być niepuste i unikalne.');seen.add(id);return {...item,id,label:String(item.label||id),svg:String(item.svg||'')};});
-  }
-  measure(){
-    this.width=Math.max(1,this.root.clientWidth);this.height=Math.max(100,this.root.clientHeight);
-    this.size=94;
-    this.spacing=this.width*.25;
-    this.centerX=this.width/2;this.centerY=this.height*.47;
-    this.arc=12;
-  }
-  setItems(items,{selectedId=null}={}){
-    const parsed=this.validate(items);this.cancelDrag();this.items=parsed;
-    const found=parsed.findIndex(item=>item.id===String(selectedId));
-    this.position=this.target=found>=0?found:0;this.changedId=null;
-    this.slots.forEach(slot=>{slot.currentId=null;slot.button.classList.remove('is-activated')});
-    this.render();this.emitChange();return this;
-  }
-  getSelected(){const index=mod(Math.round(this.position),this.items.length);return {...this.items[index],index};}
-  select(id,{animate=true}={}){
-    const index=this.items.findIndex(item=>item.id===String(id));if(index<0)return false;
-    this.cancelDrag();const n=this.items.length;const nearest=Math.round(this.position);let d=mod(index-mod(nearest,n),n);if(d>n/2)d-=n;
-    this.target=nearest+d;if(!animate||this.reduced){this.position=this.target;this.finishSnap();}else this.animate();return true;
-  }
-  next(){if(this.items.length<2)return;this.cancelDrag();this.target=Math.round(this.target)+1;this.animate();}
-  previous(){if(this.items.length<2)return;this.cancelDrag();this.target=Math.round(this.target)-1;this.animate();}
-  render(){
-    if(this.destroyed||!this.items.length)return;
-    const n=this.items.length,center=Math.round(this.position),fraction=this.position-center;
-    for(const slot of this.slots){
-      const logical=center+slot.offset,r=logical-this.position,a=Math.abs(r),item=this.items[mod(logical,n)];
-      const enabled=n===1?slot.offset===0:n===2?(slot.offset===0||slot.offset===(fraction<0?-1:1)):true;
-      const scale=1-.20*Math.min(a,1),fade=clamp((1.52-a)/.45,0,1),opacity=(1-.20*Math.min(a,1))*fade;
-      const x=this.centerX+r*this.spacing,y=this.centerY+this.arc*Math.min(a,1.5)**1.45;
-      if(slot.currentId!==item.id){slot.icon.innerHTML=item.svg;slot.currentId=item.id;slot.button.classList.remove('is-activated');}
-      const b=slot.button;b.dataset.id=item.id;b.dataset.logicalIndex=String(logical);
-      b.style.width=this.size+'px';b.style.height=this.size+'px';b.style.left=x+'px';b.style.top=y+'px';
-      b.style.transform=`translate(-50%,-50%) scale(${scale})`;b.style.opacity=enabled?String(opacity):'0';
-      b.style.visibility=enabled&&opacity>.015?'visible':'hidden';b.style.pointerEvents=enabled&&opacity>.1?'auto':'none';
-      b.style.zIndex=String(Math.round(20-a*5));b.style.setProperty('--item-color',item.color||'#e9dfbd');
-      b.tabIndex=enabled&&slot.offset===0?0:-1;
-      b.setAttribute('aria-current',String(slot.offset===0));b.setAttribute('aria-label',(slot.offset===0?'Uruchom: ':'Wybierz: ')+item.label);
-    }
-  }
-  pointerDown(e){
-    if(e.button!==0||this.drag||this.destroyed)return;
-    const b=e.target.closest('.arc-menu__button');cancelAnimationFrame(this.raf);this.raf=0;
-    this.focusAfterSnap=false;this.drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,start:this.position,logical:b?Number(b.dataset.logicalIndex):null,moved:false,lastX:e.clientX,lastTime:performance.now(),velocity:0};
-    try{this.root.setPointerCapture(e.pointerId)}catch(_){}
-  }
-  pointerMove(e){
-    const d=this.drag;if(!d||d.id!==e.pointerId)return;
-    const rect=this.root.getBoundingClientRect(),x=clamp(e.clientX,rect.left,rect.right),dx=x-d.startX,dy=e.clientY-d.startY;
-    if(d.vertical)return;if(!d.moved){if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){d.vertical=true;return;}if(Math.abs(dx)<8||Math.abs(dx)<Math.abs(dy))return;d.moved=true;this.root.classList.add('is-dragging');}
-    e.preventDefault();if(this.items.length<2)return;const now=performance.now(),dt=now-d.lastTime;
-    if(dt>0){d.velocity=(x-d.lastX)/dt;d.lastX=x;d.lastTime=now;}
-    // Bounded gesture: moving outside the menu cannot carry the component across the page.
-    this.position=d.start+clamp(-dx/this.spacing,-2.2,2.2);this.target=this.position;this.render();
-  }
-  pointerUp(e){
-    const d=this.drag;if(!d||d.id!==e.pointerId)return;this.drag=null;this.root.classList.remove('is-dragging');
-    try{if(this.root.hasPointerCapture(e.pointerId))this.root.releasePointerCapture(e.pointerId)}catch(_){}
-    if(d.vertical||(!d.moved&&Math.hypot(e.clientX-d.startX,e.clientY-d.startY)>10)){this.target=Math.round(this.position);this.animate();return;}if(d.moved){const v=performance.now()-d.lastTime<90?d.velocity:0;this.target=Math.round(this.position+clamp(-v*65/this.spacing,-.55,.55));this.animate();}
-    else if(d.logical!==null)this.tap(d.logical);else{this.target=Math.round(this.position);this.animate();}
-  }
-  pointerCancel(e){if(!this.drag||this.drag.id!==e.pointerId)return;this.drag=null;this.root.classList.remove('is-dragging');this.target=Math.round(this.position);this.animate();}
-  cancelDrag(){if(!this.drag)return;const id=this.drag.id;this.drag=null;this.root.classList.remove('is-dragging');try{if(this.root.hasPointerCapture(id))this.root.releasePointerCapture(id)}catch(_){}}
-  tap(logical){
-    if(this.destroyed)return;const selected=Math.round(this.position),settled=Math.abs(this.position-selected)<.035&&Math.abs(this.position-this.target)<.035;
-    if(logical===selected&&settled){this.position=this.target=selected;this.render();this.activate();}
-    else{this.target=logical;this.animate();}
-  }
-  activate(){
-    const detail=this.getSelected();clearTimeout(this.flashTimer);
-    this.slots.forEach(s=>s.button.classList.remove('is-activated'));this.slots[1].button.classList.add('is-activated');
-    this.flashTimer=setTimeout(()=>this.slots.forEach(s=>s.button.classList.remove('is-activated')),230);
-    this.root.dispatchEvent(new CustomEvent('arc:activate',{detail,bubbles:true,composed:true}));
-  }
-  emitChange(){const detail=this.getSelected();if(detail.id===this.changedId)return;this.changedId=detail.id;this.root.dispatchEvent(new CustomEvent('arc:change',{detail,bubbles:true,composed:true}));}
-  finishSnap(){
-    this.position=this.target=mod(Math.round(this.target),this.items.length);this.render();this.emitChange();
-    if(this.focusAfterSnap){this.focusAfterSnap=false;this.slots[1].button.focus({preventScroll:true});}
-  }
-  animate(){
-    if(this.destroyed||this.drag)return;if(this.reduced){this.finishSnap();return;}
-    if(this.raf)return;this.lastTime=performance.now();
-    const frame=now=>{this.raf=0;if(this.destroyed||this.drag)return;const dt=Math.min(.05,(now-this.lastTime)/1000);this.lastTime=now;
-      this.position+=(this.target-this.position)*(1-Math.exp(-19*dt));this.render();
-      if(Math.abs(this.target-this.position)<.002)this.finishSnap();else this.raf=requestAnimationFrame(frame);
-    };this.raf=requestAnimationFrame(frame);
-  }
-  keyDown(e){
-    if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();this.focusAfterSnap=true;if(e.key==='ArrowRight')this.next();else this.previous();}
-    else if(e.key==='Home'||e.key==='End'){e.preventDefault();this.focusAfterSnap=true;this.select(this.items[e.key==='Home'?0:this.items.length-1].id);}
-  }
-  destroy(){this.cancelDrag();this.destroyed=true;cancelAnimationFrame(this.raf);clearTimeout(this.flashTimer);this.abort.abort();this.observer?.disconnect();this.root.replaceChildren();this.root.classList.remove('arc-menu','is-dragging');}
-}
-global.ArcCarousel=ArcCarousel;
-})(window);
-</script><script>
-'use strict';const $=s=>document.querySelector(s),P=JSON.parse($('#payload').textContent),CFG=P.config,UI=CFG.ui,images={},cells={a01:[],a02:[],ui:[]},pixels={a01:[],a02:[]},icons={},W=384,H=768,SH=550,GROUND=425,BASE=2.35,KEY='latkaGame0288',order=['attic','garden','yard','living','kitchen','bathroom'];
-const items=[{id:'food',icon:'food',label:'Nakarm',room:'kitchen',color:'#ffd3dd'},{id:'water',icon:'water',label:'Napój',room:'kitchen',color:'#cdeafc'},{id:'fun',icon:'fun',label:'Zabawa',room:'garden',color:'#d8f0d0'},{id:'den',icon:'den',label:'Buda i kość',room:'yard',color:'#ead1ae'},{id:'sleep',icon:'sleep',label:'Sen',room:'living',color:'#ddd2ff'},{id:'clean',icon:'clean',label:'Mycie',room:'bathroom',color:'#ffe9bd'},{id:'brush',icon:'brush',label:'Szczotkowanie',room:'living',color:'#ffdfb5'}];
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,canvas=$('#sceneCanvas'),ctx=canvas.getContext('2d'),rewardCtx=$('.card canvas').getContext('2d');let loaded=false,room='living',x=.5,left=false,sleeping=false,poop=null,stats={food:50,water:50,fun:50,sleep:50,clean:50},selected='sleep',phase='idle',sheet='a01',anim=16,frames=[63],ms=380,frameIndex=0,animStart=0,clock=0,last=0,queue=[],segment=null,idleUntil=6500,nextTrip=32000,nextPoop=45000,nextBubble=9000,nextButterfly=28000,stage='',travelMode='',jumpY=0,pending=null,menu=null,gesture=null,petFinishAt=Infinity,petLast=0,butterfly=null,bubble=null,bubblePos=null,scale=1,actions=0,trips=0,lastVariant='',forcedVariant=null,orientationPaused=false,boneVisible=false,toastTimer=null,debugRoute=[],roomOffset=0,blockedActivity=null;
-try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s){room=order.includes(s.room)?s.room:'living';sleeping=!!s.sleeping;left=!!s.left;poop=s.poop&&order.includes(s.poop.room)?s.poop:(order.includes(s.poopRoom)?{room:s.poopRoom,x:.3}:null);if(sleeping)room='living';if(poop?.room===room)sleeping=false;}}catch(e){}
-const getPreset=(s,i)=>CFG[s].presets[i],numbers=s=>String(s||'').split(',').map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=72),duration=(s,i)=>numbers(getPreset(s,i).seq).length*getPreset(s,i).ms;function currentFrame(){return frames[frameIndex%frames.length]||63;}function dirty(r=room){return poop?.room===r;}
-function save(){if(!loaded)return;try{localStorage.setItem(KEY,JSON.stringify({room,sleeping,left,poop,testMode:true}));}catch(e){}}
-function toast(s){$('.toast').textContent=s;$('.toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('.toast').hidden=true,4000);}
-function resize(){const v=window.visualViewport,vw=v?.width||innerWidth,vh=v?.height||innerHeight;scale=Math.max(.03,Math.min(vw/W,vh/H));const g=$('#game');g.style.transform=`scale(${scale})`;g.style.left=((v?.offsetLeft||0)+(vw-W*scale)/2)+'px';g.style.top=((v?.offsetTop||0)+(vh-H*scale)/2)+'px';orientationPaused=matchMedia('(orientation:landscape) and (pointer:coarse)').matches;if(orientationPaused&&gesture){if(gesture.kind==='pet')stopPetting();if(phase==='swipe-preview'){phase='idle';setOffset(0);locks();}gesture=null;}last=0;menu?.measure();menu?.render();}
-window.addEventListener('resize',resize);window.addEventListener('orientationchange',resize);window.visualViewport?.addEventListener('resize',resize);window.visualViewport?.addEventListener('scroll',resize);resize();
-function setAnim(s,i,tempo){sheet=s;anim=i;frames=numbers(getPreset(s,i).seq);ms=tempo||getPreset(s,i).ms;frameIndex=0;animStart=clock;}function setFrames(s,a,time){sheet=s;anim=-1;frames=a;ms=time;frameIndex=0;animStart=clock;}
-function setOffset(v){roomOffset=v;$('.roomTrack').style.transform=`translateX(${v}px)`;}
-function roomSVG(r){const src=(P.assets.rooms&&P.assets.rooms[r])||"tla/001.png";return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">`;}
-function buildRooms(){const root=$('.roomTrack');root.innerHTML='';const n=order.indexOf(room);for(let i=Math.max(0,n-1);i<=Math.min(order.length-1,n+1);i++){const p=document.createElement('div');p.className='roomPanel';p.dataset.room=order[i];p.style.left=(i-n)*100+'%';p.innerHTML=roomSVG(order[i]);root.append(p);}}
-function setRoom(r){room=r;buildRooms();setOffset(0);const key={yard:'den',garden:'garden',living:'living',kitchen:'kitchen',bathroom:'bathroom',attic:'home'}[r];$('.roomBadge img').src=icons[key];$('.roomBadge img').alt={yard:'Podwórko z budą',garden:'Ogród',living:'Salon',kitchen:'Kuchnia',bathroom:'Łazienka',attic:'Poddasze'}[r];syncMenu();updateArrows();updatePoopAccess();debugRoute.push(r);save();}
-function heart(){return Object.values(stats).reduce((a,b)=>a+b,0)/5;}function statusBuild(){for(const key of ['food','water','fun','sleep','clean','heart']){const el=document.createElement('div');el.className='stat';el.dataset.status=key;el.style.setProperty('--c',key==='heart'?'#e88ca6':items.find(i=>i.id===key)?.color||'#c7b0da');const im=new Image();im.src=icons[key];im.alt={food:'Głód',water:'Woda',fun:'Zabawa',sleep:'Sen',clean:'Czystość',heart:'Samopoczucie'}[key];im.width=im.height=36;const bar=document.createElement('div');bar.className='bar';bar.innerHTML='<i></i>';el.append(im,bar,document.createElement('small'));$('.status').append(el);}statusUpdate();}function statusUpdate(){document.querySelectorAll('.stat').forEach(el=>{const v=el.dataset.status==='heart'?heart():stats[el.dataset.status];el.querySelector('i').style.width=v+'%';el.querySelector('small').textContent=Math.round(v)+'%';el.setAttribute('aria-label',el.querySelector('img').alt+': '+Math.round(v)+'%');});}
-function syncMenu(){
-  const allowed = items.filter(i => i.room === room);
+<!doctype html>
+<html lang="pl">
 
-  // Pokój bez przypisanych czynności nie zmienia wyboru menu.
-  if (allowed.length === 0) return;
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>Łatka v0.2.94</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent
+      }
 
-  const min = Math.min(
-    ...allowed.map(i => stats[i.id] ?? 50)
-  );
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none
+      }
 
-  const tied = allowed.filter(
-    i => (stats[i.id] ?? 50) === min
-  );
+      body {
+        background: #dcd5cf;
+        color: #59485d;
+        font: 16px system-ui
+      }
 
-  selected = tied.some(i => i.id === selected)
-    ? selected
-    : tied[0].id;
+      #game {
+        position: fixed;
+        width: 384px;
+        height: 768px;
+        transform-origin: top left;
+        background: #f8eee7;
+        display: grid;
+        grid-template-rows: 106px 550px 112px;
+        overflow: hidden
+      }
 
-  menu?.select(selected, { animate: loaded });
-}
-function casual(){return loaded&&['idle','roam','pause','look','butterfly'].includes(phase);}function canPet(){return casual()||phase==='petting';}function locks(){document.body.classList.toggle('locked',!casual());document.querySelectorAll('.arrow').forEach(b=>b.disabled=!casual());$('.petAccess').disabled=!canPet();updateArrows();}function updateArrows(){const n=order.indexOf(room);$('.arrow.prev').hidden=n===0;$('.arrow.next').hidden=n===order.length-1;}function updatePoopAccess(){$('.poopAccess').hidden=!dirty();}
-function interrupt(){if(!casual())return;queue=[];segment=null;if(phase==='butterfly'){butterfly=null;nextButterfly=clock+45000;}phase='idle';jumpY=0;setAnim('a01',16);locks();}function wake(){if(!sleeping)return;sleeping=false;setAnim('a01',16);idleUntil=clock+4000;save();}function say(icon,time=2600,type=UI.bubbleType){bubble={icon,until:clock+time,type};}
-function idle(which=null){phase='idle';stage='';queue=[];segment=null;pending=null;jumpY=0;boneVisible=false;butterfly=null;setOffset(0);setAnim('a01',which??(Math.random()<.35?18:16));idleUntil=clock+Math.max(frames.length*ms,1800)+Math.random()*2000;locks();save();}
-function startQueue(parts){queue=parts;nextSegment();}function nextSegment(){segment=queue.shift();if(!segment){idle();return;}segment.started=clock;segment.onStart?.();if(segment.sheet&&segment.anim!==undefined)setAnim(segment.sheet,segment.anim,segment.tempo);if(segment.frames)setFrames(segment.sheet||'a01',segment.frames,segment.tempo||200);if(segment.from!==undefined)x=segment.from;segment.origin=x;if(segment.facing!==undefined)left=segment.facing;else if(segment.to!==undefined&&Math.abs(segment.to-x)>.001)left=segment.to<x;segment.distance=segment.to===undefined?0:Math.abs(segment.to-x)*W;}
-function blockRoomActivity(id){if(!dirty())return false;idle(16);blockedActivity=id;say('poop',4500);toast('Najpierw posprzątaj kupkę w tym pomieszczeniu.');return true;}
-function rewardParts(){return [{sheet:'a01',anim:16,time:1000,onStart:()=>{$('.popup').hidden=false;$('.reward').src=icons.heart;},onEnd:()=>$('.popup').hidden=true}];}function repeatPart(s,i,times=1){return {sheet:s,anim:i,time:duration(s,i)*times};}
-function activity(id){if(blockRoomActivity(id))return;pending=id;if(id==='sleep'){sleeping=true;phase='idle';queue=[];segment=null;setAnim('a02',6);say('sleep',2600);locks();save();return;}phase='activity';locks();let parts=[];if(id==='food')parts=[repeatPart('a01',5)];else if(id==='water')parts=[repeatPart('a01',2)];else if(id==='clean')parts=[repeatPart('a01',14),{...repeatPart('a01',13),onStart:()=>{$('.popup').hidden=false;$('.reward').src=icons.clean;}}];else if(id==='brush'){const p=getPreset('a02',21);if(numbers(p.intro).length)parts.push({sheet:'a02',frames:numbers(p.intro),tempo:p.ms,time:numbers(p.intro).length*p.ms});parts.push(repeatPart('a02',21));if(numbers(p.outro).length)parts.push({sheet:'a02',frames:numbers(p.outro),tempo:p.ms,time:numbers(p.outro).length*p.ms});}else if(id==='den')parts=[{sheet:'a01',anim:18,time:3600,onStart:()=>boneVisible=true,onEnd:()=>boneVisible=false}];else parts=[repeatPart('a02',8+Math.floor(Math.random()*6),2)];parts.push(...rewardParts());startQueue(parts);}
-function chooseVariant(){let v=forcedVariant;if(v){forcedVariant=null;lastVariant=v;return v;}const r=Math.random();v=r<.5?'roll':r<.85?'run':'happy';if(v===lastVariant)v=v==='roll'?'run':'roll';lastVariant=v;return v;}function finishTravel(id){nextTrip=clock+40000+Math.random()*35000;if(id)activity(id);else{idle(16);if(dirty())say('poop',3500);}}
-// Arrow timing is calmer; ordinary animations retain the user's configured timing.
-function arrowTravel(r,dir){interrupt();wake();phase='travel';travelMode='arrow';left=dir<0;bubble=null;locks();const facing=dir<0,edge=dir>0?.82:.18,exit=dir>0?1.06:-.06,entry=dir>0?-.06:1.06,land=dir>0?.18:.82,variant=chooseVariant();let changed=false;const parts=[{sheet:'a01',anim:1,tempo:180,facing,to:edge,motion:'run',time:Math.max(320,Math.abs(edge-x)*W/210*1000),onStart:()=>stage='run'},{sheet:'a01',frames:[1,2,7,8],tempo:155,facing,time:reduced?200:620,onStart:()=>stage='jump',update:p=>{if(p>=.5&&!changed){setRoom(r);changed=true;}x=p<.5?edge+(exit-edge)*p*2:entry+(land-entry)*(p-.5)*2;jumpY=reduced?0:-Math.sin(Math.PI*p)*35;},onEnd:()=>{if(!changed)setRoom(r);x=land;jumpY=0;}},{sheet:'a01',anim:variant==='roll'?9:1,tempo:variant==='roll'?225:180,facing,from:land,to:.5,motion:variant==='roll'?null:'run',time:variant==='roll'?900:Math.abs(.5-land)*W/210*1000,onStart:()=>stage='arrival'}];if(variant==='happy')parts.push({sheet:'a01',anim:17,tempo:200,facing,time:800});parts.push({sheet:'a01',anim:16,facing,time:220,onEnd:()=>finishTravel(null)});startQueue(parts);}
-function stepRoom(d){if(!casual())return;const n=order.indexOf(room)+d;if(n<0||n>=order.length)return;arrowTravel(order[n],d);}
-function route(target,id=null,mode='menu'){if(!casual()||!order.includes(target))return;interrupt();wake();phase='travel';travelMode=mode;pending=id;bubble=null;locks();const from=order.indexOf(room),to=order.indexOf(target),distance=Math.abs(to-from),dir=to>=from?1:-1,facing=dir<0,run=mode==='menu'||distance>1,speed=run?210:65,parts=[];left=facing;function movement(a,b,onEnd){return {sheet:'a01',anim:run?1:6,tempo:180,motion:run?'run':'walk',facing,from:a,to:b,time:Math.max(160,Math.abs(b-a)*W/speed*1000),onStart:()=>stage=run?'route-run':'route-walk',onEnd};}if(!distance){if(Math.abs(x-.5)*W>2)parts.push(movement(x,.5));}else{let origin=x;for(let i=from;i!==to;i+=dir){const r=order[i+dir];parts.push(movement(origin,dir>0?1.08:-.08,()=>{setRoom(r);x=dir>0?-.08:1.08;}));origin=dir>0?-.08:1.08;}if(mode==='auto'&&target==='garden'&&run&&Math.random()<.3)parts.push({sheet:'a01',anim:9,tempo:225,facing,from:origin,to:.5,time:900,onStart:()=>stage='route-roll'});else parts.push(movement(origin,.5));}parts.push({sheet:'a01',anim:16,facing,time:220,onEnd:()=>finishTravel(id)});startQueue(parts);}
-function action(id){if(!casual())return;const i=items.find(i=>i.id===id);if(!i)return;if(i.room===room&&dirty()){interrupt();blockRoomActivity(id);return;}if(id==='sleep'&&sleeping)return;actions++;route(i.room,id,'menu');}
-function react(){if(!casual())return;interrupt();wake();phase='reaction';locks();say('heart');startQueue([repeatPart('a01',[10,12,7,15][Math.floor(Math.random()*4)])]);}
-function startPetting(){if(!canPet())return;if(phase!=='petting'){interrupt();wake();phase='petting';queue=[];segment=null;setFrames('a01',[39,40,39,40,45],280);anim=10;locks();say('heart',5000);}petLast=clock;petFinishAt=Infinity;}function stopPetting(){if(phase!=='petting')return;const cycle=frames.length*ms;petFinishAt=clock+(cycle-(clock-animStart)%cycle);}function endPetting(){phase='reaction';startQueue([{sheet:'a01',frames:[46],tempo:250,time:250}]);}
-function geometry(){const f=currentFrame(),o={x:0,y:0,scale:100,...CFG[sheet].offsets[String(f)]};return {f,o,s:BASE*o.scale/100*(sheet==='a01'&&anim===1?1.04:1)*(sheet==='a01'&&anim===10?1.05:1)*0.70,w:cells[sheet][f-1].width,h:cells[sheet][f-1].height,g:CFG[sheet].ground};}
-function drawDog(c,cx=x*W,gy=GROUND+jumpY,facing=left,ratio=1){const g=geometry();c.save();c.translate(cx,gy);if(facing)c.scale(-1,1);c.translate(g.o.x*BASE*ratio,g.o.y*BASE*ratio);c.scale(g.s*ratio,g.s*ratio);c.imageSmoothingEnabled=false;c.drawImage(cells[sheet][g.f-1],-g.w/2,-g.g);c.restore();}
-function headPosition(){const g=geometry(),h=P.meta[sheet][g.f-1].head;return {x:x*W+(left?-1:1)*((h[0]-g.w/2)*g.s+g.o.x*BASE),y:GROUND+jumpY+(h[1]-g.g)*g.s+g.o.y*BASE};}
-function petHit(px,py){if(!loaded)return false;const g=geometry();let xx=px-x*W;if(left)xx=-xx;const sx=(xx-g.o.x*BASE)/g.s+g.w/2,sy=(py-GROUND-jumpY-g.o.y*BASE)/g.s+g.g,b=P.meta[sheet][g.f-1].box,bw=b[2]-b[0],bh=b[3]-b[1];if(sx<b[0]+bw*.23||sx>=b[2]||sy<b[1]+bh*.1||sy>b[1]+bh*.86)return false;const ix=Math.floor(sx),iy=Math.floor(sy);if(ix<0||iy<0||ix>=g.w||iy>=g.h)return false;return pixels[sheet][g.f-1][(iy*g.w+ix)*4+3]>120;}
-function poopRect(){const w=40,h=w*images.poop.height/images.poop.width;let offset=0;if(poop){const diff=order.indexOf(poop.room)-order.indexOf(room);offset=diff*W+roomOffset;}return {x:clamp((poop?.x||.3)*W,22,W-22)-w/2+offset,y:GROUND+24-h,w,h};}function poopHit(px,py){if(!dirty())return false;const r=poopRect();return px>r.x-6&&px<r.x+r.w+6&&py>r.y-6&&py<r.y+r.h+6;}
-function cleanPoop(){if(!casual()||!dirty())return;interrupt();wake();poop=null;blockedActivity=null;updatePoopAccess();say('star');save();toast('Posprzątane — można znów wybrać czynność.');}
-function spawnPoop(){if(!casual()||sleeping||poop)return false;interrupt();phase='toilet';locks();const facing=left;startQueue([{sheet:'a01',frames:[41,42,47],tempo:420,time:1260,onStart:()=>say('poop',2600),onEnd:()=>{poop={room,x:clamp(x+(left?1:-1)*.2,.08,.92)};updatePoopAccess();say('poop',4500);save();}},{sheet:'a01',frames:[48],tempo:350,time:350}]);nextPoop=clock+60000;return true;}
-$('.poopAccess').onclick=cleanPoop;$('.petAccess').onclick=react;$('.arrow.prev').onclick=()=>stepRoom(-1);$('.arrow.next').onclick=()=>stepRoom(1);
-function pointerXY(e){const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*SH};}
-function previewSwipe(dx){const dir=dx<0?1:-1,n=order.indexOf(room)+dir,valid=n>=0&&n<order.length;setOffset(valid?clamp(dx/scale,-W*.94,W*.94):clamp(dx/scale*.15,-36,36));}
-function settleSwipe(dir,commit){const n=order.indexOf(room)+dir,valid=commit&&n>=0&&n<order.length,origin=roomOffset,end=valid?-dir*W:0,target=valid?order[n]:room;phase='travel';travelMode='swipe';stage=valid?'swipe-slide':'swipe-cancel';locks();const time=reduced?180:clamp(Math.abs(end-origin)/W*1000+180,260,1150);if(valid){wake();left=dir<0;bubble=null;}startQueue([{sheet:'a01',anim:valid?1:16,tempo:180,facing:valid?dir<0:left,time,onStart:()=>stage=valid?'swipe-slide':'swipe-cancel',update:p=>{const eased=1-Math.pow(1-p,3);setOffset(origin+(end-origin)*eased);},onEnd:()=>{if(valid)setRoom(target);else setOffset(0);}},{sheet:'a01',anim:16,time:200,onEnd:()=>finishTravel(null)}]);}
-canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;if(gesture){if(gesture.kind==='pet')stopPetting();if(phase==='swipe-preview')settleSwipe(1,false);gesture=null;return;}const p=pointerXY(e);gesture={id:e.pointerId,sx:e.clientX,sy:e.clientY,kind:null,dog:petHit(p.x,p.y),poop:poopHit(p.x,p.y)};try{canvas.setPointerCapture(e.pointerId);}catch(_){}});
-canvas.addEventListener('pointermove',e=>{const g=gesture;if(!g||g.id!==e.pointerId)return;const dx=e.clientX-g.sx,dy=e.clientY-g.sy;if(!g.kind){if(Math.abs(dy)>18&&Math.abs(dy)>Math.abs(dx)*1.2){g.kind=g.dog&&!g.poop&&canPet()?'pet':'vertical';if(g.kind==='pet')startPetting();}else if(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)*1.2&&casual()){g.kind='swipe';interrupt();wake();phase='swipe-preview';locks();}}if(g.kind==='swipe')previewSwipe(dx);if(g.kind==='pet'){e.preventDefault();petLast=clock;petFinishAt=Infinity;if(!bubble||bubble.until<clock+1000)say('heart',2500);}});
-function pointerEnd(e,cancel=false){const g=gesture;if(!g||g.id!==e.pointerId)return;gesture=null;try{if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);}catch(_){}if(g.kind==='pet'){stopPetting();return;}const dx=e.clientX-g.sx,dy=e.clientY-g.sy;if(g.kind==='swipe'){settleSwipe(dx<0?1:-1,!cancel&&Math.abs(dx)>=45&&Math.abs(dx)>Math.abs(dy)*1.2);return;}if(cancel)return;if(!g.kind&&Math.hypot(dx,dy)<=12){const p=pointerXY(e);if(g.poop&&poopHit(p.x,p.y))cleanPoop();else if(g.dog&&petHit(p.x,p.y))react();}}
-canvas.addEventListener('pointerup',e=>pointerEnd(e));canvas.addEventListener('pointercancel',e=>pointerEnd(e,true));canvas.addEventListener('lostpointercapture',e=>{if(gesture?.id===e.pointerId)pointerEnd(e,true);});
-function chooseDestination(){const a=order.filter(r=>r!==room),weights=a.map(r=>r==='garden'?5:r==='yard'?2:1);let n=Math.random()*weights.reduce((s,v)=>s+v,0);for(let i=0;i<a.length;i++){n-=weights[i];if(n<=0)return a[i];}return a[0];}function autoTrip(target=chooseDestination()){if(!casual()||sleeping||gesture||menu.drag)return false;trips++;route(target,null,'auto');return true;}
-function localWalk(){if(!casual())return;interrupt();phase='roam';const dest=x<=.5?.58:.42,dist=Math.abs(dest-x)*W;if(dist<2){idle();return;}locks();startQueue([{sheet:'a01',anim:6,motion:'walk',to:dest,time:dist/60*1000}]);}function autonomous(){const r=Math.random();if(r<.55)localWalk();else if(r<.72){phase='pause';locks();startQueue([{sheet,frames:[currentFrame()],tempo:1000,time:1000+Math.random()*900}]);}else if(r<.86){phase='look';locks();startQueue([repeatPart('a01',Math.random()<.5?3:7)]);}else idle();}
-function butterflyEvent(){if(!casual()||sleeping||dirty()||!['garden','yard'].includes(room)||menu.drag||gesture)return false;interrupt();phase='butterfly';bubble=null;locks();const dir=x<.5?1:-1;left=dir<0;const flightStart={x:dir>0?-25:W+25,y:200},flightEnd={x:x*W+dir*82,y:GROUND-240};butterfly={visible:true,x:flightStart.x,y:flightStart.y,dir};startQueue([{sheet:'a01',anim:16,time:2200,onStart:()=>stage='butterfly-flight',update:p=>{butterfly.x=flightStart.x+(flightEnd.x-flightStart.x)*p;butterfly.y=flightStart.y+(flightEnd.y-flightStart.y)*p+Math.sin(p*Math.PI*4)*13;}},{sheet:'a01',anim:3,time:900,onStart:()=>stage='butterfly-watch',update:p=>{butterfly.x=flightEnd.x+Math.sin(p*5)*7;butterfly.y=flightEnd.y+Math.cos(p*6)*9;}},{sheet:'a02',anim:14,facing:dir<0,to:clamp(x+dir*.1,.35,.65),time:duration('a02',14)*2,onStart:()=>{stage='butterfly-chase';butterfly.visible=false;}},{sheet:'a02',anim:17,facing:dir<0,time:duration('a02',17),onStart:()=>stage='butterfly-nose'},{sheet:'a01',anim:16,facing:dir<0,time:1000,onStart:()=>{stage='butterfly-leave';butterfly.visible=true;butterfly.from={x:x*W+dir*82,y:GROUND-240};},update:p=>{butterfly.x=butterfly.from.x+dir*190*p;butterfly.y=butterfly.from.y-90*p+Math.sin(p*8)*6;},onEnd:()=>{nextButterfly=clock+45000+Math.random()*40000;butterfly=null;}}]);return true;}
-function iconDraw(c,key,x,y,w,h=w){if(key==='poop'){const ratio=images.poop.width/images.poop.height;let iw=w,ih=w/ratio;if(ih>h){ih=h;iw=h*ratio;}c.drawImage(images.poop,x+(w-iw)/2,y+(h-ih)/2,iw,ih);return;}const n=UI.map[key];if(n&&cells.ui[n-1])c.drawImage(cells.ui[n-1],x,y,w,h);}
-function bubbleDraw(dt){if(!bubble||clock>bubble.until){bubblePos=null;return;}const h=headPosition(),size=clamp(UI.bubbleSize,60,106),target={x:clamp(h.x-size*(left?.36:.64),6,W-size-6),y:clamp(h.y-size-12,6,SH-size-6)};if(!bubblePos)bubblePos={...target};const blend=1-Math.exp(-dt/110);bubblePos.x+=(target.x-bubblePos.x)*blend;bubblePos.y+=(target.y-bubblePos.y)*blend;const bx=clamp(bubblePos.x,6,W-size-6),by=clamp(bubblePos.y,6,SH-size-6),type=bubble.type||'thought';ctx.save();if(left){ctx.translate(bx+size,by);ctx.scale(-1,1);iconDraw(ctx,type,0,0,size);}else iconDraw(ctx,type,bx,by,size);ctx.restore();const center=P.bubbleCenters[type]||[.5,.4],symbol=Math.min(UI.bubbleSymbolSize,size*.58);iconDraw(ctx,bubble.icon,bx+(left?1-center[0]:center[0])*size-symbol/2,by+center[1]*size-symbol/2-1,symbol);}
-function draw(dt){ctx.clearRect(0,0,W,SH);ctx.imageSmoothingEnabled=false;drawDog(ctx);if(boneVisible)iconDraw(ctx,'bone',x*W+20,GROUND-30,37);if(butterfly?.visible){ctx.save();ctx.translate(butterfly.x,butterfly.y);if(butterfly.dir<0)ctx.scale(-1,1);ctx.drawImage(images['b'+Math.floor(clock/130)%2],-22,-22,44,44);ctx.restore();}
-// Dropping is explicitly a foreground layer and below the dog's walking baseline.
-if(poop&&Math.abs(order.indexOf(poop.room)-order.indexOf(room))<=1){const r=poopRect();ctx.drawImage(images.poop,r.x,r.y,r.w,r.h);}bubbleDraw(dt);if(!$('.popup').hidden){rewardCtx.clearRect(0,0,300,300);drawDog(rewardCtx,150,255,left,.72);}const c=x*W;$('.arrow.prev').classList.toggle('near',c-102<66);$('.arrow.next').classList.toggle('near',c+102>W-66);}
-function loopFrame(t){const dt=last?Math.min(60,t-last):0;last=t;if(loaded&&!document.hidden&&!orientationPaused){clock+=dt;if(phase!=='swipe-preview')frameIndex=Math.floor((clock-animStart)/ms)%frames.length;if(segment){const p=clamp((clock-segment.started)/segment.time,0,1);if(segment.to!==undefined)x=segment.origin+(segment.to-segment.origin)*p;if(segment.motion){const travelled=Math.abs(x-segment.origin)*W,stride=segment.motion==='walk'?13:36;frameIndex=segment.distance>2?Math.floor(travelled/stride)%frames.length:0;}segment.update?.(p);if(p>=1){const old=segment;segment=null;old.onEnd?.();if(!segment&&phase!=='idle')nextSegment();}}else if(phase==='petting'){if(clock>=petFinishAt||(!gesture&&clock-petLast>3000))endPetting();}else if(phase==='idle'&&!sleeping&&!gesture&&!menu.drag){if(clock>=nextPoop&&!poop)spawnPoop();else if(clock>=nextTrip)autoTrip();else if(clock>=nextButterfly&&!dirty()&&['garden','yard'].includes(room))butterflyEvent();else if(clock>=idleUntil)autonomous();}if(clock>=nextBubble&&!sleeping&&phase==='idle'){say(dirty()?'poop':['food','water','fun','sleep','clean'][Math.floor(Math.random()*5)]);nextBubble=clock+14000;}draw(dt);}requestAnimationFrame(loopFrame);}
-async function loadImage(src){const im=new Image();await new Promise((ok,bad)=>{im.onload=ok;im.onerror=()=>bad(Error('Nie można odczytać grafiki.'));im.src=src;});return im;}
-async function boot(){for(const k of ['a01','a02','ui','poop'])images[k]=await loadImage(P.assets[k]);for(let i=0;i<2;i++)images['b'+i]=await loadImage(P.assets.butterflies[i]);for(const key of ['a01','a02','ui']){const rows=key==='ui'?6:12,im=images[key],w=im.width/6,h=im.height/rows;for(let f=0;f<rows*6;f++){const c=document.createElement('canvas');c.width=w;c.height=h;const cx=c.getContext('2d');cx.drawImage(im,(f%6)*w,Math.floor(f/6)*h,w,h,0,0,w,h);cells[key].push(c);if(key!=='ui')pixels[key].push(cx.getImageData(0,0,w,h).data);}}for(const [key,n] of Object.entries(UI.map))icons[key]=cells.ui[n-1].toDataURL('image/png');statusBuild();const root=$('.menu');for(const name of ['pointerdown','keydown','click'])root.addEventListener(name,e=>{if(!casual()){e.preventDefault();e.stopImmediatePropagation();return;}if(name!=='click'){interrupt();wake();}},true);menu=new ArcCarousel(root,{items:items.map(i=>({...i,svg:'<img alt="" src="'+icons[i.icon]+'">'})),selectedId:selected});root.addEventListener('arc:change',e=>selected=e.detail.id);root.addEventListener('arc:activate',e=>action(e.detail.id));loaded=true;setRoom(room);setAnim(sleeping?'a02':'a01',sleeping?6:16);if(dirty())say('poop',4000);$('.load').hidden=true;locks();resize();save();requestAnimationFrame(loopFrame);}
-$('.full').onclick=async()=>{try{if(document.fullscreenElement||document.webkitFullscreenElement){if(document.exitFullscreen)await document.exitFullscreen();else document.webkitExitFullscreen?.();return;}const el=document.documentElement;if(el.requestFullscreen)await el.requestFullscreen();else if(el.webkitRequestFullscreen)await el.webkitRequestFullscreen();else return toast('Pełny ekran jest niedostępny w tej przeglądarce.');try{if(screen.orientation?.lock)await screen.orientation.lock('portrait');else throw Error();}catch(e){toast('Brak automatycznej blokady obrotu — trzymaj urządzenie pionowo.');}}catch(e){toast('Przeglądarka nie pozwoliła uruchomić pełnego ekranu.');}};
-window.addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden){save();if(gesture?.kind==='pet')stopPetting();if(phase==='swipe-preview'){phase='idle';setOffset(0);locks();}gesture=null;}});window.addEventListener('error',e=>{$('.load').hidden=false;$('.load').textContent='Błąd wersji testowej: '+e.message;});boot().catch(e=>{$('.load').hidden=false;$('.load').textContent=e.message;});
-window.gameTest={state:()=>({loaded,room,x,left,phase,stage,travelMode,sheet,anim,frame:currentFrame(),actions,trips,sleeping,selected,stats,heart:heart(),poop,dirty:!!dirty(),blockedActivity,scale,orientationPaused,butterfly,butterflyVisible:!!butterfly?.visible,bubble,bubblePos,route:debugRoute,roomOffset,segmentTime:segment?.time,segmentMotion:segment?.motion||null,gesture:gesture?.kind||null,sceneH:SH,ground:GROUND,dogBase:BASE}),step:stepRoom,action,touch:react,poop:spawnPoop,butterfly:butterflyEvent,walk:localWalk,hit:petHit,head:headPosition,poopRect,clean:cleanPoop,advance:n=>clock+=n,forceVariant:v=>forcedVariant=v,select:(id,animate=false)=>menu.select(id,{animate}),at:(r,pos=.5)=>{gesture=null;queue=[];segment=null;butterfly=null;$('.popup').hidden=true;sleeping=false;x=pos;phase='idle';setRoom(r);idle(16);nextPoop=clock+45000;nextTrip=clock+32000;nextButterfly=clock+28000;},needs:s=>{Object.assign(stats,s);statusUpdate();syncMenu();},petStart:startPetting,petEnd:stopPetting,menu:()=>menu,putPoop:(r,pos=.3)=>{poop={room:r,x:pos};updatePoopAccess();save();},clearPoop:()=>{poop=null;updatePoopAccess();save();}};
-</script></body></html>
+      .status {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 4px;
+        padding: 5px 6px;
+        align-content: center;
+        background: #efe1d7
+      }
+
+      .stat {
+        min-width: 0;
+        text-align: center;
+        padding: 7px 3px;
+        background: #fff9f2;
+        border-radius: 14px
+      }
+
+      .stat img {
+        display: block;
+        margin: auto;
+        image-rendering: pixelated;
+        object-fit: contain
+      }
+
+      .bar {
+        height: 6px;
+        border-radius: 5px;
+        background: #ded0ca;
+        overflow: hidden;
+        margin: 6px 2px 2px
+      }
+
+      .bar i {
+        display: block;
+        width: 50%;
+        height: 100%;
+        background: var(--c)
+      }
+
+      .stat small {
+        font-size: 9px;
+        color: #8c7c8c
+      }
+
+      .scene {
+        position: relative;
+        overflow: hidden;
+        touch-action: none;
+        background: #dde7d8
+      }
+
+      .roomTrack {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        will-change: transform
+      }
+
+      .roomPanel {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden
+      }
+
+      .roomPanel svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        shape-rendering: crispEdges
+      }
+
+      #sceneCanvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        image-rendering: pixelated;
+        touch-action: none
+      }
+
+      .roomBadge {
+        position: absolute;
+        left: 9px;
+        top: 9px;
+        width: 38px;
+        height: 38px;
+        padding: 5px;
+        background: #fff9;
+        border-radius: 11px;
+        pointer-events: none
+      }
+
+      .roomBadge img {
+        width: 100%;
+        height: 100%;
+        image-rendering: pixelated
+      }
+
+      .full {
+        position: absolute;
+        right: 9px;
+        top: 9px;
+        z-index: 5;
+        border: 2px solid white;
+        border-radius: 11px;
+        background: #fff9e9dd;
+        font-size: 23px;
+        width: 40px;
+        height: 40px;
+        cursor: pointer
+      }
+
+      .arrow {
+        position: absolute;
+        top: 44%;
+        z-index: 4;
+        width: 40px;
+        height: 52px;
+        border: 3px solid white;
+        border-radius: 16px;
+        background: #fff8e9df;
+        color: #88758f;
+        font-size: 32px;
+        cursor: pointer;
+        transition: opacity .12s
+      }
+
+      .arrow.prev {
+        left: 5px
+      }
+
+      .arrow.next {
+        right: 5px
+      }
+
+      .arrow:disabled {
+        opacity: .3
+      }
+
+      .arrow.near {
+        opacity: .1 !important
+      }
+
+      .arrow:focus-visible {
+        opacity: 1 !important;
+        outline: 3px solid #9674ab
+      }
+
+      .arrow[hidden] {
+        display: none
+      }
+
+      .dock {
+        display: grid;
+        align-content: center;
+        background: transparent;
+      }
+
+      .menu {
+        position: relative;
+        width: 100%;
+        height: 112px;
+        overflow: visible;
+        touch-action: pan-y;
+        user-select: none;
+        -webkit-user-select: none;
+        isolation: isolate
+      }
+
+      .arc-menu__button {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        padding: 10px;
+        margin: 0;
+        border: 3px solid white;
+        border-radius: 50%;
+        background: var(--item-color);
+        box-shadow: 0 3px #0001;
+        cursor: pointer;
+        touch-action: pan-y
+      }
+
+      .arc-menu__icon {
+        display: block;
+        width: 60px;
+        height: 60px;
+        max-width: 100%;
+        max-height: 100%;
+        pointer-events: none;
+      }
+
+      .arc-menu__icon img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+        image-rendering: pixelated;
+        pointer-events: none
+      }
+
+      .arc-menu__button:focus-visible {
+        outline: 3px solid #9674ab;
+        outline-offset: 2px
+      }
+
+      .locked .menu {
+        opacity: .65;
+        pointer-events: none
+      }
+
+      .popup {
+        position: absolute;
+        inset: 0;
+        background: #3b2e3c38;
+        z-index: 20;
+        display: grid;
+        place-items: center
+      }
+
+      .popup[hidden] {
+        display: none
+      }
+
+      .card {
+        width: 250px;
+        background: #fff8ea;
+        border: 5px solid white;
+        border-radius: 30px;
+        box-shadow: 0 6px #0002;
+        text-align: center;
+        overflow: hidden
+      }
+
+      .card canvas {
+        width: 100%;
+        display: block;
+        image-rendering: pixelated
+      }
+
+      .reward {
+        display: block;
+        width: 55px;
+        height: 55px;
+        margin: 0 auto 12px;
+        image-rendering: pixelated
+      }
+
+      .load {
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+        display: grid;
+        place-content: center;
+        background: #fff3df;
+        font-size: 24px;
+        text-align: center;
+        padding: 20px
+      }
+
+      .load[hidden] {
+        display: none
+      }
+
+      .rotate {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: none;
+        place-content: center;
+        text-align: center;
+        padding: 20px;
+        background: #fff3df;
+        font: 22px system-ui
+      }
+
+      .rotate span {
+        font-size: 60px
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 90vw;
+        z-index: 60;
+        background: #493850ef;
+        color: white;
+        padding: 12px;
+        border-radius: 12px;
+        font-size: 14px
+      }
+
+      .toast[hidden] {
+        display: none
+      }
+
+      .petAccess,
+      .poopAccess {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        clip-path: inset(50%);
+        overflow: hidden
+      }
+
+      .petAccess:focus-visible,
+      .poopAccess:focus-visible {
+        clip-path: none;
+        width: auto;
+        height: auto;
+        left: 50%;
+        bottom: 25%;
+        z-index: 10;
+        transform: translateX(-50%);
+        padding: 10px;
+        background: #fff8e9;
+        border: 2px solid #9674ab;
+        border-radius: 10px
+      }
+
+      @media(orientation:landscape) and (pointer:coarse) {
+        .rotate {
+          display: grid
+        }
+      }
+
+      @media(prefers-reduced-motion:reduce) {
+        .arrow {
+          transition: none
+        }
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <main id="game" aria-label="Łatka — gra">
+      <header class="status" aria-label="Potrzeby i samopoczucie"></header>
+      <section class="scene" aria-label="Pomieszczenie">
+        <div class="roomTrack"></div><canvas id="sceneCanvas" width="384" height="550"></canvas>
+        <div class="roomBadge"><img alt=""></div><button class="full" aria-label="Pełny ekran">⛶</button><button
+          class="arrow prev" aria-label="Poprzednie pomieszczenie">‹</button><button class="arrow next"
+          aria-label="Następne pomieszczenie">›</button><button class="petAccess">Pogłaszcz Łatkę</button><button
+          class="poopAccess" hidden>Posprzątaj kupkę</button>
+      </section>
+      <footer class="dock">
+        <nav class="menu" aria-label="Opieka i aktywności"></nav>
+      </footer>
+      <div class="popup" hidden>
+        <div class="card"><canvas width="300" height="300"></canvas><img class="reward" alt="Nagroda"></div>
+      </div>
+      <div class="load">Wczytywanie Łatki…</div>
+    </main>
+    <div class="rotate"><span>📱 ↻</span>Obróć urządzenie do pionu.<small>Gra jest wstrzymana.</small></div>
+    <div class="toast" hidden role="status"></div>
+    <script id="payload" type="application/json">
+      {
+        "config": {
+          "version": "3.0",
+          "activeTab": "ui",
+          "a01": {
+            "name": "Latka-arkusz-animacji-oryginal-ANIMACJE-01_wyrownany.png",
+            "preview": false,
+            "cols": 6,
+            "rows": 12,
+            "ground": 113,
+            "offsets": {
+              "17": {
+                "x": 0,
+                "y": 4,
+                "scale": 100
+              },
+              "18": {
+                "x": 1,
+                "y": 8,
+                "scale": 101
+              },
+              "25": {
+                "x": 0,
+                "y": -1,
+                "scale": 100
+              },
+              "31": {
+                "x": 0,
+                "y": -1,
+                "scale": 100
+              },
+              "32": {
+                "x": 0,
+                "y": -1,
+                "scale": 100
+              },
+              "33": {
+                "x": 0,
+                "y": -3,
+                "scale": 100
+              },
+              "34": {
+                "x": 0,
+                "y": -1,
+                "scale": 102
+              }
+            },
+            "presets": [{
+              "name": "01. Skok / podskok",
+              "seq": "1,2,43,8",
+              "ms": 220,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "02. Bieg / sus",
+              "seq": "3,4,9,10",
+              "ms": 180,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "03. Picie",
+              "seq": "5,6,5,6,5,6,5,6,5,6,58,58",
+              "ms": 180,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "04. Rozglądanie się",
+              "seq": "13,13,14,14,19,20,20,20",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "05. Turlanie A",
+              "seq": "15,38,65,22",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "06. Jedzenie",
+              "seq": "17,18,17,18,17,18,23,30",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "07. Marsz",
+              "seq": "25,31,32",
+              "ms": 180,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "08. Uszy / mrugnięcie",
+              "seq": "27,28,33,34",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "09. Siad / stanie",
+              "seq": "29,30,35,36",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "10. Turlanie B",
+              "seq": "37,38,43,44",
+              "ms": 180,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "11. Na grzbiecie",
+              "seq": "39,40,39,39,40,45,46",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "12. Węszenie / toaleta",
+              "seq": "20,41,42,47,47,42,65,65,48",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "13. Drapanie",
+              "seq": "49,50,55,49,50,49,50,56",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "14. Otrząsanie",
+              "seq": "51,52,57,58",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "15. Mycie / piana",
+              "seq": "59,60,54,59,60,54,53",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "16. Patrzenie w górę / łapa",
+              "seq": "61,62,67,68",
+              "ms": 340,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "17. Spokojne stanie",
+              "seq": "63,27,63,65,63,27,65",
+              "ms": 380,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "18. Radość / podskok",
+              "seq": "65,66,71,72",
+              "ms": 280,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "Siad — spokojnie",
+              "seq": "29,29,29,61,29,29,29,49",
+              "ms": 650,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "Węszenie bez toalety",
+              "seq": "41,41",
+              "ms": 400,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "Toaleta osobno",
+              "seq": "47,48,47",
+              "ms": 650,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "Radość z powrotem",
+              "seq": "63,65,66,71,72,63",
+              "ms": 220,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }, {
+              "name": "Marsz i skok",
+              "seq": "25,26,31,32,1,2,7,8,25",
+              "ms": 150,
+              "intro": "",
+              "outro": "",
+              "repeat": true
+            }]
+          },
+          "a02": {
+            "name": "Latka-arkusz-animacji-oryginal-ANIMACJE-02_wyrownany.png",
+            "preview": false,
+            "cols": 6,
+            "rows": 12,
+            "ground": 113,
+            "offsets": {
+              "3": {
+                "x": 0,
+                "y": 4,
+                "scale": 100
+              },
+              "4": {
+                "x": 0,
+                "y": 4,
+                "scale": 100
+              },
+              "17": {
+                "x": 0,
+                "y": 0,
+                "scale": 102
+              },
+              "23": {
+                "x": 0,
+                "y": -1,
+                "scale": 100
+              },
+              "24": {
+                "x": 0,
+                "y": -2,
+                "scale": 100
+              },
+              "66": {
+                "x": 0,
+                "y": 8,
+                "scale": 100
+              },
+              "71": {
+                "x": 0,
+                "y": -4,
+                "scale": 100
+              },
+              "72": {
+                "x": 0,
+                "y": -2,
+                "scale": 100
+              }
+            },
+            "presets": [{
+              "name": "01. Stanie / „NIE” — ruch głową",
+              "intro": "",
+              "seq": "1,2,7,8",
+              "outro": "",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "02. Siad — spokojny / smutny",
+              "intro": "",
+              "seq": "3,4,9,10",
+              "outro": "",
+              "ms": 350,
+              "repeat": true
+            }, {
+              "name": "03. Smutek na stojąco / uszy",
+              "intro": "",
+              "seq": "5,6,11,12",
+              "outro": "",
+              "ms": 350,
+              "repeat": true
+            }, {
+              "name": "04. Szczotkowanie — wariant A",
+              "intro": "",
+              "seq": "13,14,19,20",
+              "outro": "",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "05. Szczotkowanie — wariant B",
+              "intro": "",
+              "seq": "15,16,21,22",
+              "outro": "",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "06. Siad tyłem / rozglądanie",
+              "intro": "",
+              "seq": "17,18,23,24",
+              "outro": "",
+              "ms": 350,
+              "repeat": true
+            }, {
+              "name": "07. Sen w legowisku",
+              "intro": "",
+              "seq": "25,26,31,32",
+              "outro": "",
+              "ms": 700,
+              "repeat": true
+            }, {
+              "name": "08. Ziewanie i przeciąganie",
+              "intro": "1",
+              "seq": "27,28,33,34",
+              "outro": "1",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "09. Piłka — zachęta do zabawy",
+              "intro": "",
+              "seq": "29,30,35,36",
+              "outro": "",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "10. Piłka — trącanie łapą",
+              "intro": "",
+              "seq": "37,38,43,44",
+              "outro": "",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "11. Piłka — zabawa na leżąco",
+              "intro": "",
+              "seq": "39,40,45,46",
+              "outro": "",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "12. Aport — ruch z piłką",
+              "intro": "",
+              "seq": "41,42,47,48",
+              "outro": "",
+              "ms": 220,
+              "repeat": true
+            }, {
+              "name": "13. Piłka — podrzut i podskok",
+              "intro": "",
+              "seq": "49,50,55,56",
+              "outro": "",
+              "ms": 220,
+              "repeat": true
+            }, {
+              "name": "14. Piłka — trzymanie i opuszczanie",
+              "intro": "",
+              "seq": "51,52,57,58",
+              "outro": "",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "15. Motyl — skoki i pogoń",
+              "intro": "",
+              "seq": "53,54,59,60",
+              "outro": "",
+              "ms": 220,
+              "repeat": true
+            }, {
+              "name": "16. Motyl — obserwowanie przy ziemi",
+              "intro": "",
+              "seq": "61,62,67,68",
+              "outro": "",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "17. Motyl — obserwowanie na siedząco",
+              "intro": "",
+              "seq": "63,64,69,70",
+              "outro": "",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "18. Motyl — ląduje przy nosie",
+              "intro": "",
+              "seq": "65,66,71,72",
+              "outro": "",
+              "ms": 280,
+              "repeat": true
+            }, {
+              "name": "19. Neutralne stanie — baza",
+              "intro": "",
+              "seq": "1,8,1,8",
+              "outro": "",
+              "ms": 650,
+              "repeat": true
+            }, {
+              "name": "20. „NIE” — próba z powrotem",
+              "intro": "1",
+              "seq": "2,7,2,7",
+              "outro": "8",
+              "ms": 230,
+              "repeat": true
+            }, {
+              "name": "21. Smutek — siad",
+              "intro": "3",
+              "seq": "4,10,4,10",
+              "outro": "9",
+              "ms": 600,
+              "repeat": true
+            }, {
+              "name": "22. Szczotkowanie — połączone",
+              "intro": "1",
+              "seq": "13,14,19,20,15,16,21,22,22,22",
+              "outro": "8",
+              "ms": 240,
+              "repeat": true
+            }, {
+              "name": "23. Ziewnięcie — krótko",
+              "intro": "27",
+              "seq": "28",
+              "outro": "34",
+              "ms": 500,
+              "repeat": false
+            }],
+            "selected": 17
+          },
+          "ui": {
+            "name": "Latka-ikonki-ATLAS.png",
+            "preview": false,
+            "cols": 6,
+            "rows": 6,
+            "map": {
+              "food": 1,
+              "water": 2,
+              "fun": 3,
+              "sleep": 4,
+              "clean": 5,
+              "bone": 6,
+              "mole": 7,
+              "butterfly": 8,
+              "memory": 9,
+              "bubbles": 10,
+              "cup": 11,
+              "star": 12,
+              "speech": 13,
+              "thought": 14,
+              "parents": 15,
+              "lock": 16,
+              "clock": 17,
+              "plus": 18,
+              "garden": 19,
+              "living": 20,
+              "kitchen": 21,
+              "bathroom": 22,
+              "den": 23,
+              "pets": 24,
+              "heart": 25,
+              "brush": 26,
+              "bark": 27,
+              "treat": 28,
+              "cloth": 29,
+              "paw": 30,
+              "options": 31,
+              "sound": 32,
+              "mute": 33,
+              "bell": 34,
+              "help": 35,
+              "home": 36
+            },
+            "needs": {
+              "food": 50,
+              "water": 50,
+              "fun": 50,
+              "sleep": 50,
+              "clean": 50
+            },
+            "statusSize": 44,
+            "menuSize": 69,
+            "bubbleType": "thought",
+            "bubbleIcon": "fun",
+            "bubbleSize": 110,
+            "bubbleSymbolSize": 53,
+            "menuGroup": "care",
+            "topH": 154,
+            "bottomH": 230,
+            "heartMode": "mean"
+          },
+          "reference": null
+        },
+        "assets": {
+          "a01": "animacje/latka-animacje-01.png",
+          "a02": "animacje/latka-animacje-02.png",
+          "ui": "ikony/latka-ikony.png",
+          "butterflies": ["animacje/motyl-1.png", "animacje/motyl-2.png"],
+          "poop": "inne/kupka.png",
+          "rooms": {
+            "living": "tla/004.png",
+            "kitchen": "tla/005.png",
+            "bathroom": "tla/006.png",
+            "garden": "tla/003.png",
+            "yard": "tla/002.png",
+            "attic": "tla/001.png"
+          }
+        },
+        "meta": {
+          "a01": [{
+            "box": [4, 32, 124, 116],
+            "head": [95.2, 34]
+          }, {
+            "box": [5, 0, 123, 118],
+            "head": [94.68, 0]
+          }, {
+            "box": [3, 27, 125, 116],
+            "head": [95.72, 30]
+          }, {
+            "box": [5, 20, 123, 116],
+            "head": [94.68, 22]
+          }, {
+            "box": [3, 27, 125, 116],
+            "head": [95.72, 30]
+          }, {
+            "box": [4, 21, 124, 116],
+            "head": [95.2, 24]
+          }, {
+            "box": [8, 4, 120, 116],
+            "head": [93.12, 6]
+          }, {
+            "box": [8, 11, 120, 116],
+            "head": [93.12, 13]
+          }, {
+            "box": [8, 29, 120, 116],
+            "head": [93.12, 34]
+          }, {
+            "box": [8, 14, 120, 116],
+            "head": [93.12, 17]
+          }, {
+            "box": [6, 11, 123, 116],
+            "head": [94.92, 13]
+          }, {
+            "box": [8, 11, 125, 116],
+            "head": [96.92, 13]
+          }, {
+            "box": [4, 9, 124, 116],
+            "head": [95.2, 11]
+          }, {
+            "box": [6, 6, 121, 116],
+            "head": [93.4, 8]
+          }, {
+            "box": [14, 32, 113, 116],
+            "head": [89.24, 37]
+          }, {
+            "box": [5, 9, 123, 116],
+            "head": [94.68, 12]
+          }, {
+            "box": [3, 19, 125, 116],
+            "head": [95.72, 29]
+          }, {
+            "box": [5, 15, 123, 114],
+            "head": [94.68, 27]
+          }, {
+            "box": [10, 11, 119, 116],
+            "head": [92.84, 13]
+          }, {
+            "box": [8, 11, 120, 116],
+            "head": [93.12, 13]
+          }, {
+            "box": [6, 29, 121, 116],
+            "head": [93.4, 52]
+          }, {
+            "box": [8, 11, 120, 116],
+            "head": [93.12, 13]
+          }, {
+            "box": [6, 9, 123, 116],
+            "head": [94.92, 11]
+          }, {
+            "box": [12, 11, 124, 116],
+            "head": [97.12, 13]
+          }, {
+            "box": [4, 12, 124, 116],
+            "head": [95.2, 14]
+          }, {
+            "box": [5, 15, 123, 116],
+            "head": [94.68, 17]
+          }, {
+            "box": [6, 10, 124, 116],
+            "head": [95.68, 12]
+          }, {
+            "box": [7, 10, 125, 116],
+            "head": [96.68, 12]
+          }, {
+            "box": [4, 10, 124, 116],
+            "head": [95.2, 12]
+          }, {
+            "box": [8, 9, 120, 116],
+            "head": [93.12, 12]
+          }, {
+            "box": [9, 11, 119, 116],
+            "head": [92.6, 13]
+          }, {
+            "box": [10, 17, 119, 116],
+            "head": [92.84, 19]
+          }, {
+            "box": [16, 0, 120, 116],
+            "head": [95.04, 1]
+          }, {
+            "box": [11, 10, 123, 116],
+            "head": [96.12, 12]
+          }, {
+            "box": [9, 6, 119, 116],
+            "head": [92.6, 8]
+          }, {
+            "box": [8, 10, 120, 116],
+            "head": [93.12, 12]
+          }, {
+            "box": [16, 39, 113, 116],
+            "head": [89.72, 44]
+          }, {
+            "box": [20, 25, 109, 116],
+            "head": [87.64, 27]
+          }, {
+            "box": [3, 20, 125, 116],
+            "head": [95.72, 22]
+          }, {
+            "box": [4, 15, 124, 116],
+            "head": [95.2, 22]
+          }, {
+            "box": [9, 19, 119, 116],
+            "head": [92.6, 55]
+          }, {
+            "box": [6, 20, 121, 116],
+            "head": [93.4, 22]
+          }, {
+            "box": [10, 17, 119, 116],
+            "head": [92.84, 29]
+          }, {
+            "box": [8, 11, 120, 116],
+            "head": [93.12, 13]
+          }, {
+            "box": [4, 17, 124, 116],
+            "head": [95.2, 19]
+          }, {
+            "box": [8, 11, 120, 116],
+            "head": [93.12, 13]
+          }, {
+            "box": [8, 12, 120, 116],
+            "head": [93.12, 14]
+          }, {
+            "box": [6, 12, 121, 116],
+            "head": [93.4, 14]
+          }, {
+            "box": [8, 12, 121, 116],
+            "head": [93.88, 14]
+          }, {
+            "box": [6, 12, 121, 116],
+            "head": [93.4, 14]
+          }, {
+            "box": [4, 7, 124, 116],
+            "head": [95.2, 9]
+          }, {
+            "box": [5, 12, 123, 116],
+            "head": [94.68, 27]
+          }, {
+            "box": [6, 10, 123, 116],
+            "head": [94.92, 12]
+          }, {
+            "box": [6, 4, 121, 116],
+            "head": [93.4, 17]
+          }, {
+            "box": [6, 12, 121, 116],
+            "head": [93.4, 14]
+          }, {
+            "box": [8, 12, 120, 116],
+            "head": [93.12, 14]
+          }, {
+            "box": [6, 5, 121, 116],
+            "head": [93.4, 7]
+          }, {
+            "box": [8, 12, 120, 116],
+            "head": [93.12, 14]
+          }, {
+            "box": [8, 14, 120, 116],
+            "head": [93.12, 16]
+          }, {
+            "box": [10, 4, 123, 116],
+            "head": [95.88, 20]
+          }, {
+            "box": [9, 10, 119, 116],
+            "head": [92.6, 12]
+          }, {
+            "box": [9, 12, 119, 116],
+            "head": [92.6, 14]
+          }, {
+            "box": [4, 10, 124, 116],
+            "head": [95.2, 12]
+          }, {
+            "box": [5, 10, 123, 116],
+            "head": [94.68, 12]
+          }, {
+            "box": [5, 10, 123, 116],
+            "head": [94.68, 12]
+          }, {
+            "box": [9, 3, 119, 116],
+            "head": [92.6, 4]
+          }, {
+            "box": [11, 10, 123, 116],
+            "head": [96.12, 12]
+          }, {
+            "box": [6, 12, 121, 116],
+            "head": [93.4, 14]
+          }, {
+            "box": [8, 12, 120, 116],
+            "head": [93.12, 14]
+          }, {
+            "box": [8, 12, 120, 116],
+            "head": [93.12, 14]
+          }, {
+            "box": [9, 19, 119, 116],
+            "head": [92.6, 21]
+          }, {
+            "box": [11, 12, 123, 116],
+            "head": [96.12, 14]
+          }],
+          "a02": [{
+            "box": [6, 9, 121, 116],
+            "head": [93.4, 11]
+          }, {
+            "box": [6, 9, 121, 116],
+            "head": [93.4, 11]
+          }, {
+            "box": [6, 4, 121, 116],
+            "head": [93.4, 6]
+          }, {
+            "box": [6, 12, 121, 116],
+            "head": [93.4, 14]
+          }, {
+            "box": [4, 9, 124, 116],
+            "head": [95.2, 11]
+          }, {
+            "box": [4, 22, 124, 116],
+            "head": [95.2, 24]
+          }, {
+            "box": [8, 12, 121, 116],
+            "head": [93.88, 14]
+          }, {
+            "box": [8, 12, 121, 116],
+            "head": [93.88, 14]
+          }, {
+            "box": [8, 9, 121, 116],
+            "head": [93.88, 11]
+          }, {
+            "box": [8, 9, 121, 116],
+            "head": [93.88, 11]
+          }, {
+            "box": [8, 12, 121, 116],
+            "head": [93.88, 14]
+          }, {
+            "box": [8, 12, 121, 116],
+            "head": [93.88, 14]
+          }, {
+            "box": [4, 1, 124, 116],
+            "head": [95.2, 4]
+          }, {
+            "box": [7, 9, 124, 116],
+            "head": [95.92, 11]
+          }, {
+            "box": [4, 9, 124, 116],
+            "head": [95.2, 11]
+          }, {
+            "box": [6, 9, 123, 116],
+            "head": [94.92, 11]
+          }, {
+            "box": [6, 14, 123, 116],
+            "head": [94.92, 17]
+          }, {
+            "box": [6, 4, 121, 116],
+            "head": [93.4, 6]
+          }, {
+            "box": [5, 12, 123, 116],
+            "head": [94.68, 14]
+          }, {
+            "box": [8, 12, 121, 116],
+            "head": [93.88, 14]
+          }, {
+            "box": [8, 1, 121, 116],
+            "head": [93.88, 4]
+          }, {
+            "box": [8, 12, 121, 116],
+            "head": [93.88, 14]
+          }, {
+            "box": [6, 9, 121, 116],
+            "head": [93.4, 11]
+          }, {
+            "box": [6, 9, 123, 116],
+            "head": [94.92, 11]
+          }, {
+            "box": [6, 34, 123, 116],
+            "head": [94.92, 37]
+          }, {
+            "box": [6, 34, 123, 116],
+            "head": [94.92, 37]
+          }, {
+            "box": [4, 9, 124, 116],
+            "head": [95.2, 11]
+          }, {
+            "box": [6, 9, 123, 116],
+            "head": [94.92, 11]
+          }, {
+            "box": [11, 16, 121, 116],
+            "head": [94.6, 49]
+          }, {
+            "box": [6, 27, 121, 116],
+            "head": [93.4, 29]
+          }, {
+            "box": [6, 31, 123, 116],
+            "head": [94.92, 34]
+          }, {
+            "box": [6, 31, 123, 116],
+            "head": [94.92, 34]
+          }, {
+            "box": [9, 6, 119, 116],
+            "head": [92.6, 37]
+          }, {
+            "box": [6, 12, 119, 116],
+            "head": [91.88, 14]
+          }, {
+            "box": [6, 21, 111, 114],
+            "head": [85.8, 24]
+          }, {
+            "box": [8, 17, 121, 116],
+            "head": [93.88, 19]
+          }, {
+            "box": [5, 19, 123, 116],
+            "head": [94.68, 39]
+          }, {
+            "box": [6, 14, 123, 116],
+            "head": [94.92, 16]
+          }, {
+            "box": [6, 32, 123, 116],
+            "head": [94.92, 34]
+          }, {
+            "box": [8, 32, 120, 116],
+            "head": [93.12, 44]
+          }, {
+            "box": [6, 19, 123, 116],
+            "head": [94.92, 45]
+          }, {
+            "box": [6, 11, 123, 116],
+            "head": [94.92, 14]
+          }, {
+            "box": [4, 21, 116, 108],
+            "head": [89.12, 24]
+          }, {
+            "box": [9, 14, 119, 116],
+            "head": [92.6, 16]
+          }, {
+            "box": [5, 22, 123, 116],
+            "head": [94.68, 42]
+          }, {
+            "box": [13, 11, 121, 116],
+            "head": [95.08, 14]
+          }, {
+            "box": [9, 9, 119, 116],
+            "head": [92.6, 11]
+          }, {
+            "box": [11, 9, 121, 116],
+            "head": [94.6, 11]
+          }, {
+            "box": [4, 9, 124, 116],
+            "head": [95.2, 16]
+          }, {
+            "box": [10, 9, 118, 116],
+            "head": [92.08, 11]
+          }, {
+            "box": [4, 29, 124, 116],
+            "head": [95.2, 32]
+          }, {
+            "box": [9, 13, 124, 116],
+            "head": [96.4, 16]
+          }, {
+            "box": [6, 14, 111, 116],
+            "head": [85.8, 16]
+          }, {
+            "box": [6, 15, 103, 117],
+            "head": [79.72, 18]
+          }, {
+            "box": [5, 12, 123, 116],
+            "head": [94.68, 14]
+          }, {
+            "box": [8, 17, 121, 116],
+            "head": [93.88, 19]
+          }, {
+            "box": [5, 19, 123, 116],
+            "head": [94.68, 21]
+          }, {
+            "box": [8, 12, 121, 116],
+            "head": [93.88, 14]
+          }, {
+            "box": [8, 4, 115, 116],
+            "head": [89.32000000000001, 32]
+          }, {
+            "box": [6, 12, 121, 116],
+            "head": [93.4, 14]
+          }, {
+            "box": [4, 34, 101, 116],
+            "head": [77.72, 54]
+          }, {
+            "box": [5, 11, 122, 116],
+            "head": [93.92, 13]
+          }, {
+            "box": [6, 6, 121, 116],
+            "head": [93.4, 19]
+          }, {
+            "box": [10, 14, 105, 116],
+            "head": [82.2, 16]
+          }, {
+            "box": [4, 9, 123, 116],
+            "head": [94.44, 11]
+          }, {
+            "box": [6, 0, 121, 107],
+            "head": [93.4, 2]
+          }, {
+            "box": [5, 12, 118, 116],
+            "head": [90.88, 14]
+          }, {
+            "box": [5, 22, 108, 116],
+            "head": [83.28, 37]
+          }, {
+            "box": [6, 12, 116, 116],
+            "head": [89.6, 14]
+          }, {
+            "box": [7, 17, 112, 116],
+            "head": [86.8, 19]
+          }, {
+            "box": [4, 18, 117, 120],
+            "head": [89.88, 21]
+          }, {
+            "box": [6, 3, 109, 120],
+            "head": [84.28, 5]
+          }]
+        },
+        "bubbleCenters": {
+          "speech": [0.4985, 0.425],
+          "thought": [0.4974, 0.3924]
+        },
+        "cleanup": {
+          "65": 0,
+          "66": 47,
+          "71": 63,
+          "72": 1
+        }
+      }
+
+    </script>
+    <script>
+      (function(global) {
+        'use strict';
+        const mod = (value, n) => ((value % n) + n) % n;
+        const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+        class ArcCarousel {
+          constructor(root, {
+            items,
+            selectedId = null
+          } = {}) {
+            if (!(root instanceof HTMLElement)) throw new TypeError('ArcCarousel: wymagany element HTML.');
+            this.root = root;
+            this.items = [];
+            this.position = 0;
+            this.target = 0;
+            this.drag = null;
+            this.raf = 0;
+            this.lastTime = 0;
+            this.changedId = null;
+            this.focusAfterSnap = false;
+            this.flashTimer = 0;
+            this.destroyed = false;
+            this.abort = new AbortController();
+            this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            root.classList.add('arc-menu');
+            root.setAttribute('role', 'group');
+            if (!root.hasAttribute('aria-label')) root.setAttribute('aria-label', 'Menu aktywności');
+            root.replaceChildren();
+            this.slots = [-1, 0, 1].map(offset => {
+              const button = document.createElement('button');
+              button.type = 'button';
+              button.className = 'arc-menu__button';
+              button.draggable = false;
+              const icon = document.createElement('span');
+              icon.className = 'arc-menu__icon';
+              icon.setAttribute('aria-hidden', 'true');
+              button.append(icon);
+              root.append(button);
+              return {
+                offset,
+                button,
+                icon,
+                currentId: null
+              };
+            });
+            const on = (name, fn, options = {}) => root.addEventListener(name, fn, {
+              ...options,
+              signal: this.abort.signal
+            });
+            on('pointerdown', e => this.pointerDown(e));
+            on('pointermove', e => this.pointerMove(e), {
+              passive: false
+            });
+            on('pointerup', e => this.pointerUp(e));
+            on('pointercancel', e => this.pointerCancel(e));
+            on('lostpointercapture', e => this.pointerCancel(e));
+            on('dragstart', e => e.preventDefault());
+            // Pointer gestures are handled above. Detail=0 preserves keyboard/assistive activation.
+            on('click', e => {
+              if (e.detail !== 0) return;
+              const b = e.target.closest('.arc-menu__button');
+              if (b && root.contains(b)) this.tap(Number(b.dataset.logicalIndex));
+            });
+            on('keydown', e => this.keyDown(e));
+            if ('ResizeObserver' in global) {
+              this.observer = new ResizeObserver(() => {
+                if (this.drag) {
+                  this.drag = null;
+                  root.classList.remove('is-dragging');
+                  this.target = Math.round(this.position)
+                }
+                this.measure();
+                this.render();
+                this.animate();
+              });
+              this.observer.observe(root);
+            } else global.addEventListener('resize', () => {
+              this.measure();
+              this.render();
+            }, {
+              signal: this.abort.signal
+            });
+            this.measure();
+            this.setItems(items, {
+              selectedId
+            });
+          }
+          validate(items) {
+            if (!Array.isArray(items) || items.length < 1) throw new TypeError(
+              'ArcCarousel: podaj co najmniej jedną ikonę.');
+            const seen = new Set();
+            return items.map(item => {
+              if (!item || item.id == null) throw new TypeError('Każda ikona potrzebuje id.');
+              const id = String(item.id);
+              if (!id || seen.has(id)) throw new TypeError('Id ikon muszą być niepuste i unikalne.');
+              seen.add(id);
+              return {
+                ...item,
+                id,
+                label: String(item.label || id),
+                svg: String(item.svg || '')
+              };
+            });
+          }
+          measure() {
+            this.width = Math.max(1, this.root.clientWidth);
+            this.height = Math.max(100, this.root.clientHeight);
+            this.size = 94;
+            this.spacing = this.width * .25;
+            this.centerX = this.width / 2;
+            this.centerY = this.height * .47;
+            this.arc = 12;
+          }
+          setItems(items, {
+            selectedId = null
+          } = {}) {
+            const parsed = this.validate(items);
+            this.cancelDrag();
+            this.items = parsed;
+            const found = parsed.findIndex(item => item.id === String(selectedId));
+            this.position = this.target = found >= 0 ? found : 0;
+            this.changedId = null;
+            this.slots.forEach(slot => {
+              slot.currentId = null;
+              slot.button.classList.remove('is-activated')
+            });
+            this.render();
+            this.emitChange();
+            return this;
+          }
+          getSelected() {
+            const index = mod(Math.round(this.position), this.items.length);
+            return {
+              ...this.items[index],
+              index
+            };
+          }
+          select(id, {
+            animate = true
+          } = {}) {
+            const index = this.items.findIndex(item => item.id === String(id));
+            if (index < 0) return false;
+            this.cancelDrag();
+            const n = this.items.length;
+            const nearest = Math.round(this.position);
+            let d = mod(index - mod(nearest, n), n);
+            if (d > n / 2) d -= n;
+            this.target = nearest + d;
+            if (!animate || this.reduced) {
+              this.position = this.target;
+              this.finishSnap();
+            } else this.animate();
+            return true;
+          }
+          next() {
+            if (this.items.length < 2) return;
+            this.cancelDrag();
+            this.target = Math.round(this.target) + 1;
+            this.animate();
+          }
+          previous() {
+            if (this.items.length < 2) return;
+            this.cancelDrag();
+            this.target = Math.round(this.target) - 1;
+            this.animate();
+          }
+          render() {
+            if (this.destroyed || !this.items.length) return;
+            const n = this.items.length,
+              center = Math.round(this.position),
+              fraction = this.position - center;
+            for (const slot of this.slots) {
+              const logical = center + slot.offset,
+                r = logical - this.position,
+                a = Math.abs(r),
+                item = this.items[mod(logical, n)];
+              const enabled = n === 1 ? slot.offset === 0 : n === 2 ? (slot.offset === 0 || slot.offset === (
+                fraction < 0 ? -1 : 1)) : true;
+              const scale = 1 - .20 * Math.min(a, 1),
+                fade = clamp((1.52 - a) / .45, 0, 1),
+                opacity = (1 - .20 * Math.min(a, 1)) * fade;
+              const x = this.centerX + r * this.spacing,
+                y = this.centerY + this.arc * Math.min(a, 1.5) ** 1.45;
+              if (slot.currentId !== item.id) {
+                slot.icon.innerHTML = item.svg;
+                slot.currentId = item.id;
+                slot.button.classList.remove('is-activated');
+              }
+              const b = slot.button;
+              b.dataset.id = item.id;
+              b.dataset.logicalIndex = String(logical);
+              b.style.width = this.size + 'px';
+              b.style.height = this.size + 'px';
+              b.style.left = x + 'px';
+              b.style.top = y + 'px';
+              b.style.transform = `translate(-50%,-50%) scale(${scale})`;
+              b.style.opacity = enabled ? String(opacity) : '0';
+              b.style.visibility = enabled && opacity > .015 ? 'visible' : 'hidden';
+              b.style.pointerEvents = enabled && opacity > .1 ? 'auto' : 'none';
+              b.style.zIndex = String(Math.round(20 - a * 5));
+              b.style.setProperty('--item-color', item.color || '#e9dfbd');
+              b.tabIndex = enabled && slot.offset === 0 ? 0 : -1;
+              b.setAttribute('aria-current', String(slot.offset === 0));
+              b.setAttribute('aria-label', (slot.offset === 0 ? 'Uruchom: ' : 'Wybierz: ') + item.label);
+            }
+          }
+          pointerDown(e) {
+            if (e.button !== 0 || this.drag || this.destroyed) return;
+            const b = e.target.closest('.arc-menu__button');
+            cancelAnimationFrame(this.raf);
+            this.raf = 0;
+            this.focusAfterSnap = false;
+            this.drag = {
+              id: e.pointerId,
+              startX: e.clientX,
+              startY: e.clientY,
+              start: this.position,
+              logical: b ? Number(b.dataset.logicalIndex) : null,
+              moved: false,
+              lastX: e.clientX,
+              lastTime: performance.now(),
+              velocity: 0
+            };
+            try {
+              this.root.setPointerCapture(e.pointerId)
+            } catch (_) {}
+          }
+          pointerMove(e) {
+            const d = this.drag;
+            if (!d || d.id !== e.pointerId) return;
+            const rect = this.root.getBoundingClientRect(),
+              x = clamp(e.clientX, rect.left, rect.right),
+              dx = x - d.startX,
+              dy = e.clientY - d.startY;
+            if (d.vertical) return;
+            if (!d.moved) {
+              if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
+                d.vertical = true;
+                return;
+              }
+              if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
+              d.moved = true;
+              this.root.classList.add('is-dragging');
+            }
+            e.preventDefault();
+            if (this.items.length < 2) return;
+            const now = performance.now(),
+              dt = now - d.lastTime;
+            if (dt > 0) {
+              d.velocity = (x - d.lastX) / dt;
+              d.lastX = x;
+              d.lastTime = now;
+            }
+            // Bounded gesture: moving outside the menu cannot carry the component across the page.
+            this.position = d.start + clamp(-dx / this.spacing, -2.2, 2.2);
+            this.target = this.position;
+            this.render();
+          }
+          pointerUp(e) {
+            const d = this.drag;
+            if (!d || d.id !== e.pointerId) return;
+            this.drag = null;
+            this.root.classList.remove('is-dragging');
+            try {
+              if (this.root.hasPointerCapture(e.pointerId)) this.root.releasePointerCapture(e.pointerId)
+            } catch (_) {}
+            if (d.vertical || (!d.moved && Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 10)) {
+              this.target = Math.round(this.position);
+              this.animate();
+              return;
+            }
+            if (d.moved) {
+              const v = performance.now() - d.lastTime < 90 ? d.velocity : 0;
+              this.target = Math.round(this.position + clamp(-v * 65 / this.spacing, -.55, .55));
+              this.animate();
+            } else if (d.logical !== null) this.tap(d.logical);
+            else {
+              this.target = Math.round(this.position);
+              this.animate();
+            }
+          }
+          pointerCancel(e) {
+            if (!this.drag || this.drag.id !== e.pointerId) return;
+            this.drag = null;
+            this.root.classList.remove('is-dragging');
+            this.target = Math.round(this.position);
+            this.animate();
+          }
+          cancelDrag() {
+            if (!this.drag) return;
+            const id = this.drag.id;
+            this.drag = null;
+            this.root.classList.remove('is-dragging');
+            try {
+              if (this.root.hasPointerCapture(id)) this.root.releasePointerCapture(id)
+            } catch (_) {}
+          }
+          tap(logical) {
+            if (this.destroyed) return;
+            const selected = Math.round(this.position),
+              settled = Math.abs(this.position - selected) < .035 && Math.abs(this.position - this.target) < .035;
+            if (logical === selected && settled) {
+              this.position = this.target = selected;
+              this.render();
+              this.activate();
+            } else {
+              this.target = logical;
+              this.animate();
+            }
+          }
+          activate() {
+            const detail = this.getSelected();
+            clearTimeout(this.flashTimer);
+            this.slots.forEach(s => s.button.classList.remove('is-activated'));
+            this.slots[1].button.classList.add('is-activated');
+            this.flashTimer = setTimeout(() => this.slots.forEach(s => s.button.classList.remove('is-activated')),
+              230);
+            this.root.dispatchEvent(new CustomEvent('arc:activate', {
+              detail,
+              bubbles: true,
+              composed: true
+            }));
+          }
+          emitChange() {
+            const detail = this.getSelected();
+            if (detail.id === this.changedId) return;
+            this.changedId = detail.id;
+            this.root.dispatchEvent(new CustomEvent('arc:change', {
+              detail,
+              bubbles: true,
+              composed: true
+            }));
+          }
+          finishSnap() {
+            this.position = this.target = mod(Math.round(this.target), this.items.length);
+            this.render();
+            this.emitChange();
+            if (this.focusAfterSnap) {
+              this.focusAfterSnap = false;
+              this.slots[1].button.focus({
+                preventScroll: true
+              });
+            }
+          }
+          animate() {
+            if (this.destroyed || this.drag) return;
+            if (this.reduced) {
+              this.finishSnap();
+              return;
+            }
+            if (this.raf) return;
+            this.lastTime = performance.now();
+            const frame = now => {
+              this.raf = 0;
+              if (this.destroyed || this.drag) return;
+              const dt = Math.min(.05, (now - this.lastTime) / 1000);
+              this.lastTime = now;
+              this.position += (this.target - this.position) * (1 - Math.exp(-19 * dt));
+              this.render();
+              if (Math.abs(this.target - this.position) < .002) this.finishSnap();
+              else this.raf = requestAnimationFrame(frame);
+            };
+            this.raf = requestAnimationFrame(frame);
+          }
+          keyDown(e) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+              e.preventDefault();
+              this.focusAfterSnap = true;
+              if (e.key === 'ArrowRight') this.next();
+              else this.previous();
+            } else if (e.key === 'Home' || e.key === 'End') {
+              e.preventDefault();
+              this.focusAfterSnap = true;
+              this.select(this.items[e.key === 'Home' ? 0 : this.items.length - 1].id);
+            }
+          }
+          destroy() {
+            this.cancelDrag();
+            this.destroyed = true;
+            cancelAnimationFrame(this.raf);
+            clearTimeout(this.flashTimer);
+            this.abort.abort();
+            this.observer?.disconnect();
+            this.root.replaceChildren();
+            this.root.classList.remove('arc-menu', 'is-dragging');
+          }
+        }
+        global.ArcCarousel = ArcCarousel;
+      })(window);
+
+    </script>
+    <script>
+      'use strict';
+      const $ = s => document.querySelector(s),
+        P = JSON.parse($('#payload').textContent),
+        CFG = P.config,
+        UI = CFG.ui,
+        images = {},
+        cells = {
+          a01: [],
+          a02: [],
+          ui: []
+        },
+        pixels = {
+          a01: [],
+          a02: []
+        },
+        icons = {},
+        W = 384,
+        H = 768,
+        SH = 550,
+        GROUND = 425,
+        BASE = 2.35,
+        KEY = 'latkaGame0288',
+        order = ['attic', 'garden', 'yard', 'living', 'kitchen', 'bathroom'];
+      const items = [{
+        id: 'food',
+        icon: 'food',
+        label: 'Nakarm',
+        room: 'kitchen',
+        color: '#ffd3dd'
+      }, {
+        id: 'water',
+        icon: 'water',
+        label: 'Napój',
+        room: 'kitchen',
+        color: '#cdeafc'
+      }, {
+        id: 'fun',
+        icon: 'fun',
+        label: 'Zabawa',
+        room: 'garden',
+        color: '#d8f0d0'
+      }, {
+        id: 'den',
+        icon: 'den',
+        label: 'Buda i kość',
+        room: 'yard',
+        color: '#ead1ae'
+      }, {
+        id: 'sleep',
+        icon: 'sleep',
+        label: 'Sen',
+        room: 'living',
+        color: '#ddd2ff'
+      }, {
+        id: 'clean',
+        icon: 'clean',
+        label: 'Mycie',
+        room: 'bathroom',
+        color: '#ffe9bd'
+      }, {
+        id: 'brush',
+        icon: 'brush',
+        label: 'Szczotkowanie',
+        room: 'living',
+        color: '#ffdfb5'
+      }];
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v)),
+        reduced = matchMedia('(prefers-reduced-motion:reduce)').matches,
+        canvas = $('#sceneCanvas'),
+        ctx = canvas.getContext('2d'),
+        rewardCtx = $('.card canvas').getContext('2d');
+      let loaded = false,
+        room = 'living',
+        x = .5,
+        left = false,
+        sleeping = false,
+        poop = null,
+        stats = {
+          food: 50,
+          water: 50,
+          fun: 50,
+          sleep: 50,
+          clean: 50
+        },
+        selected = 'sleep',
+        phase = 'idle',
+        sheet = 'a01',
+        anim = 16,
+        frames = [63],
+        ms = 380,
+        frameIndex = 0,
+        animStart = 0,
+        clock = 0,
+        last = 0,
+        queue = [],
+        segment = null,
+        idleUntil = 6500,
+        nextTrip = 32000,
+        nextPoop = 45000,
+        nextBubble = 9000,
+        nextButterfly = 28000,
+        stage = '',
+        travelMode = '',
+        jumpY = 0,
+        pending = null,
+        menu = null,
+        gesture = null,
+        petFinishAt = Infinity,
+        petLast = 0,
+        butterfly = null,
+        bubble = null,
+        bubblePos = null,
+        scale = 1,
+        actions = 0,
+        trips = 0,
+        lastVariant = '',
+        forcedVariant = null,
+        orientationPaused = false,
+        boneVisible = false,
+        toastTimer = null,
+        debugRoute = [],
+        roomOffset = 0,
+        blockedActivity = null;
+      try {
+        const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+        if (s) {
+          room = order.includes(s.room) ? s.room : 'living';
+          sleeping = !!s.sleeping;
+          left = !!s.left;
+          poop = s.poop && order.includes(s.poop.room) ? s.poop : (order.includes(s.poopRoom) ? {
+            room: s.poopRoom,
+            x: .3
+          } : null);
+          if (sleeping) room = 'living';
+          if (poop?.room === room) sleeping = false;
+        }
+      } catch (e) {}
+      const getPreset = (s, i) => CFG[s].presets[i],
+        numbers = s => String(s || '').split(',').map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 72),
+        duration = (s, i) => numbers(getPreset(s, i).seq).length * getPreset(s, i).ms;
+
+      function currentFrame() {
+        return frames[frameIndex % frames.length] || 63;
+      }
+
+      function dirty(r = room) {
+        return poop?.room === r;
+      }
+
+      function save() {
+        if (!loaded) return;
+        try {
+          localStorage.setItem(KEY, JSON.stringify({
+            room,
+            sleeping,
+            left,
+            poop,
+            testMode: true
+          }));
+        } catch (e) {}
+      }
+
+      function toast(s) {
+        $('.toast').textContent = s;
+        $('.toast').hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => $('.toast').hidden = true, 4000);
+      }
+
+      function resize() {
+        const v = window.visualViewport,
+          vw = v?.width || innerWidth,
+          vh = v?.height || innerHeight;
+        scale = Math.max(.03, Math.min(vw / W, vh / H));
+        const g = $('#game');
+        g.style.transform = `scale(${scale})`;
+        g.style.left = ((v?.offsetLeft || 0) + (vw - W * scale) / 2) + 'px';
+        g.style.top = ((v?.offsetTop || 0) + (vh - H * scale) / 2) + 'px';
+        orientationPaused = matchMedia('(orientation:landscape) and (pointer:coarse)').matches;
+        if (orientationPaused && gesture) {
+          if (gesture.kind === 'pet') stopPetting();
+          if (phase === 'swipe-preview') {
+            phase = 'idle';
+            setOffset(0);
+            locks();
+          }
+          gesture = null;
+        }
+        last = 0;
+        menu?.measure();
+        menu?.render();
+      }
+      window.addEventListener('resize', resize);
+      window.addEventListener('orientationchange', resize);
+      window.visualViewport?.addEventListener('resize', resize);
+      window.visualViewport?.addEventListener('scroll', resize);
+      resize();
+
+      function setAnim(s, i, tempo) {
+        sheet = s;
+        anim = i;
+        frames = numbers(getPreset(s, i).seq);
+        ms = tempo || getPreset(s, i).ms;
+        frameIndex = 0;
+        animStart = clock;
+      }
+
+      function setFrames(s, a, time) {
+        sheet = s;
+        anim = -1;
+        frames = a;
+        ms = time;
+        frameIndex = 0;
+        animStart = clock;
+      }
+
+      function setOffset(v) {
+        roomOffset = v;
+        $('.roomTrack').style.transform = `translateX(${v}px)`;
+      }
+
+      function roomSVG(r) {
+        const src = (P.assets.rooms && P.assets.rooms[r]) || "tla/001.png";
+        return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+      }
+
+      function buildRooms() {
+        const root = $('.roomTrack');
+        root.innerHTML = '';
+        const n = order.indexOf(room);
+        for (let i = Math.max(0, n - 1); i <= Math.min(order.length - 1, n + 1); i++) {
+          const p = document.createElement('div');
+          p.className = 'roomPanel';
+          p.dataset.room = order[i];
+          p.style.left = (i - n) * 100 + '%';
+          p.innerHTML = roomSVG(order[i]);
+          root.append(p);
+        }
+      }
+
+      function setRoom(r) {
+        room = r;
+        buildRooms();
+        setOffset(0);
+        const key = {
+          yard: 'den',
+          garden: 'garden',
+          living: 'living',
+          kitchen: 'kitchen',
+          bathroom: 'bathroom',
+          attic: 'home'
+        } [r];
+        $('.roomBadge img').src = icons[key];
+        $('.roomBadge img').alt = {
+          yard: 'Podwórko z budą',
+          garden: 'Ogród',
+          living: 'Salon',
+          kitchen: 'Kuchnia',
+          bathroom: 'Łazienka',
+          attic: 'Poddasze'
+        } [r];
+        syncMenu();
+        updateArrows();
+        updatePoopAccess();
+        debugRoute.push(r);
+        save();
+      }
+
+      function heart() {
+        return Object.values(stats).reduce((a, b) => a + b, 0) / 5;
+      }
+
+      function statusBuild() {
+        for (const key of ['food', 'water', 'fun', 'sleep', 'clean', 'heart']) {
+          const el = document.createElement('div');
+          el.className = 'stat';
+          el.dataset.status = key;
+          el.style.setProperty('--c', key === 'heart' ? '#e88ca6' : items.find(i => i.id === key)?.color || '#c7b0da');
+          const im = new Image();
+          im.src = icons[key];
+          im.alt = {
+            food: 'Głód',
+            water: 'Woda',
+            fun: 'Zabawa',
+            sleep: 'Sen',
+            clean: 'Czystość',
+            heart: 'Samopoczucie'
+          } [key];
+          im.width = im.height = 36;
+          const bar = document.createElement('div');
+          bar.className = 'bar';
+          bar.innerHTML = '<i></i>';
+          el.append(im, bar, document.createElement('small'));
+          $('.status').append(el);
+        }
+        statusUpdate();
+      }
+
+      function statusUpdate() {
+        document.querySelectorAll('.stat').forEach(el => {
+          const v = el.dataset.status === 'heart' ? heart() : stats[el.dataset.status];
+          el.querySelector('i').style.width = v + '%';
+          el.querySelector('small').textContent = Math.round(v) + '%';
+          el.setAttribute('aria-label', el.querySelector('img').alt + ': ' + Math.round(v) + '%');
+        });
+      }
+
+      function syncMenu() {
+        const allowed = items.filter(i => i.room === room);
+
+        // Pokój bez przypisanych czynności nie zmienia wyboru menu.
+        if (allowed.length === 0) return;
+
+        const min = Math.min(
+          ...allowed.map(i => stats[i.id] ?? 50)
+        );
+
+        const tied = allowed.filter(
+          i => (stats[i.id] ?? 50) === min
+        );
+
+        selected = tied.some(i => i.id === selected) ?
+          selected :
+          tied[0].id;
+
+        menu?.select(selected, {
+          animate: loaded
+        });
+      }
+
+      function casual() {
+        return loaded && ['idle', 'roam', 'pause', 'look', 'butterfly'].includes(phase);
+      }
+
+      function canPet() {
+        return casual() || phase === 'petting';
+      }
+
+      function locks() {
+        document.body.classList.toggle('locked', !casual());
+        document.querySelectorAll('.arrow').forEach(b => b.disabled = !casual());
+        $('.petAccess').disabled = !canPet();
+        updateArrows();
+      }
+
+      function updateArrows() {
+        const n = order.indexOf(room);
+        $('.arrow.prev').hidden = n === 0;
+        $('.arrow.next').hidden = n === order.length - 1;
+      }
+
+      function updatePoopAccess() {
+        $('.poopAccess').hidden = !dirty();
+      }
+
+      function interrupt() {
+        if (!casual()) return;
+        queue = [];
+        segment = null;
+        if (phase === 'butterfly') {
+          butterfly = null;
+          nextButterfly = clock + 45000;
+        }
+        phase = 'idle';
+        jumpY = 0;
+        setAnim('a01', 16);
+        locks();
+      }
+
+      function wake() {
+        if (!sleeping) return;
+        sleeping = false;
+        setAnim('a01', 16);
+        idleUntil = clock + 4000;
+        save();
+      }
+
+      function say(icon, time = 2600, type = UI.bubbleType) {
+        bubble = {
+          icon,
+          until: clock + time,
+          type
+        };
+      }
+
+      function idle(which = null) {
+        phase = 'idle';
+        stage = '';
+        queue = [];
+        segment = null;
+        pending = null;
+        jumpY = 0;
+        boneVisible = false;
+        butterfly = null;
+        setOffset(0);
+        setAnim('a01', which ?? (Math.random() < .35 ? 18 : 16));
+        idleUntil = clock + Math.max(frames.length * ms, 1800) + Math.random() * 2000;
+        locks();
+        save();
+      }
+
+      function startQueue(parts) {
+        queue = parts;
+        nextSegment();
+      }
+
+      function nextSegment() {
+        segment = queue.shift();
+        if (!segment) {
+          idle();
+          return;
+        }
+        segment.started = clock;
+        segment.onStart?.();
+        if (segment.sheet && segment.anim !== undefined) setAnim(segment.sheet, segment.anim, segment.tempo);
+        if (segment.frames) setFrames(segment.sheet || 'a01', segment.frames, segment.tempo || 200);
+        if (segment.from !== undefined) x = segment.from;
+        segment.origin = x;
+        if (segment.facing !== undefined) left = segment.facing;
+        else if (segment.to !== undefined && Math.abs(segment.to - x) > .001) left = segment.to < x;
+        segment.distance = segment.to === undefined ? 0 : Math.abs(segment.to - x) * W;
+      }
+
+      function blockRoomActivity(id) {
+        if (!dirty()) return false;
+        idle(16);
+        blockedActivity = id;
+        say('poop', 4500);
+        toast('Najpierw posprzątaj kupkę w tym pomieszczeniu.');
+        return true;
+      }
+
+      function rewardParts() {
+        return [{
+          sheet: 'a01',
+          anim: 16,
+          time: 1000,
+          onStart: () => {
+            $('.popup').hidden = false;
+            $('.reward').src = icons.heart;
+          },
+          onEnd: () => $('.popup').hidden = true
+        }];
+      }
+
+      function repeatPart(s, i, times = 1) {
+        return {
+          sheet: s,
+          anim: i,
+          time: duration(s, i) * times
+        };
+      }
+
+      function activity(id) {
+        if (blockRoomActivity(id)) return;
+        pending = id;
+        if (id === 'sleep') {
+          sleeping = true;
+          phase = 'idle';
+          queue = [];
+          segment = null;
+          setAnim('a02', 6);
+          say('sleep', 2600);
+          locks();
+          save();
+          return;
+        }
+        phase = 'activity';
+        locks();
+        let parts = [];
+        if (id === 'food') parts = [repeatPart('a01', 5)];
+        else if (id === 'water') parts = [repeatPart('a01', 2)];
+        else if (id === 'clean') parts = [repeatPart('a01', 14), {
+          ...repeatPart('a01', 13),
+          onStart: () => {
+            $('.popup').hidden = false;
+            $('.reward').src = icons.clean;
+          }
+        }];
+        else if (id === 'brush') {
+          const p = getPreset('a02', 21);
+          if (numbers(p.intro).length) parts.push({
+            sheet: 'a02',
+            frames: numbers(p.intro),
+            tempo: p.ms,
+            time: numbers(p.intro).length * p.ms
+          });
+          parts.push(repeatPart('a02', 21));
+          if (numbers(p.outro).length) parts.push({
+            sheet: 'a02',
+            frames: numbers(p.outro),
+            tempo: p.ms,
+            time: numbers(p.outro).length * p.ms
+          });
+        } else if (id === 'den') parts = [{
+          sheet: 'a01',
+          anim: 18,
+          time: 3600,
+          onStart: () => boneVisible = true,
+          onEnd: () => boneVisible = false
+        }];
+        else parts = [repeatPart('a02', 8 + Math.floor(Math.random() * 6), 2)];
+        parts.push(...rewardParts());
+        startQueue(parts);
+      }
+
+      function chooseVariant() {
+        let v = forcedVariant;
+        if (v) {
+          forcedVariant = null;
+          lastVariant = v;
+          return v;
+        }
+        const r = Math.random();
+        v = r < .5 ? 'roll' : r < .85 ? 'run' : 'happy';
+        if (v === lastVariant) v = v === 'roll' ? 'run' : 'roll';
+        lastVariant = v;
+        return v;
+      }
+
+      function finishTravel(id) {
+        nextTrip = clock + 40000 + Math.random() * 35000;
+        if (id) activity(id);
+        else {
+          idle(16);
+          if (dirty()) say('poop', 3500);
+        }
+      }
+      // Arrow timing is calmer; ordinary animations retain the user's configured timing.
+      function arrowTravel(r, dir) {
+        interrupt();
+        wake();
+        phase = 'travel';
+        travelMode = 'arrow';
+        left = dir < 0;
+        bubble = null;
+        locks();
+        const facing = dir < 0,
+          edge = dir > 0 ? .82 : .18,
+          exit = dir > 0 ? 1.06 : -.06,
+          entry = dir > 0 ? -.06 : 1.06,
+          land = dir > 0 ? .18 : .82,
+          variant = chooseVariant();
+        let changed = false;
+        const parts = [{
+          sheet: 'a01',
+          anim: 1,
+          tempo: 180,
+          facing,
+          to: edge,
+          motion: 'run',
+          time: Math.max(320, Math.abs(edge - x) * W / 210 * 1000),
+          onStart: () => stage = 'run'
+        }, {
+          sheet: 'a01',
+          frames: [1, 2, 7, 8],
+          tempo: 155,
+          facing,
+          time: reduced ? 200 : 620,
+          onStart: () => stage = 'jump',
+          update: p => {
+            if (p >= .5 && !changed) {
+              setRoom(r);
+              changed = true;
+            }
+            x = p < .5 ? edge + (exit - edge) * p * 2 : entry + (land - entry) * (p - .5) * 2;
+            jumpY = reduced ? 0 : -Math.sin(Math.PI * p) * 35;
+          },
+          onEnd: () => {
+            if (!changed) setRoom(r);
+            x = land;
+            jumpY = 0;
+          }
+        }, {
+          sheet: 'a01',
+          anim: variant === 'roll' ? 9 : 1,
+          tempo: variant === 'roll' ? 225 : 180,
+          facing,
+          from: land,
+          to: .5,
+          motion: variant === 'roll' ? null : 'run',
+          time: variant === 'roll' ? 900 : Math.abs(.5 - land) * W / 210 * 1000,
+          onStart: () => stage = 'arrival'
+        }];
+        if (variant === 'happy') parts.push({
+          sheet: 'a01',
+          anim: 17,
+          tempo: 200,
+          facing,
+          time: 800
+        });
+        parts.push({
+          sheet: 'a01',
+          anim: 16,
+          facing,
+          time: 220,
+          onEnd: () => finishTravel(null)
+        });
+        startQueue(parts);
+      }
+
+      function stepRoom(d) {
+        if (!casual()) return;
+        const n = order.indexOf(room) + d;
+        if (n < 0 || n >= order.length) return;
+        arrowTravel(order[n], d);
+      }
+
+      function route(target, id = null, mode = 'menu') {
+        if (!casual() || !order.includes(target)) return;
+        interrupt();
+        wake();
+        phase = 'travel';
+        travelMode = mode;
+        pending = id;
+        bubble = null;
+        locks();
+        const from = order.indexOf(room),
+          to = order.indexOf(target),
+          distance = Math.abs(to - from),
+          dir = to >= from ? 1 : -1,
+          facing = dir < 0,
+          run = mode === 'menu' || distance > 1,
+          speed = run ? 210 : 65,
+          parts = [];
+        left = facing;
+
+        function movement(a, b, onEnd) {
+          return {
+            sheet: 'a01',
+            anim: run ? 1 : 6,
+            tempo: 180,
+            motion: run ? 'run' : 'walk',
+            facing,
+            from: a,
+            to: b,
+            time: Math.max(160, Math.abs(b - a) * W / speed * 1000),
+            onStart: () => stage = run ? 'route-run' : 'route-walk',
+            onEnd
+          };
+        }
+        if (!distance) {
+          if (Math.abs(x - .5) * W > 2) parts.push(movement(x, .5));
+        } else {
+          let origin = x;
+          for (let i = from; i !== to; i += dir) {
+            const r = order[i + dir];
+            parts.push(movement(origin, dir > 0 ? 1.08 : -.08, () => {
+              setRoom(r);
+              x = dir > 0 ? -.08 : 1.08;
+            }));
+            origin = dir > 0 ? -.08 : 1.08;
+          }
+          if (mode === 'auto' && target === 'garden' && run && Math.random() < .3) parts.push({
+            sheet: 'a01',
+            anim: 9,
+            tempo: 225,
+            facing,
+            from: origin,
+            to: .5,
+            time: 900,
+            onStart: () => stage = 'route-roll'
+          });
+          else parts.push(movement(origin, .5));
+        }
+        parts.push({
+          sheet: 'a01',
+          anim: 16,
+          facing,
+          time: 220,
+          onEnd: () => finishTravel(id)
+        });
+        startQueue(parts);
+      }
+
+      function action(id) {
+        if (!casual()) return;
+        const i = items.find(i => i.id === id);
+        if (!i) return;
+        if (i.room === room && dirty()) {
+          interrupt();
+          blockRoomActivity(id);
+          return;
+        }
+        if (id === 'sleep' && sleeping) return;
+        actions++;
+        route(i.room, id, 'menu');
+      }
+
+      function react() {
+        if (!casual()) return;
+        interrupt();
+        wake();
+        phase = 'reaction';
+        locks();
+        say('heart');
+        startQueue([repeatPart('a01', [10, 12, 7, 15][Math.floor(Math.random() * 4)])]);
+      }
+
+      function startPetting() {
+        if (!canPet()) return;
+        if (phase !== 'petting') {
+          interrupt();
+          wake();
+          phase = 'petting';
+          queue = [];
+          segment = null;
+          setFrames('a01', [39, 40, 39, 40, 45], 280);
+          anim = 10;
+          locks();
+          say('heart', 5000);
+        }
+        petLast = clock;
+        petFinishAt = Infinity;
+      }
+
+      function stopPetting() {
+        if (phase !== 'petting') return;
+        const cycle = frames.length * ms;
+        petFinishAt = clock + (cycle - (clock - animStart) % cycle);
+      }
+
+      function endPetting() {
+        phase = 'reaction';
+        startQueue([{
+          sheet: 'a01',
+          frames: [46],
+          tempo: 250,
+          time: 250
+        }]);
+      }
+
+      function geometry() {
+        const f = currentFrame(),
+          o = {
+            x: 0,
+            y: 0,
+            scale: 100,
+            ...CFG[sheet].offsets[String(f)]
+          };
+        return {
+          f,
+          o,
+          s: BASE * o.scale / 100 * (sheet === 'a01' && anim === 1 ? 1.04 : 1) * (sheet === 'a01' && anim === 10 ?
+            1.05 : 1) * 0.70,
+          w: cells[sheet][f - 1].width,
+          h: cells[sheet][f - 1].height,
+          g: CFG[sheet].ground
+        };
+      }
+
+      function drawDog(c, cx = x * W, gy = GROUND + jumpY, facing = left, ratio = 1) {
+        const g = geometry();
+        c.save();
+        c.translate(cx, gy);
+        if (facing) c.scale(-1, 1);
+        c.translate(g.o.x * BASE * ratio, g.o.y * BASE * ratio);
+        c.scale(g.s * ratio, g.s * ratio);
+        c.imageSmoothingEnabled = false;
+        c.drawImage(cells[sheet][g.f - 1], -g.w / 2, -g.g);
+        c.restore();
+      }
+
+      function headPosition() {
+        const g = geometry(),
+          h = P.meta[sheet][g.f - 1].head;
+        return {
+          x: x * W + (left ? -1 : 1) * ((h[0] - g.w / 2) * g.s + g.o.x * BASE),
+          y: GROUND + jumpY + (h[1] - g.g) * g.s + g.o.y * BASE
+        };
+      }
+
+      function petHit(px, py) {
+        if (!loaded) return false;
+        const g = geometry();
+        let xx = px - x * W;
+        if (left) xx = -xx;
+        const sx = (xx - g.o.x * BASE) / g.s + g.w / 2,
+          sy = (py - GROUND - jumpY - g.o.y * BASE) / g.s + g.g,
+          b = P.meta[sheet][g.f - 1].box,
+          bw = b[2] - b[0],
+          bh = b[3] - b[1];
+        if (sx < b[0] + bw * .23 || sx >= b[2] || sy < b[1] + bh * .1 || sy > b[1] + bh * .86) return false;
+        const ix = Math.floor(sx),
+          iy = Math.floor(sy);
+        if (ix < 0 || iy < 0 || ix >= g.w || iy >= g.h) return false;
+        return pixels[sheet][g.f - 1][(iy * g.w + ix) * 4 + 3] > 120;
+      }
+
+      function poopRect() {
+        const w = 40,
+          h = w * images.poop.height / images.poop.width;
+        let offset = 0;
+        if (poop) {
+          const diff = order.indexOf(poop.room) - order.indexOf(room);
+          offset = diff * W + roomOffset;
+        }
+        return {
+          x: clamp((poop?.x || .3) * W, 22, W - 22) - w / 2 + offset,
+          y: GROUND + 24 - h,
+          w,
+          h
+        };
+      }
+
+      function poopHit(px, py) {
+        if (!dirty()) return false;
+        const r = poopRect();
+        return px > r.x - 6 && px < r.x + r.w + 6 && py > r.y - 6 && py < r.y + r.h + 6;
+      }
+
+      function cleanPoop() {
+        if (!casual() || !dirty()) return;
+        interrupt();
+        wake();
+        poop = null;
+        blockedActivity = null;
+        updatePoopAccess();
+        say('star');
+        save();
+        toast('Posprzątane — można znów wybrać czynność.');
+      }
+
+      function spawnPoop() {
+        if (!casual() || sleeping || poop) return false;
+        interrupt();
+        phase = 'toilet';
+        locks();
+        const facing = left;
+        startQueue([{
+          sheet: 'a01',
+          frames: [41, 42, 47],
+          tempo: 420,
+          time: 1260,
+          onStart: () => say('poop', 2600),
+          onEnd: () => {
+            poop = {
+              room,
+              x: clamp(x + (left ? 1 : -1) * .2, .08, .92)
+            };
+            updatePoopAccess();
+            say('poop', 4500);
+            save();
+          }
+        }, {
+          sheet: 'a01',
+          frames: [48],
+          tempo: 350,
+          time: 350
+        }]);
+        nextPoop = clock + 60000;
+        return true;
+      }
+      $('.poopAccess').onclick = cleanPoop;
+      $('.petAccess').onclick = react;
+      $('.arrow.prev').onclick = () => stepRoom(-1);
+      $('.arrow.next').onclick = () => stepRoom(1);
+
+      function pointerXY(e) {
+        const r = canvas.getBoundingClientRect();
+        return {
+          x: (e.clientX - r.left) / r.width * W,
+          y: (e.clientY - r.top) / r.height * SH
+        };
+      }
+
+      function previewSwipe(dx) {
+        const dir = dx < 0 ? 1 : -1,
+          n = order.indexOf(room) + dir,
+          valid = n >= 0 && n < order.length;
+        setOffset(valid ? clamp(dx / scale, -W * .94, W * .94) : clamp(dx / scale * .15, -36, 36));
+      }
+
+      function settleSwipe(dir, commit) {
+        const n = order.indexOf(room) + dir,
+          valid = commit && n >= 0 && n < order.length,
+          origin = roomOffset,
+          end = valid ? -dir * W : 0,
+          target = valid ? order[n] : room;
+        phase = 'travel';
+        travelMode = 'swipe';
+        stage = valid ? 'swipe-slide' : 'swipe-cancel';
+        locks();
+        const time = reduced ? 180 : clamp(Math.abs(end - origin) / W * 1000 + 180, 260, 1150);
+        if (valid) {
+          wake();
+          left = dir < 0;
+          bubble = null;
+        }
+        startQueue([{
+          sheet: 'a01',
+          anim: valid ? 1 : 16,
+          tempo: 180,
+          facing: valid ? dir < 0 : left,
+          time,
+          onStart: () => stage = valid ? 'swipe-slide' : 'swipe-cancel',
+          update: p => {
+            const eased = 1 - Math.pow(1 - p, 3);
+            setOffset(origin + (end - origin) * eased);
+          },
+          onEnd: () => {
+            if (valid) setRoom(target);
+            else setOffset(0);
+          }
+        }, {
+          sheet: 'a01',
+          anim: 16,
+          time: 200,
+          onEnd: () => finishTravel(null)
+        }]);
+      }
+      canvas.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return;
+        if (gesture) {
+          if (gesture.kind === 'pet') stopPetting();
+          if (phase === 'swipe-preview') settleSwipe(1, false);
+          gesture = null;
+          return;
+        }
+        const p = pointerXY(e);
+        gesture = {
+          id: e.pointerId,
+          sx: e.clientX,
+          sy: e.clientY,
+          kind: null,
+          dog: petHit(p.x, p.y),
+          poop: poopHit(p.x, p.y)
+        };
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      });
+      canvas.addEventListener('pointermove', e => {
+        const g = gesture;
+        if (!g || g.id !== e.pointerId) return;
+        const dx = e.clientX - g.sx,
+          dy = e.clientY - g.sy;
+        if (!g.kind) {
+          if (Math.abs(dy) > 18 && Math.abs(dy) > Math.abs(dx) * 1.2) {
+            g.kind = g.dog && !g.poop && canPet() ? 'pet' : 'vertical';
+            if (g.kind === 'pet') startPetting();
+          } else if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.2 && casual()) {
+            g.kind = 'swipe';
+            interrupt();
+            wake();
+            phase = 'swipe-preview';
+            locks();
+          }
+        }
+        if (g.kind === 'swipe') previewSwipe(dx);
+        if (g.kind === 'pet') {
+          e.preventDefault();
+          petLast = clock;
+          petFinishAt = Infinity;
+          if (!bubble || bubble.until < clock + 1000) say('heart', 2500);
+        }
+      });
+
+      function pointerEnd(e, cancel = false) {
+        const g = gesture;
+        if (!g || g.id !== e.pointerId) return;
+        gesture = null;
+        try {
+          if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+        } catch (_) {}
+        if (g.kind === 'pet') {
+          stopPetting();
+          return;
+        }
+        const dx = e.clientX - g.sx,
+          dy = e.clientY - g.sy;
+        if (g.kind === 'swipe') {
+          settleSwipe(dx < 0 ? 1 : -1, !cancel && Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.2);
+          return;
+        }
+        if (cancel) return;
+        if (!g.kind && Math.hypot(dx, dy) <= 12) {
+          const p = pointerXY(e);
+          if (g.poop && poopHit(p.x, p.y)) cleanPoop();
+          else if (g.dog && petHit(p.x, p.y)) react();
+        }
+      }
+      canvas.addEventListener('pointerup', e => pointerEnd(e));
+      canvas.addEventListener('pointercancel', e => pointerEnd(e, true));
+      canvas.addEventListener('lostpointercapture', e => {
+        if (gesture?.id === e.pointerId) pointerEnd(e, true);
+      });
+
+      function chooseDestination() {
+        const a = order.filter(r => r !== room),
+          weights = a.map(r => r === 'garden' ? 5 : r === 'yard' ? 2 : 1);
+        let n = Math.random() * weights.reduce((s, v) => s + v, 0);
+        for (let i = 0; i < a.length; i++) {
+          n -= weights[i];
+          if (n <= 0) return a[i];
+        }
+        return a[0];
+      }
+
+      function autoTrip(target = chooseDestination()) {
+        if (!casual() || sleeping || gesture || menu.drag) return false;
+        trips++;
+        route(target, null, 'auto');
+        return true;
+      }
+
+      function localWalk() {
+        if (!casual()) return;
+        interrupt();
+        phase = 'roam';
+        const dest = x <= .5 ? .58 : .42,
+          dist = Math.abs(dest - x) * W;
+        if (dist < 2) {
+          idle();
+          return;
+        }
+        locks();
+        startQueue([{
+          sheet: 'a01',
+          anim: 6,
+          motion: 'walk',
+          to: dest,
+          time: dist / 60 * 1000
+        }]);
+      }
+
+      function autonomous() {
+        const r = Math.random();
+        if (r < .55) localWalk();
+        else if (r < .72) {
+          phase = 'pause';
+          locks();
+          startQueue([{
+            sheet,
+            frames: [currentFrame()],
+            tempo: 1000,
+            time: 1000 + Math.random() * 900
+          }]);
+        } else if (r < .86) {
+          phase = 'look';
+          locks();
+          startQueue([repeatPart('a01', Math.random() < .5 ? 3 : 7)]);
+        } else idle();
+      }
+
+      function butterflyEvent() {
+        if (!casual() || sleeping || dirty() || !['garden', 'yard'].includes(room) || menu.drag || gesture)
+      return false;
+        interrupt();
+        phase = 'butterfly';
+        bubble = null;
+        locks();
+        const dir = x < .5 ? 1 : -1;
+        left = dir < 0;
+        const flightStart = {
+            x: dir > 0 ? -25 : W + 25,
+            y: 200
+          },
+          flightEnd = {
+            x: x * W + dir * 82,
+            y: GROUND - 240
+          };
+        butterfly = {
+          visible: true,
+          x: flightStart.x,
+          y: flightStart.y,
+          dir
+        };
+        startQueue([{
+          sheet: 'a01',
+          anim: 16,
+          time: 2200,
+          onStart: () => stage = 'butterfly-flight',
+          update: p => {
+            butterfly.x = flightStart.x + (flightEnd.x - flightStart.x) * p;
+            butterfly.y = flightStart.y + (flightEnd.y - flightStart.y) * p + Math.sin(p * Math.PI * 4) * 13;
+          }
+        }, {
+          sheet: 'a01',
+          anim: 3,
+          time: 900,
+          onStart: () => stage = 'butterfly-watch',
+          update: p => {
+            butterfly.x = flightEnd.x + Math.sin(p * 5) * 7;
+            butterfly.y = flightEnd.y + Math.cos(p * 6) * 9;
+          }
+        }, {
+          sheet: 'a02',
+          anim: 14,
+          facing: dir < 0,
+          to: clamp(x + dir * .1, .35, .65),
+          time: duration('a02', 14) * 2,
+          onStart: () => {
+            stage = 'butterfly-chase';
+            butterfly.visible = false;
+          }
+        }, {
+          sheet: 'a02',
+          anim: 17,
+          facing: dir < 0,
+          time: duration('a02', 17),
+          onStart: () => stage = 'butterfly-nose'
+        }, {
+          sheet: 'a01',
+          anim: 16,
+          facing: dir < 0,
+          time: 1000,
+          onStart: () => {
+            stage = 'butterfly-leave';
+            butterfly.visible = true;
+            butterfly.from = {
+              x: x * W + dir * 82,
+              y: GROUND - 240
+            };
+          },
+          update: p => {
+            butterfly.x = butterfly.from.x + dir * 190 * p;
+            butterfly.y = butterfly.from.y - 90 * p + Math.sin(p * 8) * 6;
+          },
+          onEnd: () => {
+            nextButterfly = clock + 45000 + Math.random() * 40000;
+            butterfly = null;
+          }
+        }]);
+        return true;
+      }
+
+      function iconDraw(c, key, x, y, w, h = w) {
+        if (key === 'poop') {
+          const ratio = images.poop.width / images.poop.height;
+          let iw = w,
+            ih = w / ratio;
+          if (ih > h) {
+            ih = h;
+            iw = h * ratio;
+          }
+          c.drawImage(images.poop, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih);
+          return;
+        }
+        const n = UI.map[key];
+        if (n && cells.ui[n - 1]) c.drawImage(cells.ui[n - 1], x, y, w, h);
+      }
+
+      function bubbleDraw(dt) {
+        if (!bubble || clock > bubble.until) {
+          bubblePos = null;
+          return;
+        }
+        const h = headPosition(),
+          size = clamp(UI.bubbleSize, 60, 106),
+          target = {
+            x: clamp(h.x - size * (left ? .36 : .64), 6, W - size - 6),
+            y: clamp(h.y - size - 12, 6, SH - size - 6)
+          };
+        if (!bubblePos) bubblePos = {
+          ...target
+        };
+        const blend = 1 - Math.exp(-dt / 110);
+        bubblePos.x += (target.x - bubblePos.x) * blend;
+        bubblePos.y += (target.y - bubblePos.y) * blend;
+        const bx = clamp(bubblePos.x, 6, W - size - 6),
+          by = clamp(bubblePos.y, 6, SH - size - 6),
+          type = bubble.type || 'thought';
+        ctx.save();
+        if (left) {
+          ctx.translate(bx + size, by);
+          ctx.scale(-1, 1);
+          iconDraw(ctx, type, 0, 0, size);
+        } else iconDraw(ctx, type, bx, by, size);
+        ctx.restore();
+        const center = P.bubbleCenters[type] || [.5, .4],
+          symbol = Math.min(UI.bubbleSymbolSize, size * .58);
+        iconDraw(ctx, bubble.icon, bx + (left ? 1 - center[0] : center[0]) * size - symbol / 2, by + center[1] * size -
+          symbol / 2 - 1, symbol);
+      }
+
+      function draw(dt) {
+        ctx.clearRect(0, 0, W, SH);
+        ctx.imageSmoothingEnabled = false;
+        drawDog(ctx);
+        if (boneVisible) iconDraw(ctx, 'bone', x * W + 20, GROUND - 30, 37);
+        if (butterfly?.visible) {
+          ctx.save();
+          ctx.translate(butterfly.x, butterfly.y);
+          if (butterfly.dir < 0) ctx.scale(-1, 1);
+          ctx.drawImage(images['b' + Math.floor(clock / 130) % 2], -22, -22, 44, 44);
+          ctx.restore();
+        }
+        // Dropping is explicitly a foreground layer and below the dog's walking baseline.
+        if (poop && Math.abs(order.indexOf(poop.room) - order.indexOf(room)) <= 1) {
+          const r = poopRect();
+          ctx.drawImage(images.poop, r.x, r.y, r.w, r.h);
+        }
+        bubbleDraw(dt);
+        if (!$('.popup').hidden) {
+          rewardCtx.clearRect(0, 0, 300, 300);
+          drawDog(rewardCtx, 150, 255, left, .72);
+        }
+        const c = x * W;
+        $('.arrow.prev').classList.toggle('near', c - 102 < 66);
+        $('.arrow.next').classList.toggle('near', c + 102 > W - 66);
+      }
+
+      function loopFrame(t) {
+        const dt = last ? Math.min(60, t - last) : 0;
+        last = t;
+        if (loaded && !document.hidden && !orientationPaused) {
+          clock += dt;
+          if (phase !== 'swipe-preview') frameIndex = Math.floor((clock - animStart) / ms) % frames.length;
+          if (segment) {
+            const p = clamp((clock - segment.started) / segment.time, 0, 1);
+            if (segment.to !== undefined) x = segment.origin + (segment.to - segment.origin) * p;
+            if (segment.motion) {
+              const travelled = Math.abs(x - segment.origin) * W,
+                stride = segment.motion === 'walk' ? 13 : 36;
+              frameIndex = segment.distance > 2 ? Math.floor(travelled / stride) % frames.length : 0;
+            }
+            segment.update?.(p);
+            if (p >= 1) {
+              const old = segment;
+              segment = null;
+              old.onEnd?.();
+              if (!segment && phase !== 'idle') nextSegment();
+            }
+          } else if (phase === 'petting') {
+            if (clock >= petFinishAt || (!gesture && clock - petLast > 3000)) endPetting();
+          } else if (phase === 'idle' && !sleeping && !gesture && !menu.drag) {
+            if (clock >= nextPoop && !poop) spawnPoop();
+            else if (clock >= nextTrip) autoTrip();
+            else if (clock >= nextButterfly && !dirty() && ['garden', 'yard'].includes(room)) butterflyEvent();
+            else if (clock >= idleUntil) autonomous();
+          }
+          if (clock >= nextBubble && !sleeping && phase === 'idle') {
+            say(dirty() ? 'poop' : ['food', 'water', 'fun', 'sleep', 'clean'][Math.floor(Math.random() * 5)]);
+            nextBubble = clock + 14000;
+          }
+          draw(dt);
+        }
+        requestAnimationFrame(loopFrame);
+      }
+      async function loadImage(src) {
+        const im = new Image();
+        await new Promise((ok, bad) => {
+          im.onload = ok;
+          im.onerror = () => bad(Error('Nie można odczytać grafiki.'));
+          im.src = src;
+        });
+        return im;
+      }
+      async function boot() {
+        for (const k of ['a01', 'a02', 'ui', 'poop']) images[k] = await loadImage(P.assets[k]);
+        for (let i = 0; i < 2; i++) images['b' + i] = await loadImage(P.assets.butterflies[i]);
+        for (const key of ['a01', 'a02', 'ui']) {
+          const rows = key === 'ui' ? 6 : 12,
+            im = images[key],
+            w = im.width / 6,
+            h = im.height / rows;
+          for (let f = 0; f < rows * 6; f++) {
+            const c = document.createElement('canvas');
+            c.width = w;
+            c.height = h;
+            const cx = c.getContext('2d');
+            cx.drawImage(im, (f % 6) * w, Math.floor(f / 6) * h, w, h, 0, 0, w, h);
+            cells[key].push(c);
+            if (key !== 'ui') pixels[key].push(cx.getImageData(0, 0, w, h).data);
+          }
+        }
+        for (const [key, n] of Object.entries(UI.map)) icons[key] = cells.ui[n - 1].toDataURL('image/png');
+        statusBuild();
+        const root = $('.menu');
+        for (const name of ['pointerdown', 'keydown', 'click']) root.addEventListener(name, e => {
+          if (!casual()) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return;
+          }
+          if (name !== 'click') {
+            interrupt();
+            wake();
+          }
+        }, true);
+        menu = new ArcCarousel(root, {
+          items: items.map(i => ({
+            ...i,
+            svg: '<img alt="" src="' + icons[i.icon] + '">'
+          })),
+          selectedId: selected
+        });
+        root.addEventListener('arc:change', e => selected = e.detail.id);
+        root.addEventListener('arc:activate', e => action(e.detail.id));
+        loaded = true;
+        setRoom(room);
+        setAnim(sleeping ? 'a02' : 'a01', sleeping ? 6 : 16);
+        if (dirty()) say('poop', 4000);
+        $('.load').hidden = true;
+        locks();
+        resize();
+        save();
+        requestAnimationFrame(loopFrame);
+      }
+      $('.full').onclick = async () => {
+        try {
+          if (document.fullscreenElement || document.webkitFullscreenElement) {
+            if (document.exitFullscreen) await document.exitFullscreen();
+            else document.webkitExitFullscreen?.();
+            return;
+          }
+          const el = document.documentElement;
+          if (el.requestFullscreen) await el.requestFullscreen();
+          else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+          else return toast('Pełny ekran jest niedostępny w tej przeglądarce.');
+          try {
+            if (screen.orientation?.lock) await screen.orientation.lock('portrait');
+            else throw Error();
+          } catch (e) {
+            toast('Brak automatycznej blokady obrotu — trzymaj urządzenie pionowo.');
+          }
+        } catch (e) {
+          toast('Przeglądarka nie pozwoliła uruchomić pełnego ekranu.');
+        }
+      };
+      window.addEventListener('pagehide', save);
+      document.addEventListener('visibilitychange', () => {
+        last = 0;
+        if (document.hidden) {
+          save();
+          if (gesture?.kind === 'pet') stopPetting();
+          if (phase === 'swipe-preview') {
+            phase = 'idle';
+            setOffset(0);
+            locks();
+          }
+          gesture = null;
+        }
+      });
+      window.addEventListener('error', e => {
+        $('.load').hidden = false;
+        $('.load').textContent = 'Błąd wersji testowej: ' + e.message;
+      });
+      boot().catch(e => {
+        $('.load').hidden = false;
+        $('.load').textContent = e.message;
+      });
+      window.gameTest = {
+        state: () => ({
+          loaded,
+          room,
+          x,
+          left,
+          phase,
+          stage,
+          travelMode,
+          sheet,
+          anim,
+          frame: currentFrame(),
+          actions,
+          trips,
+          sleeping,
+          selected,
+          stats,
+          heart: heart(),
+          poop,
+          dirty: !!dirty(),
+          blockedActivity,
+          scale,
+          orientationPaused,
+          butterfly,
+          butterflyVisible: !!butterfly?.visible,
+          bubble,
+          bubblePos,
+          route: debugRoute,
+          roomOffset,
+          segmentTime: segment?.time,
+          segmentMotion: segment?.motion || null,
+          gesture: gesture?.kind || null,
+          sceneH: SH,
+          ground: GROUND,
+          dogBase: BASE
+        }),
+        step: stepRoom,
+        action,
+        touch: react,
+        poop: spawnPoop,
+        butterfly: butterflyEvent,
+        walk: localWalk,
+        hit: petHit,
+        head: headPosition,
+        poopRect,
+        clean: cleanPoop,
+        advance: n => clock += n,
+        forceVariant: v => forcedVariant = v,
+        select: (id, animate = false) => menu.select(id, {
+          animate
+        }),
+        at: (r, pos = .5) => {
+          gesture = null;
+          queue = [];
+          segment = null;
+          butterfly = null;
+          $('.popup').hidden = true;
+          sleeping = false;
+          x = pos;
+          phase = 'idle';
+          setRoom(r);
+          idle(16);
+          nextPoop = clock + 45000;
+          nextTrip = clock + 32000;
+          nextButterfly = clock + 28000;
+        },
+        needs: s => {
+          Object.assign(stats, s);
+          statusUpdate();
+          syncMenu();
+        },
+        petStart: startPetting,
+        petEnd: stopPetting,
+        menu: () => menu,
+        putPoop: (r, pos = .3) => {
+          poop = {
+            room: r,
+            x: pos
+          };
+          updatePoopAccess();
+          save();
+        },
+        clearPoop: () => {
+          poop = null;
+          updatePoopAccess();
+          save();
+        }
+      };
+
+    </script>
+  </body>
+
+</html>
