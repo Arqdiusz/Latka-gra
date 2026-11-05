@@ -6,7 +6,7 @@ on:
       dock_height:
         description: "Wysokość stopki z tłem w px (obecnie 400)"
         required: true
-        default: "800"
+        default: "400"
         type: string
 
       menu_shift_y:
@@ -136,7 +136,7 @@ jobs:
                   )
               return raw
 
-          dock_height = number("DOCK_HEIGHT", 100, 400)
+          dock_height = number("DOCK_HEIGHT", 100, 800)
           menu_shift_y = number("MENU_SHIFT_Y", -200, 100)
           icon_size = number("ICON_SIZE", 30, 120)
           dock_color = color("DOCK_COLOR")
