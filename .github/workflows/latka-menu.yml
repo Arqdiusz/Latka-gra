@@ -152,7 +152,7 @@ jobs:
           path = Path("index.html")
           source = path.read_text(encoding="utf-8")
 
-                    replacements = [
+          replacements = [
               (
                   r"(grid-template-rows:\s*106px\s+550px\s+)112px(\s*;)",
                   rf"\g<1>{menu_height}px\g<2>",
