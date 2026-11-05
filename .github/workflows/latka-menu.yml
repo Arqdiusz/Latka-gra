@@ -4,21 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       icon_size:
-        description: "Rozmiar ikony w px (obecnie 66)"
+        description: "Rozmiar ikony w px (obecnie 80)"
         required: true
-        default: "66"
+        default: "80"
         type: string
 
       menu_height:
-        description: "Wysokość menu w px (obecnie 112)"
+        description: "Wysokość menu w px (obecnie 180)"
         required: true
-        default: "112"
+        default: "180"
         type: string
 
       menu_shift_y:
-        description: "Przesunięcie menu w pionie w px; minus = wyżej (obecnie -11.2)"
+        description: "Przesunięcie menu w pionie w px; minus = wyżej (obecnie -20.2)"
         required: true
-        default: "-11.2"
+        default: "-20.2"
         type: string
 
       dock_color:
@@ -40,9 +40,9 @@ on:
         type: string
 
       icon_padding:
-        description: "Wewnętrzny odstęp wokół ikony w px (obecnie 10)"
+        description: "Wewnętrzny odstęp wokół ikony w px (obecnie 5)"
         required: true
-        default: "10"
+        default: "5"
         type: string
 
       icon_border_width:
@@ -110,7 +110,7 @@ jobs:
               try:
                   value = float(raw)
               except ValueError:
-                  raise SystemExit(f"{name}: wpisz liczbę, np. 66.")
+                  raise SystemExit(f"{name}: wpisz liczbę, np. 80.")
               if not minimum <= value <= maximum:
                   raise SystemExit(
                       f"{name}: dozwolony zakres to {minimum}–{maximum}."
@@ -136,9 +136,9 @@ jobs:
                   )
               return raw
 
-          icon_size = number("ICON_SIZE", 30, 100)
-          menu_height = number("MENU_HEIGHT", 80, 180)
-          menu_shift_y = number("MENU_SHIFT_Y", -40, 40)
+          icon_size = number("ICON_SIZE", 30, 120)
+          menu_height = number("MENU_HEIGHT", 80, 240)
+          menu_shift_y = number("MENU_SHIFT_Y", -60, 60)
           dock_color = color("DOCK_COLOR")
           border_width = number("BORDER_WIDTH", 0, 10, allow_decimal=False)
           border_color = color("BORDER_COLOR")
@@ -152,49 +152,52 @@ jobs:
           path = Path("index.html")
           source = path.read_text(encoding="utf-8")
 
+          px = r"\d+(?:\.\d+)?px"
+          hexcolor = r"#[0-9a-fA-F]{3,8}"
+
           replacements = [
               (
-                  r"(grid-template-rows:\s*106px\s+550px\s+)112px(\s*;)",
+                  rf"(grid-template-rows:\s*106px\s+550px\s+){px}(\s*;)",
                   rf"\g<1>{menu_height}px\g<2>",
-                  "wysokość menu w siatce strony"
+                  "wysokosc-menu-siatka"
               ),
               (
-                  r"(\.menu\{[^}]*?height\s*:\s*)112px(\s*;)",
+                  rf"(\.menu\{{[^}}]*?height\s*:\s*){px}(\s*;)",
                   rf"\g<1>{menu_height}px\g<2>",
-                  "wysokość menu"
+                  "wysokosc-menu"
               ),
               (
-                  r"(\.menu\{[^}]*?transform\s*:\s*translateY\(\s*)-11\.2px(\s*\))",
+                  rf"(\.menu\{{[^}}]*?transform\s*:\s*translateY\(\s*)-?{px}(\s*\))",
                   rf"\g<1>{menu_shift_y}px\g<2>",
-                  "przesunięcie menu w pionie"
+                  "przesuniecie-menu"
               ),
               (
-                  r"(\.dock\{[^}]*?background\s*:\s*)#efe1d7(\s*;)",
+                  rf"(\.dock\{{[^}}]*?background\s*:\s*){hexcolor}(\s*;)",
                   rf"\g<1>{dock_color}\g<2>",
-                  "kolor tła dolnego paska"
+                  "tlo-docka"
               ),
               (
-                  r"(\.dock\{[^}]*?border-top\s*:\s*)2px\s+solid\s+#fff8(\s*;)",
+                  rf"(\.dock\{{[^}}]*?border-top\s*:\s*){px}\s+solid\s+{hexcolor}(\s*;)",
                   rf"\g<1>{border_width}px solid {border_color}\g<2>",
                   "gorna-linia-menu"
               ),
               (
-                  r"(\.arc-menu__icon\{[^}]*?width\s*:\s*)66px(\s*;)",
+                  rf"(\.arc-menu__icon\{{[^}}]*?width\s*:\s*){px}(\s*;)",
                   rf"\g<1>{icon_size}px\g<2>",
-                  "szerokość ikony"
+                  "szerokosc-ikony"
               ),
               (
-                  r"(\.arc-menu__icon\{[^}]*?height\s*:\s*)66px(\s*;)",
+                  rf"(\.arc-menu__icon\{{[^}}]*?height\s*:\s*){px}(\s*;)",
                   rf"\g<1>{icon_size}px\g<2>",
-                  "wysokość ikony"
+                  "wysokosc-ikony"
               ),
               (
-                  r"(\.arc-menu__button\s*\{[^}]*?padding\s*:\s*)10px(\s*;)",
+                  rf"(\.arc-menu__button\s*\{{[^}}]*?padding\s*:\s*){px}(\s*;)",
                   rf"\g<1>{icon_padding}px\g<2>",
-                  "wewnętrzny-odstep-ikony"
+                  "wewnetrzny-odstep-ikony"
               ),
               (
-                  r"(\.arc-menu__button\s*\{[^}]*?border\s*:\s*)3px\s+solid\s+white(\s*;)",
+                  rf"(\.arc-menu__button\s*\{{[^}}]*?border\s*:\s*){px}\s+solid\s+[^\s;]+(\s*;)",
                   rf"\g<1>{icon_border_width}px solid {icon_border_color}\g<2>",
                   "obwodka-ikony"
               )
