@@ -189,12 +189,12 @@ jobs:
                   "wysokość ikony"
               ),
               (
-                  r"(\.arc-menu__button\{[^}]*?padding\s*:\s*)10px(\s*;)",
+                  r"(\.arc-menu__button\s*\{[^}]*?padding\s*:\s*)10px(\s*;)",
                   rf"\g<1>{icon_padding}px\g<2>",
                   "wewnętrzny odstęp ikony"
               ),
               (
-                  r"(\.arc-menu__button\{[^}]*?border\s*:\s*)3px\s+solid\s+white(\s*;)",
+                  r"(\.arc-menu__button\s*\{[^}]*?border\s*:\s*)3px\s+solid\s+white(\s*;)",
                   rf"\g<1>{icon_border_width}px solid {icon_border_color}\g<2>",
                   "obwódka ikony"
               )
@@ -219,7 +219,7 @@ jobs:
 
           if icon_color:
               updated, count = re.subn(
-                  r"(\.arc-menu__button\{[^}]*?background\s*:\s*)var\(--item-color\)(\s*;)",
+                  r"(\.arc-menu__button\s*\{[^}]*?background\s*:\s*)var\(--item-color\)(\s*;)",
                   rf"\g<1>{icon_color}\g<2>",
                   updated,
                   count=1,
