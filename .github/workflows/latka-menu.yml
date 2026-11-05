@@ -143,10 +143,10 @@ jobs:
                   )
               return raw
 
-          dock_height = number("DOCK_HEIGHT", 100, 400)
-          menu_height = number("MENU_HEIGHT", 100, 400)
+          dock_height = number("DOCK_HEIGHT", 100, 500)
+          menu_height = number("MENU_HEIGHT", 100, 500)
           icon_size = number("ICON_SIZE", 30, 120)
-          menu_shift_y = number("MENU_SHIFT_Y", -60, 60)
+          menu_shift_y = number("MENU_SHIFT_Y", -600, 600)
           dock_color = color("DOCK_COLOR")
           border_width = number("BORDER_WIDTH", 0, 10, allow_decimal=False)
           border_color = color("BORDER_COLOR")
