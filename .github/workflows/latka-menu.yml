@@ -1,0 +1,293 @@
+name: "Łatka — ustawienia menu dolnego"
+
+on:
+  workflow_dispatch:
+    inputs:
+      icon_size:
+        description: "Rozmiar ikony w px (obecnie 66)"
+        required: true
+        default: "66"
+        type: string
+
+      menu_height:
+        description: "Wysokość menu w px (obecnie 112)"
+        required: true
+        default: "112"
+        type: string
+
+      menu_shift_y:
+        description: "Przesunięcie menu w pionie w px; minus = wyżej (obecnie -11.2)"
+        required: true
+        default: "-11.2"
+        type: string
+
+      dock_color:
+        description: "Kolor tła dolnego paska, np. #efe1d7"
+        required: true
+        default: "#efe1d7"
+        type: string
+
+      border_width:
+        description: "Grubość górnej linii menu w px (obecnie 2)"
+        required: true
+        default: "2"
+        type: string
+
+      border_color:
+        description: "Kolor górnej linii menu, np. #fff8"
+        required: true
+        default: "#fff8"
+        type: string
+
+      icon_padding:
+        description: "Wewnętrzny odstęp wokół ikony w px (obecnie 10)"
+        required: true
+        default: "10"
+        type: string
+
+      icon_border_width:
+        description: "Grubość białej obwódki ikony w px (obecnie 3)"
+        required: true
+        default: "3"
+        type: string
+
+      icon_border_color:
+        description: "Kolor obwódki ikony, np. white lub #ffffff"
+        required: true
+        default: "white"
+        type: string
+
+      icon_color:
+        description: "Opcjonalnie: jeden kolor tła wszystkich ikon; zostaw puste, aby zachować obecne kolory"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update-menu-and-publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Pobierz aktualną grę
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Zastosuj ustawienia menu
+        env:
+          ICON_SIZE: ${{ inputs.icon_size }}
+          MENU_HEIGHT: ${{ inputs.menu_height }}
+          MENU_SHIFT_Y: ${{ inputs.menu_shift_y }}
+          DOCK_COLOR: ${{ inputs.dock_color }}
+          BORDER_WIDTH: ${{ inputs.border_width }}
+          BORDER_COLOR: ${{ inputs.border_color }}
+          ICON_PADDING: ${{ inputs.icon_padding }}
+          ICON_BORDER_WIDTH: ${{ inputs.icon_border_width }}
+          ICON_BORDER_COLOR: ${{ inputs.icon_border_color }}
+          ICON_COLOR: ${{ inputs.icon_color }}
+        shell: python
+        run: |
+          import os
+          import re
+          from pathlib import Path
+
+          def number(name, minimum, maximum, allow_decimal=True):
+              raw = os.environ[name].strip().replace(",", ".")
+              try:
+                  value = float(raw)
+              except ValueError:
+                  raise SystemExit(f"{name}: wpisz liczbę, np. 66.")
+              if not minimum <= value <= maximum:
+                  raise SystemExit(
+                      f"{name}: dozwolony zakres to {minimum}–{maximum}."
+                  )
+              if value == int(value):
+                  return str(int(value))
+              if not allow_decimal:
+                  raise SystemExit(f"{name}: wpisz liczbę całkowitą.")
+              return f"{value:g}"
+
+          def color(name, fallback=None):
+              raw = os.environ[name].strip()
+              if not raw:
+                  if fallback is None:
+                      return None
+                  return fallback
+              if not re.fullmatch(
+                  r"#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|white|black",
+                  raw
+              ):
+                  raise SystemExit(
+                      f"{name}: użyj formatu #RRGGBB, np. #efe1d7, albo white."
+                  )
+              return raw
+
+          icon_size = number("ICON_SIZE", 30, 100)
+          menu_height = number("MENU_HEIGHT", 80, 180)
+          menu_shift_y = number("MENU_SHIFT_Y", -40, 40)
+          dock_color = color("DOCK_COLOR")
+          border_width = number("BORDER_WIDTH", 0, 10, allow_decimal=False)
+          border_color = color("BORDER_COLOR")
+          icon_padding = number("ICON_PADDING", 0, 24, allow_decimal=False)
+          icon_border_width = number(
+              "ICON_BORDER_WIDTH", 0, 10, allow_decimal=False
+          )
+          icon_border_color = color("ICON_BORDER_COLOR")
+          icon_color = color("ICON_COLOR")
+
+          path = Path("index.html")
+          source = path.read_text(encoding="utf-8")
+
+          replacements = [
+              (
+                  r"(grid-template-rows:\s*106px\s+550px\s+)112px(\s*;)",
+                  rf"\g<1>{menu_height}px\g<2>",
+                  "wysokość menu w siatce strony"
+              ),
+              (
+                  r"(\.menu\{[^}]*?height:)112px(\s*;)",
+                  rf"\g<1>{menu_height}px\g<2>",
+                  "wysokość menu"
+              ),
+              (
+                  r"(\.menu\{[^}]*?transform:translateY\()-11\.2px(\))",
+                  rf"\g<1>{menu_shift_y}px\g<2>",
+                  "przesunięcie menu w pionie"
+              ),
+              (
+                  r"(\.dock\{[^}]*?background:)#efe1d7(\s*;)",
+                  rf"\g<1>{dock_color}\g<2>",
+                  "kolor tła dolnego paska"
+              ),
+              (
+                  r"(\.dock\{[^}]*?border-top:)2px\s+solid\s+#fff8(\s*;)",
+                  rf"\g<1>{border_width}px solid {border_color}\g<2>",
+                  "górna linia menu"
+              ),
+              (
+                  r"(\.arc-menu__icon\{[^}]*?width:)66px(\s*;)",
+                  rf"\g<1>{icon_size}px\g<2>",
+                  "szerokość ikony"
+              ),
+              (
+                  r"(\.arc-menu__icon\{[^}]*?height:)66px(\s*;)",
+                  rf"\g<1>{icon_size}px\g<2>",
+                  "wysokość ikony"
+              ),
+              (
+                  r"(\.arc-menu__button\{[^}]*?padding:)10px(\s*;)",
+                  rf"\g<1>{icon_padding}px\g<2>",
+                  "wewnętrzny odstęp ikony"
+              ),
+              (
+                  r"(\.arc-menu__button\{[^}]*?border:)3px\s+solid\s+white(\s*;)",
+                  rf"\g<1>{icon_border_width}px solid {icon_border_color}\g<2>",
+                  "obwódka ikony"
+              )
+          ]
+
+          updated = source
+
+          for pattern, replacement, label in replacements:
+              updated, count = re.subn(
+                  pattern,
+                  replacement,
+                  updated,
+                  count=1,
+                  flags=re.S
+              )
+
+              if count != 1:
+                  raise SystemExit(
+                      f"Nie rozpoznano jednoznacznie: {label}. "
+                      "Plik pozostaje bez zmian."
+                  )
+
+          if icon_color:
+              updated, count = re.subn(
+                  r"(\.arc-menu__button\{[^}]*?background:)var\(--item-color\)(\s*;)",
+                  rf"\g<1>{icon_color}\g<2>",
+                  updated,
+                  count=1,
+                  flags=re.S
+              )
+
+              if count != 1:
+                  raise SystemExit(
+                      "Nie rozpoznano koloru tła ikon. "
+                      "Plik pozostaje bez zmian."
+                  )
+
+          path.write_text(updated, encoding="utf-8")
+
+          summary = [
+              "## Nowe ustawienia menu dolnego",
+              f"- Rozmiar ikony: {icon_size} px.",
+              f"- Wysokość menu: {menu_height} px.",
+              f"- Przesunięcie pionowe: {menu_shift_y} px.",
+              f"- Tło paska: {dock_color}.",
+              f"- Górna linia: {border_width} px, {border_color}.",
+              f"- Wewnętrzny odstęp ikony: {icon_padding} px.",
+              f"- Obwódka ikony: {icon_border_width} px, {icon_border_color}."
+          ]
+
+          if icon_color:
+              summary.append(f"- Wspólny kolor ikon: {icon_color}.")
+          else:
+              summary.append("- Kolory poszczególnych ikon: bez zmian.")
+
+          with open(
+              os.environ["GITHUB_STEP_SUMMARY"],
+              "a",
+              encoding="utf-8"
+          ) as report:
+              report.write("\n".join(summary) + "\n")
+
+      - name: Zapisz zmianę w repozytorium
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "Ustawienia są już takie same."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add index.html
+            git commit -m "Update Latka bottom menu settings"
+            git push origin HEAD:main
+          fi
+
+      - name: Przygotuj pliki strony
+        shell: bash
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          for directory in animacje ikony inne tla ustawienia animacje-ustawienia; do
+            if [ -d "$directory" ]; then
+              cp -R "$directory" "_site/$directory"
+            fi
+          done
+
+      - name: Przygotuj GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Przekaż stronę do publikacji
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Opublikuj grę
+        id: deployment
+        uses: actions/deploy-pages@v4
