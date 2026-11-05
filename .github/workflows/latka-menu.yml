@@ -3,28 +3,16 @@ name: "Łatka — ustawienia menu dolnego"
 on:
   workflow_dispatch:
     inputs:
-      menu_height:
-        description: "Wysokość obszaru .menu w px (Twoje działające: 20)"
+      dock_height:
+        description: "Wysokość stopki z tłem w px (obecnie 400)"
         required: true
-        default: "20"
+        default: "400"
         type: string
 
       menu_shift_y:
-        description: "Przesunięcie ikon w pionie w px (Twoje działające: -240.2)"
+        description: "Przesunięcie ikon od góry stopki w px (obecnie -20.2)"
         required: true
-        default: "-240.2"
-        type: string
-
-      panel_height:
-        description: "Wysokość tła pod ikonami w px"
-        required: true
-        default: "300"
-        type: string
-
-      panel_color:
-        description: "Kolor tła pod ikonami, np. #efe1d7"
-        required: true
-        default: "#efe1d7"
+        default: "-20.2"
         type: string
 
       icon_size:
@@ -33,14 +21,8 @@ on:
         default: "80"
         type: string
 
-      dock_height:
-        description: "Wysokość stopki w px (obecnie 400)"
-        required: true
-        default: "400"
-        type: string
-
       dock_color:
-        description: "Kolor tła stopki, np. #efe1d7"
+        description: "Kolor tła całej stopki, np. #efe1d7"
         required: true
         default: "#efe1d7"
         type: string
@@ -107,12 +89,9 @@ jobs:
 
       - name: Zastosuj ustawienia menu
         env:
-          MENU_HEIGHT: ${{ inputs.menu_height }}
-          MENU_SHIFT_Y: ${{ inputs.menu_shift_y }}
-          PANEL_HEIGHT: ${{ inputs.panel_height }}
-          PANEL_COLOR: ${{ inputs.panel_color }}
-          ICON_SIZE: ${{ inputs.icon_size }}
           DOCK_HEIGHT: ${{ inputs.dock_height }}
+          MENU_SHIFT_Y: ${{ inputs.menu_shift_y }}
+          ICON_SIZE: ${{ inputs.icon_size }}
           DOCK_COLOR: ${{ inputs.dock_color }}
           BORDER_WIDTH: ${{ inputs.border_width }}
           BORDER_COLOR: ${{ inputs.border_color }}
@@ -131,7 +110,7 @@ jobs:
               try:
                   value = float(raw)
               except ValueError:
-                  raise SystemExit(f"{name}: wpisz liczbę, np. 300.")
+                  raise SystemExit(f"{name}: wpisz liczbę, np. 400.")
               if not minimum <= value <= maximum:
                   raise SystemExit(
                       f"{name}: dozwolony zakres to {minimum}–{maximum}."
@@ -157,12 +136,9 @@ jobs:
                   )
               return raw
 
-          menu_height = number("MENU_HEIGHT", 10, 120)
-          menu_shift_y = number("MENU_SHIFT_Y", -400, 0)
-          panel_height = number("PANEL_HEIGHT", 100, 400)
-          panel_color = color("PANEL_COLOR")
-          icon_size = number("ICON_SIZE", 30, 120)
           dock_height = number("DOCK_HEIGHT", 100, 400)
+          menu_shift_y = number("MENU_SHIFT_Y", -200, 100)
+          icon_size = number("ICON_SIZE", 30, 120)
           dock_color = color("DOCK_COLOR")
           border_width = number("BORDER_WIDTH", 0, 10, allow_decimal=False)
           border_color = color("BORDER_COLOR")
@@ -179,7 +155,7 @@ jobs:
           px = r"\d+(?:\.\d+)?px"
           hexcolor = r"#[0-9a-fA-F]{3,8}"
 
-          # 1. Wysokość stopki w siatce strony.
+          # 1. Wysokość stopki.
           source, count = re.subn(
               rf"(grid-template-rows:\s*106px\s+550px\s+){px}(\s*;)",
               rf"\g<1>{dock_height}px\g<2>",
@@ -189,16 +165,27 @@ jobs:
           if count != 1:
               raise SystemExit("Nie rozpoznano wysokości stopki.")
 
-          # 2. Wysokość i przesunięcie obszaru .menu.
+          # 2. Ikony przy górze stopki.
+          source, count = re.subn(
+              r"(\.dock\{[^}]*?align-content\s*:\s*)[^;]+(;)",
+              rf"\g<1>start\g<2>",
+              source,
+              count=1
+          )
+          if count != 1:
+              raise SystemExit("Nie rozpoznano ustawienia wyrównania stopki.")
+
+          # 3. Wysokość .menu wraca do 20 px — układ ikon jest liczony dla niej.
           source, count = re.subn(
               rf"(\.menu\{{[^}}]*?height\s*:\s*){px}(\s*;)",
-              rf"\g<1>{menu_height}px\g<2>",
+              r"\g<1>20px\g<2>",
               source,
               count=1
           )
           if count != 1:
               raise SystemExit("Nie rozpoznano wysokości menu.")
 
+          # 4. Przesunięcie ikon.
           source, count = re.subn(
               rf"(\.menu\{{[^}}]*?transform\s*:\s*translateY\(\s*)-?{px}(\s*\))",
               rf"\g<1>{menu_shift_y}px\g<2>",
@@ -206,63 +193,29 @@ jobs:
               count=1
           )
           if count != 1:
-              raise SystemExit("Nie rozpoznano przesunięcia menu.")
+              raise SystemExit("Nie rozpoznano przesunięcia ikon.")
 
-          # 3. Tło pod ikonami: zmiana istniejących zmiennych.
-          source, count = re.subn(
-              r"(--panel-height\s*:\s*)[^;]+(;)",
-              rf"\g<1>{panel_height}px\g<2>",
+          # 5. Usuń poprzedni osobny panel, jeśli istniał.
+          source = re.sub(
+              r"\s*\.menu::before\{[^}]*\}",
+              "",
+              source,
+              count=1
+          )
+          source = re.sub(
+              r"--panel-height:[^;]+;",
+              "",
+              source,
+              count=1
+          )
+          source = re.sub(
+              r"--panel-color:[^;]+;",
+              "",
               source,
               count=1
           )
 
-          if count == 0:
-              # Pierwsze uruchomienie: dodaj zmienne do reguły .menu.
-              source, count = re.subn(
-                  r"(\.menu\{)",
-                  rf"\g<1>--panel-height:{panel_height}px;--panel-color:{panel_color};",
-                  source,
-                  count=1
-              )
-              if count != 1:
-                  raise SystemExit("Nie rozpoznano reguły .menu.")
-
-          source, count = re.subn(
-              r"(--panel-color\s*:\s*)[^;]+(;)",
-              rf"\g<1>{panel_color}\g<2>",
-              source,
-              count=1
-          )
-          if count != 1:
-              raise SystemExit("Nie rozpoznano koloru tła pod ikonami.")
-
-          # 4. Dodaj regułę tła, jeśli jeszcze nie istnieje.
-          if ".menu::before" not in source:
-              panel_css = (
-                  "\n\n      .menu::before{"
-                  "content:\"\";"
-                  "position:absolute;"
-                  "left:0;"
-                  "right:0;"
-                  "top:50%;"
-                  "height:var(--panel-height,300px);"
-                  "transform:translateY(-50%);"
-                  "background:var(--panel-color,#efe1d7);"
-                  "z-index:-1;"
-                  "}"
-              )
-
-              match = re.search(r"\.menu\{[^}]*\}", source)
-              if not match:
-                  raise SystemExit("Nie rozpoznano reguły .menu.")
-
-              source = (
-                  source[:match.end()]
-                  + panel_css
-                  + source[match.end():]
-              )
-
-          # 5. Kolor i linia stopki.
+          # 6. Kolor i linia stopki.
           source, count = re.subn(
               rf"(\.dock\{{[^}}]*?background\s*:\s*){hexcolor}(\s*;)",
               rf"\g<1>{dock_color}\g<2>",
@@ -281,7 +234,7 @@ jobs:
           if count != 1:
               raise SystemExit("Nie rozpoznano górnej linii stopki.")
 
-          # 6. Ikony.
+          # 7. Ikony.
           source, count = re.subn(
               rf"(\.arc-menu__icon\{{[^}}]*?width\s*:\s*){px}(\s*;)",
               rf"\g<1>{icon_size}px\g<2>",
@@ -332,11 +285,10 @@ jobs:
 
           summary = [
               "## Nowe ustawienia menu dolnego",
-              f"- Wysokość .menu: {menu_height} px.",
-              f"- Przesunięcie ikon: {menu_shift_y} px.",
-              f"- Tło pod ikonami: {panel_height} px, {panel_color}.",
+              f"- Wysokość stopki z tłem: {dock_height} px.",
+              f"- Przesunięcie ikon od góry stopki: {menu_shift_y} px.",
               f"- Rozmiar ikony: {icon_size} px.",
-              f"- Stopka: {dock_height} px, tło {dock_color}.",
+              f"- Tło stopki: {dock_color}.",
               f"- Górna linia: {border_width} px, {border_color}.",
               f"- Wewnętrzny odstęp ikony: {icon_padding} px.",
               f"- Obwódka ikony: {icon_border_width} px, {icon_border_color}."
