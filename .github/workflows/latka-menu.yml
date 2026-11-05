@@ -152,49 +152,49 @@ jobs:
           path = Path("index.html")
           source = path.read_text(encoding="utf-8")
 
-          replacements = [
+                    replacements = [
               (
                   r"(grid-template-rows:\s*106px\s+550px\s+)112px(\s*;)",
                   rf"\g<1>{menu_height}px\g<2>",
                   "wysokość menu w siatce strony"
               ),
               (
-                  r"(\.menu\{[^}]*?height:)112px(\s*;)",
+                  r"(\.menu\{[^}]*?height\s*:\s*)112px(\s*;)",
                   rf"\g<1>{menu_height}px\g<2>",
                   "wysokość menu"
               ),
               (
-                  r"(\.menu\{[^}]*?transform:translateY\()-11\.2px(\))",
+                  r"(\.menu\{[^}]*?transform\s*:\s*translateY\(\s*)-11\.2px(\s*\))",
                   rf"\g<1>{menu_shift_y}px\g<2>",
                   "przesunięcie menu w pionie"
               ),
               (
-                  r"(\.dock\{[^}]*?background:)#efe1d7(\s*;)",
+                  r"(\.dock\{[^}]*?background\s*:\s*)#efe1d7(\s*;)",
                   rf"\g<1>{dock_color}\g<2>",
                   "kolor tła dolnego paska"
               ),
               (
-                  r"(\.dock\{[^}]*?border-top:)2px\s+solid\s+#fff8(\s*;)",
+                  r"(\.dock\{[^}]*?border-top\s*:\s*)2px\s+solid\s+#fff8(\s*;)",
                   rf"\g<1>{border_width}px solid {border_color}\g<2>",
                   "górna linia menu"
               ),
               (
-                  r"(\.arc-menu__icon\{[^}]*?width:)66px(\s*;)",
+                  r"(\.arc-menu__icon\{[^}]*?width\s*:\s*)66px(\s*;)",
                   rf"\g<1>{icon_size}px\g<2>",
                   "szerokość ikony"
               ),
               (
-                  r"(\.arc-menu__icon\{[^}]*?height:)66px(\s*;)",
+                  r"(\.arc-menu__icon\{[^}]*?height\s*:\s*)66px(\s*;)",
                   rf"\g<1>{icon_size}px\g<2>",
                   "wysokość ikony"
               ),
               (
-                  r"(\.arc-menu__button\{[^}]*?padding:)10px(\s*;)",
+                  r"(\.arc-menu__button\{[^}]*?padding\s*:\s*)10px(\s*;)",
                   rf"\g<1>{icon_padding}px\g<2>",
                   "wewnętrzny odstęp ikony"
               ),
               (
-                  r"(\.arc-menu__button\{[^}]*?border:)3px\s+solid\s+white(\s*;)",
+                  r"(\.arc-menu__button\{[^}]*?border\s*:\s*)3px\s+solid\s+white(\s*;)",
                   rf"\g<1>{icon_border_width}px solid {icon_border_color}\g<2>",
                   "obwódka ikony"
               )
@@ -219,7 +219,7 @@ jobs:
 
           if icon_color:
               updated, count = re.subn(
-                  r"(\.arc-menu__button\{[^}]*?background:)var\(--item-color\)(\s*;)",
+              r"(\.arc-menu__button\{[^}]*?background\s*:\s*)var\(--item-color\)(\s*;)",
                   rf"\g<1>{icon_color}\g<2>",
                   updated,
                   count=1,
