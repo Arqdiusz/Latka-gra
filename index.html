@@ -148,7 +148,26 @@ function roomSVG(r){const src=(P.assets.rooms&&P.assets.rooms[r])||"tla/001.png"
 function buildRooms(){const root=$('.roomTrack');root.innerHTML='';const n=order.indexOf(room);for(let i=Math.max(0,n-1);i<=Math.min(order.length-1,n+1);i++){const p=document.createElement('div');p.className='roomPanel';p.dataset.room=order[i];p.style.left=(i-n)*100+'%';p.innerHTML=roomSVG(order[i]);root.append(p);}}
 function setRoom(r){room=r;buildRooms();setOffset(0);const key={yard:'den',garden:'garden',living:'living',kitchen:'kitchen',bathroom:'bathroom',attic:'home'}[r];$('.roomBadge img').src=icons[key];$('.roomBadge img').alt={yard:'Podwórko z budą',garden:'Ogród',living:'Salon',kitchen:'Kuchnia',bathroom:'Łazienka',attic:'Poddasze'}[r];syncMenu();updateArrows();updatePoopAccess();debugRoute.push(r);save();}
 function heart(){return Object.values(stats).reduce((a,b)=>a+b,0)/5;}function statusBuild(){for(const key of ['food','water','fun','sleep','clean','heart']){const el=document.createElement('div');el.className='stat';el.dataset.status=key;el.style.setProperty('--c',key==='heart'?'#e88ca6':items.find(i=>i.id===key)?.color||'#c7b0da');const im=new Image();im.src=icons[key];im.alt={food:'Głód',water:'Woda',fun:'Zabawa',sleep:'Sen',clean:'Czystość',heart:'Samopoczucie'}[key];im.width=im.height=36;const bar=document.createElement('div');bar.className='bar';bar.innerHTML='<i></i>';el.append(im,bar,document.createElement('small'));$('.status').append(el);}statusUpdate();}function statusUpdate(){document.querySelectorAll('.stat').forEach(el=>{const v=el.dataset.status==='heart'?heart():stats[el.dataset.status];el.querySelector('i').style.width=v+'%';el.querySelector('small').textContent=Math.round(v)+'%';el.setAttribute('aria-label',el.querySelector('img').alt+': '+Math.round(v)+'%');});}
-function syncMenu(){const allowed=items.filter(i=>i.room===room),min=Math.min(...allowed.map(i=>stats[i.id]??50)),tied=allowed.filter(i=>(stats[i.id]??50)===min);selected=tied.some(i=>i.id===selected)?selected:tied[0].id;menu?.select(selected,{animate:loaded});}
+function syncMenu(){
+  const allowed = items.filter(i => i.room === room);
+
+  // Pokój bez przypisanych czynności nie zmienia wyboru menu.
+  if (allowed.length === 0) return;
+
+  const min = Math.min(
+    ...allowed.map(i => stats[i.id] ?? 50)
+  );
+
+  const tied = allowed.filter(
+    i => (stats[i.id] ?? 50) === min
+  );
+
+  selected = tied.some(i => i.id === selected)
+    ? selected
+    : tied[0].id;
+
+  menu?.select(selected, { animate: loaded });
+}
 function casual(){return loaded&&['idle','roam','pause','look','butterfly'].includes(phase);}function canPet(){return casual()||phase==='petting';}function locks(){document.body.classList.toggle('locked',!casual());document.querySelectorAll('.arrow').forEach(b=>b.disabled=!casual());$('.petAccess').disabled=!canPet();updateArrows();}function updateArrows(){const n=order.indexOf(room);$('.arrow.prev').hidden=n===0;$('.arrow.next').hidden=n===order.length-1;}function updatePoopAccess(){$('.poopAccess').hidden=!dirty();}
 function interrupt(){if(!casual())return;queue=[];segment=null;if(phase==='butterfly'){butterfly=null;nextButterfly=clock+45000;}phase='idle';jumpY=0;setAnim('a01',16);locks();}function wake(){if(!sleeping)return;sleeping=false;setAnim('a01',16);idleUntil=clock+4000;save();}function say(icon,time=2600,type=UI.bubbleType){bubble={icon,until:clock+time,type};}
 function idle(which=null){phase='idle';stage='';queue=[];segment=null;pending=null;jumpY=0;boneVisible=false;butterfly=null;setOffset(0);setAnim('a01',which??(Math.random()<.35?18:16));idleUntil=clock+Math.max(frames.length*ms,1800)+Math.random()*2000;locks();save();}
