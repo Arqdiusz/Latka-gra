@@ -3,38 +3,44 @@ name: "Łatka — ustawienia menu dolnego"
 on:
   workflow_dispatch:
     inputs:
+      dock_height:
+        description: "Wysokość całej stopki z tłem w px (obecnie 300)"
+        required: true
+        default: "300"
+        type: string
+
+      menu_height:
+        description: "Wysokość obszaru z ikonami w px (obecnie 180)"
+        required: true
+        default: "180"
+        type: string
+
       icon_size:
         description: "Rozmiar ikony w px (obecnie 80)"
         required: true
         default: "80"
         type: string
 
-      menu_height:
-        description: "Wysokość menu w px (obecnie 180)"
-        required: true
-        default: "180"
-        type: string
-
       menu_shift_y:
-        description: "Przesunięcie menu w pionie w px; minus = wyżej (obecnie -20.2)"
+        description: "Przesunięcie ikon w pionie w px; minus = wyżej (obecnie -20.2)"
         required: true
         default: "-20.2"
         type: string
 
       dock_color:
-        description: "Kolor tła dolnego paska, np. #efe1d7"
+        description: "Kolor tła całej stopki, np. #efe1d7"
         required: true
         default: "#efe1d7"
         type: string
 
       border_width:
-        description: "Grubość górnej linii menu w px (obecnie 2)"
+        description: "Grubość górnej linii stopki w px (obecnie 2)"
         required: true
         default: "2"
         type: string
 
       border_color:
-        description: "Kolor górnej linii menu, np. #fff8"
+        description: "Kolor górnej linii stopki, np. #fff8"
         required: true
         default: "#fff8"
         type: string
@@ -46,19 +52,19 @@ on:
         type: string
 
       icon_border_width:
-        description: "Grubość białej obwódki ikony w px (obecnie 3)"
+        description: "Grubość obwódki ikony w px (obecnie 3)"
         required: true
         default: "3"
         type: string
 
       icon_border_color:
-        description: "Kolor obwódki ikony, np. white lub #ffffff"
+        description: "Kolor obwódki ikony, np. white"
         required: true
         default: "white"
         type: string
 
       icon_color:
-        description: "Opcjonalnie: jeden kolor tła wszystkich ikon; zostaw puste, aby zachować obecne kolory"
+        description: "Opcjonalnie: jeden kolor tła wszystkich ikon; puste = obecne kolory"
         required: false
         default: ""
         type: string
@@ -89,8 +95,9 @@ jobs:
 
       - name: Zastosuj ustawienia menu
         env:
-          ICON_SIZE: ${{ inputs.icon_size }}
+          DOCK_HEIGHT: ${{ inputs.dock_height }}
           MENU_HEIGHT: ${{ inputs.menu_height }}
+          ICON_SIZE: ${{ inputs.icon_size }}
           MENU_SHIFT_Y: ${{ inputs.menu_shift_y }}
           DOCK_COLOR: ${{ inputs.dock_color }}
           BORDER_WIDTH: ${{ inputs.border_width }}
@@ -110,7 +117,7 @@ jobs:
               try:
                   value = float(raw)
               except ValueError:
-                  raise SystemExit(f"{name}: wpisz liczbę, np. 80.")
+                  raise SystemExit(f"{name}: wpisz liczbę, np. 300.")
               if not minimum <= value <= maximum:
                   raise SystemExit(
                       f"{name}: dozwolony zakres to {minimum}–{maximum}."
@@ -136,8 +143,9 @@ jobs:
                   )
               return raw
 
+          dock_height = number("DOCK_HEIGHT", 100, 400)
+          menu_height = number("MENU_HEIGHT", 100, 400)
           icon_size = number("ICON_SIZE", 30, 120)
-          menu_height = number("MENU_HEIGHT", 80, 400)
           menu_shift_y = number("MENU_SHIFT_Y", -60, 60)
           dock_color = color("DOCK_COLOR")
           border_width = number("BORDER_WIDTH", 0, 10, allow_decimal=False)
@@ -149,6 +157,12 @@ jobs:
           icon_border_color = color("ICON_BORDER_COLOR")
           icon_color = color("ICON_COLOR")
 
+          if menu_height > dock_height:
+              raise SystemExit(
+                  "Wysokość obszaru z ikonami nie może być większa "
+                  "niż wysokość całej stopki."
+              )
+
           path = Path("index.html")
           source = path.read_text(encoding="utf-8")
 
@@ -158,28 +172,28 @@ jobs:
           replacements = [
               (
                   rf"(grid-template-rows:\s*106px\s+550px\s+){px}(\s*;)",
-                  rf"\g<1>{menu_height}px\g<2>",
-                  "wysokosc-menu-siatka"
+                  rf"\g<1>{dock_height}px\g<2>",
+                  "wysokosc-stopki"
               ),
               (
                   rf"(\.menu\{{[^}}]*?height\s*:\s*){px}(\s*;)",
                   rf"\g<1>{menu_height}px\g<2>",
-                  "wysokosc-menu"
+                  "wysokosc-menu-z-ikonami"
               ),
               (
                   rf"(\.menu\{{[^}}]*?transform\s*:\s*translateY\(\s*)-?{px}(\s*\))",
                   rf"\g<1>{menu_shift_y}px\g<2>",
-                  "przesuniecie-menu"
+                  "przesuniecie-ikon"
               ),
               (
                   rf"(\.dock\{{[^}}]*?background\s*:\s*){hexcolor}(\s*;)",
                   rf"\g<1>{dock_color}\g<2>",
-                  "tlo-docka"
+                  "tlo-stopki"
               ),
               (
                   rf"(\.dock\{{[^}}]*?border-top\s*:\s*){px}\s+solid\s+{hexcolor}(\s*;)",
                   rf"\g<1>{border_width}px solid {border_color}\g<2>",
-                  "gorna-linia-menu"
+                  "gorna-linia-stopki"
               ),
               (
                   rf"(\.arc-menu__icon\{{[^}}]*?width\s*:\s*){px}(\s*;)",
@@ -239,10 +253,11 @@ jobs:
 
           summary = [
               "## Nowe ustawienia menu dolnego",
+              f"- Wysokość stopki z tłem: {dock_height} px.",
+              f"- Wysokość obszaru z ikonami: {menu_height} px.",
               f"- Rozmiar ikony: {icon_size} px.",
-              f"- Wysokość menu: {menu_height} px.",
-              f"- Przesunięcie pionowe: {menu_shift_y} px.",
-              f"- Tło paska: {dock_color}.",
+              f"- Przesunięcie ikon: {menu_shift_y} px.",
+              f"- Tło stopki: {dock_color}.",
               f"- Górna linia: {border_width} px, {border_color}.",
               f"- Wewnętrzny odstęp ikony: {icon_padding} px.",
               f"- Obwódka ikony: {icon_border_width} px, {icon_border_color}."
