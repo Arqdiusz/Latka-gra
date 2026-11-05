@@ -1,0 +1,96 @@
+name: Latka one-time update
+on:
+  push:
+    paths: ['.github/workflows/latka-update-once.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update current game safely
+        shell: python
+        run: |
+          import re, json, subprocess
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          actual = subprocess.check_output(['git','hash-object','index.html'], text=True).strip()
+          if actual != '7f00c5c5005605c9d27680d6cd7720a86ce7d8e3':
+              raise SystemExit('Source changed: stopping without modifying index.html')
+          def sub(pattern, replacement):
+              global s
+              s, n = re.subn(pattern, lambda m: replacement, s, count=1)
+              assert n == 1, pattern
+          def function(name, replacement):
+              global s
+              m = re.search(r'function\s+' + name + r'\s*\(', s)
+              assert m, name
+              start = m.start(); i = s.index('{', m.end()); depth = 0; quote = None
+              while i < len(s):
+                  c = s[i]
+                  if quote:
+                      if c == '\\': i += 2; continue
+                      if c == quote: quote = None
+                  elif c in ('\"', "'", '`'): quote = c
+                  elif c == '{': depth += 1
+                  elif c == '}':
+                      depth -= 1
+                      if depth == 0: break
+                  i += 1
+              assert depth == 0, name
+              s = s[:start] + replacement + s[i+1:]
+          sub(r'\.dock\s*\{[^}]*\}', '.dock{display:grid;align-content:center;background:#efe1d7;border-top:2px solid #fff8;}')
+          sub(r'\.arc-menu__icon\s*\{[^}]*\}', '.arc-menu__icon{display:block;width:66px;height:66px;max-width:100%;max-height:100%;pointer-events:none;}')
+          sub(r'\.menu\s*\{[^}]*\}', '.menu{position:relative;width:100%;height:112px;transform:translateY(-11.2px);overflow:visible;touch-action:pan-y;user-select:none;-webkit-user-select:none;isolation:isolate;}')
+          sub(r'this\.size\s*=\s*[\d.]+\s*;', 'this.size=103.4;')
+          sub(r'this\.centerY\s*=\s*this\.height\s*\*\s*[\d.]+', 'this.centerY=this.height*.46')
+          sub(r'this\.arc\s*=\s*[\d.]+\s*;', 'this.arc=10;')
+          m = re.search(r'<script\s+id="payload"[^>]*>(.*?)</script>', s, re.S)
+          assert m
+          data = json.loads(m[1])
+          data['assets']['rooms']['yard'] = 'tla/003.png'
+          data['assets']['rooms']['garden'] = 'tla/002.png'
+          s = s[:m.start(1)] + json.dumps(data,ensure_ascii=False,indent=2) + s[m.end(1):]
+          assert 'NEEDS_DECAY' not in s, 'Needs already installed: stop'
+          module = '''
+          const NEEDS_KEY='latka-potrzeby-v1';
+          const NEEDS_DECAY={food:0.65,water:1,fun:0.8,sleep:0.55,clean:0.35};
+          const ACTION_EFFECTS={food:{food:28,water:-3},water:{water:35},fun:{fun:24,water:-5,sleep:-4,clean:-3},den:{fun:16,food:-2,water:-2},clean:{clean:38},brush:{clean:12,fun:5}};
+          let needsSaveSeconds=0;
+          function changeNeeds(changes){for(const [k,v] of Object.entries(changes)){if(Object.prototype.hasOwnProperty.call(stats,k))stats[k]=clamp(stats[k]+v,0,100);}if(loaded)statusUpdate();}
+          function saveNeeds(){try{localStorage.setItem(NEEDS_KEY,JSON.stringify({version:1,stats:{...stats}}));}catch(e){console.warn(e);}}
+          function loadNeeds(){Object.assign(stats,{food:75,water:75,fun:70,sleep:80,clean:85});try{const a=JSON.parse(localStorage.getItem(NEEDS_KEY)||'null');if(a?.version===1&&a.stats){for(const k of Object.keys(NEEDS_DECAY)){const v=a.stats[k];if(typeof v==='number'&&Number.isFinite(v))stats[k]=clamp(v,0,100);}}}catch(e){console.warn(e);}}
+          function updateNeeds(seconds){if(!loaded||seconds<=0)return;const m=seconds/60;for(const [k,r] of Object.entries(NEEDS_DECAY)){if(sleeping&&k==='sleep')continue;stats[k]=clamp(stats[k]-r*m*(sleeping?0.5:1),0,100);}if(sleeping){stats.sleep=clamp(stats.sleep+12*m,0,100);if(stats.sleep>=100){wake();toast('Łatka się wyspała!');}}if(poop)stats.clean=clamp(stats.clean-0.8*m,0,100);statusUpdate();needsSaveSeconds+=seconds;if(needsSaveSeconds>=10){needsSaveSeconds=0;saveNeeds();}}
+          '''
+          function('save', "function save(){if(!loaded)return;try{localStorage.setItem(KEY,JSON.stringify({room,sleeping,left,poop}));}catch(e){}saveNeeds();}")
+          s = s.replace('function save()', module + 'function save()', 1)
+          function('syncMenu', "function syncMenu(){const allowed=items.filter(i=>i.room===room);if(!allowed.length)return;const score=i=>stats[i.id==='den'?'fun':i.id==='brush'?'clean':i.id]??50;const min=Math.min(...allowed.map(score)),tied=allowed.filter(i=>score(i)===min);selected=tied.some(i=>i.id===selected)?selected:tied[0].id;menu?.select(selected,{animate:loaded});}")
+          function('rewardParts', "function rewardParts(){const id=pending;return [{sheet:'a01',anim:16,time:1000,onStart:()=>{if(ACTION_EFFECTS[id]){changeNeeds(ACTION_EFFECTS[id]);save();}$('.popup').hidden=false;$('.reward').src=icons.heart;},onEnd:()=>$('.popup').hidden=true}];}")
+          function('cleanPoop', "function cleanPoop(){if(!casual()||!dirty())return;interrupt();wake();poop=null;blockedActivity=null;changeNeeds({clean:6});updatePoopAccess();say('star');save();toast('Posprzątane — można znów wybrać czynność.');}")
+          sub(r'function\s+activity\s*\(id\)\s*\{', '''function activity(id){
+          if(!dirty()){
+            const play=id==='fun'||id==='den';
+            if(play&&stats.water<15){idle(16);say('water',3500);toast('Najpierw woda — Łatka jest spragniona.');return;}
+            if(play&&stats.sleep<15){idle(16);say('sleep',3500);toast('Łatka potrzebuje snu przed zabawą.');return;}
+            if((id==='food'||id==='water')&&stats[id]>=95){idle(16);say(id);toast(id==='food'?'Łatka jest już najedzona.':'Łatka nie potrzebuje więcej wody.');return;}
+          }
+          ''')
+          sub(r'statusBuild\s*\(\s*\)\s*;', 'loadNeeds();statusBuild();statusUpdate();')
+          sub(r'clock\s*\+=\s*dt\s*;', 'clock+=dt;updateNeeds(dt/1000);')
+          for i,(attrs,body) in enumerate(re.findall(r'<script([^>]*)>(.*?)</script>',s,re.S)):
+              if 'application/json' in attrs: continue
+              check=Path('/tmp/latka-check-'+str(i)+'.js');check.write_text(body,encoding='utf-8')
+              subprocess.run(['node','--check',str(check)],check=True)
+          for name in ['save','activity','syncMenu','rewardParts','updateNeeds']:
+              assert len(re.findall(r'function\s+'+name+r'\s*\(',s))==1,name
+          p.write_text(s,encoding='utf-8')
+      - name: Commit updated index
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Integrate needs, fix kennel background and adjust bottom menu'
+          git push origin HEAD:main
