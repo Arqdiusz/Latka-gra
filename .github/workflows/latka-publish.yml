@@ -1,0 +1,51 @@
+name: "Łatka — publikuj aktualną wersję"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Pobierz aktualną grę
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Przygotuj pliki strony
+        shell: bash
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          for directory in animacje ikony inne tla ustawienia animacje-ustawienia; do
+            if [ -d "$directory" ]; then
+              cp -R "$directory" "_site/$directory"
+            fi
+          done
+
+      - name: Przygotuj GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Przekaż stronę do publikacji
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Opublikuj grę
+        id: deployment
+        uses: actions/deploy-pages@v4
