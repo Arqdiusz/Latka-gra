@@ -96,8 +96,8 @@ body {
 
 .heartBadge img {
     flex-shrink: 0;
-    width: 22px;
-    height: 22px;
+    width: 25px;
+    height: 25px;
     image-rendering: pixelated;
 }
 
@@ -251,7 +251,7 @@ body {
     place-items: center;
     padding: 5px;
     margin: 0;
-    border: 3px solid white;
+    border: 2px solid #5c4b47;
     border-radius: 50%;
     background: var(--item-color);
     box-shadow: 0 3px #0001;
