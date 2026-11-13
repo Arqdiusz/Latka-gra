@@ -32,7 +32,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html _site/
-          for directory in animacje ikony inne tla ustawienia animacje-ustawienia; do
+          for directory in css js animacje ikony inne tla ustawienia animacje-ustawienia; do
             if [ -d "$directory" ]; then
               cp -R "$directory" "_site/$directory"
             fi
