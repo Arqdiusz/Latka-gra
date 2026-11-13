@@ -1046,7 +1046,7 @@ canvas.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
     if (gesture) {
         if (gesture.kind === "pet") stopPetting();
-        if (phase === "swipe-preview") settleSwipe(1, false);
+        if (phase === "swipe-preview") { phase = "idle"; setOffset(0); }
         gesture = null;
         return;
     }
@@ -1074,13 +1074,9 @@ canvas.addEventListener("pointermove", (e) => {
             if (g.kind === "pet") startPetting();
         } else if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.2 && casual()) {
             g.kind = "swipe";
-            interrupt();
-            wake();
-            phase = "swipe-preview";
-            locks();
         }
     }
-    if (g.kind === "swipe") previewSwipe(dx);
+    if (g.kind === "swipe") { /* podgląd wyłączony — używamy animacji strzałek */ }
     if (g.kind === "pet") {
         e.preventDefault();
         petLast = clock;
@@ -1103,7 +1099,12 @@ function pointerEnd(e, cancel = false) {
     const dx = e.clientX - g.sx,
         dy = e.clientY - g.sy;
     if (g.kind === "swipe") {
-        settleSwipe(dx < 0 ? 1 : -1, !cancel && Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.2);
+        if (!cancel && Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+            setOffset(0);
+            stepRoom(dx < 0 ? 1 : -1);
+        } else {
+            setOffset(0);
+        }
         return;
     }
     if (cancel) return;
