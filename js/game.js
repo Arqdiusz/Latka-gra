@@ -343,9 +343,6 @@ function heart() {
 }
 
 function statusBuild() {
-    const statusEl = $(".status");
-
-    // Rząd 1: 5 potrzeb
     const statsRow = document.createElement("div");
     statsRow.className = "status-stats";
 
@@ -365,21 +362,12 @@ function statusBuild() {
         el.append(im, bar);
         statsRow.append(el);
     }
+    $(".status").append(statsRow);
 
-    // Rząd 2: serduszko na pełną szerokość
-    const heartRow = document.createElement("div");
-    heartRow.className = "stat-heart";
-    heartRow.dataset.status = "heart";
-    const heartIm = new Image();
-    heartIm.src = icons["heart"];
-    heartIm.alt = "Samopoczucie";
-    heartIm.width = heartIm.height = 28;
-    const heartBar = document.createElement("div");
-    heartBar.className = "bar";
-    heartBar.innerHTML = "<i></i>";
-    heartRow.append(heartIm, heartBar);
+    // Serduszko — żyje w pasku sceny (HTML już go ma, tu tylko podpinamy ikonę)
+    const heartBadge = $(".heartBadge");
+    if (heartBadge) heartBadge.querySelector("img").src = icons["heart"];
 
-    statusEl.append(statsRow, heartRow);
     statusUpdate();
 }
 
@@ -395,13 +383,13 @@ function statusUpdate() {
     });
 
     // Serduszko
-    const heartEl = document.querySelector(".stat-heart[data-status='heart']");
-    if (heartEl) {
+    const heartBadge = $(".heartBadge");
+    if (heartBadge) {
         const v = heart();
-        const fill = heartEl.querySelector("i");
+        const fill = heartBadge.querySelector("i");
         fill.style.width = v + "%";
         fill.style.background = v <= 25 ? "#e84b4b" : v <= 50 ? "#f0a060" : "#f4a0bc";
-        heartEl.setAttribute("aria-label", "Samopoczucie psa: " + Math.round(v) + "%");
+        heartBadge.setAttribute("aria-label", "Samopoczucie Łatki: " + Math.round(v) + "%");
     }
 }
 
