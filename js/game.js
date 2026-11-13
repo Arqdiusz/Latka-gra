@@ -27,7 +27,7 @@ const items = [
         icon: "food",
         label: "Nakarm",
         room: "kitchen",
-        color: "#fe9a9a",
+        color: "#841a19",
     },
     {
         id: "water",
@@ -41,7 +41,7 @@ const items = [
         icon: "fun",
         label: "Zabawa",
         room: "garden",
-        color: "#6b9e51",
+        color: "#d2e146",
     },
     {
         id: "den",
