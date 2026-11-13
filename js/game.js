@@ -41,7 +41,7 @@ const items = [
         icon: "fun",
         label: "Zabawa",
         room: "garden",
-        color: "#dfa248",
+        color: "#6b9e51",
     },
     {
         id: "den",
