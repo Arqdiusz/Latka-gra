@@ -50,8 +50,14 @@ body {
 .stat img {
     display: block;
     margin: auto;
-    image-rendering: pixelated;
+    width: 36px;
+    height: 36px;
+    padding: 10px;
+    background: var(--c);
+    border-radius: 50%;
+    box-sizing: content-box;
     object-fit: contain;
+    image-rendering: pixelated;
 }
 
 .bar {
