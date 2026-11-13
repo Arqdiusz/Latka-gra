@@ -54,6 +54,7 @@ body {
     height: 36px;
     padding: 10px;
     background: var(--c);
+    border: 2px solid #5c4b47;
     border-radius: 50%;
     box-sizing: content-box;
     object-fit: contain;
