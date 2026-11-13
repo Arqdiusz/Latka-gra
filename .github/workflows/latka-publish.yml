@@ -31,12 +31,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p _site
-          cp index.html _site/
-          for directory in css js animacje ikony inne tla ustawienia animacje-ustawienia; do
-            if [ -d "$directory" ]; then
-              cp -R "$directory" "_site/$directory"
-            fi
-          done
+          rsync -a --exclude='.git' --exclude='.github' --exclude='_site' \
+            --exclude='README.md' --exclude='narzedzia' ./ _site/
 
       - name: Przygotuj GitHub Pages
         uses: actions/configure-pages@v5
