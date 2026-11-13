@@ -1,0 +1,229 @@
+{
+  "asset": "latka-animacje-01.png",
+  "cols": 6,
+  "rows": 12,
+  "ground": 113,
+  "offsets": {
+    "17": {
+      "x": 0,
+      "y": 4,
+      "scale": 100
+    },
+    "18": {
+      "x": 1,
+      "y": 8,
+      "scale": 101
+    },
+    "25": {
+      "x": 0,
+      "y": -1,
+      "scale": 100
+    },
+    "31": {
+      "x": 0,
+      "y": -1,
+      "scale": 100
+    },
+    "32": {
+      "x": 0,
+      "y": -1,
+      "scale": 100
+    },
+    "33": {
+      "x": 0,
+      "y": -3,
+      "scale": 100
+    },
+    "34": {
+      "x": 0,
+      "y": -1,
+      "scale": 102
+    }
+  },
+  "presets": [
+    {
+      "name": "01. Skok / podskok",
+      "seq": "1,2,43,8",
+      "ms": 220,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "02. Bieg / sus",
+      "seq": "3,4,9,10",
+      "ms": 180,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "03. Picie",
+      "seq": "5,6,5,6,5,6,5,6,5,6,58,58",
+      "ms": 180,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "04. Rozglądanie się",
+      "seq": "13,13,14,14,19,20,20,20",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "05. Turlanie A",
+      "seq": "15,38,65,22",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "06. Jedzenie",
+      "seq": "17,18,17,18,17,18,23,30",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "07. Marsz",
+      "seq": "25,31,32",
+      "ms": 180,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "08. Uszy / mrugnięcie",
+      "seq": "27,28,33,34",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "09. Siad / stanie",
+      "seq": "29,30,35,36",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "10. Turlanie B",
+      "seq": "37,38,43,44",
+      "ms": 180,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "11. Na grzbiecie",
+      "seq": "39,40,39,39,40,45,46",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "12. Węszenie / toaleta",
+      "seq": "20,41,42,47,47,42,65,65,48",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "13. Drapanie",
+      "seq": "49,50,55,49,50,49,50,56",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "14. Otrząsanie",
+      "seq": "51,52,57,58",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "15. Mycie / piana",
+      "seq": "59,60,54,59,60,54,53",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "16. Patrzenie w górę / łapa",
+      "seq": "61,62,67,68",
+      "ms": 340,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "17. Spokojne stanie",
+      "seq": "63,27,63,65,63,27,65",
+      "ms": 380,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "18. Radość / podskok",
+      "seq": "65,66,71,72",
+      "ms": 280,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "Siad — spokojnie",
+      "seq": "29,29,29,61,29,29,29,49",
+      "ms": 650,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "Węszenie bez toalety",
+      "seq": "41,41",
+      "ms": 400,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "Toaleta osobno",
+      "seq": "47,48,47",
+      "ms": 650,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "Radość z powrotem",
+      "seq": "63,65,66,71,72,63",
+      "ms": 220,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    },
+    {
+      "name": "Marsz i skok",
+      "seq": "25,26,31,32,1,2,7,8,25",
+      "ms": 150,
+      "intro": "",
+      "outro": "",
+      "repeat": true
+    }
+  ]
+}

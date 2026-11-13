@@ -1,0 +1,234 @@
+{
+  "asset": "latka-animacje-02.png",
+  "cols": 6,
+  "rows": 12,
+  "ground": 113,
+  "offsets": {
+    "3": {
+      "x": 0,
+      "y": 4,
+      "scale": 100
+    },
+    "4": {
+      "x": 0,
+      "y": 4,
+      "scale": 100
+    },
+    "17": {
+      "x": 0,
+      "y": 0,
+      "scale": 102
+    },
+    "23": {
+      "x": 0,
+      "y": -1,
+      "scale": 100
+    },
+    "24": {
+      "x": 0,
+      "y": -2,
+      "scale": 100
+    },
+    "66": {
+      "x": 0,
+      "y": 8,
+      "scale": 100
+    },
+    "71": {
+      "x": 0,
+      "y": -4,
+      "scale": 100
+    },
+    "72": {
+      "x": 0,
+      "y": -2,
+      "scale": 100
+    }
+  },
+  "presets": [
+    {
+      "name": "01. Stanie / „NIE” — ruch głową",
+      "intro": "",
+      "seq": "1,2,7,8",
+      "outro": "",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "02. Siad — spokojny / smutny",
+      "intro": "",
+      "seq": "3,4,9,10",
+      "outro": "",
+      "ms": 350,
+      "repeat": true
+    },
+    {
+      "name": "03. Smutek na stojąco / uszy",
+      "intro": "",
+      "seq": "5,6,11,12",
+      "outro": "",
+      "ms": 350,
+      "repeat": true
+    },
+    {
+      "name": "04. Szczotkowanie — wariant A",
+      "intro": "",
+      "seq": "13,14,19,20",
+      "outro": "",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "05. Szczotkowanie — wariant B",
+      "intro": "",
+      "seq": "15,16,21,22",
+      "outro": "",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "06. Siad tyłem / rozglądanie",
+      "intro": "",
+      "seq": "17,18,23,24",
+      "outro": "",
+      "ms": 350,
+      "repeat": true
+    },
+    {
+      "name": "07. Sen w legowisku",
+      "intro": "",
+      "seq": "25,26,31,32",
+      "outro": "",
+      "ms": 700,
+      "repeat": true
+    },
+    {
+      "name": "08. Ziewanie i przeciąganie",
+      "intro": "1",
+      "seq": "27,28,33,34",
+      "outro": "1",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "09. Piłka — zachęta do zabawy",
+      "intro": "",
+      "seq": "29,30,35,36",
+      "outro": "",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "10. Piłka — trącanie łapą",
+      "intro": "",
+      "seq": "37,38,43,44",
+      "outro": "",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "11. Piłka — zabawa na leżąco",
+      "intro": "",
+      "seq": "39,40,45,46",
+      "outro": "",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "12. Aport — ruch z piłką",
+      "intro": "",
+      "seq": "41,42,47,48",
+      "outro": "",
+      "ms": 220,
+      "repeat": true
+    },
+    {
+      "name": "13. Piłka — podrzut i podskok",
+      "intro": "",
+      "seq": "49,50,55,56",
+      "outro": "",
+      "ms": 220,
+      "repeat": true
+    },
+    {
+      "name": "14. Piłka — trzymanie i opuszczanie",
+      "intro": "",
+      "seq": "51,52,57,58",
+      "outro": "",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "15. Motyl — skoki i pogoń",
+      "intro": "",
+      "seq": "53,54,59,60",
+      "outro": "",
+      "ms": 220,
+      "repeat": true
+    },
+    {
+      "name": "16. Motyl — obserwowanie przy ziemi",
+      "intro": "",
+      "seq": "61,62,67,68",
+      "outro": "",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "17. Motyl — obserwowanie na siedząco",
+      "intro": "",
+      "seq": "63,64,69,70",
+      "outro": "",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "18. Motyl — ląduje przy nosie",
+      "intro": "",
+      "seq": "65,66,71,72",
+      "outro": "",
+      "ms": 280,
+      "repeat": true
+    },
+    {
+      "name": "19. Neutralne stanie — baza",
+      "intro": "",
+      "seq": "1,8,1,8",
+      "outro": "",
+      "ms": 650,
+      "repeat": true
+    },
+    {
+      "name": "20. „NIE” — próba z powrotem",
+      "intro": "1",
+      "seq": "2,7,2,7",
+      "outro": "8",
+      "ms": 230,
+      "repeat": true
+    },
+    {
+      "name": "21. Smutek — siad",
+      "intro": "3",
+      "seq": "4,10,4,10",
+      "outro": "9",
+      "ms": 600,
+      "repeat": true
+    },
+    {
+      "name": "22. Szczotkowanie — połączone",
+      "intro": "1",
+      "seq": "13,14,19,20,15,16,21,22,22,22",
+      "outro": "8",
+      "ms": 240,
+      "repeat": true
+    },
+    {
+      "name": "23. Ziewnięcie — krótko",
+      "intro": "27",
+      "seq": "28",
+      "outro": "34",
+      "ms": 500,
+      "repeat": false
+    }
+  ]
+}
