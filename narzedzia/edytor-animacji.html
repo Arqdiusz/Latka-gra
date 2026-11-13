@@ -6,99 +6,106 @@
 <title>Łatka — Edytor animacji</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#f0ebe4;color:#3c3346;font:14px/1.5 system-ui;min-height:100dvh}
+body{background:#f0ebe4;color:#3c3346;font:14px/1.5 system-ui;min-height:100dvh;overflow:hidden}
 
 /* ── Nagłówek ── */
-header{background:#fff;border-bottom:2px solid #e0d5cc;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-header h1{font-size:18px;flex:1}
-.hbtn{background:#ede0f8;border:1px solid #c7b0d8;border-radius:8px;padding:6px 12px;cursor:pointer;font:inherit;white-space:nowrap}
+header{background:#fff;border-bottom:2px solid #e0d5cc;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:50px}
+header h1{font-size:17px;flex:1;white-space:nowrap}
+.hbtn{background:#ede0f8;border:1px solid #c7b0d8;border-radius:8px;padding:5px 11px;cursor:pointer;font:inherit;white-space:nowrap;font-size:13px}
 .hbtn:hover{background:#dfc8f5}
 .hbtn.danger{background:#fde8e8;border-color:#e0b0b0}
 .hbtn.danger:hover{background:#f8d0d0}
+.hbtn.primary{background:#a060c8;color:#fff;border-color:#8040a8}
+.hbtn.primary:hover{background:#8848b0}
 
-/* ── Dwa panele obok siebie ── */
-.app{display:grid;grid-template-columns:320px 1fr;height:calc(100dvh - 56px);overflow:hidden}
-@media(max-width:700px){.app{grid-template-columns:1fr;height:auto;overflow:visible}}
+/* ── Trzy kolumny ── */
+.app{display:grid;grid-template-columns:240px 1fr 300px;height:calc(100dvh - 50px);overflow:hidden}
 
-/* ── Lewy panel: lista arkuszy i animacji ── */
+/* ══ KOLUMNA 1: lista animacji ══ */
 .sidebar{background:#fff;border-right:2px solid #e0d5cc;display:flex;flex-direction:column;overflow:hidden}
-.sidebar-sec{padding:10px 12px;border-bottom:1px solid #ede5de}
-.sidebar-sec h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#9e8da8;margin-bottom:6px}
-.sheet-tabs{display:flex;gap:6px;flex-wrap:wrap}
-.sheet-tab{background:#f5eefb;border:2px solid transparent;border-radius:9px;padding:5px 10px;cursor:pointer;font:13px inherit}
+.sidebar-sec{padding:8px 10px;border-bottom:1px solid #ede5de}
+.sidebar-sec h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#9e8da8;margin-bottom:5px}
+.sheet-tabs{display:flex;gap:5px;flex-wrap:wrap}
+.sheet-tab{background:#f5eefb;border:2px solid transparent;border-radius:8px;padding:4px 9px;cursor:pointer;font:12px inherit}
 .sheet-tab.active{border-color:#a060c8;background:#ede0f8}
 .sheet-tab:hover:not(.active){background:#e8ddf5}
-
-.anim-list{flex:1;overflow-y:auto;padding:6px 0}
-.anim-item{display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;border-left:3px solid transparent}
+.anim-list{flex:1;overflow-y:auto;padding:4px 0}
+.anim-item{display:flex;align-items:center;gap:5px;padding:6px 10px;cursor:pointer;border-left:3px solid transparent}
 .anim-item:hover{background:#f5eefb}
 .anim-item.active{background:#ede0f8;border-left-color:#a060c8}
-.anim-item .anim-name{flex:1;font-size:13px}
-.anim-item .anim-idx{font-size:11px;color:#b0a0bc;width:22px}
-.anim-item .del-btn{opacity:0;background:none;border:none;cursor:pointer;font-size:14px;color:#c05858;padding:0 2px}
+.anim-item .anim-name{flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.anim-item .anim-idx{font-size:10px;color:#b0a0bc;width:20px;flex-shrink:0}
+.anim-item .del-btn{opacity:0;background:none;border:none;cursor:pointer;font-size:13px;color:#c05858;padding:0 2px;flex-shrink:0}
 .anim-item:hover .del-btn{opacity:1}
-
-.add-row{padding:8px 12px}
-.add-row button{width:100%;background:#ede0f8;border:1px dashed #b090c8;border-radius:9px;padding:7px;cursor:pointer;font:inherit;color:#7050a8}
+.add-row{padding:7px 10px;border-top:1px solid #ede5de}
+.add-row button{width:100%;background:#ede0f8;border:1px dashed #b090c8;border-radius:8px;padding:6px;cursor:pointer;font:13px inherit;color:#7050a8}
 .add-row button:hover{background:#e0d0f0}
 
-/* ── Prawy panel: edycja + podgląd ── */
-.main{display:grid;grid-template-rows:auto 1fr;overflow:hidden}
-.editor{overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+/* ══ KOLUMNA 2: środek — podgląd animacji + siatka klatek ══ */
+.center{display:flex;flex-direction:column;overflow:hidden;background:#1e1828}
 
-.card{background:#fff;border-radius:12px;padding:12px 14px;border:1px solid #e8dfe8}
-.card h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:#9e8da8;margin-bottom:8px}
-
-label.field{display:flex;flex-direction:column;gap:3px;font-size:13px}
-label.field span{color:#7a6882}
-input[type=text],input[type=number],textarea{font:inherit;border:1px solid #d0c0da;border-radius:7px;padding:5px 8px;background:#faf7fc;color:#3c3346;width:100%}
-input[type=text]:focus,input[type=number]:focus,textarea:focus{outline:2px solid #b080d0;border-color:transparent}
-textarea{resize:vertical;min-height:40px;font-family:ui-monospace,monospace;font-size:12px}
-input[type=number]{width:90px}
-input[type=range]{width:100%;accent-color:#a060c8}
-
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.row label.field{flex:1;min-width:80px}
-
-.seq-help{font-size:11px;color:#9e8da8;margin-top:2px}
-
-/* Tabela korekt klatek */
-.offset-table{width:100%;border-collapse:collapse;font-size:12px}
-.offset-table th{text-align:left;color:#9e8da8;font-weight:600;padding:3px 4px;border-bottom:1px solid #ede5de}
-.offset-table td{padding:3px 4px}
-.offset-table tr:hover td{background:#faf5ff}
-.offset-table input[type=number]{width:60px;padding:2px 4px;font-size:12px}
-.offset-table .del-btn{background:none;border:none;cursor:pointer;color:#c05858;padding:0 4px;font-size:13px}
-
-/* Podgląd */
-.preview-panel{background:#2a2030;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px;min-height:260px}
-.preview-stage{background:repeating-conic-gradient(#3a3040 0 25%,#2a2030 0 50%) 0/20px 20px;border-radius:10px;overflow:hidden;position:relative}
+/* Podgląd animacji */
+.anim-preview{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;gap:6px;flex-shrink:0}
+.preview-stage{background:repeating-conic-gradient(#2e2438 0 25%,#1e1828 0 50%) 0/16px 16px;border-radius:8px;overflow:hidden;position:relative;cursor:crosshair}
 .preview-stage canvas{display:block;image-rendering:pixelated}
-.preview-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
-.pbtn{background:#4a3a58;border:1px solid #6a5a78;border-radius:8px;padding:5px 12px;cursor:pointer;font:13px inherit;color:#e8d8f8}
-.pbtn:hover{background:#5a4a68}
-.pbtn.active{background:#9050c0;border-color:#b070e0}
-.preview-info{font-size:11px;color:#9080a8;text-align:center}
-.thumb-strip{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;max-width:600px;padding:4px 0}
-.thumb-strip canvas{border:2px solid transparent;border-radius:4px;cursor:pointer;image-rendering:pixelated}
-.thumb-strip canvas.hi{border-color:#c080f0}
+.anim-controls{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:center}
+.pbtn{background:#3a2c48;border:1px solid #5a4a68;border-radius:7px;padding:4px 10px;cursor:pointer;font:12px inherit;color:#d8c8f0}
+.pbtn:hover{background:#4a3a58}
+.pbtn.active{background:#8840b8;border-color:#a060d8}
+.preview-info{font-size:11px;color:#8878a8;text-align:center;min-height:16px}
 
-/* Górna belka edytora — info o arkuszu ── */
-.sheet-info-bar{background:#f5eefb;border-bottom:1px solid #e0d5cc;padding:6px 14px;font-size:12px;color:#7a6882;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.sheet-info-bar strong{color:#3c3346}
+/* Siatka klatek arkusza */
+.sheet-grid-wrap{flex:1;overflow:auto;padding:8px 10px;border-top:2px solid #2e2438}
+.sheet-grid-header{font-size:11px;color:#8878a8;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.sheet-grid{display:grid;gap:2px}
+.frame-cell{position:relative;cursor:pointer;border:2px solid transparent;border-radius:3px;overflow:hidden}
+.frame-cell canvas{display:block;width:100%;image-rendering:pixelated}
+.frame-cell .fnum{position:absolute;top:0;left:0;background:#000a;color:#fff;font-size:9px;line-height:1.2;padding:0 2px;pointer-events:none}
+.frame-cell:hover{border-color:#8848b8}
+.frame-cell.in-seq{border-color:#50a050}
+.frame-cell.current-frame{border-color:#f0c040 !important;box-shadow:0 0 0 1px #f0c040}
+.frame-cell.has-offset{background:#3a2c48}
 
-/* Powiadomienia */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#3c3346;color:#fff;border-radius:10px;padding:8px 18px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+/* ══ KOLUMNA 3: edytor właściwości ══ */
+.propanel{background:#fff;border-left:2px solid #e0d5cc;display:flex;flex-direction:column;overflow:hidden}
+.propanel-scroll{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.card{background:#faf7fc;border-radius:10px;padding:10px 12px;border:1px solid #e8dfe8}
+.card-title{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#9e8da8;margin-bottom:7px;font-weight:600}
+label.field{display:flex;flex-direction:column;gap:2px;font-size:12px}
+label.field .lbl{color:#7a6882;font-size:11px}
+input[type=text],input[type=number],textarea,select{font:inherit;border:1px solid #d0c0da;border-radius:6px;padding:4px 7px;background:#faf7fc;color:#3c3346;width:100%;font-size:13px}
+input[type=text]:focus,input[type=number]:focus,textarea:focus{outline:2px solid #b080d0;border-color:transparent}
+textarea{resize:vertical;min-height:34px;font-family:ui-monospace,monospace;font-size:11px}
+input[type=number]{width:76px}
+input[type=range]{width:100%;accent-color:#a060c8;margin:3px 0}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.row label.field{flex:1;min-width:60px}
+.hint{font-size:10px;color:#9e8da8;margin-top:1px}
+
+/* Korekta klatki — karta specjalna */
+.offset-card{background:#f0eaf8;border-color:#d0b8e8}
+.offset-card .card-title{color:#7050a8}
+.off-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px}
+.off-row label.field input{text-align:right}
+.off-preview-note{font-size:10px;color:#9e8da8;margin-top:4px;font-style:italic}
+
+/* Zoom siatki */
+.zoom-row{display:flex;align-items:center;gap:6px;font-size:11px;color:#8878a8}
+.zoom-row input{flex:1}
+
+/* Toast */
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#3c3346;color:#fff;border-radius:9px;padding:7px 16px;font-size:12px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
 
-.empty-hint{text-align:center;padding:40px 20px;color:#b0a0bc;font-size:14px;line-height:1.8}
-
-/* Modalny confirm */
+/* Modal */
 .modal-bg{position:fixed;inset:0;background:#0007;display:flex;align-items:center;justify-content:center;z-index:100}
-.modal{background:#fff;border-radius:14px;padding:24px;max-width:340px;width:90%;box-shadow:0 8px 32px #0004}
-.modal h3{margin-bottom:10px}
-.modal p{font-size:13px;color:#6a5a72;margin-bottom:16px}
+.modal{background:#fff;border-radius:12px;padding:20px;max-width:320px;width:90%}
+.modal h3{margin-bottom:8px}
+.modal p{font-size:12px;color:#6a5a72;margin-bottom:14px}
 .modal .row{justify-content:flex-end}
+
+.empty-hint{text-align:center;padding:30px 16px;color:#8878a8;font-size:12px;line-height:1.9}
+.empty-hint code{background:#2e2438;color:#c8b8e8;padding:1px 5px;border-radius:4px;font-size:11px}
 </style>
 </head>
 <body>
@@ -107,18 +114,18 @@ input[type=range]{width:100%;accent-color:#a060c8}
   <h1>Łatka — Edytor animacji</h1>
   <button class="hbtn" id="btnLoadFiles">📂 Wczytaj PNG + JSON</button>
   <button class="hbtn" id="btnSaveJson">💾 Zapisz JSON</button>
-  <button class="hbtn" id="btnSaveAll">💾 Zapisz wszystkie JSONy</button>
+  <button class="hbtn" id="btnSaveAll">💾 Zapisz wszystkie</button>
   <input id="fileInput" type="file" accept="image/png,application/json,.json" multiple hidden>
 </header>
 
 <div class="app">
 
-  <!-- ── Lewy panel ── -->
+  <!-- ══ KOLUMNA 1: lista animacji ══ -->
   <aside class="sidebar">
     <div class="sidebar-sec">
       <h2>Arkusz PNG</h2>
       <div class="sheet-tabs" id="sheetTabs">
-        <span style="font-size:12px;color:#b0a0bc">Wczytaj pliki PNG i JSON →</span>
+        <span style="font-size:11px;color:#b0a0bc">Wczytaj pliki →</span>
       </div>
     </div>
     <div class="sidebar-sec" style="padding-bottom:4px">
@@ -130,16 +137,31 @@ input[type=range]{width:100%;accent-color:#a060c8}
     </div>
   </aside>
 
-  <!-- ── Prawy panel ── -->
-  <div class="main">
-    <div class="sheet-info-bar" id="sheetInfoBar" hidden></div>
-    <div class="editor" id="editor">
+  <!-- ══ KOLUMNA 2: podgląd + siatka klatek ══ -->
+  <div class="center" id="centerCol">
+    <div class="anim-preview" id="animPreview">
       <div class="empty-hint">
-        Kliknij <strong>📂 Wczytaj PNG + JSON</strong> i wybierz pliki arkuszy animacji<br>
-        (np. <code>latka-animacje-01.png</code> i <code>latka-animacje-01.json</code>).<br><br>
-        Możesz wczytać kilka PNG i kilka JSON na raz — edytor sam je dopasuje po nazwie.<br><br>
-        <small>Pliki nie są wysyłane nigdzie — wszystko działa lokalnie w przeglądarce.</small>
+        Kliknij <strong>📂 Wczytaj PNG + JSON</strong><br>
+        i wybierz np. <code>latka-animacje-01.png</code><br>
+        i <code>latka-animacje-01.json</code>
       </div>
+    </div>
+    <div class="sheet-grid-wrap" id="sheetGridWrap" hidden>
+      <div class="sheet-grid-header">
+        <span id="gridInfo">Klatki arkusza</span>
+        <div class="zoom-row">
+          Zoom <input type="range" id="gridZoom" min="0.5" max="3" step="0.25" value="1">
+          <span id="gridZoomVal">×1</span>
+        </div>
+      </div>
+      <div class="sheet-grid" id="sheetGrid"></div>
+    </div>
+  </div>
+
+  <!-- ══ KOLUMNA 3: właściwości ══ -->
+  <div class="propanel">
+    <div class="propanel-scroll" id="propanel">
+      <div class="empty-hint" style="color:#b0a0bc">Wybierz animację z listy.</div>
     </div>
   </div>
 
@@ -150,24 +172,24 @@ input[type=range]{width:100%;accent-color:#a060c8}
 <script>
 'use strict';
 
-/* ═══════════════════════════════════════════════
-   STAN GLOBALNY
-═══════════════════════════════════════════════ */
-// sheets: Map<id, {id, name, png, img, json, ground, cols, rows, offsets, presets, dirty}>
-const sheets = new Map();
+/* ═══════════════════════════════════════
+   STAN
+═══════════════════════════════════════ */
+const sheets = new Map();      // id → sheet
 let activeSheetId = null;
 let activePresetIdx = null;
 
-// Podgląd animacji
+// Podgląd
 let playing = false, animIdx = 0, animPhase = 'loop', stamp = 0;
 let seqIntro = [], seqLoop = [], seqOutro = [], seqActive = [];
-let previewCanvas = null, previewCtx = null;
-let zoomLevel = 2.0;
+let previewCtx = null, previewCanvas = null;
+let previewZoom = 2.0;
 let showGuides = true;
+let gridZoom = 1.0;
 
-/* ═══════════════════════════════════════════════
+/* ═══════════════════════════════════════
    HELPERS
-═══════════════════════════════════════════════ */
+═══════════════════════════════════════ */
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 
@@ -179,33 +201,20 @@ function toast(msg, ms = 2500) {
   el._t = setTimeout(() => el.classList.remove('show'), ms);
 }
 
-function sheetName(filename) {
-  // 'latka-animacje-01.png' → 'latka-animacje-01'
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function sheetBaseName(filename) {
   return filename.replace(/\.[^.]+$/, '');
 }
 
-function matchJsonToSheet(jsonName, sheetId) {
-  // Sprawdź czy JSON pasuje do arkusza po nazwie bazowej
-  const base = sheetName(jsonName);
-  const sid = sheetName(sheets.get(sheetId)?.name || '');
-  return base === sid;
-}
-
-function readFileAsDataURL(f) {
+function readFile(f, mode = 'dataURL') {
   return new Promise((ok, bad) => {
     const r = new FileReader();
     r.onload = () => ok(r.result);
     r.onerror = () => bad(new Error('Błąd odczytu: ' + f.name));
-    r.readAsDataURL(f);
-  });
-}
-
-function readFileAsText(f) {
-  return new Promise((ok, bad) => {
-    const r = new FileReader();
-    r.onload = () => ok(r.result);
-    r.onerror = () => bad(new Error('Błąd odczytu: ' + f.name));
-    r.readAsText(f);
+    mode === 'dataURL' ? r.readAsDataURL(f) : r.readAsText(f);
   });
 }
 
@@ -218,559 +227,14 @@ function loadImage(src) {
   });
 }
 
-/* ═══════════════════════════════════════════════
-   WCZYTYWANIE PLIKÓW
-═══════════════════════════════════════════════ */
-$('#btnLoadFiles').onclick = () => $('#fileInput').click();
-$('#fileInput').onchange = async e => {
-  const files = [...e.target.files];
-  e.target.value = '';
-  if (!files.length) return;
-
-  const pngFiles = files.filter(f => f.name.endsWith('.png'));
-  const jsonFiles = files.filter(f => f.name.endsWith('.json'));
-
-  // Wczytaj PNG → utwórz/zaktualizuj arkusze
-  for (const f of pngFiles) {
-    try {
-      const dataUrl = await readFileAsDataURL(f);
-      const img = await loadImage(dataUrl);
-      const id = sheetName(f.name);
-
-      if (sheets.has(id)) {
-        // Aktualizuj obraz istniejącego arkusza
-        const s = sheets.get(id);
-        s.png = dataUrl;
-        s.img = img;
-        toast(`Zaktualizowano obraz: ${f.name}`);
-      } else {
-        // Nowy arkusz — domyślna siatka 6×12 jeśli pasuje
-        const cols = (img.width % 6 === 0) ? 6 : 1;
-        const rows = (img.height % 12 === 0) ? 12 : 1;
-        sheets.set(id, {
-          id,
-          name: f.name,
-          png: dataUrl,
-          img,
-          cols,
-          rows,
-          ground: Math.round(img.height / rows * 0.88),
-          offsets: {},
-          presets: [],
-          dirty: false
-        });
-        toast(`Wczytano: ${f.name} (${img.width}×${img.height}px, siatka ${cols}×${rows})`);
-      }
-    } catch (err) {
-      toast('Błąd: ' + err.message, 4000);
-    }
-  }
-
-  // Wczytaj JSON → dopasuj do arkusza
-  for (const f of jsonFiles) {
-    try {
-      const text = await readFileAsText(f);
-      const data = JSON.parse(text);
-      const id = sheetName(f.name);
-
-      if (!sheets.has(id)) {
-        // Jeszcze nie ma PNG — utwórz arkusz bez obrazu
-        sheets.set(id, {
-          id,
-          name: id + '.png',
-          png: null,
-          img: null,
-          cols: data.cols || 6,
-          rows: data.rows || 12,
-          ground: data.ground || 113,
-          offsets: data.offsets || {},
-          presets: data.presets || [],
-          dirty: false
-        });
-        toast(`Wczytano JSON bez PNG: ${f.name} — wczytaj też PNG`, 4000);
-      } else {
-        const s = sheets.get(id);
-        s.cols = data.cols || s.cols;
-        s.rows = data.rows || s.rows;
-        s.ground = data.ground || s.ground;
-        s.offsets = data.offsets || {};
-        s.presets = data.presets || [];
-        s.dirty = false;
-        toast(`Wczytano ustawienia: ${f.name} (${s.presets.length} animacji)`);
-      }
-    } catch (err) {
-      toast('Błąd JSON: ' + err.message, 4000);
-    }
-  }
-
-  // Aktywuj pierwszy arkusz jeśli żaden nie jest aktywny
-  if (!activeSheetId && sheets.size > 0) {
-    activeSheetId = [...sheets.keys()][0];
-    activePresetIdx = sheets.get(activeSheetId).presets.length > 0 ? 0 : null;
-  }
-
-  renderAll();
-};
-
-/* ═══════════════════════════════════════════════
-   ZAPISYWANIE JSON
-═══════════════════════════════════════════════ */
-function buildJson(sheet) {
-  return {
-    asset: sheet.name,
-    cols: sheet.cols,
-    rows: sheet.rows,
-    ground: sheet.ground,
-    offsets: sheet.offsets,
-    presets: sheet.presets
-  };
-}
-
-function downloadJson(sheet) {
-  const jsonName = sheetName(sheet.name) + '.json';
-  const text = JSON.stringify(buildJson(sheet), null, 2);
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = jsonName;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-  sheet.dirty = false;
-  renderSheetTabs();
-  toast(`Zapisano: ${jsonName}`);
-}
-
-$('#btnSaveJson').onclick = () => {
-  if (!activeSheetId) return toast('Najpierw wybierz arkusz');
-  downloadJson(sheets.get(activeSheetId));
-};
-
-$('#btnSaveAll').onclick = () => {
-  if (sheets.size === 0) return toast('Brak wczytanych arkuszy');
-  for (const s of sheets.values()) downloadJson(s);
-};
-
-/* ═══════════════════════════════════════════════
-   RENDEROWANIE LISTY
-═══════════════════════════════════════════════ */
-function renderAll() {
-  renderSheetTabs();
-  renderAnimList();
-  renderEditor();
-}
-
-function renderSheetTabs() {
-  const el = $('#sheetTabs');
-  el.innerHTML = '';
-  if (sheets.size === 0) {
-    el.innerHTML = '<span style="font-size:12px;color:#b0a0bc">Wczytaj pliki PNG i JSON →</span>';
-    return;
-  }
-  for (const [id, s] of sheets) {
-    const btn = document.createElement('button');
-    btn.className = 'sheet-tab' + (id === activeSheetId ? ' active' : '');
-    btn.textContent = s.name.replace('latka-animacje-', 'Arkusz ').replace('.png', '');
-    if (s.dirty) btn.textContent += ' ●';
-    btn.onclick = () => {
-      activeSheetId = id;
-      activePresetIdx = s.presets.length > 0 ? 0 : null;
-      stopAnim();
-      renderAll();
-    };
-    el.append(btn);
-  }
-}
-
-function renderAnimList() {
-  const list = $('#animList');
-  const addRow = $('#addRow');
-  list.innerHTML = '';
-
-  if (!activeSheetId) { addRow.hidden = true; return; }
-  const sheet = sheets.get(activeSheetId);
-  addRow.hidden = false;
-
-  if (sheet.presets.length === 0) {
-    list.innerHTML = '<div class="empty-hint" style="padding:20px 12px;font-size:12px">Brak animacji.<br>Kliknij „+ Dodaj animację".</div>';
-    return;
-  }
-
-  sheet.presets.forEach((p, i) => {
-    const item = document.createElement('div');
-    item.className = 'anim-item' + (i === activePresetIdx ? ' active' : '');
-
-    const idx = document.createElement('span');
-    idx.className = 'anim-idx';
-    idx.textContent = (i + 1) + '.';
-
-    const name = document.createElement('span');
-    name.className = 'anim-name';
-    name.textContent = p.name || '(bez nazwy)';
-
-    const del = document.createElement('button');
-    del.className = 'del-btn';
-    del.title = 'Usuń';
-    del.textContent = '✕';
-    del.onclick = e => {
-      e.stopPropagation();
-      confirmDelete(i);
-    };
-
-    item.append(idx, name, del);
-    item.onclick = () => {
-      activePresetIdx = i;
-      stopAnim();
-      renderAll();
-    };
-    list.append(item);
-  });
-
-  // Scroll do aktywnej pozycji
-  const active = list.querySelector('.anim-item.active');
-  if (active) active.scrollIntoView({ block: 'nearest' });
-}
-
-/* ═══════════════════════════════════════════════
-   EDYTOR — PRAWY PANEL
-═══════════════════════════════════════════════ */
-function renderEditor() {
-  const bar = $('#sheetInfoBar');
-  const editor = $('#editor');
-
-  if (!activeSheetId) {
-    bar.hidden = true;
-    editor.innerHTML = '<div class="empty-hint">Wczytaj pliki PNG i JSON →</div>';
-    return;
-  }
-
-  const sheet = sheets.get(activeSheetId);
-  const totalFrames = sheet.cols * sheet.rows;
-
-  // Belka info o arkuszu
-  bar.hidden = false;
-  bar.innerHTML = `
-    <strong>${sheet.name}</strong>
-    <span>${sheet.img ? sheet.img.width + '×' + sheet.img.height + 'px' : '(brak obrazu)'}</span>
-    <span>Siatka:
-      <input type="number" id="cfgCols" min="1" max="64" value="${sheet.cols}" style="width:50px"> ×
-      <input type="number" id="cfgRows" min="1" max="64" value="${sheet.rows}" style="width:50px">
-      <button class="hbtn" style="padding:2px 8px;font-size:12px" id="btnApplyGrid">Zastosuj</button>
-    </span>
-    <span>Linia ziemi: <input type="number" id="cfgGround" value="${sheet.ground}" style="width:60px"> px</span>
-    <span style="color:#9e8da8">${totalFrames} klatek</span>
-  `;
-
-  $('#cfgCols').oninput = $('#cfgRows').oninput = () => {};
-  $('#btnApplyGrid').onclick = () => {
-    const c = parseInt($('#cfgCols').value);
-    const r = parseInt($('#cfgRows').value);
-    if (!sheet.img) return toast('Brak obrazu PNG');
-    if (sheet.img.width % c !== 0 || sheet.img.height % r !== 0)
-      return toast(`PNG ${sheet.img.width}×${sheet.img.height} nie pasuje do siatki ${c}×${r}`);
-    if (c !== sheet.cols || r !== sheet.rows) {
-      if (!confirm(`Zmiana siatki (${sheet.cols}×${sheet.rows} → ${c}×${r}) zmieni znaczenie numerów klatek. Kontynuować?`)) return;
-    }
-    sheet.cols = c;
-    sheet.rows = r;
-    sheet.dirty = true;
-    renderAll();
-    toast('Siatka zaktualizowana');
-  };
-  $('#cfgGround').oninput = () => {
-    sheet.ground = parseInt($('#cfgGround').value) || sheet.ground;
-    sheet.dirty = true;
-    drawPreview();
-  };
-
-  // Brak aktywnej animacji
-  if (activePresetIdx === null || !sheet.presets[activePresetIdx]) {
-    editor.innerHTML = '<div class="empty-hint" style="padding-top:40px">Wybierz animację z listy lub dodaj nową.</div>';
-    buildPreviewPanel(sheet, null);
-    return;
-  }
-
-  const p = sheet.presets[activePresetIdx];
-  editor.innerHTML = '';
-
-  // ── Karta: podstawowe dane ──
-  const cardBasic = card('Animacja');
-  cardBasic.innerHTML += `
-    <label class="field"><span>Nazwa</span>
-      <input type="text" id="animName" value="${esc(p.name || '')}">
-    </label>
-    <div class="row" style="margin-top:8px">
-      <label class="field"><span>Czas klatki (ms)</span>
-        <input type="number" id="animMs" min="40" max="5000" value="${p.ms || 280}">
-      </label>
-      <label class="field" style="flex-direction:row;align-items:center;gap:6px;margin-top:18px">
-        <input type="checkbox" id="animRepeat" ${p.repeat !== false ? 'checked' : ''}>
-        <span>Zapętlaj</span>
-      </label>
-    </div>
-  `;
-  editor.append(cardBasic);
-
-  // ── Karta: sekwencje ──
-  const cardSeq = card('Sekwencje klatek');
-  cardSeq.innerHTML += `
-    <label class="field">
-      <span>Wejście <small style="color:#b0a0bc">(jednorazowe, opcjonalne)</small></span>
-      <textarea id="animIntro" rows="1">${esc(p.intro || '')}</textarea>
-    </label>
-    <label class="field" style="margin-top:6px">
-      <span>Pętla <small style="color:#b0a0bc">(numery klatek od 1, po przecinku)</small></span>
-      <textarea id="animSeq" rows="2">${esc(p.seq || '1')}</textarea>
-    </label>
-    <label class="field" style="margin-top:6px">
-      <span>Wyjście <small style="color:#b0a0bc">(jednorazowe, opcjonalne)</small></span>
-      <textarea id="animOutro" rows="1">${esc(p.outro || '')}</textarea>
-    </label>
-    <div class="seq-help">Klatki od 1 do ${totalFrames}. Przykład pętli: <code>25,31,32,25</code></div>
-  `;
-  editor.append(cardSeq);
-
-  // ── Karta: korekty klatek ──
-  const cardOff = card('Korekty klatek (pozycja, skala)');
-  const offKeys = Object.keys(sheet.offsets).sort((a, b) => Number(a) - Number(b));
-  let offHtml = `
-    <table class="offset-table">
-      <thead><tr><th>Klatka</th><th>X</th><th>Y</th><th>Skala %</th><th></th></tr></thead>
-      <tbody id="offsetTbody">
-  `;
-  for (const k of offKeys) {
-    const o = sheet.offsets[k];
-    offHtml += `<tr data-frame="${k}">
-      <td><strong>${k}</strong></td>
-      <td><input type="number" class="off-x" value="${o.x || 0}"></td>
-      <td><input type="number" class="off-y" value="${o.y || 0}"></td>
-      <td><input type="number" class="off-s" min="10" max="300" value="${o.scale || 100}"></td>
-      <td><button class="del-btn" title="Usuń korektę">✕</button></td>
-    </tr>`;
-  }
-  offHtml += `</tbody></table>
-    <div class="row" style="margin-top:8px">
-      <span style="font-size:12px;color:#9e8da8">Dodaj dla klatki:</span>
-      <input type="number" id="newOffFrame" min="1" max="${totalFrames}" placeholder="nr" style="width:70px">
-      <button class="hbtn" style="padding:4px 10px;font-size:12px" id="btnAddOff">+ Dodaj</button>
-    </div>
-  `;
-  cardOff.innerHTML += offHtml;
-  editor.append(cardOff);
-
-  // ── Karta: przyciski akcji ──
-  const cardActions = card('');
-  cardActions.style.borderColor = 'transparent';
-  cardActions.style.background = 'transparent';
-  cardActions.style.padding = '0';
-  cardActions.innerHTML = `
-    <div class="row">
-      <button class="hbtn" id="btnSavePreset">✔ Zapisz animację</button>
-      <button class="hbtn danger" id="btnDeletePreset">✕ Usuń animację</button>
-    </div>
-  `;
-  editor.append(cardActions);
-
-  // ── Podgląd ──
-  buildPreviewPanel(sheet, p);
-
-  // ── Obsługa zdarzeń edytora ──
-  bindEditorEvents(sheet, p);
-}
-
-function card(title) {
-  const el = document.createElement('div');
-  el.className = 'card';
-  if (title) el.innerHTML = `<h3>${esc(title)}</h3>`;
-  return el;
-}
-
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function bindEditorEvents(sheet, p) {
-  // Zapis animacji
-  $('#btnSavePreset').onclick = () => {
-    try {
-      const name = $('#animName').value.trim() || 'Animacja';
-      const seq = parseSeq($('#animSeq').value, sheet);
-      const intro = parseSeq($('#animIntro').value, sheet);
-      const outro = parseSeq($('#animOutro').value, sheet);
-      const ms = parseInt($('#animMs').value);
-      if (ms < 40 || ms > 5000) throw new Error('Czas klatki: 40–5000 ms');
-      Object.assign(p, {
-        name,
-        seq: seq.join(','),
-        intro: intro.join(','),
-        outro: outro.join(','),
-        ms,
-        repeat: $('#animRepeat').checked
-      });
-      sheet.dirty = true;
-      renderAnimList();
-      renderSheetTabs();
-      toast('Animacja zapisana ✔');
-      // Wznów podgląd z nową sekwencją
-      playPreset(sheet, p);
-    } catch (err) {
-      toast(err.message, 4000);
-    }
-  };
-
-  // Usuń animację
-  $('#btnDeletePreset').onclick = () => confirmDelete(activePresetIdx);
-
-  // Tabela korekt — zmiany
-  $('#offsetTbody').addEventListener('input', e => {
-    const row = e.target.closest('tr[data-frame]');
-    if (!row) return;
-    const k = row.dataset.frame;
-    sheet.offsets[k] = {
-      x: parseInt(row.querySelector('.off-x').value) || 0,
-      y: parseInt(row.querySelector('.off-y').value) || 0,
-      scale: parseInt(row.querySelector('.off-s').value) || 100
-    };
-    sheet.dirty = true;
-    drawPreview();
-  });
-
-  // Usuń korektę
-  $('#offsetTbody').addEventListener('click', e => {
-    const btn = e.target.closest('.del-btn');
-    if (!btn) return;
-    const k = btn.closest('tr').dataset.frame;
-    delete sheet.offsets[k];
-    sheet.dirty = true;
-    renderEditor();
-    toast(`Usunięto korektę klatki ${k}`);
-  });
-
-  // Dodaj korektę
-  $('#btnAddOff').onclick = () => {
-    const n = parseInt($('#newOffFrame').value);
-    const max = sheet.cols * sheet.rows;
-    if (!n || n < 1 || n > max) return toast(`Numer klatki od 1 do ${max}`);
-    if (sheet.offsets[n]) return toast(`Klatka ${n} ma już korektę`);
-    sheet.offsets[String(n)] = { x: 0, y: 0, scale: 100 };
-    sheet.dirty = true;
-    renderEditor();
-  };
-}
-
-/* ═══════════════════════════════════════════════
-   PODGLĄD ANIMACJI
-═══════════════════════════════════════════════ */
-function buildPreviewPanel(sheet, p) {
-  // Usuń poprzedni canvas jeśli był
-  const existing = document.getElementById('previewWrap');
-  if (existing) existing.remove();
-
-  const wrap = document.createElement('div');
-  wrap.id = 'previewWrap';
-  wrap.className = 'preview-panel';
-
-  const size = 256;
-  const stage = document.createElement('div');
-  stage.className = 'preview-stage';
-  const cv = document.createElement('canvas');
-  cv.width = size;
-  cv.height = size;
-  cv.style.width = size + 'px';
-  cv.style.height = size + 'px';
-  previewCanvas = cv;
-  previewCtx = cv.getContext('2d');
-  stage.append(cv);
-  wrap.append(stage);
-
-  if (sheet.img && p) {
-    // Kontrolki
-    const ctrl = document.createElement('div');
-    ctrl.className = 'preview-controls';
-    ctrl.innerHTML = `
-      <button class="pbtn" id="pbtnPlay">▶ Odtwarzaj</button>
-      <button class="pbtn" id="pbtnPrev">◀</button>
-      <button class="pbtn" id="pbtnNext">▶</button>
-      <button class="pbtn" id="pbtnGuides">Linie</button>
-      <label style="color:#c8b8d8;font-size:12px;display:flex;align-items:center;gap:5px">
-        Zoom <input type="range" id="pbtnZoom" min="0.5" max="4" step="0.1" value="${zoomLevel}" style="width:80px">
-      </label>
-    `;
-    wrap.append(ctrl);
-
-    // Pasek miniatur
-    const strip = document.createElement('div');
-    strip.className = 'thumb-strip';
-    strip.id = 'thumbStrip';
-    wrap.append(strip);
-
-    // Info
-    const info = document.createElement('div');
-    info.className = 'preview-info';
-    info.id = 'previewInfo';
-    wrap.append(info);
-  }
-
-  // Wstaw za edytorem
-  $('#editor').after(wrap);
-
-  if (sheet.img && p) {
-    buildThumbs(sheet, p);
-    playPreset(sheet, p);
-
-    $('#pbtnPlay').onclick = () => {
-      playing = !playing;
-      $('#pbtnPlay').textContent = playing ? '⏸ Pauza' : '▶ Odtwarzaj';
-      if (playing) { stamp = performance.now(); }
-    };
-    $('#pbtnPrev').onclick = () => {
-      playing = false;
-      animIdx = (animIdx - 1 + seqActive.length) % seqActive.length;
-      drawPreview();
-    };
-    $('#pbtnNext').onclick = () => {
-      playing = false;
-      animIdx = (animIdx + 1) % seqActive.length;
-      drawPreview();
-    };
-    $('#pbtnGuides').onclick = () => {
-      showGuides = !showGuides;
-      $('#pbtnGuides').classList.toggle('active', showGuides);
-      drawPreview();
-    };
-    $('#pbtnZoom').oninput = e => {
-      zoomLevel = parseFloat(e.target.value);
-      drawPreview();
-    };
-  } else {
-    previewCtx.fillStyle = '#3a3040';
-    previewCtx.font = '13px system-ui';
-    previewCtx.textAlign = 'center';
-    previewCtx.fillStyle = '#8070a0';
-    previewCtx.fillText(sheet.img ? 'Wybierz animację' : 'Brak obrazu PNG', 128, 128);
-  }
-}
-
-function buildThumbs(sheet, p) {
-  const strip = $('#thumbStrip');
-  if (!strip) return;
-  strip.innerHTML = '';
-  const frames = parseSeqSafe(p.seq, sheet);
+function frameRect(sheet, n) {
   const fw = sheet.img.width / sheet.cols;
   const fh = sheet.img.height / sheet.rows;
-  const th = 36, tw = Math.round(fw / fh * th);
+  return { x: (n - 1) % sheet.cols * fw, y: Math.floor((n - 1) / sheet.cols) * fh, w: fw, h: fh };
+}
 
-  frames.forEach((n, i) => {
-    const cv = document.createElement('canvas');
-    cv.width = tw; cv.height = th;
-    const ctx = cv.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
-    const sx = (n - 1) % sheet.cols * fw;
-    const sy = Math.floor((n - 1) / sheet.cols) * fh;
-    ctx.drawImage(sheet.img, sx, sy, fw, fh, 0, 0, tw, th);
-    cv.title = `Klatka ${n}`;
-    cv.onclick = () => { playing = false; animIdx = i; drawPreview(); };
-    strip.append(cv);
-  });
+function offset(sheet, n) {
+  return { x: 0, y: 0, scale: 100, ...sheet.offsets[String(n)] };
 }
 
 function parseSeq(str, sheet) {
@@ -779,13 +243,227 @@ function parseSeq(str, sheet) {
   const max = sheet.cols * sheet.rows;
   for (const n of nums) {
     if (!Number.isInteger(n) || n < 1 || n > max)
-      throw new Error(`Numer klatki ${n} jest poza zakresem (1–${max})`);
+      throw new Error(`Klatka ${n} poza zakresem (1–${max})`);
   }
   return nums;
 }
 
 function parseSeqSafe(str, sheet) {
   try { return parseSeq(str, sheet); } catch { return [1]; }
+}
+
+function allSeqFrames(p, sheet) {
+  const all = new Set([
+    ...parseSeqSafe(p.intro, sheet),
+    ...parseSeqSafe(p.seq, sheet),
+    ...parseSeqSafe(p.outro, sheet)
+  ]);
+  return all;
+}
+
+/* ═══════════════════════════════════════
+   WCZYTYWANIE
+═══════════════════════════════════════ */
+$('#btnLoadFiles').onclick = () => $('#fileInput').click();
+$('#fileInput').onchange = async e => {
+  const files = [...e.target.files];
+  e.target.value = '';
+  if (!files.length) return;
+
+  const pngs = files.filter(f => f.name.endsWith('.png'));
+  const jsons = files.filter(f => f.name.endsWith('.json'));
+
+  for (const f of pngs) {
+    try {
+      const dataUrl = await readFile(f, 'dataURL');
+      const img = await loadImage(dataUrl);
+      const id = sheetBaseName(f.name);
+      const cols = img.width % 6 === 0 ? 6 : 1;
+      const rows = img.height % 12 === 0 ? 12 : 1;
+      if (sheets.has(id)) {
+        const s = sheets.get(id);
+        s.png = dataUrl; s.img = img;
+        toast(`Zaktualizowano obraz: ${f.name}`);
+      } else {
+        sheets.set(id, { id, name: f.name, png: dataUrl, img, cols, rows,
+          ground: Math.round(img.height / rows * 0.88), offsets: {}, presets: [], dirty: false });
+        toast(`Wczytano: ${f.name} (${img.width}×${img.height}px)`);
+      }
+    } catch (err) { toast('Błąd PNG: ' + err.message, 4000); }
+  }
+
+  for (const f of jsons) {
+    try {
+      const data = JSON.parse(await readFile(f, 'text'));
+      const id = sheetBaseName(f.name);
+      if (!sheets.has(id)) {
+        sheets.set(id, { id, name: id + '.png', png: null, img: null,
+          cols: data.cols || 6, rows: data.rows || 12, ground: data.ground || 113,
+          offsets: data.offsets || {}, presets: data.presets || [], dirty: false });
+        toast(`JSON bez PNG: ${f.name} — wczytaj też PNG`, 4000);
+      } else {
+        const s = sheets.get(id);
+        Object.assign(s, { cols: data.cols || s.cols, rows: data.rows || s.rows,
+          ground: data.ground || s.ground, offsets: data.offsets || {},
+          presets: data.presets || [], dirty: false });
+        toast(`Wczytano JSON: ${f.name} (${s.presets.length} animacji)`);
+      }
+    } catch (err) { toast('Błąd JSON: ' + err.message, 4000); }
+  }
+
+  if (!activeSheetId && sheets.size > 0) {
+    activeSheetId = [...sheets.keys()][0];
+    activePresetIdx = sheets.get(activeSheetId).presets.length > 0 ? 0 : null;
+  }
+  renderAll();
+};
+
+/* ═══════════════════════════════════════
+   ZAPISYWANIE
+═══════════════════════════════════════ */
+function buildJson(sheet) {
+  return { asset: sheet.name, cols: sheet.cols, rows: sheet.rows,
+    ground: sheet.ground, offsets: sheet.offsets, presets: sheet.presets };
+}
+
+function downloadJson(sheet) {
+  const name = sheetBaseName(sheet.name) + '.json';
+  const url = URL.createObjectURL(new Blob([JSON.stringify(buildJson(sheet), null, 2)], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  sheet.dirty = false;
+  renderSheetTabs();
+  toast(`Zapisano: ${name}`);
+}
+
+$('#btnSaveJson').onclick = () => activeSheetId ? downloadJson(sheets.get(activeSheetId)) : toast('Wybierz arkusz');
+$('#btnSaveAll').onclick = () => { if (!sheets.size) return toast('Brak arkuszy'); for (const s of sheets.values()) downloadJson(s); };
+
+/* ═══════════════════════════════════════
+   RENDEROWANIE LISTY
+═══════════════════════════════════════ */
+function renderAll() {
+  renderSheetTabs();
+  renderAnimList();
+  rebuildPreviewArea();
+  renderPropanel();
+  buildSheetGrid();
+}
+
+function renderSheetTabs() {
+  const el = $('#sheetTabs');
+  el.innerHTML = '';
+  if (!sheets.size) { el.innerHTML = '<span style="font-size:11px;color:#b0a0bc">Wczytaj pliki →</span>'; return; }
+  for (const [id, s] of sheets) {
+    const btn = document.createElement('button');
+    btn.className = 'sheet-tab' + (id === activeSheetId ? ' active' : '');
+    btn.textContent = s.name.replace('latka-animacje-', '').replace('.png', '') + (s.dirty ? ' ●' : '');
+    btn.onclick = () => { activeSheetId = id; activePresetIdx = sheets.get(id).presets.length ? 0 : null; stopAnim(); renderAll(); };
+    el.append(btn);
+  }
+}
+
+function renderAnimList() {
+  const list = $('#animList');
+  $('#addRow').hidden = !activeSheetId;
+  list.innerHTML = '';
+  if (!activeSheetId) return;
+  const sheet = sheets.get(activeSheetId);
+  if (!sheet.presets.length) {
+    list.innerHTML = '<div class="empty-hint" style="padding:14px 10px;font-size:11px">Brak animacji.<br>Kliknij „+ Dodaj".</div>';
+    return;
+  }
+  sheet.presets.forEach((p, i) => {
+    const item = document.createElement('div');
+    item.className = 'anim-item' + (i === activePresetIdx ? ' active' : '');
+    item.innerHTML = `<span class="anim-idx">${i+1}.</span><span class="anim-name">${esc(p.name||'(bez nazwy)')}</span><button class="del-btn" title="Usuń">✕</button>`;
+    item.querySelector('.del-btn').onclick = e => { e.stopPropagation(); confirmDelete(i); };
+    item.onclick = () => { activePresetIdx = i; stopAnim(); renderAll(); };
+    list.append(item);
+  });
+  list.querySelector('.active')?.scrollIntoView({ block: 'nearest' });
+}
+
+/* ═══════════════════════════════════════
+   PODGLĄD ANIMACJI (środkowa kolumna, góra)
+═══════════════════════════════════════ */
+function rebuildPreviewArea() {
+  const area = $('#animPreview');
+  area.innerHTML = '';
+
+  const sheet = activeSheetId ? sheets.get(activeSheetId) : null;
+  const p = sheet && activePresetIdx !== null ? sheet.presets[activePresetIdx] : null;
+
+  if (!sheet?.img) {
+    area.innerHTML = '<div class="empty-hint">Wczytaj PNG + JSON →</div>';
+    return;
+  }
+
+  const SIZE = 220;
+  const stage = document.createElement('div');
+  stage.className = 'preview-stage';
+
+  const cv = document.createElement('canvas');
+  cv.width = SIZE; cv.height = SIZE;
+  cv.style.width = SIZE + 'px'; cv.style.height = SIZE + 'px';
+  previewCanvas = cv;
+  previewCtx = cv.getContext('2d');
+  stage.append(cv);
+  area.append(stage);
+
+  // Kliknięcie w podgląd — nic specjalnego, ale można tu dodać logikę
+
+  // Kontrolki
+  const ctrl = document.createElement('div');
+  ctrl.className = 'anim-controls';
+  ctrl.innerHTML = `
+    <button class="pbtn" id="pbtnPlay">${playing ? '⏸' : '▶'}</button>
+    <button class="pbtn" id="pbtnPrev">◀</button>
+    <button class="pbtn" id="pbtnNext">▶</button>
+    <button class="pbtn ${showGuides ? 'active' : ''}" id="pbtnGuides" title="Linie pomocnicze">┼</button>
+    <label style="color:#a090c0;font-size:11px;display:flex;align-items:center;gap:4px">
+      🔍<input type="range" id="prevZoom" min="0.5" max="4" step="0.25" value="${previewZoom}" style="width:70px;accent-color:#a060c8">
+    </label>
+  `;
+  area.append(ctrl);
+
+  const info = document.createElement('div');
+  info.className = 'preview-info';
+  info.id = 'previewInfo';
+  area.append(info);
+
+  // Zdarzenia kontrolek
+  $('#pbtnPlay').onclick = () => {
+    if (!p) return;
+    playing = !playing;
+    $('#pbtnPlay').textContent = playing ? '⏸' : '▶';
+    if (playing) stamp = performance.now();
+  };
+  $('#pbtnPrev').onclick = () => {
+    if (!seqActive.length) return;
+    playing = false; $('#pbtnPlay').textContent = '▶';
+    animIdx = (animIdx - 1 + seqActive.length) % seqActive.length;
+    updateOffsetEditor(); drawPreview();
+  };
+  $('#pbtnNext').onclick = () => {
+    if (!seqActive.length) return;
+    playing = false; $('#pbtnPlay').textContent = '▶';
+    animIdx = (animIdx + 1) % seqActive.length;
+    updateOffsetEditor(); drawPreview();
+  };
+  $('#pbtnGuides').onclick = () => {
+    showGuides = !showGuides;
+    $('#pbtnGuides').classList.toggle('active', showGuides);
+    drawPreview();
+  };
+  $('#prevZoom').oninput = e => { previewZoom = parseFloat(e.target.value); drawPreview(); };
+
+  if (p) {
+    playPreset(sheet, p);
+  } else {
+    drawPreview();
+  }
 }
 
 function playPreset(sheet, p) {
@@ -797,48 +475,46 @@ function playPreset(sheet, p) {
   animIdx = 0;
   playing = true;
   stamp = performance.now();
-  if ($('#pbtnPlay')) $('#pbtnPlay').textContent = '⏸ Pauza';
+  if ($('#pbtnPlay')) $('#pbtnPlay').textContent = '⏸';
   drawPreview();
 }
 
-function stopAnim() {
-  playing = false;
+function stopAnim() { playing = false; }
+
+function currentFrameNum() {
+  return seqActive[animIdx] ?? null;
 }
 
 function drawPreview() {
-  if (!previewCtx || !previewCanvas) return;
+  if (!previewCtx) return;
   const sheet = activeSheetId ? sheets.get(activeSheetId) : null;
-  const p = sheet && activePresetIdx !== null ? sheet.presets[activePresetIdx] : null;
   const ctx = previewCtx;
   const W = previewCanvas.width, H = previewCanvas.height;
   ctx.clearRect(0, 0, W, H);
 
-  if (!sheet?.img || !p || !seqActive.length) {
-    ctx.fillStyle = '#3a3040';
+  if (!sheet?.img || !seqActive.length) {
+    ctx.fillStyle = '#1e1828';
     ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#6a5a80';
-    ctx.font = '13px system-ui';
+    ctx.fillStyle = '#5a4a68';
+    ctx.font = '12px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText('Brak danych', W / 2, H / 2);
+    ctx.fillText('Wybierz animację', W / 2, H / 2);
     return;
   }
 
   const n = seqActive[animIdx] || 1;
-  const fw = sheet.img.width / sheet.cols;
-  const fh = sheet.img.height / sheet.rows;
-  const sx = (n - 1) % sheet.cols * fw;
-  const sy = Math.floor((n - 1) / sheet.cols) * fh;
-  const off = sheet.offsets[String(n)] || { x: 0, y: 0, scale: 100 };
+  const r = frameRect(sheet, n);
+  const off = offset(sheet, n);
   const sc = off.scale / 100;
-  const z = zoomLevel * 64 / Math.max(fw, fh);
+  const z = previewZoom * 56 / Math.max(r.w, r.h);
   const ground = sheet.ground;
-  const anchor = H / 2 + ground * z / 2;
+  const anchor = H * 0.78;
 
   ctx.imageSmoothingEnabled = false;
   ctx.save();
-  ctx.translate(W / 2 + off.x * z, anchor);
+  ctx.translate(W / 2 + off.x * z, anchor + off.y * z);
   ctx.scale(sc, sc);
-  ctx.drawImage(sheet.img, sx, sy, fw, fh, -fw / 2 * z, -ground * z, fw * z, fh * z);
+  ctx.drawImage(sheet.img, r.x, r.y, r.w, r.h, -r.w / 2 * z, -ground * z, r.w * z, r.h * z);
   ctx.restore();
 
   if (showGuides) {
@@ -850,15 +526,15 @@ function drawPreview() {
     ctx.stroke();
   }
 
-  // Info
   const info = $('#previewInfo');
   if (info) {
-    info.textContent = `klatka ${n} · ${animPhase} · ${animIdx + 1}/${seqActive.length} · zoom ×${zoomLevel.toFixed(1)}`;
+    const p = sheet.presets[activePresetIdx];
+    info.textContent = `klatka ${n} · ${animPhase} [${animIdx + 1}/${seqActive.length}] · ${p?.ms || 280}ms/kl`;
   }
 
-  // Podświetl miniaturę
-  const thumbs = $$('#thumbStrip canvas');
-  thumbs.forEach((c, i) => c.classList.toggle('hi', i === animIdx));
+  // Podświetl aktywną klatkę w siatce
+  $$('.frame-cell.current-frame').forEach(c => c.classList.remove('current-frame'));
+  document.querySelector(`.frame-cell[data-n="${n}"]`)?.classList.add('current-frame');
 }
 
 // Pętla animacji
@@ -866,8 +542,7 @@ function animLoop(t) {
   if (playing && activeSheetId) {
     const sheet = sheets.get(activeSheetId);
     const p = sheet?.presets[activePresetIdx];
-    const ms = p?.ms || 280;
-    if (t - stamp >= ms) {
+    if (p && t - stamp >= (p.ms || 280)) {
       stamp = t;
       advanceFrame(sheet, p);
     }
@@ -880,39 +555,358 @@ function advanceFrame(sheet, p) {
   if (animIdx + 1 < seqActive.length) {
     animIdx++;
   } else if (animPhase === 'intro') {
-    animPhase = 'loop';
-    seqActive = seqLoop;
-    animIdx = 0;
+    animPhase = 'loop'; seqActive = seqLoop; animIdx = 0;
   } else if (animPhase === 'outro') {
     playing = false;
-    if ($('#pbtnPlay')) $('#pbtnPlay').textContent = '▶ Odtwarzaj';
+    if ($('#pbtnPlay')) $('#pbtnPlay').textContent = '▶';
     return;
-  } else if (p?.repeat !== false) {
+  } else if (p.repeat !== false) {
     animIdx = 0;
   } else {
     playing = false;
-    if ($('#pbtnPlay')) $('#pbtnPlay').textContent = '▶ Odtwarzaj';
+    if ($('#pbtnPlay')) $('#pbtnPlay').textContent = '▶';
     return;
   }
+  updateOffsetEditor();
   drawPreview();
 }
 
 requestAnimationFrame(animLoop);
 
-/* ═══════════════════════════════════════════════
-   DODAWANIE / USUWANIE ANIMACJI
-═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   SIATKA KLATEK (środkowa kolumna, dół)
+═══════════════════════════════════════ */
+function buildSheetGrid() {
+  const wrap = $('#sheetGridWrap');
+  const grid = $('#sheetGrid');
+  grid.innerHTML = '';
+  const sheet = activeSheetId ? sheets.get(activeSheetId) : null;
+  if (!sheet?.img) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+
+  const p = sheet.presets[activePresetIdx];
+  const inSeq = p ? allSeqFrames(p, sheet) : new Set();
+  const total = sheet.cols * sheet.rows;
+  const fw = sheet.img.width / sheet.cols;
+  const fh = sheet.img.height / sheet.rows;
+  const cellW = Math.round(fw * gridZoom);
+  const cellH = Math.round(fh * gridZoom);
+
+  grid.style.gridTemplateColumns = `repeat(${sheet.cols}, ${cellW}px)`;
+
+  $('#gridInfo').textContent = `${total} klatek · ${sheet.cols}×${sheet.rows} · komórka ${fw}×${fh}px`;
+
+  $('#gridZoom').oninput = e => {
+    gridZoom = parseFloat(e.target.value);
+    $('#gridZoomVal').textContent = '×' + gridZoom.toFixed(2).replace('.00','').replace(/\.?0+$/,'');
+    buildSheetGrid();
+  };
+
+  for (let n = 1; n <= total; n++) {
+    const cell = document.createElement('div');
+    cell.className = 'frame-cell';
+    cell.dataset.n = n;
+    if (inSeq.has(n)) cell.classList.add('in-seq');
+    if (sheet.offsets[String(n)]) cell.classList.add('has-offset');
+
+    // Canvas z klatką
+    const cv = document.createElement('canvas');
+    cv.width = fw; cv.height = fh;
+    cv.style.width = cellW + 'px'; cv.style.height = cellH + 'px';
+    const ctx = cv.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(sheet.img, (n-1) % sheet.cols * fw, Math.floor((n-1) / sheet.cols) * fh, fw, fh, 0, 0, fw, fh);
+
+    const num = document.createElement('span');
+    num.className = 'fnum';
+    num.textContent = n;
+
+    cell.append(cv, num);
+
+    // Kliknięcie — zatrzymaj i skocz do tej klatki w podglądzie
+    cell.onclick = () => {
+      playing = false;
+      if ($('#pbtnPlay')) $('#pbtnPlay').textContent = '▶';
+      // Znajdź tę klatkę w aktywnej sekwencji
+      const idx = seqActive.indexOf(n);
+      if (idx !== -1) animIdx = idx;
+      else {
+        // Pokaż klatkę poza sekwencją — ustaw tymczasowo
+        seqActive = [n];
+        animIdx = 0;
+      }
+      updateOffsetEditor();
+      drawPreview();
+      // Scroll siatki do komórki
+      cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    };
+
+    grid.append(cell);
+  }
+
+  // Podświetl aktualną
+  const cur = currentFrameNum();
+  if (cur) document.querySelector(`.frame-cell[data-n="${cur}"]`)?.classList.add('current-frame');
+}
+
+/* ═══════════════════════════════════════
+   PRAWY PANEL — właściwości
+═══════════════════════════════════════ */
+function renderPropanel() {
+  const panel = $('#propanel');
+  const sheet = activeSheetId ? sheets.get(activeSheetId) : null;
+
+  if (!sheet) {
+    panel.innerHTML = '<div class="empty-hint" style="color:#b0a0bc">Wczytaj pliki PNG + JSON.</div>';
+    return;
+  }
+
+  const p = activePresetIdx !== null ? sheet.presets[activePresetIdx] : null;
+
+  panel.innerHTML = '';
+
+  // ── Karta: ustawienia arkusza ──
+  const cardSheet = mkCard('Arkusz');
+  cardSheet.innerHTML += `
+    <div class="row">
+      <label class="field"><span class="lbl">Kolumny</span>
+        <input type="number" id="cfgCols" min="1" max="64" value="${sheet.cols}">
+      </label>
+      <label class="field"><span class="lbl">Wiersze</span>
+        <input type="number" id="cfgRows" min="1" max="64" value="${sheet.rows}">
+      </label>
+      <button class="hbtn" id="btnApplyGrid" style="margin-top:14px;padding:3px 8px;font-size:11px">OK</button>
+    </div>
+    <label class="field" style="margin-top:6px"><span class="lbl">Linia ziemi (px)</span>
+      <input type="number" id="cfgGround" value="${sheet.ground}">
+    </label>
+  `;
+  panel.append(cardSheet);
+
+  $('#btnApplyGrid').onclick = () => {
+    const c = parseInt($('#cfgCols').value), r = parseInt($('#cfgRows').value);
+    if (!sheet.img) return toast('Brak obrazu');
+    if (sheet.img.width % c || sheet.img.height % r) return toast(`PNG nie pasuje do siatki ${c}×${r}`);
+    if ((c !== sheet.cols || r !== sheet.rows) && !confirm(`Zmiana siatki zmieni numery klatek. Kontynuować?`)) return;
+    sheet.cols = c; sheet.rows = r; sheet.dirty = true;
+    renderAll(); toast('Siatka zaktualizowana');
+  };
+  $('#cfgGround').oninput = () => {
+    sheet.ground = parseInt($('#cfgGround').value) || sheet.ground;
+    sheet.dirty = true; drawPreview();
+  };
+
+  if (!p) {
+    const hint = document.createElement('div');
+    hint.className = 'empty-hint';
+    hint.style.color = '#b0a0bc';
+    hint.textContent = 'Wybierz animację z listy lub dodaj nową.';
+    panel.append(hint);
+    return;
+  }
+
+  // ── Karta: animacja ──
+  const cardAnim = mkCard('Animacja');
+  cardAnim.innerHTML += `
+    <label class="field"><span class="lbl">Nazwa</span>
+      <input type="text" id="animName" value="${esc(p.name || '')}">
+    </label>
+    <div class="row" style="margin-top:6px">
+      <label class="field"><span class="lbl">ms / klatka</span>
+        <input type="number" id="animMs" min="40" max="5000" value="${p.ms || 280}">
+      </label>
+      <label class="field" style="flex-direction:row;align-items:center;gap:5px;margin-top:14px">
+        <input type="checkbox" id="animRepeat" ${p.repeat !== false ? 'checked' : ''}>
+        <span class="lbl">Zapętlaj</span>
+      </label>
+    </div>
+  `;
+  panel.append(cardAnim);
+
+  // ── Karta: sekwencje ──
+  const total = sheet.cols * sheet.rows;
+  const cardSeq = mkCard('Sekwencje klatek');
+  cardSeq.innerHTML += `
+    <label class="field"><span class="lbl">Wejście (opcjonalne)</span>
+      <textarea id="animIntro" rows="1">${esc(p.intro || '')}</textarea>
+    </label>
+    <label class="field" style="margin-top:5px"><span class="lbl">Pętla ★</span>
+      <textarea id="animSeq" rows="2">${esc(p.seq || '1')}</textarea>
+    </label>
+    <label class="field" style="margin-top:5px"><span class="lbl">Wyjście (opcjonalne)</span>
+      <textarea id="animOutro" rows="1">${esc(p.outro || '')}</textarea>
+    </label>
+    <div class="hint">Numery klatek od 1 do ${total}, rozdzielone przecinkami.<br>
+    Kliknij klatkę w siatce poniżej żeby ją podejrzeć.</div>
+    <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
+      <button class="hbtn primary" id="btnSavePreset" style="font-size:12px">✔ Zapisz animację</button>
+      <button class="hbtn danger" id="btnDeletePreset" style="font-size:12px">✕ Usuń</button>
+    </div>
+  `;
+  panel.append(cardSeq);
+
+  // ── Karta: korekta bieżącej klatki ──
+  const curN = currentFrameNum();
+  const cardOff = mkCard('Korekta klatki');
+  cardOff.classList.add('offset-card');
+  const off = curN ? offset(sheet, curN) : { x: 0, y: 0, scale: 100 };
+  cardOff.innerHTML += `
+    <div style="font-size:11px;color:#9e8da8;margin-bottom:5px">
+      Klatka: <strong id="offFrameNum">${curN ?? '—'}</strong>
+      ${curN && sheet.offsets[String(curN)] ? '<span style="color:#a060c8"> (ma korektę)</span>' : ''}
+    </div>
+    <div class="off-row">
+      <label class="field"><span class="lbl">X (px)</span>
+        <input type="number" id="offX" value="${off.x}">
+      </label>
+      <label class="field"><span class="lbl">Y (px)</span>
+        <input type="number" id="offY" value="${off.y}">
+      </label>
+      <label class="field"><span class="lbl">Skala %</span>
+        <input type="number" id="offScale" min="10" max="300" value="${off.scale}">
+      </label>
+    </div>
+    <div style="margin-top:5px;display:flex;gap:5px">
+      <button class="hbtn" id="btnApplyOff" style="font-size:11px">Zastosuj</button>
+      <button class="hbtn danger" id="btnClearOff" style="font-size:11px">Usuń korektę</button>
+    </div>
+    <div class="off-preview-note">Zmiany widać natychmiast w podglądzie po kliknięciu „Zastosuj".</div>
+  `;
+  panel.append(cardOff);
+
+  // Zbinduj zdarzenia
+  bindPropanelEvents(sheet, p);
+}
+
+function mkCard(title) {
+  const el = document.createElement('div');
+  el.className = 'card';
+  if (title) el.innerHTML = `<div class="card-title">${esc(title)}</div>`;
+  return el;
+}
+
+function bindPropanelEvents(sheet, p) {
+  // Zapis animacji
+  $('#btnSavePreset').onclick = () => {
+    try {
+      const name = $('#animName').value.trim() || 'Animacja';
+      const seq = parseSeq($('#animSeq').value, sheet);
+      const intro = parseSeq($('#animIntro').value, sheet);
+      const outro = parseSeq($('#animOutro').value, sheet);
+      const ms = parseInt($('#animMs').value);
+      if (ms < 40 || ms > 5000) throw new Error('ms/klatka: 40–5000');
+      if (!seq.length) throw new Error('Pętla musi mieć co najmniej 1 klatkę');
+      Object.assign(p, { name, seq: seq.join(','), intro: intro.join(','), outro: outro.join(','), ms, repeat: $('#animRepeat').checked });
+      sheet.dirty = true;
+      renderAnimList(); renderSheetTabs();
+      // Przeładuj sekwencje podglądu
+      playPreset(sheet, p);
+      buildSheetGrid();
+      toast('Animacja zapisana ✔');
+    } catch (err) { toast(err.message, 4000); }
+  };
+
+  $('#btnDeletePreset').onclick = () => confirmDelete(activePresetIdx);
+
+  // Live preview ms
+  $('#animMs').oninput = () => {
+    const ms = parseInt($('#animMs').value);
+    if (ms >= 40 && ms <= 5000) p._previewMs = ms;
+  };
+
+  // Korekta klatki — zastosuj
+  $('#btnApplyOff').onclick = () => {
+    const n = currentFrameNum();
+    if (!n) return toast('Nie ma aktywnej klatki — użyj ◀ ▶ lub kliknij klatkę w siatce');
+    sheet.offsets[String(n)] = {
+      x: parseInt($('#offX').value) || 0,
+      y: parseInt($('#offY').value) || 0,
+      scale: parseInt($('#offScale').value) || 100
+    };
+    sheet.dirty = true;
+    drawPreview();
+    buildSheetGrid();
+    // Odśwież tylko nagłówek karty (ma/nie ma korekty)
+    const numEl = $('#offFrameNum');
+    if (numEl) {
+      numEl.nextSibling && numEl.parentNode.querySelectorAll('span').forEach(s => { if(s.style.color) s.textContent = ' (ma korektę)'; s.style.color='#a060c8'; });
+    }
+    toast(`Korekta klatki ${n} zapisana`);
+  };
+
+  // Korekta klatki — usuń
+  $('#btnClearOff').onclick = () => {
+    const n = currentFrameNum();
+    if (!n) return;
+    delete sheet.offsets[String(n)];
+    sheet.dirty = true;
+    drawPreview();
+    buildSheetGrid();
+    renderPropanel();
+    toast(`Usunięto korektę klatki ${n}`);
+  };
+
+  // Live — zmiana x/y/scale od razu widoczna w podglądzie
+  for (const id of ['#offX', '#offY', '#offScale']) {
+    $(id).oninput = () => {
+      const n = currentFrameNum();
+      if (!n) return;
+      // Nadpisz tymczasowo w pamięci i odrysuj
+      const prev = sheet.offsets[String(n)];
+      sheet.offsets[String(n)] = {
+        x: parseInt($('#offX').value) || 0,
+        y: parseInt($('#offY').value) || 0,
+        scale: parseInt($('#offScale').value) || 100
+      };
+      drawPreview();
+      // Nie zapisujemy na dysk — czekamy na "Zastosuj"
+      if (!prev) delete sheet.offsets[String(n)]; // jeśli nie było — cofnij temp
+      else sheet.offsets[String(n)] = { ...prev }; // przywróć stary
+      // Uwaga: przy oninput pokazujemy preview ze zmienioną wartością,
+      // ale zapisujemy dopiero po "Zastosuj". Dlatego poniżej
+      // chwilowo nadpisujemy po prostu i rysujemy.
+    };
+  }
+
+  // Lepsza wersja live preview — rysuj zawsze aktualne wartości z pól
+  function liveOff() {
+    const n = currentFrameNum();
+    if (!n) return;
+    const tmp = {
+      x: parseInt($('#offX')?.value) || 0,
+      y: parseInt($('#offY')?.value) || 0,
+      scale: parseInt($('#offScale')?.value) || 100
+    };
+    const saved = sheet.offsets[String(n)];
+    sheet.offsets[String(n)] = tmp;
+    drawPreview();
+    // Przywróć (podgląd live, bez zapisu)
+    if (saved) sheet.offsets[String(n)] = saved;
+    else delete sheet.offsets[String(n)];
+  }
+  for (const id of ['#offX','#offY','#offScale'])
+    $(id).oninput = liveOff;
+}
+
+// Aktualizacja karty korekty gdy zmienia się klatka
+function updateOffsetEditor() {
+  const n = currentFrameNum();
+  const sheet = activeSheetId ? sheets.get(activeSheetId) : null;
+  if (!sheet || !n) return;
+  const off = offset(sheet, n);
+  if ($('#offX')) $('#offX').value = off.x;
+  if ($('#offY')) $('#offY').value = off.y;
+  if ($('#offScale')) $('#offScale').value = off.scale;
+  if ($('#offFrameNum')) $('#offFrameNum').textContent = n;
+}
+
+/* ═══════════════════════════════════════
+   DODAJ / USUŃ ANIMACJĘ
+═══════════════════════════════════════ */
 $('#btnAddAnim').onclick = () => {
   if (!activeSheetId) return;
   const sheet = sheets.get(activeSheetId);
-  sheet.presets.push({
-    name: 'Nowa animacja ' + (sheet.presets.length + 1),
-    intro: '',
-    seq: '1',
-    outro: '',
-    ms: 280,
-    repeat: true
-  });
+  sheet.presets.push({ name: 'Nowa animacja ' + (sheet.presets.length + 1), intro: '', seq: '1', outro: '', ms: 280, repeat: true });
   activePresetIdx = sheet.presets.length - 1;
   sheet.dirty = true;
   renderAll();
@@ -924,32 +918,21 @@ function confirmDelete(idx) {
   const name = sheet.presets[idx]?.name || 'ta animacja';
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
-  modal.innerHTML = `
-    <div class="modal">
-      <h3>Usuń animację</h3>
-      <p>Czy na pewno usunąć <strong>${esc(name)}</strong>?<br>Tej operacji nie można cofnąć.</p>
-      <div class="row">
-        <button class="hbtn" id="mCancel">Anuluj</button>
-        <button class="hbtn danger" id="mConfirm">Usuń</button>
-      </div>
-    </div>
-  `;
+  modal.innerHTML = `<div class="modal"><h3>Usuń animację</h3><p>Usunąć <strong>${esc(name)}</strong>? Nie można cofnąć.</p><div class="row"><button class="hbtn" id="mCancel">Anuluj</button><button class="hbtn danger" id="mConfirm">Usuń</button></div></div>`;
   document.body.append(modal);
   modal.querySelector('#mCancel').onclick = () => modal.remove();
   modal.querySelector('#mConfirm').onclick = () => {
     sheet.presets.splice(idx, 1);
     sheet.dirty = true;
-    activePresetIdx = sheet.presets.length > 0 ? Math.min(idx, sheet.presets.length - 1) : null;
-    modal.remove();
-    stopAnim();
-    renderAll();
+    activePresetIdx = sheet.presets.length ? Math.min(idx, sheet.presets.length - 1) : null;
+    modal.remove(); stopAnim(); renderAll();
     toast('Animacja usunięta');
   };
 }
 
-/* ═══════════════════════════════════════════════
+/* ═══════════════════════════════════════
    START
-═══════════════════════════════════════════════ */
+═══════════════════════════════════════ */
 renderAll();
 </script>
 </body>
