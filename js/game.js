@@ -914,7 +914,7 @@ function petHit(px, py) {
 }
 
 function poopRect() {
-    const w = 40,
+    const w = 60,
         h = (w * images.poop.height) / images.poop.width;
     let offset = 0;
     if (poop) {
