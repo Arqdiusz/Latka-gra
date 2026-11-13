@@ -58,7 +58,7 @@ body {
     height: 9px;
     border-radius: 6px;
     background: #fffaf4;
-    border: 2px solid var(--c);
+    border: 2px solid #5c4b47;
     overflow: hidden;
     margin: 5px 2px 0;
 }
@@ -99,7 +99,7 @@ body {
     height: 11px;
     margin: 0;
     border-radius: 7px;
-    border: 2px solid #f4a0bc;
+    border: 2px solid #5c4b47;
     background: #fffaf4;
 }
 
