@@ -343,41 +343,66 @@ function heart() {
 }
 
 function statusBuild() {
-    for (const key of ["food", "water", "fun", "sleep", "clean", "heart"]) {
+    const statusEl = $(".status");
+
+    // Rząd 1: 5 potrzeb
+    const statsRow = document.createElement("div");
+    statsRow.className = "status-stats";
+
+    const labels = { food: "Głód", water: "Woda", fun: "Zabawa", sleep: "Sen", clean: "Czystość" };
+    for (const key of ["food", "water", "fun", "sleep", "clean"]) {
         const el = document.createElement("div");
         el.className = "stat";
         el.dataset.status = key;
-        el.style.setProperty(
-            "--c",
-            key === "heart" ? "#e88ca6" : items.find((i) => i.id === key)?.color || "#c7b0da"
-        );
+        el.style.setProperty("--c", items.find((i) => i.id === key)?.color || "#c7b0da");
         const im = new Image();
         im.src = icons[key];
-        im.alt = {
-            food: "Głód",
-            water: "Woda",
-            fun: "Zabawa",
-            sleep: "Sen",
-            clean: "Czystość",
-            heart: "Samopoczucie",
-        }[key];
+        im.alt = labels[key];
         im.width = im.height = 36;
         const bar = document.createElement("div");
         bar.className = "bar";
         bar.innerHTML = "<i></i>";
-        el.append(im, bar, document.createElement("small"));
-        $(".status").append(el);
+        el.append(im, bar);
+        statsRow.append(el);
     }
+
+    // Rząd 2: serduszko na pełną szerokość
+    const heartRow = document.createElement("div");
+    heartRow.className = "stat-heart";
+    heartRow.dataset.status = "heart";
+    const heartIm = new Image();
+    heartIm.src = icons["heart"];
+    heartIm.alt = "Samopoczucie";
+    heartIm.width = heartIm.height = 28;
+    const heartBar = document.createElement("div");
+    heartBar.className = "bar";
+    heartBar.innerHTML = "<i></i>";
+    heartRow.append(heartIm, heartBar);
+
+    statusEl.append(statsRow, heartRow);
     statusUpdate();
 }
 
 function statusUpdate() {
-    document.querySelectorAll(".stat").forEach((el) => {
-        const v = el.dataset.status === "heart" ? heart() : stats[el.dataset.status];
-        el.querySelector("i").style.width = v + "%";
-        el.querySelector("small").textContent = Math.round(v) + "%";
+    // 5 potrzeb z dynamicznym kolorem paska
+    document.querySelectorAll(".stat[data-status]").forEach((el) => {
+        const v = stats[el.dataset.status];
+        if (v === undefined) return;
+        const fill = el.querySelector("i");
+        fill.style.width = v + "%";
+        fill.style.background = v <= 10 ? "#e84b4b" : v <= 40 ? "#f0c535" : "var(--c)";
         el.setAttribute("aria-label", el.querySelector("img").alt + ": " + Math.round(v) + "%");
     });
+
+    // Serduszko
+    const heartEl = document.querySelector(".stat-heart[data-status='heart']");
+    if (heartEl) {
+        const v = heart();
+        const fill = heartEl.querySelector("i");
+        fill.style.width = v + "%";
+        fill.style.background = v <= 25 ? "#e84b4b" : v <= 50 ? "#f0a060" : "#f4a0bc";
+        heartEl.setAttribute("aria-label", "Samopoczucie psa: " + Math.round(v) + "%");
+    }
 }
 
 function syncMenu() {

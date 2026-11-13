@@ -29,19 +29,24 @@ body {
 }
 
 .status {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 4px;
-    padding: 5px 6px;
-    align-content: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 6px 6px 4px;
     background: #efe1d7;
+}
+
+.status-stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
 }
 
 .stat {
     min-width: 0;
     text-align: center;
-    padding: 7px 3px;
-    background: #fff9f2;
+    padding: 7px 3px 5px;
+    background: color-mix(in srgb, var(--c) 22%, #fff9f2);
     border-radius: 14px;
 }
 
@@ -53,11 +58,11 @@ body {
 }
 
 .bar {
-    height: 6px;
+    height: 8px;
     border-radius: 5px;
-    background: #ded0ca;
+    background: color-mix(in srgb, var(--c) 30%, #e8ddd8);
     overflow: hidden;
-    margin: 6px 2px 2px;
+    margin: 5px 2px 0;
 }
 
 .bar i {
@@ -65,11 +70,29 @@ body {
     width: 50%;
     height: 100%;
     background: var(--c);
+    border-radius: 5px;
+    transition: width 0.4s ease, background-color 0.5s ease;
 }
 
-.stat small {
-    font-size: 9px;
-    color: #8c7c8c;
+/* Serduszko — pełna szerokość */
+.stat-heart {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 2px 3px 5px;
+}
+
+.stat-heart img {
+    flex-shrink: 0;
+    image-rendering: pixelated;
+}
+
+.stat-heart .bar {
+    flex: 1;
+    height: 12px;
+    margin: 0;
+    border-radius: 8px;
+    background: color-mix(in srgb, #f4a0bc 25%, #e8ddd8);
 }
 
 .scene {
