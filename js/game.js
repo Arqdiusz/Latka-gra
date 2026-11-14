@@ -1405,7 +1405,15 @@ async function loadImage(src) {
 async function boot() {
     // Załaduj konfigurację z osobnego pliku
     P = await fetch("data/config.json").then((r) => r.json());
+    // Załaduj animacje z plików edytora (animacje-ustawienia/)
+    // — te pliki są źródłem prawdy; config.json trzyma resztę ustawień
+    const [anim01, anim02] = await Promise.all([
+        fetch("animacje-ustawienia/latka-animacje-01.json").then((r) => r.json()),
+        fetch("animacje-ustawienia/latka-animacje-02.json").then((r) => r.json()),
+    ]);
     CFG = P.config;
+    CFG.a01 = anim01;
+    CFG.a02 = anim02;
     UI = CFG.ui;
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
     for (let i = 0; i < 2; i++) images["b" + i] = await loadImage(P.assets.butterflies[i]);
