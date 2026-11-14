@@ -103,7 +103,7 @@ let loaded = false,
     queue = [],
     segment = null,
     idleUntil = 6500,
-    nextTrip = 32000,
+    nextTrip = 15000,
     nextPoop = 45000,
     nextBubble = 9000,
     nextButterfly = 28000,
@@ -632,7 +632,7 @@ function chooseVariant() {
 }
 
 function finishTravel(id) {
-    nextTrip = clock + 40000 + Math.random() * 35000;
+    nextTrip = clock + 15000 + Math.random() * 15000;
     if (id) activity(id);
     else {
         idle(16);
@@ -1571,7 +1571,7 @@ window.gameTest = {
         setRoom(r);
         idle(16);
         nextPoop = clock + 45000;
-        nextTrip = clock + 32000;
+        nextTrip = clock + 15000;
         nextButterfly = clock + 28000;
     },
     needs: (s) => {
