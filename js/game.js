@@ -1387,11 +1387,14 @@ function fetchStart() {
     startQueue([ballReadySegment()]);
 }
 
-// Łatka czeka na rzut — osobny segment, żeby silnik animacji nie przerwał zabawy
+// Łatka czeka na rzut — klatki "startowe" (pies bez piłki, piłka leży obok z ramką).
+// Używamy klatek 33,34 — pies pochylony, gotowy do biegu, bez piłki w sprite.
+// Osobna piłka rysowana przez ballDraw() z pulsującą ramką zachęcającą do swipe'a.
 function ballReadySegment() {
     return {
         sheet: "a02",
-        anim: 8, // 09. Piłka — zachęta do zabawy
+        frames: [33, 34, 33, 34, 33, 34, 33, 34], // pies pochylony, gotowy do biegu
+        tempo: 320,
         time: BALL_GIVE_UP,
         onStart: () => {
             phase = "ball-ready";
@@ -1410,7 +1413,7 @@ function ballReadySegment() {
     };
 }
 
-// Zabawa skończona — nagroda i powrót do zwykłego trybu
+// Zabawa skończona — popup z animacją piłki, potem merdanie/nagroda
 function fetchFinish(rewarded) {
     const got = rewarded && fetchGame && fetchGame.throws > 0;
     fetchGame = null;
@@ -1419,13 +1422,22 @@ function fetchFinish(rewarded) {
         phase = "activity";
         pending = "fun";
         locks();
+        // 1. Podskok radości
+        // 2. Popup z animacją zabawy piłką (~2s), potem merdanie jeśli jest
+        const hasTail = CFG.a02.presets.length > 23; // 24. Merdanie (dodane przez usera)
         startQueue([
+            { sheet: "a01", anim: 18, time: duration("a01", 18) },        // podskok
             {
-                sheet: "a01",
-                anim: 18, // 18. Radość / podskok
-                time: duration("a01", 18),
+                sheet: "a02", anim: 8, time: 2200,                         // piłka zachęta (popup tło)
+                onStart: () => {
+                    $(".popup").hidden = false;
+                    $(".reward").src = icons.fun;
+                },
+                onEnd: () => ($(".popup").hidden = true),
             },
-            ...rewardParts(),
+            ...(hasTail
+                ? [{ sheet: "a02", anim: 23, time: duration("a02", 23) }]  // 24. Merdanie
+                : [{ sheet: "a01", anim: 16, time: 800 }]),                 // spokojne stanie
         ]);
     } else idle(16);
 }
@@ -1438,13 +1450,16 @@ function ballThrow(dx, dy) {
         power = clamp(Math.abs(swipe) / W, 0.18, 1),
         nextIdx = order.indexOf(ball.room) + dir,
         hasNextRoom = nextIdx >= 0 && nextIdx < order.length,
-        // Piłka zawsze leci "na drugą planszę" — do sąsiedniego pokoju.
-        // Moc rzutu decyduje tylko, jak głęboko w nim wyląduje.
+        // Piłka zawsze leci "na drugą planszę" — do sąsiedniego pokoju,
+        // lądując przy DALEKIM końcu (żeby pies miał po co biec przez cały pokój).
+        // Moc rzutu decyduje tylko o łuku i szybkości lotu, nie o odległości.
         // Jeśli to już ostatni pokój w tę stronę — piłka odbija się od ściany.
         land = hasNextRoom
             ? {
                   room: order[nextIdx],
-                  x: dir > 0 ? clamp(0.18 + power * 0.55, 0.18, 0.78) : clamp(0.82 - power * 0.55, 0.22, 0.82),
+                  // dir>0 → ląduje blisko prawej ściany (0.78-0.90)
+                  // dir<0 → ląduje blisko lewej ściany (0.10-0.22)
+                  x: dir > 0 ? clamp(0.72 + power * 0.14, 0.72, 0.88) : clamp(0.28 - power * 0.14, 0.12, 0.28),
               }
             : { room: ball.room, x: clamp(ball.x + dir * 0.3, 0.1, 0.9) },
         start = worldOf(ball.room, ball.x),
@@ -1542,8 +1557,13 @@ function moveParts(targetRoom, targetX, opts = {}) {
 
 function fetchChaseParts(land) {
     const parts = [];
-    // 1. Bieg do piłki — zatrzymanie tuż obok niej
-    const approach = clamp(land.x + (land.x > 0.5 ? -0.08 : 0.08), 0.08, 0.92);
+    // 1. Bieg do piłki — pies wbiega z bliższego końca pokoju i zatrzymuje
+    //    się tuż przy piłce (która jest przy dalekim końcu).
+    //    Zatrzymujemy się po stronie, z której pies nadbiegł (skąd rzucono).
+    const approach = clamp(
+        land.x + (land.x > 0.5 ? -0.10 : 0.10), // staje tuż obok, naprzeciwko piłki
+        0.08, 0.92
+    );
     parts.push(...moveParts(land.room, approach, { label: "ball-chase" }));
 
     // 2. Podniesienie piłki — 12. Aport
@@ -1608,11 +1628,12 @@ function ballDropPart() {
 
 // Etapy, w których piłka jest już wrysowana w sprite Łatki —
 // wtedy osobnej piłki NIE rysujemy, żeby nie było dwóch naraz
-const SPRITE_HAS_BALL = ["ball-ready", "ball-pickup", "ball-back", "ball-drop"];
+// UWAGA: "ball-ready" jest tu celowo POMINIĘTE, bo wtedy rysujemy
+// piłkę osobno (z animowaną ramką zachęcającą do swipe'a).
+const SPRITE_HAS_BALL = ["ball-pickup", "ball-back", "ball-drop"];
 
-// Rysowanie piłki — w locie i na ziemi
-// Skalujemy tym samym mnożnikiem co pieska (BASE), żeby piłka miała
-// ten sam "rozmiar pikseli" co ta wrysowana w sprite'y Łatki.
+// Rysowanie piłki — w locie, na ziemi i podczas oczekiwania na rzut
+// (z animowaną ramką zachęcającą do swipe'a podczas ball-ready)
 function ballDraw() {
     if (!ball || ball.carried || SPRITE_HAS_BALL.includes(stage)) return;
     if (Math.abs(order.indexOf(ball.room) - order.indexOf(room)) > 1) return;
@@ -1621,7 +1642,28 @@ function ballDraw() {
     if (!im) return;
     const w = im.width * BASE,
         h = im.height * BASE;
-    ctx.drawImage(im, ballScreenX() - w / 2, GROUND + 18 + ball.y - h, w, h);
+    const bx = ballScreenX() - w / 2,
+        by = GROUND + 18 + ball.y - h;
+    ctx.drawImage(im, bx, by, w, h);
+
+    // Animowana ramka zachęcająca do rzutu (pulsująca) — tylko podczas oczekiwania
+    if (stage === "ball-ready") {
+        const pulse = 0.5 + 0.5 * Math.sin(clock / 220),     // 0..1, ~2.8 Hz
+            expand = 4 + pulse * 8,                             // 4..12 px poza piłką
+            alpha = 0.4 + pulse * 0.55,                         // 0.4..0.95
+            r = Math.max(w, h) / 2 + expand,
+            cx = bx + w / 2,
+            cy = by + h / 2;
+        ctx.save();
+        ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = "rgba(255,255,255,0.7)";
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
 }
 
 function iconDraw(c, key, x, y, w, h = w) {
