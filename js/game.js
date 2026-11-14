@@ -663,7 +663,7 @@ function arrowTravel(r, dir) {
             facing,
             to: edge,
             motion: "run",
-            time: Math.max(320, ((Math.abs(edge - x) * W) / 210) * 1000),
+            time: Math.max(320, ((Math.abs(edge - x) * W) / 350) * 1000),
             onStart: () => (stage = "run"),
         },
         {
