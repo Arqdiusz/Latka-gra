@@ -324,6 +324,62 @@ body {
     image-rendering: pixelated;
 }
 
+.ballPopup {
+    position: absolute;
+    inset: 0;
+    background: #3b2e3c38;
+    z-index: 25;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.ballPopup[hidden] {
+    display: none;
+}
+
+.ballCard {
+    width: 260px;
+    max-width: 100%;
+    background: #fff8ea;
+    border: 5px solid white;
+    border-radius: 30px;
+    box-shadow: 0 6px #0002;
+    text-align: center;
+    padding: 18px 18px 20px;
+}
+
+.ballIcon {
+    display: block;
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 10px;
+    image-rendering: pixelated;
+}
+
+.ballCard p {
+    margin: 0 0 16px;
+    font-size: 15px;
+    line-height: 1.4;
+    color: #59485d;
+}
+
+.ballOk {
+    border: none;
+    border-radius: 14px;
+    background: #9674ab;
+    color: white;
+    font: inherit;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 11px 20px;
+    cursor: pointer;
+}
+
+.ballOk:hover {
+    background: #86649b;
+}
+
 .load {
     position: absolute;
     inset: 0;

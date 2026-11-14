@@ -573,8 +573,9 @@ function activity(id) {
         return;
     }
     if (id === "fun") {
-        // Zabawa = aport: dziecko rzuca piłkę, Łatka biega po nią
-        fetchStart();
+        // Zabawa = aport: dziecko rzuca piłkę, Łatka biega po nią.
+        // Najpierw krótki pop-up z instrukcją, start dopiero po "OK".
+        ballIntroShow(fetchStart);
         return;
     }
     phase = "activity";
@@ -1301,8 +1302,7 @@ function butterflyEvent() {
    Dziecko rzuca piłkę gestem, Łatka biegnie po nią (również do
    sąsiedniego pokoju), podnosi ją i przynosi z powrotem.
    ═══════════════════════════════════════════════════════════════ */
-const BALL_W = 30, // rozmiar piłki na ekranie
-    BALL_THROWS = 3, // ile rzutów do nagrody
+const BALL_THROWS = 3, // ile rzutów do nagrody
     BALL_HINT_AFTER = 7000, // po ilu ms bez rzutu Łatka zachęca
     BALL_GIVE_UP = 30000; // po ilu ms bez rzutu zabawa się kończy
 let ball = null, // { room, x, y, spin, carried }
@@ -1332,6 +1332,35 @@ function worldSplit(w) {
         x: clamp(px, 0.12, 0.88),
     };
 }
+
+// ── Pop-up z instrukcją przed startem zabawy ──────────────────
+// Silnik animacji wymaga, żeby poza stanem "idle" zawsze był jakiś
+// segment w kolejce — inaczej sam wraca do idle. Dlatego czekanie na
+// kliknięcie "OK" to też segment (jak przy czekaniu na rzut).
+let ballIntroResume = null;
+function ballIntroShow(onOk) {
+    ballIntroResume = onOk;
+    $(".ballIcon").src = icons.fun;
+    $(".ballPopup").hidden = false;
+    startQueue([
+        {
+            sheet: "a01",
+            anim: 16, // 17. Spokojne stanie
+            time: 120000,
+            onStart: () => {
+                phase = "ball-intro";
+                stage = "ball-intro";
+                locks();
+            },
+        },
+    ]);
+}
+$(".ballOk").onclick = () => {
+    $(".ballPopup").hidden = true;
+    const resume = ballIntroResume;
+    ballIntroResume = null;
+    resume?.();
+};
 
 // ── Start zabawy ──────────────────────────────────────────────
 function fetchStart() {
@@ -1407,14 +1436,18 @@ function ballThrow(dx, dy) {
     const swipe = dx / (scale || 1),
         dir = Math.abs(swipe) < 10 ? (left ? -1 : 1) : swipe < 0 ? -1 : 1,
         power = clamp(Math.abs(swipe) / W, 0.18, 1),
-        // Lekki rzut zostaje w tym samym pokoju, mocny leci do sąsiedniego
-        toEdge = dir > 0 ? 0.88 - ball.x : ball.x - 0.12,
-        span =
-            power < 0.45
-                ? Math.min(0.3 + power, Math.max(0.3, toEdge))
-                : 0.55 + power * 0.8,
+        nextIdx = order.indexOf(ball.room) + dir,
+        hasNextRoom = nextIdx >= 0 && nextIdx < order.length,
+        // Piłka zawsze leci "na drugą planszę" — do sąsiedniego pokoju.
+        // Moc rzutu decyduje tylko, jak głęboko w nim wyląduje.
+        // Jeśli to już ostatni pokój w tę stronę — piłka odbija się od ściany.
+        land = hasNextRoom
+            ? {
+                  room: order[nextIdx],
+                  x: dir > 0 ? clamp(0.18 + power * 0.55, 0.18, 0.78) : clamp(0.82 - power * 0.55, 0.22, 0.82),
+              }
+            : { room: ball.room, x: clamp(ball.x + dir * 0.3, 0.1, 0.9) },
         start = worldOf(ball.room, ball.x),
-        land = worldSplit(start + dir * span),
         travelled = Math.abs(worldOf(land.room, land.x) - start);
 
     fetchGame.throws++;
@@ -1423,8 +1456,9 @@ function ballThrow(dx, dy) {
     bubble = null;
     locks();
 
-    const flightTime = clamp(420 + travelled * 620, 480, 1250),
-        arc = 150 + travelled * 110; // wysokość łuku
+    // Mocniejszy rzut = szybszy i wyższy łuk (nawet jeśli dystans jest podobny)
+    const flightTime = hasNextRoom ? clamp(900 - power * 380, 480, 900) : clamp(420 + travelled * 620, 420, 650),
+        arc = hasNextRoom ? 150 + power * 140 : 150 + travelled * 110;
 
     startQueue([
         // Piłka leci łukiem, Łatka odprowadza ją wzrokiem
@@ -1577,13 +1611,17 @@ function ballDropPart() {
 const SPRITE_HAS_BALL = ["ball-ready", "ball-pickup", "ball-back", "ball-drop"];
 
 // Rysowanie piłki — w locie i na ziemi
+// Skalujemy tym samym mnożnikiem co pieska (BASE), żeby piłka miała
+// ten sam "rozmiar pikseli" co ta wrysowana w sprite'y Łatki.
 function ballDraw() {
     if (!ball || ball.carried || SPRITE_HAS_BALL.includes(stage)) return;
     if (Math.abs(order.indexOf(ball.room) - order.indexOf(room)) > 1) return;
     const n = ((Math.floor(ball.spin) % 4) + 4) % 4,
         im = images["ball" + n];
     if (!im) return;
-    ctx.drawImage(im, ballScreenX() - BALL_W / 2, GROUND + 18 + ball.y - BALL_W, BALL_W, BALL_W);
+    const w = im.width * BASE,
+        h = im.height * BASE;
+    ctx.drawImage(im, ballScreenX() - w / 2, GROUND + 18 + ball.y - h, w, h);
 }
 
 function iconDraw(c, key, x, y, w, h = w) {
@@ -1883,6 +1921,7 @@ window.gameTest = {
     butterfly: butterflyEvent,
     fetchStart,
     throwBall: ballThrow,
+    confirmBallIntro: () => $(".ballOk").click(),
     walk: localWalk,
     hit: petHit,
     head: headPosition,
