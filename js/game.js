@@ -27,7 +27,7 @@ const items = [
         icon: "food",
         label: "Nakarm",
         room: "kitchen",
-        color: "#841a19",
+        color: "#ec8d8c",
     },
     {
         id: "water",
@@ -62,7 +62,7 @@ const items = [
         icon: "clean",
         label: "Mycie",
         room: "bathroom",
-        color: "#a1dbdd",
+        color: "#fde598",
     },
     {
         id: "brush",
