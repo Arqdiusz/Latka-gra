@@ -1457,9 +1457,14 @@ function ballThrow(dx, dy) {
         land = hasNextRoom
             ? {
                   room: order[nextIdx],
-                  // dir>0 → ląduje blisko prawej ściany (0.78-0.90)
-                  // dir<0 → ląduje blisko lewej ściany (0.10-0.22)
-                  x: dir > 0 ? clamp(0.72 + power * 0.14, 0.72, 0.88) : clamp(0.28 - power * 0.14, 0.12, 0.28),
+                  // Piłka ląduje przy przednich łapach psa gdy dobiegnie:
+                  // pies zatrzymuje się ~0.10 od piłki, więc lądowanie
+                  // ustawiamy tak, by approach (pies) + 0.07 offset = land (piłka).
+                  // dir>0: pies wbiega od lewej → piłka jest po jego prawej
+                  // dir<0: pies wbiega od prawej → piłka jest po jego lewej
+                  x: dir > 0
+                      ? clamp(0.72 + power * 0.10, 0.72, 0.84)  // daleki koniec, piłka
+                      : clamp(0.28 - power * 0.10, 0.16, 0.28), // daleki koniec, piłka
               }
             : { room: ball.room, x: clamp(ball.x + dir * 0.3, 0.1, 0.9) },
         start = worldOf(ball.room, ball.x),
@@ -1560,10 +1565,10 @@ function fetchChaseParts(land) {
     // 1. Bieg do piłki — pies wbiega z bliższego końca pokoju i zatrzymuje
     //    się tuż przy piłce (która jest przy dalekim końcu).
     //    Zatrzymujemy się po stronie, z której pies nadbiegł (skąd rzucono).
-    const approach = clamp(
-        land.x + (land.x > 0.5 ? -0.10 : 0.10), // staje tuż obok, naprzeciwko piłki
-        0.08, 0.92
-    );
+    // Pies wbiega z bliższej strony pokoju i zatrzymuje się tuż przed piłką.
+    // offset 0.08: pies staje tak, że piłka jest przy jego przednich łapach.
+    const fromDir = land.x > 0.5 ? -1 : 1; // pies wbiega z lewej (1) lub prawej (-1)
+    const approach = clamp(land.x + fromDir * 0.08, 0.06, 0.94);
     parts.push(...moveParts(land.room, approach, { label: "ball-chase" }));
 
     // 2. Podniesienie piłki — 12. Aport
@@ -1571,7 +1576,7 @@ function fetchChaseParts(land) {
         sheet: "a02",
         anim: 11,
         time: duration("a02", 11),
-        facing: land.x < approach,
+        facing: fromDir > 0, // pies patrzy w kierunku z którego wbiegł (w stronę piłki)
         onStart: () => {
             stage = "ball-pickup";
             say("heart", 1800);
@@ -1640,8 +1645,8 @@ function ballDraw() {
     const n = ((Math.floor(ball.spin) % 4) + 4) % 4,
         im = images["ball" + n];
     if (!im) return;
-    const w = im.width * BASE,
-        h = im.height * BASE;
+    const w = im.width * BASE * 0.8,
+        h = im.height * BASE * 0.8;
     const bx = ballScreenX() - w / 2,
         by = GROUND + 18 + ball.y - h;
     ctx.drawImage(im, bx, by, w, h);
