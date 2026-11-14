@@ -539,6 +539,12 @@
       "animacje/motyl-1.png",
       "animacje/motyl-2.png"
     ],
+    "balls": [
+      "animacje/ball-1.png",
+      "animacje/ball-2.png",
+      "animacje/ball-3.png",
+      "animacje/ball-4.png"
+    ],
     "poop": "inne/kupka.png",
     "rooms": {
       "living": "tla/004.png",

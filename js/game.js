@@ -412,7 +412,8 @@ function canPet() {
 }
 
 function locks() {
-    document.body.classList.toggle("locked", !casual());
+    // W czasie czekania na rzut menu zostaje aktywne, żeby dało się wyjść z zabawy
+    document.body.classList.toggle("locked", !casual() && phase !== "ball-ready");
     document.querySelectorAll(".arrow").forEach((b) => (b.disabled = !casual()));
     $(".petAccess").disabled = !canPet();
     updateArrows();
@@ -467,6 +468,8 @@ function idle(which = null) {
     jumpY = 0;
     boneVisible = false;
     butterfly = null;
+    ball = null;
+    fetchGame = null;
     setOffset(0);
     setAnim("a01", which ?? (Math.random() < 0.35 ? 18 : 16));
     idleUntil = clock + Math.max(frames.length * ms, 1800) + Math.random() * 2000;
@@ -567,6 +570,11 @@ function activity(id) {
         say("sleep", 2600);
         locks();
         save();
+        return;
+    }
+    if (id === "fun") {
+        // Zabawa = aport: dziecko rzuca piłkę, Łatka biega po nią
+        fetchStart();
         return;
     }
     phase = "activity";
@@ -795,6 +803,12 @@ function route(target, id = null, mode = "menu") {
 }
 
 function action(id) {
+    // Z czekania na rzut można wyjść wybierając inną czynność
+    if (phase === "ball-ready") {
+        fetchGame = null;
+        ball = null;
+        idle(16);
+    }
     if (!casual()) return;
     const i = items.find((i) => i.id === id);
     if (!i) return;
@@ -1069,7 +1083,10 @@ canvas.addEventListener("pointermove", (e) => {
     const dx = e.clientX - g.sx,
         dy = e.clientY - g.sy;
     if (!g.kind) {
-        if (Math.abs(dy) > 18 && Math.abs(dy) > Math.abs(dx) * 1.2) {
+        if (phase === "ball-ready") {
+            // W trybie aportu każdy ruch palcem to rzut piłką
+            if (Math.hypot(dx, dy) > 10) g.kind = "throw";
+        } else if (Math.abs(dy) > 18 && Math.abs(dy) > Math.abs(dx) * 1.2) {
             g.kind = g.dog && !g.poop && canPet() ? "pet" : "vertical";
             if (g.kind === "pet") startPetting();
         } else if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.2 && casual()) {
@@ -1098,6 +1115,15 @@ function pointerEnd(e, cancel = false) {
     }
     const dx = e.clientX - g.sx,
         dy = e.clientY - g.sy;
+    if (g.kind === "throw") {
+        if (!cancel) ballThrow(dx, dy);
+        return;
+    }
+    if (phase === "ball-ready" && !cancel && !g.kind) {
+        // Samo stuknięcie w ekran też rzuca — krótki rzut przed siebie
+        ballThrow(0, 0);
+        return;
+    }
     if (g.kind === "swipe") {
         if (!cancel && Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
             setOffset(0);
@@ -1270,6 +1296,296 @@ function butterflyEvent() {
     return true;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   APORT — zabawa w rzucanie piłki
+   Dziecko rzuca piłkę gestem, Łatka biegnie po nią (również do
+   sąsiedniego pokoju), podnosi ją i przynosi z powrotem.
+   ═══════════════════════════════════════════════════════════════ */
+const BALL_W = 30, // rozmiar piłki na ekranie
+    BALL_THROWS = 3, // ile rzutów do nagrody
+    BALL_HINT_AFTER = 7000, // po ilu ms bez rzutu Łatka zachęca
+    BALL_GIVE_UP = 30000; // po ilu ms bez rzutu zabawa się kończy
+let ball = null, // { room, x, y, spin, carried }
+    fetchGame = null; // { throws, hinted, homeRoom, homeX }
+
+// Pozycja piłki na ekranie — uwzględnia sąsiednie pokoje (jak kupka)
+function ballScreenX() {
+    const diff = order.indexOf(ball.room) - order.indexOf(room);
+    return ball.x * W + diff * W + roomOffset;
+}
+
+// Świat liczony w sposób ciągły: indeks pokoju + pozycja w pokoju
+const worldOf = (r, px) => order.indexOf(r) + px;
+
+function worldSplit(w) {
+    const lo = 0.12,
+        hi = order.length - 1 + 0.88;
+    w = clamp(w, lo, hi);
+    let r = Math.floor(w),
+        px = w - r;
+    if (r > order.length - 1) {
+        r = order.length - 1;
+        px = 0.88;
+    }
+    return {
+        room: order[r],
+        x: clamp(px, 0.12, 0.88),
+    };
+}
+
+// ── Start zabawy ──────────────────────────────────────────────
+function fetchStart() {
+    phase = "ball-ready";
+    stage = "ball-ready";
+    queue = [];
+    segment = null;
+    jumpY = 0;
+    fetchGame = {
+        throws: 0,
+        hinted: false,
+        homeRoom: room,
+        homeX: 0.5,
+    };
+    ball = {
+        room,
+        x: clamp(x + (left ? -0.14 : 0.14), 0.12, 0.88),
+        y: 0,
+        spin: 0,
+        carried: false,
+    };
+    say("fun", 2600);
+    toast("Przesuń palcem po ekranie — rzuć piłkę Łatce!");
+    startQueue([ballReadySegment()]);
+}
+
+// Łatka czeka na rzut — osobny segment, żeby silnik animacji nie przerwał zabawy
+function ballReadySegment() {
+    return {
+        sheet: "a02",
+        anim: 8, // 09. Piłka — zachęta do zabawy
+        time: BALL_GIVE_UP,
+        onStart: () => {
+            phase = "ball-ready";
+            stage = "ball-ready";
+            if (fetchGame) fetchGame.hinted = false;
+            locks();
+        },
+        update: (p) => {
+            if (fetchGame && !fetchGame.hinted && p * BALL_GIVE_UP > BALL_HINT_AFTER) {
+                fetchGame.hinted = true;
+                say("fun", 2600);
+                toast("Przesuń palcem — Łatka czeka na rzut!");
+            }
+        },
+        onEnd: () => fetchFinish(!!fetchGame && fetchGame.throws > 0),
+    };
+}
+
+// Zabawa skończona — nagroda i powrót do zwykłego trybu
+function fetchFinish(rewarded) {
+    const got = rewarded && fetchGame && fetchGame.throws > 0;
+    fetchGame = null;
+    ball = null;
+    if (got) {
+        phase = "activity";
+        pending = "fun";
+        locks();
+        startQueue([
+            {
+                sheet: "a01",
+                anim: 18, // 18. Radość / podskok
+                time: duration("a01", 18),
+            },
+            ...rewardParts(),
+        ]);
+    } else idle(16);
+}
+
+// ── Rzut ──────────────────────────────────────────────────────
+function ballThrow(dx, dy) {
+    if (phase !== "ball-ready" || !ball || !fetchGame) return;
+    const swipe = dx / (scale || 1),
+        dir = Math.abs(swipe) < 10 ? (left ? -1 : 1) : swipe < 0 ? -1 : 1,
+        power = clamp(Math.abs(swipe) / W, 0.18, 1),
+        // Lekki rzut zostaje w tym samym pokoju, mocny leci do sąsiedniego
+        toEdge = dir > 0 ? 0.88 - ball.x : ball.x - 0.12,
+        span =
+            power < 0.45
+                ? Math.min(0.3 + power, Math.max(0.3, toEdge))
+                : 0.55 + power * 0.8,
+        start = worldOf(ball.room, ball.x),
+        land = worldSplit(start + dir * span),
+        travelled = Math.abs(worldOf(land.room, land.x) - start);
+
+    fetchGame.throws++;
+    phase = "ball-fly";
+    left = dir < 0;
+    bubble = null;
+    locks();
+
+    const flightTime = clamp(420 + travelled * 620, 480, 1250),
+        arc = 150 + travelled * 110; // wysokość łuku
+
+    startQueue([
+        // Piłka leci łukiem, Łatka odprowadza ją wzrokiem
+        {
+            sheet: "a01",
+            anim: 15, // 16. Patrzenie w górę / łapa
+            facing: dir < 0,
+            time: flightTime,
+            onStart: () => (stage = "ball-fly"),
+            update: (p) => {
+                const w = start + (worldOf(land.room, land.x) - start) * p,
+                    pos = worldSplit(w);
+                ball.room = pos.room;
+                ball.x = pos.x;
+                ball.y = -Math.sin(Math.PI * p) * arc;
+                ball.spin += travelled * dir * 0.9;
+            },
+            onEnd: () => {
+                ball.room = land.room;
+                ball.x = land.x;
+                ball.y = 0;
+            },
+        },
+        // Krótkie odbicie piłki po wylądowaniu
+        {
+            sheet: "a01",
+            anim: 1,
+            tempo: 180,
+            facing: dir < 0,
+            time: 260,
+            onStart: () => (stage = "ball-bounce"),
+            update: (p) => {
+                ball.y = -Math.abs(Math.sin(Math.PI * p * 2)) * 26 * (1 - p);
+                ball.spin += dir * 0.35;
+            },
+            onEnd: () => (ball.y = 0),
+        },
+        // Pogoń + podniesienie + powrót
+        ...fetchChaseParts(land),
+    ]);
+}
+
+// ── Pogoń, podniesienie i powrót ──────────────────────────────
+// Bieg z piłką w pysku — klatki z arkusza a02 (sprite ma już piłkę)
+const CARRY_FRAMES = [42, 50, 52, 50];
+
+function moveParts(targetRoom, targetX, opts = {}) {
+    const { speed = 235, label = "ball-chase", carry = false } = opts,
+        from = order.indexOf(room),
+        to = order.indexOf(targetRoom),
+        dir = to >= from ? 1 : -1,
+        parts = [];
+    const seg = (a, b, facing, onEnd) => ({
+        // Bieg: a01 „02. Bieg / sus", a z piłką — klatki aportu z a02
+        sheet: carry ? "a02" : "a01",
+        ...(carry ? { frames: CARRY_FRAMES } : { anim: 1 }),
+        tempo: 180,
+        motion: "run",
+        facing,
+        from: a,
+        to: b,
+        time: Math.max(200, ((Math.abs(b - a) * W) / speed) * 1000),
+        onStart: () => (stage = label),
+        onEnd,
+    });
+    let origin = x;
+    for (let i = from; i !== to; i += dir) {
+        const r = order[i + dir],
+            edge = dir > 0 ? 1.08 : -0.08;
+        parts.push(
+            seg(origin, edge, dir < 0, () => {
+                setRoom(r);
+                x = dir > 0 ? -0.08 : 1.08;
+            })
+        );
+        origin = dir > 0 ? -0.08 : 1.08;
+    }
+    parts.push(seg(origin, targetX, targetX < origin));
+    return parts;
+}
+
+function fetchChaseParts(land) {
+    const parts = [];
+    // 1. Bieg do piłki — zatrzymanie tuż obok niej
+    const approach = clamp(land.x + (land.x > 0.5 ? -0.08 : 0.08), 0.08, 0.92);
+    parts.push(...moveParts(land.room, approach, { label: "ball-chase" }));
+
+    // 2. Podniesienie piłki — 12. Aport
+    parts.push({
+        sheet: "a02",
+        anim: 11,
+        time: duration("a02", 11),
+        facing: land.x < approach,
+        onStart: () => {
+            stage = "ball-pickup";
+            say("heart", 1800);
+        },
+        onEnd: () => {
+            ball.carried = true;
+            ball.y = 0;
+        },
+    });
+
+    // 3. Powrót z piłką — trasę liczymy dopiero teraz, bo Łatka mogła
+    //    w międzyczasie przebiec do innego pokoju
+    parts.push({
+        sheet: "a02",
+        frames: [47], // stoi z piłką w pysku
+        tempo: 200,
+        time: 220,
+        onStart: () => (stage = "ball-back"),
+        onEnd: () => {
+            if (!fetchGame) return;
+            queue = [
+                ...moveParts(fetchGame.homeRoom, fetchGame.homeX, {
+                    speed: 215,
+                    label: "ball-back",
+                    carry: true,
+                }),
+                ballDropPart(),
+            ];
+        },
+    });
+    return parts;
+}
+
+// 4. Położenie piłki i gotowość na kolejny rzut
+function ballDropPart() {
+    return {
+        sheet: "a02",
+        anim: 13, // 14. Piłka — trzymanie i opuszczanie
+        time: duration("a02", 13),
+        onStart: () => (stage = "ball-drop"),
+        onEnd: () => {
+            if (!ball || !fetchGame) return;
+            ball.carried = false;
+            ball.room = room;
+            ball.x = clamp(x + (left ? -0.14 : 0.14), 0.12, 0.88);
+            ball.y = 0;
+            changeNeeds({ fun: 5, water: -2, sleep: -1 });
+            save();
+            if (fetchGame.throws >= BALL_THROWS) fetchFinish(true);
+            else queue = [ballReadySegment()];
+        },
+    };
+}
+
+// Etapy, w których piłka jest już wrysowana w sprite Łatki —
+// wtedy osobnej piłki NIE rysujemy, żeby nie było dwóch naraz
+const SPRITE_HAS_BALL = ["ball-ready", "ball-pickup", "ball-back", "ball-drop"];
+
+// Rysowanie piłki — w locie i na ziemi
+function ballDraw() {
+    if (!ball || ball.carried || SPRITE_HAS_BALL.includes(stage)) return;
+    if (Math.abs(order.indexOf(ball.room) - order.indexOf(room)) > 1) return;
+    const n = ((Math.floor(ball.spin) % 4) + 4) % 4,
+        im = images["ball" + n];
+    if (!im) return;
+    ctx.drawImage(im, ballScreenX() - BALL_W / 2, GROUND + 18 + ball.y - BALL_W, BALL_W, BALL_W);
+}
+
 function iconDraw(c, key, x, y, w, h = w) {
     if (key === "poop") {
         const ratio = images.poop.width / images.poop.height;
@@ -1337,6 +1653,7 @@ function draw(dt) {
         ctx.drawImage(images["b" + (Math.floor(clock / 130) % 2)], -22, -22, 44, 44);
         ctx.restore();
     }
+    ballDraw();
     // Dropping is explicitly a foreground layer and below the dog's walking baseline.
     if (poop && Math.abs(order.indexOf(poop.room) - order.indexOf(room)) <= 1) {
         const r = poopRect();
@@ -1404,12 +1721,15 @@ async function loadImage(src) {
 }
 async function boot() {
     // Załaduj konfigurację z osobnego pliku
-    P = await fetch("data/config.json").then((r) => r.json());
+    // cache:"no-cache" — przeglądarka zawsze sprawdza, czy plik się zmienił,
+    // więc po wgraniu nowego JSON-a zmiany widać bez czyszczenia cache
+    const fresh = (u) => fetch(u, { cache: "no-cache" }).then((r) => r.json());
+    P = await fresh("data/config.json");
     // Załaduj animacje z plików edytora (animacje-ustawienia/)
     // — te pliki są źródłem prawdy; config.json trzyma resztę ustawień
     const [anim01, anim02] = await Promise.all([
-        fetch("animacje-ustawienia/latka-animacje-01.json").then((r) => r.json()),
-        fetch("animacje-ustawienia/latka-animacje-02.json").then((r) => r.json()),
+        fresh("animacje-ustawienia/latka-animacje-01.json"),
+        fresh("animacje-ustawienia/latka-animacje-02.json"),
     ]);
     CFG = P.config;
     CFG.a01 = anim01;
@@ -1417,6 +1737,9 @@ async function boot() {
     UI = CFG.ui;
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
     for (let i = 0; i < 2; i++) images["b" + i] = await loadImage(P.assets.butterflies[i]);
+    if (P.assets.balls)
+        for (let i = 0; i < P.assets.balls.length; i++)
+            images["ball" + i] = await loadImage(P.assets.balls[i]);
     for (const key of ["a01", "a02", "ui"]) {
         const rows = key === "ui" ? 6 : 12,
             im = images[key],
@@ -1540,6 +1863,8 @@ window.gameTest = {
         orientationPaused,
         butterfly,
         butterflyVisible: !!butterfly?.visible,
+        ball,
+        fetchGame,
         bubble,
         bubblePos,
         route: debugRoute,
@@ -1556,6 +1881,8 @@ window.gameTest = {
     touch: react,
     poop: spawnPoop,
     butterfly: butterflyEvent,
+    fetchStart,
+    throwBall: ballThrow,
     walk: localWalk,
     hit: petHit,
     head: headPosition,
