@@ -677,23 +677,21 @@ function arrowTravel(r, dir) {
         },
         {
             sheet: "a01",
-            frames: [1, 2, 7, 8],
-            tempo: 155,
+            anim: 1,
+            tempo: 180,
             facing,
-            time: reduced ? 200 : 620,
-            onStart: () => (stage = "jump"),
+            time: 240,
+            onStart: () => (stage = "run"),
             update: (p) => {
                 if (p >= 0.5 && !changed) {
                     setRoom(r);
                     changed = true;
                 }
                 x = p < 0.5 ? edge + (exit - edge) * p * 2 : entry + (land - entry) * (p - 0.5) * 2;
-                jumpY = reduced ? 0 : -Math.sin(Math.PI * p) * 35;
             },
             onEnd: () => {
                 if (!changed) setRoom(r);
                 x = land;
-                jumpY = 0;
             },
         },
         {
@@ -747,8 +745,8 @@ function route(target, id = null, mode = "menu") {
         distance = Math.abs(to - from),
         dir = to >= from ? 1 : -1,
         facing = dir < 0,
-        run = mode === "menu" || distance > 1,
-        speed = run ? 210 : 65,
+        run = true, // zawsze bieg (anim 02. Bieg/sus), spacer usunięty
+        speed = mode === "auto" ? 210 : 210,
         parts = [];
     left = facing;
 
