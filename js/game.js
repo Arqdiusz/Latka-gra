@@ -1422,22 +1422,19 @@ function fetchFinish(rewarded) {
         phase = "activity";
         pending = "fun";
         locks();
-        // 1. Podskok radości
-        // 2. Popup z animacją zabawy piłką (~2s), potem merdanie jeśli jest
+        // Popup natychmiast po przynesieniu piłki — bez zbędnych animacji przed nim.
+        // Po popup: merdanie jeśli user dodał preset 24 w a02, inaczej idle.
         const hasTail = CFG.a02.presets.length > 23; // 24. Merdanie (dodane przez usera)
+        $(".popup").hidden = false;
+        $(".reward").src = icons.fun;
         startQueue([
-            { sheet: "a01", anim: 18, time: duration("a01", 18) },        // podskok
             {
-                sheet: "a02", anim: 8, time: 2200,                         // piłka zachęta (popup tło)
-                onStart: () => {
-                    $(".popup").hidden = false;
-                    $(".reward").src = icons.fun;
-                },
+                sheet: "a02", anim: 8, time: 1800,                         // piłka zachęta w popupie
                 onEnd: () => ($(".popup").hidden = true),
             },
             ...(hasTail
                 ? [{ sheet: "a02", anim: 23, time: duration("a02", 23) }]  // 24. Merdanie
-                : [{ sheet: "a01", anim: 16, time: 800 }]),                 // spokojne stanie
+                : []),
         ]);
     } else idle(16);
 }
@@ -1648,7 +1645,7 @@ function ballDraw() {
     const w = im.width * BASE * 0.6,
         h = im.height * BASE * 0.6;
     const bx = ballScreenX() - w / 2,
-        by = GROUND - 1 + ball.y - h;
+        by = GROUND + 10 + ball.y - h; // piłka leży na ziemi (10px poniżej linii chodzenia)
     ctx.drawImage(im, bx, by, w, h);
 
     // Animowana ramka zachęcająca do rzutu (pulsująca) — tylko podczas oczekiwania
