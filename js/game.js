@@ -1599,9 +1599,11 @@ function fetchChaseParts(land) {
     //    się tuż przy piłce (która jest przy dalekim końcu).
     //    Zatrzymujemy się po stronie, z której pies nadbiegł (skąd rzucono).
     // Pies wbiega z bliższej strony pokoju i zatrzymuje się tuż przed piłką.
-    // offset 0.08: pies staje tak, że piłka jest przy jego przednich łapach.
+    // offset: pies staje tak, że piłka jest przy jego przednich łapach.
+    // Zwiększone z 0.08 — dog zatrzymuje się trochę dalej od krawędzi,
+    // żeby animacja chwytu miała więcej dystansu na "dosięgnięcie" piłki.
     const fromDir = land.x > 0.5 ? -1 : 1; // pies wbiega z lewej (1) lub prawej (-1)
-    const approach = clamp(land.x + fromDir * 0.08, 0.06, 0.94);
+    const approach = clamp(land.x + fromDir * 0.12, 0.06, 0.94);
     parts.push(...moveParts(land.room, approach, { label: "ball-chase" }));
 
     // 2. Chwyt piłki — 24. Aport_001_chwyt_pilki (kończy się pozą z piłką w pysku,
