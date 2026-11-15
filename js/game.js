@@ -1669,8 +1669,8 @@ function ballDraw() {
     const n = ((Math.floor(ball.spin) % 4) + 4) % 4,
         im = images["ball" + n];
     if (!im) return;
-    const w = im.width * BASE * 0.63, // +5% względem poprzedniego rozmiaru
-        h = im.height * BASE * 0.63;
+    const w = im.width * BASE * 0.68, // +5% względem poprzedniego rozmiaru
+        h = im.height * BASE * 0.68;
     const bx = ballScreenX() - w / 2,
         // Podczas "ball-ready" celujemy dokładnie w piłkę z animacji "warowanie"
         // (wyliczone z pikseli sprite'a: środek ~18px nad linią chodzenia).
