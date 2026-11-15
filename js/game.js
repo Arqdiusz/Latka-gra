@@ -1648,7 +1648,7 @@ function ballDraw() {
     const w = im.width * BASE * 0.6,
         h = im.height * BASE * 0.6;
     const bx = ballScreenX() - w / 2,
-        by = GROUND - 10 + ball.y - h;
+        by = GROUND - 1 + ball.y - h;
     ctx.drawImage(im, bx, by, w, h);
 
     // Animowana ramka zachęcająca do rzutu (pulsująca) — tylko podczas oczekiwania
