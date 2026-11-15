@@ -53,7 +53,7 @@
   "presets": [
     {
       "name": "01. Skok / podskok",
-      "seq": "1,2,43,8",
+      "seq": "7,2,43,1",
       "ms": 220,
       "intro": "",
       "outro": "",
