@@ -1425,7 +1425,7 @@ function ballReadySegment() {
     };
 }
 
-// Zabawa skończona — popup z animacją piłki, potem spokojne zakończenie (warowanie)
+// Zabawa skończona — popup z animacją piłki, potem zwykłe idle
 function fetchFinish(rewarded) {
     const got = rewarded && fetchGame && fetchGame.throws > 0;
     fetchGame = null;
@@ -1435,8 +1435,6 @@ function fetchFinish(rewarded) {
         pending = "fun";
         locks();
         // Popup natychmiast po przynesieniu piłki — bez zbędnych animacji przed nim.
-        // Po popup: "25. Aport_002_warowanie" jako spokojne zakończenie zabawy.
-        const hasClosing = CFG.a02.presets.length > 24;
         $(".popup").hidden = false;
         $(".reward").src = icons.fun;
         startQueue([
@@ -1444,9 +1442,6 @@ function fetchFinish(rewarded) {
                 sheet: "a02", anim: 8, time: 1800,                          // piłka zachęta w popupie
                 onEnd: () => ($(".popup").hidden = true),
             },
-            ...(hasClosing
-                ? [{ sheet: "a02", anim: 24, time: duration("a02", 24) }]   // 25. Aport_002_warowanie
-                : []),
         ]);
     } else idle(16);
 }
@@ -1471,11 +1466,19 @@ function ballThrow(dx, dy) {
                   // ustawiamy tak, by approach (pies) + 0.07 offset = land (piłka).
                   // dir>0: pies wbiega od lewej → piłka jest po jego prawej
                   // dir<0: pies wbiega od prawej → piłka jest po jego lewej
+                  // Bliżej krawędzi niż poprzednio — animacja chwytu zaczyna się
+                  // z pyskiem wysuniętym trochę dalej do przodu.
                   x: dir > 0
-                      ? clamp(0.72 + power * 0.10, 0.72, 0.84)  // daleki koniec, piłka
-                      : clamp(0.28 - power * 0.10, 0.16, 0.28), // daleki koniec, piłka
+                      ? clamp(0.80 + power * 0.10, 0.80, 0.92)  // daleki koniec, piłka
+                      : clamp(0.20 - power * 0.10, 0.08, 0.20), // daleki koniec, piłka
               }
             : { room: ball.room, x: clamp(ball.x + dir * 0.3, 0.1, 0.9) },
+        // Piłka najpierw ląduje odrobinę bliżej środka (impact), a dopiero
+        // potem dotacza się do właściwego miejsca (land) — żyje jeszcze
+        // chwilę, zamiast zamierać od razu po pierwszym odbiciu.
+        impact = hasNextRoom
+            ? { room: land.room, x: clamp(land.x - dir * 0.06, 0.04, 0.96) }
+            : land,
         start = worldOf(ball.room, ball.x),
         travelled = Math.abs(worldOf(land.room, land.x) - start);
 
@@ -1498,7 +1501,7 @@ function ballThrow(dx, dy) {
             time: flightTime,
             onStart: () => (stage = "ball-fly"),
             update: (p) => {
-                const w = start + (worldOf(land.room, land.x) - start) * p,
+                const w = start + (worldOf(impact.room, impact.x) - start) * p,
                     pos = worldSplit(w);
                 ball.room = pos.room;
                 ball.x = pos.x;
@@ -1506,8 +1509,8 @@ function ballThrow(dx, dy) {
                 ball.spin += travelled * dir * 0.9;
             },
             onEnd: () => {
-                ball.room = land.room;
-                ball.x = land.x;
+                ball.room = impact.room;
+                ball.x = impact.x;
                 ball.y = 0;
             },
         },
@@ -1525,6 +1528,30 @@ function ballThrow(dx, dy) {
             },
             onEnd: () => (ball.y = 0),
         },
+        // Dotoczenie do właściwego miejsca — piłka jeszcze się rusza,
+        // gdy Łatka zaczyna biec w jej stronę.
+        ...(impact.room !== land.room || impact.x !== land.x
+            ? [
+                  {
+                      sheet: "a01",
+                      anim: 1,
+                      tempo: 180,
+                      facing: dir < 0,
+                      time: 380,
+                      onStart: () => (stage = "ball-roll"),
+                      update: (p) => {
+                          ball.x = impact.x + (land.x - impact.x) * p;
+                          ball.y = -Math.abs(Math.sin(Math.PI * p)) * 5 * (1 - p);
+                          ball.spin += dir * 0.3;
+                      },
+                      onEnd: () => {
+                          ball.room = land.room;
+                          ball.x = land.x;
+                          ball.y = 0;
+                      },
+                  },
+              ]
+            : []),
         // Pogoń + podniesienie + powrót
         ...fetchChaseParts(land),
     ]);
@@ -1618,7 +1645,7 @@ function ballDropPart() {
             if (!ball || !fetchGame) return;
             ball.carried = false;
             ball.room = room;
-            ball.x = clamp(x + (left ? -0.14 : 0.14), 0.12, 0.88);
+            ball.x = clamp(x + (left ? -0.19 : 0.19), 0.12, 0.88);
             ball.y = 0;
             changeNeeds({ fun: 5, water: -2, sleep: -1 });
             save();
@@ -1642,8 +1669,8 @@ function ballDraw() {
     const n = ((Math.floor(ball.spin) % 4) + 4) % 4,
         im = images["ball" + n];
     if (!im) return;
-    const w = im.width * BASE * 0.6,
-        h = im.height * BASE * 0.6;
+    const w = im.width * BASE * 0.63, // +5% względem poprzedniego rozmiaru
+        h = im.height * BASE * 0.63;
     const bx = ballScreenX() - w / 2,
         // Podczas "ball-ready" celujemy dokładnie w piłkę z animacji "warowanie"
         // (wyliczone z pikseli sprite'a: środek ~18px nad linią chodzenia).
