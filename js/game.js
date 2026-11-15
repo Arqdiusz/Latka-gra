@@ -728,14 +728,6 @@ function arrowTravel(r, dir) {
             onStart: () => (stage = "arrival"),
         },
     ];
-    if (variant === "happy")
-        parts.push({
-            sheet: "a01",
-            anim: 17,
-            tempo: 200,
-            facing,
-            time: 800,
-        });
     parts.push({
         sheet: "a01",
         anim: 16,
