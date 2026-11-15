@@ -678,7 +678,7 @@ function arrowTravel(r, dir) {
         variant === "roll"
             ? {
                   sheet: "a01",
-                  frames: [1, 2, 7, 8],
+                  anim: 0,
                   tempo: 155,
                   facing,
                   time: reduced ? 200 : 620,
