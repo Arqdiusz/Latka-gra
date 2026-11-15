@@ -1302,7 +1302,7 @@ function butterflyEvent() {
    Dziecko rzuca piłkę gestem, Łatka biegnie po nią (również do
    sąsiedniego pokoju), podnosi ją i przynosi z powrotem.
    ═══════════════════════════════════════════════════════════════ */
-const BALL_THROWS = 3, // ile rzutów do nagrody
+const BALL_THROWS = 1, // ile rzutów do nagrody
     BALL_HINT_AFTER = 7000, // po ilu ms bez rzutu Łatka zachęca
     BALL_GIVE_UP = 30000; // po ilu ms bez rzutu zabawa się kończy
 let ball = null, // { room, x, y, spin, carried }
