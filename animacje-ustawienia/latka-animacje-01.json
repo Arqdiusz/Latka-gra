@@ -106,11 +106,12 @@
     },
     {
       "name": "05. Turlanie A",
-      "seq": "15,38,65,22",
-      "ms": 280,
+      "seq": "15,16,21",
+      "ms": 180,
       "intro": "",
       "outro": "",
-      "repeat": true
+      "repeat": true,
+      "_previewMs": 180
     },
     {
       "name": "06. Jedzenie",
@@ -146,7 +147,7 @@
     },
     {
       "name": "10. Turlanie B",
-      "seq": "37,38,43,44",
+      "seq": "15,16,21,1,44",
       "ms": 180,
       "intro": "",
       "outro": "",
@@ -250,7 +251,7 @@
     },
     {
       "name": "Marsz i skok",
-      "seq": "25,26,31,32,1,2,7,8,25",
+      "seq": "25,26,31,32,1,7,43,8,25",
       "ms": 150,
       "intro": "",
       "outro": "",
