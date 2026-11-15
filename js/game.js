@@ -1645,8 +1645,8 @@ function ballDraw() {
     const n = ((Math.floor(ball.spin) % 4) + 4) % 4,
         im = images["ball" + n];
     if (!im) return;
-    const w = im.width * BASE * 0.8,
-        h = im.height * BASE * 0.8;
+    const w = im.width * BASE * 0.6,
+        h = im.height * BASE * 0.6;
     const bx = ballScreenX() - w / 2,
         by = GROUND + 18 + ball.y - h;
     ctx.drawImage(im, bx, by, w, h);
