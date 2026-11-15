@@ -1389,7 +1389,8 @@ function fetchStart() {
     };
     ball = {
         room,
-        x: clamp(x + (left ? -0.14 : 0.14), 0.12, 0.88),
+        // 0.19 — wyliczone z pozycji piłki w sprite animacji "25. Aport_002_warowanie"
+        x: clamp(x + (left ? -0.19 : 0.19), 0.12, 0.88),
         y: 0,
         spin: 0,
         carried: false,
@@ -1399,14 +1400,13 @@ function fetchStart() {
     startQueue([ballReadySegment()]);
 }
 
-// Łatka czeka na rzut — klatki "startowe" (pies bez piłki, piłka leży obok z ramką).
-// Używamy klatek 33,34 — pies pochylony, gotowy do biegu, bez piłki w sprite.
-// Osobna piłka rysowana przez ballDraw() z pulsującą ramką zachęcającą do swipe'a.
+// Łatka czeka na rzut — animacja "25. Aport_002_warowanie" (pies leży, piłka
+// przy łapach już w sprite). Osobna piłka rysowana przez ballDraw() z pulsującą
+// ramką dokładnie nad tą z animacji — dzięki temu wygląda jak jeden obiekt.
 function ballReadySegment() {
     return {
         sheet: "a02",
-        frames: [33, 34, 33, 34, 33, 34, 33, 34], // pies pochylony, gotowy do biegu
-        tempo: 320,
+        anim: 24, // 25. Aport_002_warowanie
         time: BALL_GIVE_UP,
         onStart: () => {
             phase = "ball-ready";
@@ -1425,7 +1425,7 @@ function ballReadySegment() {
     };
 }
 
-// Zabawa skończona — popup z animacją piłki, potem merdanie/nagroda
+// Zabawa skończona — popup z animacją piłki, potem spokojne zakończenie (warowanie)
 function fetchFinish(rewarded) {
     const got = rewarded && fetchGame && fetchGame.throws > 0;
     fetchGame = null;
@@ -1435,17 +1435,17 @@ function fetchFinish(rewarded) {
         pending = "fun";
         locks();
         // Popup natychmiast po przynesieniu piłki — bez zbędnych animacji przed nim.
-        // Po popup: merdanie jeśli user dodał preset 24 w a02, inaczej idle.
-        const hasTail = CFG.a02.presets.length > 23; // 24. Merdanie (dodane przez usera)
+        // Po popup: "25. Aport_002_warowanie" jako spokojne zakończenie zabawy.
+        const hasClosing = CFG.a02.presets.length > 24;
         $(".popup").hidden = false;
         $(".reward").src = icons.fun;
         startQueue([
             {
-                sheet: "a02", anim: 8, time: 1800,                         // piłka zachęta w popupie
+                sheet: "a02", anim: 8, time: 1800,                          // piłka zachęta w popupie
                 onEnd: () => ($(".popup").hidden = true),
             },
-            ...(hasTail
-                ? [{ sheet: "a02", anim: 23, time: duration("a02", 23) }]  // 24. Merdanie
+            ...(hasClosing
+                ? [{ sheet: "a02", anim: 24, time: duration("a02", 24) }]   // 25. Aport_002_warowanie
                 : []),
         ]);
     } else idle(16);
@@ -1531,9 +1531,6 @@ function ballThrow(dx, dy) {
 }
 
 // ── Pogoń, podniesienie i powrót ──────────────────────────────
-// Bieg z piłką w pysku — klatki z arkusza a02 (sprite ma już piłkę)
-const CARRY_FRAMES = [42, 50, 52, 50];
-
 function moveParts(targetRoom, targetX, opts = {}) {
     const { speed = 235, label = "ball-chase", carry = false } = opts,
         from = order.indexOf(room),
@@ -1541,9 +1538,9 @@ function moveParts(targetRoom, targetX, opts = {}) {
         dir = to >= from ? 1 : -1,
         parts = [];
     const seg = (a, b, facing, onEnd) => ({
-        // Bieg: a01 „02. Bieg / sus", a z piłką — klatki aportu z a02
+        // Bieg: a01 „02. Bieg / sus", a z piłką — a02 „12. Aport — ruch z piłką"
         sheet: carry ? "a02" : "a01",
-        ...(carry ? { frames: CARRY_FRAMES } : { anim: 1 }),
+        anim: carry ? 11 : 1,
         tempo: 180,
         motion: "run",
         facing,
@@ -1580,11 +1577,12 @@ function fetchChaseParts(land) {
     const approach = clamp(land.x + fromDir * 0.08, 0.06, 0.94);
     parts.push(...moveParts(land.room, approach, { label: "ball-chase" }));
 
-    // 2. Podniesienie piłki — 12. Aport
+    // 2. Chwyt piłki — 24. Aport_001_chwyt_pilki (kończy się pozą z piłką w pysku,
+    //    więc od razu można ruszać w drogę powrotną, bez dodatkowego postoju)
     parts.push({
         sheet: "a02",
-        anim: 11,
-        time: duration("a02", 11),
+        anim: 23,
+        time: duration("a02", 23),
         facing: fromDir > 0, // pies patrzy w kierunku z którego wbiegł (w stronę piłki)
         onStart: () => {
             stage = "ball-pickup";
@@ -1593,18 +1591,8 @@ function fetchChaseParts(land) {
         onEnd: () => {
             ball.carried = true;
             ball.y = 0;
-        },
-    });
-
-    // 3. Powrót z piłką — trasę liczymy dopiero teraz, bo Łatka mogła
-    //    w międzyczasie przebiec do innego pokoju
-    parts.push({
-        sheet: "a02",
-        frames: [47], // stoi z piłką w pysku
-        tempo: 200,
-        time: 220,
-        onStart: () => (stage = "ball-back"),
-        onEnd: () => {
+            // 3. Powrót z piłką — trasę liczymy dopiero teraz, bo Łatka mogła
+            //    w międzyczasie przebiec do innego pokoju
             if (!fetchGame) return;
             queue = [
                 ...moveParts(fetchGame.homeRoom, fetchGame.homeX, {
@@ -1657,7 +1645,12 @@ function ballDraw() {
     const w = im.width * BASE * 0.6,
         h = im.height * BASE * 0.6;
     const bx = ballScreenX() - w / 2,
-        by = GROUND + 10 + ball.y - h; // piłka leży na ziemi (10px poniżej linii chodzenia)
+        // Podczas "ball-ready" celujemy dokładnie w piłkę z animacji "warowanie"
+        // (wyliczone z pikseli sprite'a: środek ~18px nad linią chodzenia).
+        by =
+            stage === "ball-ready"
+                ? GROUND - 18 - h / 2 + ball.y
+                : GROUND + 10 + ball.y - h; // piłka leży na ziemi (10px poniżej linii chodzenia)
     ctx.drawImage(im, bx, by, w, h);
 
     // Animowana ramka zachęcająca do rzutu (pulsująca) — tylko podczas oczekiwania
