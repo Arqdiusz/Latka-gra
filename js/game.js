@@ -1463,8 +1463,8 @@ function ballThrow(dx, dy) {
                   // dir>0: pies wbiega od lewej → piłka jest po jego prawej
                   // dir<0: pies wbiega od prawej → piłka jest po jego lewej
                   x: dir > 0
-                      ? clamp(0.92 + power * 0.10, 0.72, 0.84)  // daleki koniec, piłka
-                      : clamp(0.08 - power * 0.10, 0.16, 0.28), // daleki koniec, piłka
+                      ? clamp(0.72 + power * 0.10, 0.72, 0.84)  // daleki koniec, piłka
+                      : clamp(0.28 - power * 0.10, 0.16, 0.28), // daleki koniec, piłka
               }
             : { room: ball.room, x: clamp(ball.x + dir * 0.3, 0.1, 0.9) },
         start = worldOf(ball.room, ball.x),
@@ -1645,8 +1645,8 @@ function ballDraw() {
     const n = ((Math.floor(ball.spin) % 4) + 4) % 4,
         im = images["ball" + n];
     if (!im) return;
-    const w = im.width * BASE * 0.5,
-        h = im.height * BASE * 0.5;
+    const w = im.width * BASE * 0.6,
+        h = im.height * BASE * 0.6;
     const bx = ballScreenX() - w / 2,
         by = GROUND - 10 + ball.y - h;
     ctx.drawImage(im, bx, by, w, h);
