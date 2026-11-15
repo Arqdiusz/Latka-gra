@@ -675,25 +675,47 @@ function arrowTravel(r, dir) {
             time: Math.max(320, ((Math.abs(edge - x) * W) / 350) * 1000),
             onStart: () => (stage = "run"),
         },
-        {
-            sheet: "a01",
-            anim: 1,
-            tempo: 180,
-            facing,
-            time: 240,
-            onStart: () => (stage = "run"),
-            update: (p) => {
-                if (p >= 0.5 && !changed) {
-                    setRoom(r);
-                    changed = true;
-                }
-                x = p < 0.5 ? edge + (exit - edge) * p * 2 : entry + (land - entry) * (p - 0.5) * 2;
-            },
-            onEnd: () => {
-                if (!changed) setRoom(r);
-                x = land;
-            },
-        },
+        variant === "roll"
+            ? {
+                  sheet: "a01",
+                  frames: [1, 2, 7, 8],
+                  tempo: 155,
+                  facing,
+                  time: reduced ? 200 : 620,
+                  onStart: () => (stage = "jump"),
+                  update: (p) => {
+                      if (p >= 0.5 && !changed) {
+                          setRoom(r);
+                          changed = true;
+                      }
+                      x = p < 0.5 ? edge + (exit - edge) * p * 2 : entry + (land - entry) * (p - 0.5) * 2;
+                      jumpY = reduced ? 0 : -Math.sin(Math.PI * p) * 35;
+                  },
+                  onEnd: () => {
+                      if (!changed) setRoom(r);
+                      x = land;
+                      jumpY = 0;
+                  },
+              }
+            : {
+                  sheet: "a01",
+                  anim: 1,
+                  tempo: 180,
+                  facing,
+                  time: 340,
+                  onStart: () => (stage = "run"),
+                  update: (p) => {
+                      if (p >= 0.5 && !changed) {
+                          setRoom(r);
+                          changed = true;
+                      }
+                      x = p < 0.5 ? edge + (exit - edge) * p * 2 : entry + (land - entry) * (p - 0.5) * 2;
+                  },
+                  onEnd: () => {
+                      if (!changed) setRoom(r);
+                      x = land;
+                  },
+              },
         {
             sheet: "a01",
             anim: variant === "roll" ? 9 : 1,
