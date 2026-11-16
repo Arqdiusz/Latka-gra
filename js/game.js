@@ -470,6 +470,7 @@ function idle(which = null) {
     butterfly = null;
     ball = null;
     fetchGame = null;
+    dogHidden = false;
     setOffset(0);
     setAnim("a01", which ?? (Math.random() < 0.35 ? 18 : 16));
     idleUntil = clock + Math.max(frames.length * ms, 1800) + Math.random() * 2000;
@@ -1318,7 +1319,8 @@ const BALL_THROWS = 1, // ile rzutów do nagrody
     BALL_HINT_AFTER = 7000, // po ilu ms bez rzutu Łatka zachęca
     BALL_GIVE_UP = 30000; // po ilu ms bez rzutu zabawa się kończy
 let ball = null, // { room, x, y, spin, carried }
-    fetchGame = null; // { throws, hinted, homeRoom, homeX }
+    fetchGame = null, // { throws, hinted, homeRoom, homeX }
+    dogHidden = false; // Łatka niewidoczna, gdy czeka "za kadrem" na lądowanie piłki
 
 // Pozycja piłki na ekranie — uwzględnia sąsiednie pokoje (jak kupka)
 function ballScreenX() {
@@ -1573,14 +1575,13 @@ function fetchChaseParts(land, impact) {
     const fromDir = land.x > 0.5 ? -1 : 1; // pies wbiega z lewej (1) lub prawej (-1)
     const approach = clamp(land.x + fromDir * 0.12, 0.06, 0.94);
     const run = moveParts(land.room, approach, { label: "ball-chase" });
-    // Piłka opada i odbija się DOPIERO gdy Łatka jest już w pokoju
-    // lądowania — ale pies na ten czas ZATRZYMUJE SIĘ przy wejściu
-    // i czeka (patrząc na piłkę), zamiast biec "przez" jeszcze
-    // spadającą piłkę. Dopiero gdy piłka dotknie ziemi, pies rusza
-    // (a resztkę toczenia piłki dogrywamy już podczas jego dobiegu —
-    // tak jak motyl lecący, gdy piesek robi coś innego w
-    // butterflyEvent()). Czasy scenek są WŁASNE (oparte na zegarze
-    // gry), nie rozciągane/ściskane do długości biegu.
+    // Piłka opada i odbija się w pokoju lądowania, ZANIM Łatka się tam
+    // pojawi — pies jest na ten czas niewidoczny (jeszcze "za kadrem"),
+    // a wbiega dopiero, gdy piłka dotknie ziemi (resztkę toczenia piłki
+    // dogrywamy już podczas jego dobiegu — tak jak motyl lecący, gdy
+    // piesek robi coś innego w butterflyEvent()). Czasy scenek są
+    // WŁASNE (oparte na zegarze gry), nie rozciągane/ściskane do
+    // długości biegu.
     if (impact) {
         const last = run[run.length - 1],
             fromX = impact.x,
@@ -1594,16 +1595,19 @@ function fetchChaseParts(land, impact) {
             BOUNCE = 220,
             ROLL = 380;
 
-        // Etap 1: pies stoi w miejscu wejścia (tam, gdzie i tak zaczynałby
-        // ostatni odcinek biegu) i czeka, aż piłka opadnie i odbije się.
+        // Etap 1: pies jest niewidoczny (jeszcze nie wbiegł), piłka sama
+        // opada i odbija się od ziemi.
         const wait = {
             sheet: "a01",
-            anim: 15, // 16. Patrzenie w górę / łapa — pies śledzi spadającą piłkę
+            anim: 15,
             facing: last.facing,
             from: last.from,
             to: last.from,
             time: FALL + BOUNCE,
-            onStart: () => (stage = "ball-land"),
+            onStart: () => {
+                stage = "ball-land";
+                dogHidden = true;
+            },
             update: (p) => {
                 const t = p * (FALL + BOUNCE);
                 if (t < FALL) {
@@ -1630,6 +1634,13 @@ function fetchChaseParts(land, impact) {
             },
         };
         run.splice(run.length - 1, 0, wait);
+
+        // Pies staje się widoczny dokładnie w momencie, gdy zaczyna wbiegać.
+        const lastOnStart = last.onStart;
+        last.onStart = () => {
+            dogHidden = false;
+            lastOnStart?.();
+        };
 
         // Etap 2: dopiero teraz pies rusza — piłka dotacza się do punktu
         // lądowania w tempie własnego zegara, podczas gdy pies dobiega.
@@ -1807,7 +1818,7 @@ function bubbleDraw(dt) {
 function draw(dt) {
     ctx.clearRect(0, 0, W, SH);
     ctx.imageSmoothingEnabled = false;
-    drawDog(ctx);
+    if (!dogHidden) drawDog(ctx);
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
     if (butterfly?.visible) {
         ctx.save();
