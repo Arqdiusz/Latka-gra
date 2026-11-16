@@ -1655,34 +1655,48 @@ function fetchChaseParts(land, impact) {
             // (ten sam kierunek co w rzucie) — żeby to wyglądało jak ciąg
             // tego samego łuku, a nie nowa, osobna animacja od środka pokoju.
             fallStartX = dir > 0 ? -0.08 : 1.08,
-            FALL = 560,
+            // Opadanie + dwa gasnące odbicia (jak prawdziwa piłka), potem
+            // krótkie, zwalniające dotoczenie podczas dobiegu psa.
+            FALL = 460,
             FALL_HEIGHT = 230,
+            BOUNCE1 = 200,
+            BOUNCE1_HEIGHT = 85,
+            BOUNCE2 = 150,
+            BOUNCE2_HEIGHT = 34,
+            WAIT_TOTAL = FALL + BOUNCE1 + BOUNCE2,
             ROLL = 380;
 
-        // Etap 1: pies jest niewidoczny (jeszcze nie wbiegł), piłka sama
-        // opada — bez odrębnego odbicia. Łuk SPŁASZCZA SIĘ pod koniec
-        // (jak u szczytu/dołu paraboli), więc płynnie przechodzi w toczenie,
-        // zamiast uderzać w ziemię i podskakiwać.
+        // Etap 1: pies jest niewidoczny (jeszcze nie wbiegł) — piłka opada
+        // (przyspieszając, jak w swobodnym spadku), odbija się dwa razy,
+        // coraz niżej, a poziomo cały czas płynnie sunie w stronę fromX.
         const wait = {
             sheet: "a01",
             anim: 15,
             facing: last.facing,
             from: last.from,
             to: last.from,
-            time: FALL,
+            time: WAIT_TOTAL,
             onStart: () => {
                 stage = "ball-land";
                 dogHidden = true;
             },
             update: (p) => {
-                // Opadanie po łuku od krawędzi drzwi do fromX — wysokość
-                // zwalnia pod koniec (ease-out), więc styczna przy ziemi
-                // jest prawie pozioma, jak przy naturalnym dotoczeniu.
-                const fp = p;
+                const t = p * WAIT_TOTAL;
                 ball.room = land.room;
-                ball.x = fallStartX + (fromX - fallStartX) * fp;
-                ball.y = -FALL_HEIGHT * (1 - fp) * (1 - fp);
-                ball.spin += dir * 2.2;
+                ball.x = fallStartX + (fromX - fallStartX) * p;
+                if (t < FALL) {
+                    const fp = t / FALL;
+                    ball.y = -FALL_HEIGHT * (1 - fp * fp); // przyspieszający spadek
+                    ball.spin += dir * 2.2;
+                } else if (t < FALL + BOUNCE1) {
+                    const bp = (t - FALL) / BOUNCE1;
+                    ball.y = -Math.abs(Math.sin(Math.PI * bp)) * BOUNCE1_HEIGHT;
+                    ball.spin += dir * 0.5;
+                } else {
+                    const bp = (t - FALL - BOUNCE1) / BOUNCE2;
+                    ball.y = -Math.abs(Math.sin(Math.PI * bp)) * BOUNCE2_HEIGHT;
+                    ball.spin += dir * 0.3;
+                }
             },
             onEnd: () => {
                 ball.x = fromX;
@@ -1698,19 +1712,20 @@ function fetchChaseParts(land, impact) {
             lastOnStart?.();
         };
 
-        // Etap 2: dopiero teraz pies rusza — piłka DOTACZA SIĘ (bez
-        // podskakiwania, cały czas przy ziemi) do punktu lądowania, w
-        // tempie własnego zegara, podczas gdy pies dobiega.
+        // Etap 2: dopiero teraz pies rusza — piłka dotacza się (bez
+        // podskakiwania, przy ziemi) do punktu lądowania, ZWALNIAJĄC
+        // (ease-out) jak przy wytracaniu pędu przez tarcie o trawę.
         const scale = Math.min(1, last.time / ROLL);
         let rollStart = null;
         last.update = () => {
             if (rollStart === null) rollStart = clock;
             const t = (clock - rollStart) / scale;
             if (t < ROLL) {
-                const rp = t / ROLL;
-                ball.x = fromX + (toX - fromX) * rp;
+                const rp = t / ROLL,
+                    eased = 1 - (1 - rp) * (1 - rp);
+                ball.x = fromX + (toX - fromX) * eased;
                 ball.y = 0;
-                ball.spin += dir * 0.25;
+                ball.spin += dir * 0.25 * (1 - rp);
             } else {
                 ball.room = land.room;
                 ball.x = toX;
