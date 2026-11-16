@@ -167,6 +167,31 @@ function dirty(r = room) {
     return poop?.room === r;
 }
 
+// Jeśli jakaś potrzeba spadnie do <=33%, piesek jest w potrzebie — unika
+// wtedy oddalania się od pokoju, w którym można to poprawić (dopóki się
+// nie poprawi). Zwraca id najbardziej palącej potrzeby albo null.
+const CRITICAL_THRESHOLD = 33;
+function criticalNeed() {
+    let worst = null;
+    for (const id of ["food", "water", "fun", "sleep", "clean"]) {
+        if (stats[id] <= CRITICAL_THRESHOLD && (worst === null || stats[id] < stats[worst])) worst = id;
+    }
+    return worst;
+}
+
+function criticalRoom() {
+    const id = criticalNeed();
+    return id ? items.find((i) => i.id === id)?.room ?? null : null;
+}
+
+const NEED_GENITIVE = { food: "jedzenia", water: "wody", fun: "zabawy", sleep: "snu", clean: "mycia" };
+function blockedNeedToast() {
+    const id = criticalNeed();
+    if (!id) return;
+    say(id, 3500);
+    toast("Łatka najpierw potrzebuje: " + (NEED_GENITIVE[id] || id) + ".");
+}
+
 const NEEDS_KEY = "latka-potrzeby-v1";
 const NEEDS_DECAY = { food: 0.65, water: 1, fun: 0.8, sleep: 0.55, clean: 0.35 };
 const ACTION_EFFECTS = {
@@ -837,6 +862,18 @@ function stepRoom(d) {
     if (!casual()) return;
     const n = order.indexOf(room) + d;
     if (n < 0 || n >= order.length) return;
+    const cRoom = criticalRoom();
+    if (cRoom) {
+        const curI = order.indexOf(room),
+            needI = order.indexOf(cRoom);
+        // Jeśli już stoimy w potrzebnym pokoju, albo ten krok oddala nas od
+        // niego — nie idziemy. Blokujemy tylko kierunki "od" potrzeby, nie
+        // samą aktywność w miejscu.
+        if (curI === needI || Math.sign(needI - curI) !== d) {
+            blockedNeedToast();
+            return;
+        }
+    }
     arrowTravel(order[n], d);
 }
 
@@ -924,6 +961,11 @@ function action(id) {
     if (!casual()) return;
     const i = items.find((i) => i.id === id);
     if (!i) return;
+    const need = criticalNeed();
+    if (need && id !== need && i.room !== room) {
+        blockedNeedToast();
+        return;
+    }
     if (i.room === room && dirty()) {
         interrupt();
         blockRoomActivity(id);
@@ -1266,6 +1308,11 @@ function chooseDestination() {
 
 function autoTrip(target = chooseDestination()) {
     if (!casual() || sleeping || gesture || menu.drag) return false;
+    const cRoom = criticalRoom();
+    if (cRoom) {
+        if (cRoom === room) return false; // już tu jest — czeka na aktywność, nie błąka się dalej
+        target = cRoom; // piesek sam zmierza tam, gdzie pilnie go potrzeba
+    }
     trips++;
     route(target, null, "auto");
     return true;
@@ -2265,9 +2312,9 @@ function loopFrame(t) {
         }
         if (bubbleGame) bubbleGameUpdate(dt);
         if (clock >= nextBubble && !sleeping && phase === "idle") {
-            say(
-                dirty() ? "poop" : ["food", "water", "fun", "sleep", "clean"][Math.floor(Math.random() * 5)]
-            );
+            // Priorytet: kupka > realnie paląca potrzeba (<=33%) > losowa —
+            // dymek ma sygnalizować stan Łatki, a nie być czysto dekoracyjny.
+            say(dirty() ? "poop" : criticalNeed() || ["food", "water", "fun", "sleep", "clean"][Math.floor(Math.random() * 5)]);
             nextBubble = clock + 14000;
         }
         draw(dt);
