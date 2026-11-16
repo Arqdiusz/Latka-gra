@@ -1334,33 +1334,41 @@ function butterflyEvent() {
             },
         },
         {
-            // Krótkie zawrócenie na końcu ekranu — odbicie sprite'a (zwrócony
-            // zgodnie z nowym kierunkiem lotu), tylko na drobny moment, zanim
-            // zacznie się animacja chwytania.
+            // Krótkie zawrócenie na końcu ekranu — tylko odbicie sprite'a
+            // (zwrócony zgodnie z nowym kierunkiem lotu) na bardzo drobny
+            // moment. Skrócone z 450ms, bo dłuższe wisienie w miejscu tuż
+            // przed dolotem (który też zaczynał się od zera prędkości)
+            // wyglądało, jakby motylek się zacinał.
             sheet: "a01",
             anim: 3,
-            time: 450,
+            time: 180,
             onStart: () => {
                 stage = "butterfly-watch";
                 butterfly.dir = -dir;
             },
             update: (p) => {
+                // sin(0)=0, więc start jest ciągły z końcem lotu (flightFar).
                 butterfly.x = flightFar.x + Math.sin(p * 5) * 7;
-                butterfly.y = flightFar.y + Math.cos(p * 6) * 9;
+                butterfly.y = flightFar.y + Math.sin(p * 6) * 9;
             },
         },
         {
             // Krótki dolot bliżej pieska po zawróceniu — żeby animacja
             // chwytania nie zaczynała się za daleko od tego, gdzie motylek
-            // właśnie był.
+            // właśnie był. Startuje dokładnie z pozycji, w której skończyło
+            // się zawrócenie (watchEnd), więc nie ma skoku pozycji; odrywa
+            // się od razu z pełną prędkością (ease-out) zamiast od zera jak
+            // poprzednio (smoothstep) — to właśnie skok + zerowa prędkość
+            // startowa wyglądały łącznie jak zacięcie.
             sheet: "a01",
             anim: 16,
             time: 500,
             onStart: () => (stage = "butterfly-approach"),
             update: (p) => {
-                const e = p * p * (3 - 2 * p); // smoothstep
-                butterfly.x = flightFar.x + (flightClose.x - flightFar.x) * e;
-                butterfly.y = flightFar.y + (flightClose.y - flightFar.y) * e;
+                const watchEnd = { x: flightFar.x + Math.sin(5) * 7, y: flightFar.y + Math.sin(6) * 9 },
+                    e = 1 - Math.pow(1 - p, 3); // ease-out: szybki start, łagodne dojście
+                butterfly.x = watchEnd.x + (flightClose.x - watchEnd.x) * e;
+                butterfly.y = watchEnd.y + (flightClose.y - watchEnd.y) * e;
             },
         },
         {
