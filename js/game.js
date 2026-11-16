@@ -1330,18 +1330,22 @@ function ballScreenX() {
 const worldOf = (r, px) => order.indexOf(r) + px;
 
 function worldSplit(w) {
-    const lo = 0.12,
-        hi = order.length - 1 + 0.88;
+    const lo = 0,
+        hi = order.length - 1 + 0.999;
     w = clamp(w, lo, hi);
     let r = Math.floor(w),
         px = w - r;
     if (r > order.length - 1) {
         r = order.length - 1;
-        px = 0.88;
+        px = 0.999;
     }
+    // Uwaga: BEZ dodatkowego clamp(px, 0.12, 0.88) — podczas gładkiej
+    // interpolacji lotu piłki między pokojami (ballThrow) takie ograniczenie
+    // powodowało "przyklejenie" pozycji tuż przy krawędzi pokoju, a potem
+    // skok, gdy world-pozycja przechodziła do sąsiedniego pokoju.
     return {
         room: order[r],
-        x: clamp(px, 0.12, 0.88),
+        x: px,
     };
 }
 
