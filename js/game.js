@@ -1314,7 +1314,15 @@ function butterflyEvent() {
         flightClose = {
             x: x * W + dir * 70,
             y: 170,
-        };
+        },
+        // Ten sam "płynący" ruch co przy wlocie na mapę (stałe tempo +
+        // łagodne kołysanie), żeby dolot po zawróceniu nie wyglądał jak
+        // wystrzał z procy.
+        cruiseSpeed = Math.abs(flightFar.x - flightStart.x) / 2200, // px/ms, tak jak przy wlocie
+        // Punkt, w którym kończy się zawrócenie (patrz segment "watch" —
+        // sin(5), sin(6) to wartości na jego ostatniej klatce, p=1), żeby
+        // dolot zaczynał się bez skoku pozycji.
+        watchEnd = { x: flightFar.x + Math.sin(5) * 7, y: flightFar.y + Math.sin(6) * 9 };
     butterfly = {
         visible: true,
         x: flightStart.x,
@@ -1356,19 +1364,17 @@ function butterflyEvent() {
             // Krótki dolot bliżej pieska po zawróceniu — żeby animacja
             // chwytania nie zaczynała się za daleko od tego, gdzie motylek
             // właśnie był. Startuje dokładnie z pozycji, w której skończyło
-            // się zawrócenie (watchEnd), więc nie ma skoku pozycji; odrywa
-            // się od razu z pełną prędkością (ease-out) zamiast od zera jak
-            // poprzednio (smoothstep) — to właśnie skok + zerowa prędkość
-            // startowa wyglądały łącznie jak zacięcie.
+            // się zawrócenie (watchEnd), więc nie ma skoku pozycji. Stałe
+            // tempo (cruiseSpeed) + kołysanie — tak jak przy wlocie na mapę,
+            // żeby to nie wyglądało na wystrzał z procy (próbowane wcześniej
+            // ease-out z zera było zbyt szarpane).
             sheet: "a01",
             anim: 16,
-            time: 500,
+            time: Math.max(260, Math.hypot(flightClose.x - watchEnd.x, flightClose.y - watchEnd.y) / cruiseSpeed),
             onStart: () => (stage = "butterfly-approach"),
             update: (p) => {
-                const watchEnd = { x: flightFar.x + Math.sin(5) * 7, y: flightFar.y + Math.sin(6) * 9 },
-                    e = 1 - Math.pow(1 - p, 3); // ease-out: szybki start, łagodne dojście
-                butterfly.x = watchEnd.x + (flightClose.x - watchEnd.x) * e;
-                butterfly.y = watchEnd.y + (flightClose.y - watchEnd.y) * e;
+                butterfly.x = watchEnd.x + (flightClose.x - watchEnd.x) * p;
+                butterfly.y = watchEnd.y + (flightClose.y - watchEnd.y) * p + Math.sin(p * Math.PI * 2) * 6;
             },
         },
         {
