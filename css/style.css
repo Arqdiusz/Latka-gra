@@ -556,3 +556,75 @@ body {
         transition: none;
     }
 }
+
+/* ── TYMCZASOWY panel deweloperski — do usunięcia przed publikacją ── */
+.devToggle {
+    position: fixed;
+    left: 6px;
+    bottom: 6px;
+    z-index: 9999;
+    font: 12px monospace;
+    padding: 6px 8px;
+    background: #222;
+    color: #ffd166;
+    border: 1px solid #ffd166;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0.85;
+}
+
+.devPanel {
+    position: fixed;
+    left: 6px;
+    bottom: 42px;
+    z-index: 9999;
+    width: 220px;
+    background: #222c;
+    backdrop-filter: blur(2px);
+    color: #fff;
+    font: 12px monospace;
+    border: 1px solid #ffd166;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.devPanel[hidden] {
+    display: none;
+}
+
+.devRow {
+    display: grid;
+    grid-template-columns: 1fr 28px 34px 34px;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 0;
+}
+
+.devRow output {
+    text-align: right;
+}
+
+.devRow button,
+.devActions button {
+    font: 11px monospace;
+    padding: 4px 2px;
+    background: #444;
+    color: #fff;
+    border: 1px solid #777;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.devActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+    border-top: 1px solid #555;
+    padding-top: 6px;
+}
+
+.devActions button {
+    flex: 1 1 auto;
+    padding: 5px 4px;
+}

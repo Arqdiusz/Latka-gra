@@ -2173,3 +2173,50 @@ window.gameTest = {
         save();
     },
 };
+
+// ── TYMCZASOWY panel deweloperski — do usunięcia przed publikacją ──
+// Pozwala ręcznie zmieniać potrzeby (jedzenie/woda/zabawa/sen/czystość),
+// budzić Łatkę i usuwać kupkę, żeby łatwo testować dowolny stan gry.
+function devRefresh() {
+    document.querySelectorAll(".devPanel .devRow").forEach((row) => {
+        const k = row.dataset.stat,
+            out = row.querySelector("output");
+        if (out) out.textContent = Math.round(stats[k] ?? 0);
+    });
+}
+document.querySelectorAll(".devPanel .devRow button").forEach((btn) => {
+    btn.onclick = () => {
+        const row = btn.closest(".devRow"),
+            k = row.dataset.stat,
+            d = Number(btn.dataset.d);
+        stats[k] = clamp((stats[k] ?? 0) + d, 0, 100);
+        if (loaded) {
+            statusUpdate();
+            syncMenu();
+        }
+        saveNeeds();
+        devRefresh();
+    };
+});
+$(".devToggle").onclick = () => {
+    $(".devPanel").hidden = !$(".devPanel").hidden;
+    devRefresh();
+};
+$(".devMaxAll").onclick = () => {
+    Object.assign(stats, { food: 100, water: 100, fun: 100, sleep: 100, clean: 100 });
+    if (loaded) {
+        statusUpdate();
+        syncMenu();
+    }
+    saveNeeds();
+    devRefresh();
+};
+$(".devWake").onclick = () => {
+    wake();
+    devRefresh();
+};
+$(".devClean").onclick = () => {
+    poop = null;
+    updatePoopAccess();
+    save();
+};
