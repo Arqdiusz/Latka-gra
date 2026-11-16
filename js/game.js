@@ -1306,17 +1306,10 @@ function butterflyEvent() {
             x: dir > 0 ? -25 : W + 25,
             y: 200,
         },
-        // Punkt zawrócenia — NIE sama krawędź pomieszczenia (zbyt blisko
-        // ściany), tylko kawałek przed nią, żeby zawrót wyglądał naturalnie.
+        // Koniec ekranu — motylek dolatuje tu i zawraca (patrz niżej).
         flightFar = {
-            x: dir > 0 ? W * 0.74 : W * 0.26,
+            x: dir > 0 ? W - 15 : 15,
             y: 200,
-        },
-        // Okolice pyszczka pieska — tu motylek faktycznie podlatuje po
-        // zawróceniu, i dopiero wtedy zaczyna się animacja chwytania.
-        snout = {
-            x: x * W + dir * 34,
-            y: GROUND - 55,
         };
     butterfly = {
         visible: true,
@@ -1337,28 +1330,19 @@ function butterflyEvent() {
             },
         },
         {
+            // Krótkie zawrócenie na końcu ekranu — odbicie sprite'a (zwrócony
+            // zgodnie z nowym kierunkiem lotu), tylko na drobny moment, zanim
+            // zacznie się animacja chwytania.
             sheet: "a01",
             anim: 3,
-            time: 900,
-            onStart: () => (stage = "butterfly-watch"),
+            time: 450,
+            onStart: () => {
+                stage = "butterfly-watch";
+                butterfly.dir = -dir;
+            },
             update: (p) => {
                 butterfly.x = flightFar.x + Math.sin(p * 5) * 7;
                 butterfly.y = flightFar.y + Math.cos(p * 6) * 9;
-            },
-        },
-        {
-            // Zawrócenie — motylek leci od punktu zawrotu z powrotem w
-            // okolice pyszczka pieska. Wolniej i z łagodnym "uniesieniem" w
-            // środku lotu (nie nurkuje od razu nisko) — dopiero po dolocie
-            // tutaj zaczyna się właściwa animacja chwytania (niżej).
-            sheet: "a01",
-            anim: 16,
-            time: 1500,
-            onStart: () => (stage = "butterfly-return"),
-            update: (p) => {
-                const e = p * p * (3 - 2 * p); // smoothstep — łagodny start i koniec, bez nagłego nurkowania
-                butterfly.x = flightFar.x + (snout.x - flightFar.x) * e;
-                butterfly.y = flightFar.y + (snout.y - flightFar.y) * e - Math.sin(p * Math.PI) * 28;
             },
         },
         {
