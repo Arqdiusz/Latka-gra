@@ -8,6 +8,7 @@ const
         a01: [],
         a02: [],
         ui: [],
+        bubbles: [],
     },
     pixels = {
         a01: [],
@@ -412,12 +413,14 @@ function canPet() {
 }
 
 function locks() {
-    // W czasie czekania na rzut menu zostaje aktywne, żeby dało się wyjść z zabawy
-    document.body.classList.toggle("locked", !casual() && phase !== "ball-ready");
+    // W czasie czekania na rzut / łapania baniek menu zostaje aktywne,
+    // żeby dało się wyjść z zabawy
+    document.body.classList.toggle("locked", !casual() && phase !== "ball-ready" && phase !== "bubble-game");
     document.querySelectorAll(".arrow").forEach((b) => (b.disabled = !casual()));
     $(".petAccess").disabled = !canPet();
     updateArrows();
     updateFetchUi();
+    updateBubbleUi();
 }
 
 // Sygnalizacja rzutów (3 piłeczki) + przyciski końca/resetu zabawy —
@@ -439,6 +442,17 @@ function updateFetchUi() {
         if (src) img.src = src;
         img.classList.toggle("used", i < fetchGame.throws);
     });
+}
+
+// Licznik złapanych baniek — ikona + pasek postępu, bez tekstu.
+function updateBubbleUi() {
+    const badge = $(".bubbleBadge");
+    if (!badge) return;
+    const active = !!bubbleGame;
+    badge.hidden = !active;
+    if (!active) return;
+    badge.querySelector("img").src = icons.bubbles;
+    badge.querySelector(".bar i").style.width = clamp((bubbleGame.caught / bubbleGame.need) * 100, 0, 100) + "%";
 }
 
 // Kołowy "licznik czasu" na zielonym przycisku resetu — ciemna tarcza
@@ -521,6 +535,7 @@ function idle(which = null) {
     ball = null;
     fetchGame = null;
     dogHidden = false;
+    bubbleGame = null;
     setOffset(0);
     setAnim("a01", which ?? (Math.random() < 0.35 ? 18 : 16));
     idleUntil = clock + Math.max(frames.length * ms, 1800) + Math.random() * 2000;
@@ -629,22 +644,16 @@ function activity(id) {
         ballIntroShow(fetchStart);
         return;
     }
+    if (id === "clean") {
+        // Mycie = łapanie baniek na całym ekranie.
+        bubbleStart();
+        return;
+    }
     phase = "activity";
     locks();
     let parts = [];
     if (id === "food") parts = [repeatPart("a01", 5)];
     else if (id === "water") parts = [repeatPart("a01", 2)];
-    else if (id === "clean")
-        parts = [
-            repeatPart("a01", 14),
-            {
-                ...repeatPart("a01", 13),
-                onStart: () => {
-                    $(".popup").hidden = false;
-                    $(".reward").src = icons.clean;
-                },
-            },
-        ];
     else if (id === "brush") {
         const p = getPreset("a02", 21);
         if (numbers(p.intro).length)
@@ -867,10 +876,14 @@ function route(target, id = null, mode = "menu") {
 }
 
 function action(id) {
-    // Z czekania na rzut można wyjść wybierając inną czynność
+    // Z czekania na rzut / łapania baniek można wyjść wybierając inną czynność
     if (phase === "ball-ready") {
         fetchGame = null;
         ball = null;
+        idle(16);
+    }
+    if (phase === "bubble-game") {
+        bubbleGame = null;
         idle(16);
     }
     if (!casual()) return;
@@ -1133,10 +1146,14 @@ canvas.addEventListener("pointerdown", (e) => {
         id: e.pointerId,
         sx: e.clientX,
         sy: e.clientY,
-        kind: null,
+        kind: phase === "bubble-game" ? "bubble" : null,
         dog: petHit(p.x, p.y),
         poop: poopHit(p.x, p.y),
     };
+    if (gesture.kind === "bubble") {
+        // Łapanie baniek — cały ekran jest aktywny, trafienie liczy się od razu
+        bubbleGameHit(p.x, p.y);
+    }
     try {
         canvas.setPointerCapture(e.pointerId);
     } catch (_) {}
@@ -1144,6 +1161,12 @@ canvas.addEventListener("pointerdown", (e) => {
 canvas.addEventListener("pointermove", (e) => {
     const g = gesture;
     if (!g || g.id !== e.pointerId) return;
+    if (g.kind === "bubble") {
+        // Przeciąganie palcem po bańkach też je łapie — chaos jak w prawdziwym myciu
+        const p = pointerXY(e);
+        bubbleGameHit(p.x, p.y);
+        return;
+    }
     const dx = e.clientX - g.sx,
         dy = e.clientY - g.sy;
     if (!g.kind) {
@@ -1177,6 +1200,7 @@ function pointerEnd(e, cancel = false) {
         stopPetting();
         return;
     }
+    if (g.kind === "bubble") return;
     const dx = e.clientX - g.sx,
         dy = e.clientY - g.sy;
     if (g.kind === "throw") {
@@ -1365,7 +1389,8 @@ const BALL_THROWS = 3, // ile rzutów do nagrody
     BALL_GIVE_UP = 30000; // po ilu ms bez rzutu zabawa się kończy
 let ball = null, // { room, x, y, spin, carried }
     fetchGame = null, // { throws, hinted, homeRoom, homeX }
-    dogHidden = false; // Łatka niewidoczna, gdy czeka "za kadrem" na lądowanie piłki
+    dogHidden = false, // Łatka niewidoczna, gdy czeka "za kadrem" na lądowanie piłki
+    bubbleGame = null; // { need, caught, bubbles:[], effects:[], nextSpawn, lastCatch }
 
 // Pozycja piłki na ekranie — uwzględnia sąsiednie pokoje (jak kupka)
 function ballScreenX() {
@@ -1830,6 +1855,171 @@ function ballDraw() {
     }
 }
 
+// ── Mini-gra: łapanie baniek podczas mycia ──────────────────────
+// Cały ekran jest obszarem gry. Bańki (losowy kształt z dwóch
+// arkuszy — 40 wariantów, żeby było "chaotycznie") lecą w górę w
+// różnym tempie, delikatnie "pływając" na boki (nie po prostej
+// linii) i oddychając (spłaszczanie/rozszerzanie), żeby nie
+// wyglądały jak sztywne obiekty. Tylko bańki z pulsującą białą
+// ramką liczą się do zadania (tak jak przy piłce w aporcie) — reszta
+// to "mydlane" fałszywki: złapanie ich nie daje punktu i pokazuje
+// czerwony "zły ruch" zamiast gwiazdki.
+const BUBBLE_NEED = 10,
+    BUBBLE_GIVE_UP = 45000, // bez złapania dobrej bańki przez tyle ms -> koniec
+    BUBBLE_MAX_ON_SCREEN = 6,
+    BUBBLE_BAD_CHANCE = 0.3,
+    BUBBLE_SPAWN_MIN = 320,
+    BUBBLE_SPAWN_MAX = 760;
+
+function bubbleSpawn() {
+    if (!bubbleGame || bubbleGame.bubbles.length >= BUBBLE_MAX_ON_SCREEN || !cells.bubbles.length) return;
+    const size = 34 + Math.random() * 40, // różne wielkości
+        baseX = 24 + size / 2 + Math.random() * (W - 48 - size);
+    bubbleGame.bubbles.push({
+        cell: cells.bubbles[Math.floor(Math.random() * cells.bubbles.length)],
+        baseX,
+        x: baseX,
+        y: SH + size,
+        size,
+        vy: 48 + Math.random() * 72, // różne prędkości lotu
+        wobbleAmp: 10 + Math.random() * 30, // żeby nie leciały po równej linii
+        wobbleFreq: 1 + Math.random() * 1.7,
+        phase: Math.random() * Math.PI * 2,
+        squishPhase: Math.random() * Math.PI * 2,
+        squishFreq: 2 + Math.random() * 2,
+        good: Math.random() > BUBBLE_BAD_CHANCE,
+        born: clock,
+        popped: false,
+    });
+}
+
+function bubbleGameUpdate(dt) {
+    if (!bubbleGame) return;
+    const g = bubbleGame;
+    if (clock >= (g.nextSpawn || 0) && g.caught < g.need) {
+        bubbleSpawn();
+        g.nextSpawn = clock + BUBBLE_SPAWN_MIN + Math.random() * (BUBBLE_SPAWN_MAX - BUBBLE_SPAWN_MIN);
+    }
+    for (let i = g.bubbles.length - 1; i >= 0; i--) {
+        const b = g.bubbles[i];
+        const t = (clock - b.born) / 1000;
+        b.y -= (b.vy * dt) / 1000;
+        b.x = b.baseX + Math.sin(t * b.wobbleFreq + b.phase) * b.wobbleAmp;
+        if (b.y < -b.size) g.bubbles.splice(i, 1); // uciekła poza ekran — bez kary
+    }
+    for (let i = g.effects.length - 1; i >= 0; i--) {
+        if (clock - g.effects[i].born > 500) g.effects.splice(i, 1);
+    }
+}
+
+function bubbleGameDraw() {
+    if (!bubbleGame) return;
+    const g = bubbleGame;
+    for (const b of g.bubbles) {
+        const t = (clock - b.born) / 1000,
+            squish = Math.sin(t * b.squishFreq + b.squishPhase) * 0.14; // "oddychanie"
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.scale(1 + squish, 1 - squish);
+        ctx.drawImage(b.cell, -b.size / 2, -b.size / 2, b.size, b.size);
+        ctx.restore();
+        if (b.good) {
+            // Ta sama pulsująca ramka co przy piłce w aporcie — tu to bańki do złapania.
+            const pulse = 0.5 + 0.5 * Math.sin(clock / 180),
+                r = b.size / 2 + 5 + pulse * 6,
+                alpha = 0.45 + pulse * 0.5;
+            ctx.save();
+            ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+            ctx.lineWidth = 2.5;
+            ctx.shadowColor = "rgba(255,255,255,0.7)";
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+    for (const e of g.effects) {
+        const im = images[e.good ? "bubbleStar" : "bubbleWrong"];
+        if (!im) continue;
+        const t = clamp((clock - e.born) / 500, 0, 1),
+            size = 70 * (0.6 + t * 0.9),
+            alpha = 1 - t;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(im, e.x - size / 2, e.y - size / 2, size, size);
+        ctx.restore();
+    }
+}
+
+// Trafienie w bańkę (dotyk gdziekolwiek na ekranie podczas gry).
+// Zwraca true, jeśli coś trafiono (żeby wywołujący wiedział, że to
+// był tap w bańkę, a nie np. w psa/kupkę).
+function bubbleGameHit(px, py) {
+    if (!bubbleGame) return false;
+    const g = bubbleGame;
+    for (let i = g.bubbles.length - 1; i >= 0; i--) {
+        const b = g.bubbles[i];
+        const r = b.size / 2 + 12; // trochę większy obszar trafienia — łatwiej dla małego dziecka
+        if (Math.hypot(px - b.x, py - b.y) > r) continue;
+        g.bubbles.splice(i, 1);
+        g.effects.push({ x: b.x, y: b.y, born: clock, good: b.good });
+        if (b.good) {
+            g.caught++;
+            updateBubbleUi();
+            if (g.caught >= g.need) bubbleGameFinish(true);
+        }
+        return true;
+    }
+    return false;
+}
+
+function bubbleReadySegment() {
+    return {
+        sheet: "a01",
+        anim: 14, // 15. Mycie / piana — w pętli przez całą mini-grę
+        time: BUBBLE_GIVE_UP,
+        onStart: () => {
+            phase = "bubble-game";
+            stage = "bubble-game";
+            locks();
+        },
+        onEnd: () => bubbleGameFinish(!!bubbleGame && bubbleGame.caught > 0),
+    };
+}
+
+function bubbleStart() {
+    bubbleGame = { need: BUBBLE_NEED, caught: 0, bubbles: [], effects: [], nextSpawn: 0 };
+    say("clean", 1800);
+    startQueue([bubbleReadySegment()]);
+    save();
+}
+
+function bubbleGameFinish(rewarded) {
+    const got = rewarded && bubbleGame && bubbleGame.caught > 0;
+    bubbleGame = null;
+    if (got) {
+        phase = "activity";
+        pending = "clean";
+        locks();
+        // Popup z nagrodą od razu po złapaniu kompletu baniek.
+        $(".popup").hidden = false;
+        $(".reward").src = icons.clean;
+        startQueue([
+            {
+                sheet: "a01",
+                anim: 16,
+                time: 1800,
+                onStart: () => {
+                    changeNeeds(ACTION_EFFECTS.clean);
+                    save();
+                },
+                onEnd: () => ($(".popup").hidden = true),
+            },
+        ]);
+    } else idle(16);
+}
+
 function iconDraw(c, key, x, y, w, h = w) {
     if (key === "poop") {
         const ratio = images.poop.width / images.poop.height;
@@ -1904,6 +2094,7 @@ function draw(dt) {
         ctx.drawImage(images.poop, r.x, r.y, r.w, r.h);
     }
     bubbleDraw(dt);
+    bubbleGameDraw();
     if (!$(".popup").hidden) {
         rewardCtx.clearRect(0, 0, 300, 300);
         drawDog(rewardCtx, 150, 255, left, 0.72);
@@ -1944,6 +2135,7 @@ function loopFrame(t) {
                 butterflyEvent();
             else if (clock >= idleUntil) autonomous();
         }
+        if (bubbleGame) bubbleGameUpdate(dt);
         if (clock >= nextBubble && !sleeping && phase === "idle") {
             say(
                 dirty() ? "poop" : ["food", "water", "fun", "sleep", "clean"][Math.floor(Math.random() * 5)]
@@ -1984,6 +2176,27 @@ async function boot() {
     if (P.assets.balls)
         for (let i = 0; i < P.assets.balls.length; i++)
             images["ball" + i] = await loadImage(P.assets.balls[i]);
+    if (P.assets.bubbles) {
+        // Dwa arkusze baniek — każdy to siatka 4x5 (64x64), 20 różnych
+        // kształtów/wariantów. Tniemy je na osobne obrazki, żeby losowo
+        // wybierać dowolną z 40 baniek (chaos, jak prosił użytkownik).
+        for (const src of P.assets.bubbles) {
+            const im = await loadImage(src),
+                cols = 4,
+                rows = 5,
+                w = im.width / cols,
+                h = im.height / rows;
+            for (let f = 0; f < cols * rows; f++) {
+                const c = document.createElement("canvas");
+                c.width = w;
+                c.height = h;
+                c.getContext("2d").drawImage(im, (f % cols) * w, Math.floor(f / cols) * h, w, h, 0, 0, w, h);
+                cells.bubbles.push(c);
+            }
+        }
+    }
+    if (P.assets.bubbleStar) images.bubbleStar = await loadImage(P.assets.bubbleStar);
+    if (P.assets.bubbleWrong) images.bubbleWrong = await loadImage(P.assets.bubbleWrong);
     for (const key of ["a01", "a02", "ui"]) {
         const rows = key === "ui" ? 6 : 12,
             im = images[key],

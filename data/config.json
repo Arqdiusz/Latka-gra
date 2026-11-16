@@ -545,6 +545,12 @@
       "animacje/ball-3.png",
       "animacje/ball-4.png"
     ],
+    "bubbles": [
+      "animacje/bubble-001.png",
+      "animacje/bubble-002.png"
+    ],
+    "bubbleStar": "animacje/star-check.png",
+    "bubbleWrong": "animacje/wrong-check.png",
     "poop": "inne/kupka.png",
     "rooms": {
       "living": "tla/004.png",
