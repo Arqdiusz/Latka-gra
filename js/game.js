@@ -1873,7 +1873,8 @@ function ballDraw() {
 const BUBBLE_NEED = 10,
     BUBBLE_GIVE_UP = 75000, // bez złapania dobrej bańki przez tyle ms -> koniec
     BUBBLE_MAX_ON_SCREEN = 11, // ekran ma być pełny baniek
-    BUBBLE_BAD_CHANCE = 0.8, // dobrych bardzo mało — gra ma potrwać dłużej
+    BUBBLE_BAD_CHANCE = 0.62, // dobrych mniej niż złych, ale nie trzeba długo czekać
+    BUBBLE_MAX_BAD_STREAK = 3, // po max tylu złych pod rząd następna jest gwarantowanie dobra
     BUBBLE_FAST_CHANCE_GOOD = 0.78, // dobre-i-wolne mają być rzadkością
     BUBBLE_FAST_CHANCE_BAD = 0.45, // ale i złych szybkich jest więcej, dla chaosu
     BUBBLE_SPAWN_MIN = 140,
@@ -1883,8 +1884,12 @@ function bubbleSpawn() {
     if (!bubbleGame || bubbleGame.bubbles.length >= BUBBLE_MAX_ON_SCREEN || !cells.bubbles.length) return;
     const size = 56 + Math.random() * 78, // duże, różne wielkości
         baseX = 24 + size / 2 + Math.random() * (W - 48 - size),
-        good = Math.random() > BUBBLE_BAD_CHANCE,
+        // Licznik złych pod rząd — zapobiega długim seriom złych baniek
+        // (gracz nie powinien zbyt długo czekać na dobrą).
+        forceGood = bubbleGame.badStreak >= BUBBLE_MAX_BAD_STREAK,
+        good = forceGood || Math.random() > BUBBLE_BAD_CHANCE,
         fast = Math.random() < (good ? BUBBLE_FAST_CHANCE_GOOD : BUBBLE_FAST_CHANCE_BAD);
+    bubbleGame.badStreak = good ? 0 : bubbleGame.badStreak + 1;
     bubbleGame.bubbles.push({
         cell: cells.bubbles[Math.floor(Math.random() * cells.bubbles.length)],
         baseX,
@@ -1957,12 +1962,21 @@ function bubbleGameDraw() {
     for (const e of g.effects) {
         const im = images[e.good ? "bubbleStar" : "bubbleWrong"];
         if (!im) continue;
+        // Mały "pop": szybkie wyskoczenie z lekkim przerzutem (ease-out-back),
+        // powolny dokręt obrotu w trakcie, plus losowy obrót/odbicie z
+        // momentu trafienia — żeby efekt nie wyglądał identycznie co raz.
         const t = clamp((clock - e.born) / 500, 0, 1),
-            size = 70 * (0.6 + t * 0.9),
-            alpha = 1 - t;
+            ease = 1 - Math.pow(1 - t, 3),
+            overshoot = Math.sin(ease * Math.PI) * 0.22,
+            size = 70 * (0.55 + ease * 0.7 + overshoot),
+            alpha = 1 - t * t,
+            rot = e.rot + ease * 0.5 * e.flip;
         bctx.save();
         bctx.globalAlpha = alpha;
-        bctx.drawImage(im, e.x - size / 2, e.y - size / 2, size, size);
+        bctx.translate(e.x, e.y);
+        bctx.rotate(rot);
+        bctx.scale(e.flip, 1);
+        bctx.drawImage(im, -size / 2, -size / 2, size, size);
         bctx.restore();
     }
 }
@@ -1978,7 +1992,17 @@ function bubbleGameHit(px, py) {
         const r = b.size / 2 + 12; // trochę większy obszar trafienia — łatwiej dla małego dziecka
         if (Math.hypot(px - b.x, py - b.y) > r) continue;
         g.bubbles.splice(i, 1);
-        g.effects.push({ x: b.x, y: b.y, born: clock, good: b.good });
+        // Losowy obrót (15-45°, w obie strony) i czasem odbicie lustrzane —
+        // żeby gwiazdka/dymek nie wyglądały identycznie przy każdym trafieniu.
+        const rotDeg = (15 + Math.random() * 30) * (Math.random() < 0.5 ? -1 : 1);
+        g.effects.push({
+            x: b.x,
+            y: b.y,
+            born: clock,
+            good: b.good,
+            rot: (rotDeg * Math.PI) / 180,
+            flip: Math.random() < 0.5 ? -1 : 1,
+        });
         if (b.good) {
             g.caught++;
             updateBubbleUi();
@@ -2004,7 +2028,7 @@ function bubbleReadySegment() {
 }
 
 function bubbleStart() {
-    bubbleGame = { need: BUBBLE_NEED, caught: 0, bubbles: [], effects: [], nextSpawn: 0 };
+    bubbleGame = { need: BUBBLE_NEED, caught: 0, bubbles: [], effects: [], nextSpawn: 0, badStreak: 0 };
     say("clean", 1800);
     startQueue([bubbleReadySegment()]);
     save();
