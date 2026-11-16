@@ -902,6 +902,23 @@ function geometry() {
     };
 }
 
+// Subtelny, rozmyty cień na ziemi — wspólny dla Łatki i piłki. Kurczy się
+// i blednie, gdy obiekt jest w powietrzu (skok, fikołek, lot/odbicie piłki),
+// rośnie i ciemnieje, gdy jest blisko ziemi.
+function groundShadow(cx, lift, w, alpha) {
+    const sw = w * (1 - clamp(lift, 0, 1) * 0.5),
+        a = alpha * (1 - clamp(lift, 0, 1) * 0.75);
+    if (a <= 0.01) return;
+    ctx.save();
+    ctx.filter = "blur(4px)";
+    ctx.globalAlpha = a;
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.ellipse(cx, GROUND + 14, sw / 2, sw / 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+}
+
 function drawDog(c, cx = x * W, gy = GROUND + jumpY, facing = left, ratio = 1) {
     const g = geometry();
     c.save();
@@ -1699,6 +1716,8 @@ function ballDraw() {
                 ? GROUND - 18 - h / 2 + ball.y
                 : GROUND + 10 + ball.y - h; // piłka leży na ziemi (10px poniżej linii chodzenia)
 
+    if (stage !== "ball-ready") groundShadow(ballScreenX(), -ball.y / 160, w * 1.3, 0.22);
+
     ctx.drawImage(im, bx, by, w, h);
 
     // Animowana ramka zachęcająca do rzutu (pulsująca) — tylko podczas oczekiwania
@@ -1779,6 +1798,7 @@ function bubbleDraw(dt) {
 function draw(dt) {
     ctx.clearRect(0, 0, W, SH);
     ctx.imageSmoothingEnabled = false;
+    groundShadow(x * W, -jumpY / 35, 100, 0.24);
     drawDog(ctx);
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
     if (butterfly?.visible) {
