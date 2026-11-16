@@ -1582,7 +1582,10 @@ function fetchChaseParts(land, impact) {
             fromX = impact.x,
             toX = land.x,
             dir = toX > fromX ? 1 : -1,
-            FALL = 260,
+            // Opadanie zaczyna się od środka pokoju — dłuższy, bardziej
+            // widoczny łuk, zamiast teleportowania się tuż nad fromX.
+            fallStartX = 0.5,
+            FALL = 520,
             BOUNCE = 220,
             ROLL = 380,
             total = FALL + BOUNCE + ROLL,
@@ -1594,13 +1597,12 @@ function fetchChaseParts(land, impact) {
             if (fallStart === null) fallStart = clock;
             const t = (clock - fallStart) / scale;
             if (t < FALL) {
-                // Opadanie po łuku — nie pionowo w dół, tylko jakby to
-                // końcówka tego samego rzutu: piłka jeszcze trochę
-                // "leci" w bok (do fromX), a wysokość spada przyspieszając.
+                // Opadanie po łuku od środka pokoju do fromX — wysokość
+                // spada przyspieszając (ease-in), jak końcówka rzutu.
                 const fp = t / FALL;
                 ball.room = land.room;
-                ball.x = fromX - dir * 0.05 * (1 - fp);
-                ball.y = -140 * (1 - fp) * (1 - fp);
+                ball.x = fallStartX + (fromX - fallStartX) * fp;
+                ball.y = -160 * (1 - fp) * (1 - fp);
             } else if (t < FALL + BOUNCE) {
                 const bp = (t - FALL) / BOUNCE;
                 ball.x = fromX;
