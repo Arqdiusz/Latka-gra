@@ -1306,9 +1306,17 @@ function butterflyEvent() {
             x: dir > 0 ? -25 : W + 25,
             y: 200,
         },
-        flightEnd = {
-            x: x * W + dir * 82,
-            y: GROUND - 240,
+        // Koniec pomieszczenia — motylek najpierw przelatuje aż do dalszej
+        // krawędzi, zanim zawróci (patrz segment "butterfly-return" niżej).
+        flightFar = {
+            x: dir > 0 ? W - 20 : 20,
+            y: 200,
+        },
+        // Okolice pyszczka pieska — tu motylek faktycznie podlatuje po
+        // zawróceniu, i dopiero wtedy zaczyna się animacja chwytania.
+        snout = {
+            x: x * W + dir * 34,
+            y: GROUND - 55,
         };
     butterfly = {
         visible: true,
@@ -1323,9 +1331,9 @@ function butterflyEvent() {
             time: 2200,
             onStart: () => (stage = "butterfly-flight"),
             update: (p) => {
-                butterfly.x = flightStart.x + (flightEnd.x - flightStart.x) * p;
+                butterfly.x = flightStart.x + (flightFar.x - flightStart.x) * p;
                 butterfly.y =
-                    flightStart.y + (flightEnd.y - flightStart.y) * p + Math.sin(p * Math.PI * 4) * 13;
+                    flightStart.y + (flightFar.y - flightStart.y) * p + Math.sin(p * Math.PI * 4) * 13;
             },
         },
         {
@@ -1334,8 +1342,21 @@ function butterflyEvent() {
             time: 900,
             onStart: () => (stage = "butterfly-watch"),
             update: (p) => {
-                butterfly.x = flightEnd.x + Math.sin(p * 5) * 7;
-                butterfly.y = flightEnd.y + Math.cos(p * 6) * 9;
+                butterfly.x = flightFar.x + Math.sin(p * 5) * 7;
+                butterfly.y = flightFar.y + Math.cos(p * 6) * 9;
+            },
+        },
+        {
+            // Zawrócenie — motylek leci od dalszej krawędzi pomieszczenia
+            // z powrotem w okolice pyszczka pieska. Dopiero po dolocie tu
+            // zaczyna się właściwa animacja chwytania (niżej).
+            sheet: "a01",
+            anim: 16,
+            time: 700,
+            onStart: () => (stage = "butterfly-return"),
+            update: (p) => {
+                butterfly.x = flightFar.x + (snout.x - flightFar.x) * p;
+                butterfly.y = flightFar.y + (snout.y - flightFar.y) * p + Math.sin(p * Math.PI * 3) * 10;
             },
         },
         {
@@ -2159,10 +2180,12 @@ function draw(dt) {
     if (!dogHidden) drawDog(ctx);
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
     if (butterfly?.visible) {
+        // O 33% większy niż bazowe 44px (44 * 1.33 ≈ 58.5).
+        const bsz = 58.5;
         ctx.save();
         ctx.translate(butterfly.x, butterfly.y);
         if (butterfly.dir < 0) ctx.scale(-1, 1);
-        ctx.drawImage(images["b" + (Math.floor(clock / 130) % 2)], -22, -22, 44, 44);
+        ctx.drawImage(images["b" + (Math.floor(clock / 130) % 2)], -bsz / 2, -bsz / 2, bsz, bsz);
         ctx.restore();
     }
     ballDraw();
