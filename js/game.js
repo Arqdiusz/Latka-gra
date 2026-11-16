@@ -420,15 +420,19 @@ function locks() {
     updateFetchUi();
 }
 
-// Sygnalizacja rzutów (3 piłeczki) + przycisk końca zabawy — tylko
-// podczas aportu, bez tekstu (dzieci 3+ jeszcze nie czytają).
+// Sygnalizacja rzutów (3 piłeczki) + przyciski końca/resetu zabawy —
+// tylko podczas aportu, bez tekstu (dzieci 3+ jeszcze nie czytają).
 function updateFetchUi() {
     const badge = $(".throwsBadge"),
-        endBtn = $(".fetchEnd");
-    if (!badge || !endBtn) return;
-    const active = !!fetchGame;
+        endBtn = $(".fetchEnd"),
+        restartBtn = $(".fetchRestart");
+    if (!badge || !endBtn || !restartBtn) return;
+    const active = !!fetchGame,
+        ready = active && phase === "ball-ready",
+        outOfThrows = active && fetchGame.throws >= BALL_THROWS;
     badge.hidden = !active;
-    endBtn.hidden = !active || phase !== "ball-ready";
+    endBtn.hidden = !ready;
+    restartBtn.hidden = !ready || !outOfThrows;
     if (!active) return;
     const src = images.ball0?.src;
     badge.querySelectorAll("img").forEach((img, i) => {
@@ -440,6 +444,15 @@ function updateFetchUi() {
 $(".fetchEnd").onclick = () => {
     if (phase !== "ball-ready" || !fetchGame) return;
     fetchFinish(fetchGame.throws > 0);
+};
+
+$(".fetchRestart").onclick = () => {
+    if (phase !== "ball-ready" || !fetchGame || fetchGame.throws < BALL_THROWS) return;
+    fetchGame.throws = 0;
+    fetchGame.hinted = false;
+    fetchGame.limitNotified = false;
+    say("fun", 2200);
+    startQueue([ballReadySegment()]);
 };
 
 function updateArrows() {
