@@ -1447,12 +1447,13 @@ function fetchFinish(rewarded) {
 }
 
 // ── Rzut ──────────────────────────────────────────────────────
-// Prawdziwy lot piłki między pokojami jest i tak niewidoczny (kamera
-// zostaje w pokoju Łatki, aż ta zacznie biec), więc nie animujemy go
-// wprost. Piłka "teleportuje się" do miejsca lądowania, a jej upadek
-// + odbicie + toczenie odgrywamy jako OSOBNĄ, krótką scenkę dokładnie
-// w momencie, gdy Łatka faktycznie wbiega do pokoju, w którym piłka leży
-// (patrz fetchChaseParts) — tak jak motylek w butterflyEvent().
+// Piłka leci widocznym łukiem przez pokój Łatki i "wylatuje" przez
+// drzwi (staje się niewidoczna, gdy jej światowa pozycja przechodzi
+// do sąsiedniego pokoju — kamera tam jeszcze nie jest). Resztę —
+// opadnięcie, odbicie i toczenie do właściwego miejsca — odgrywamy
+// jako OSOBNĄ scenkę dokładnie w momencie, gdy Łatka faktycznie
+// wbiega do pokoju z piłką (patrz fetchChaseParts), tak jak motylek
+// w butterflyEvent().
 function ballThrow(dx, dy) {
     if (phase !== "ball-ready" || !ball || !fetchGame) return;
     const swipe = dx / (scale || 1),
@@ -1475,7 +1476,9 @@ function ballThrow(dx, dy) {
             : { room: ball.room, x: clamp(ball.x + dir * 0.3, 0.1, 0.9) },
         // Punkt, z którego piłka dotacza się do właściwego miejsca (land)
         // podczas scenki upadku — odrobinę bliżej środka pokoju.
-        impact = { room: land.room, x: clamp(land.x - dir * 0.06, 0.04, 0.96) };
+        impact = { room: land.room, x: clamp(land.x - dir * 0.06, 0.04, 0.96) },
+        start = worldOf(ball.room, ball.x),
+        travelled = Math.abs(worldOf(impact.room, impact.x) - start);
 
     fetchGame.throws++;
     phase = "ball-fly";
@@ -1483,20 +1486,35 @@ function ballThrow(dx, dy) {
     bubble = null;
     locks();
 
-    // Piłka od razu "jest" tam, gdzie wyląduje — wysoko w powietrzu,
-    // gotowa do opadnięcia w scence odgrywanej w fetchChaseParts().
-    ball.room = impact.room;
-    ball.x = impact.x;
-    ball.y = -140;
+    // Mocniejszy rzut = szybszy i wyższy łuk
+    const flightTime = clamp(620 - power * 260, 340, 620),
+        arc = 130 + power * 120;
 
     startQueue([
-        // Krótka reakcja na rzut — Łatka patrzy w stronę, w którą poleciała piłka
+        // Piłka leci widocznym łukiem, Łatka odprowadza ją wzrokiem —
+        // widoczna tylko dopóki jest w aktualnym pokoju (potem "wylatuje"
+        // przez drzwi i staje się niewidoczna aż Łatka tam dobiegnie).
         {
             sheet: "a01",
             anim: 15, // 16. Patrzenie w górę / łapa
             facing: dir < 0,
-            time: 380,
+            time: flightTime,
             onStart: () => (stage = "ball-fly"),
+            update: (p) => {
+                const w = start + (worldOf(impact.room, impact.x) - start) * p,
+                    pos = worldSplit(w);
+                ball.room = pos.room;
+                ball.x = pos.x;
+                ball.y = -Math.sin(Math.PI * p) * arc;
+                ball.spin += travelled * dir * 0.9;
+            },
+            onEnd: () => {
+                // Piłka "jest" już w miejscu lądowania — wysoko w powietrzu,
+                // gotowa do opadnięcia w scence odgrywanej w fetchChaseParts().
+                ball.room = impact.room;
+                ball.x = impact.x;
+                ball.y = -140;
+            },
         },
         // Pogoń + podniesienie + powrót. Upadek/odbicie/toczenie piłki
         // dogrywane są w segmencie, w którym Łatka wbiega do pokoju z piłką.
@@ -1576,9 +1594,13 @@ function fetchChaseParts(land, impact) {
             if (fallStart === null) fallStart = clock;
             const t = (clock - fallStart) / scale;
             if (t < FALL) {
+                // Opadanie po łuku — nie pionowo w dół, tylko jakby to
+                // końcówka tego samego rzutu: piłka jeszcze trochę
+                // "leci" w bok (do fromX), a wysokość spada przyspieszając.
+                const fp = t / FALL;
                 ball.room = land.room;
-                ball.x = fromX;
-                ball.y = -140 * (1 - t / FALL);
+                ball.x = fromX - dir * 0.05 * (1 - fp);
+                ball.y = -140 * (1 - fp) * (1 - fp);
             } else if (t < FALL + BOUNCE) {
                 const bp = (t - FALL) / BOUNCE;
                 ball.x = fromX;
