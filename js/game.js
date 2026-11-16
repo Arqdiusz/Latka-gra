@@ -1520,10 +1520,11 @@ function fetchFinish(rewarded) {
 function ballThrow(dx, dy) {
     if (phase !== "ball-ready" || !ball || !fetchGame) return;
     if (fetchGame.throws >= BALL_THROWS) {
-        // Piłki się skończyły — chęć rzutu (przesunięcie palcem) liczy się
-        // jako odnowienie zabawy, tak samo jak zielony przycisk resetu.
-        renewFetch();
-        return;
+        // Piłki się skończyły — ten sam ruch, który byłby rzutem, odnawia
+        // licznik I OD RAZU leci jako pierwszy rzut nowej serii (bez
+        // dodatkowego, "zgubionego" machnięcia).
+        fetchGame.throws = 0;
+        fetchGame.hinted = false;
     }
     const swipe = dx / (scale || 1),
         dir = Math.abs(swipe) < 10 ? (left ? -1 : 1) : swipe < 0 ? -1 : 1,
