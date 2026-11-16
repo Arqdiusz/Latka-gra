@@ -834,7 +834,10 @@ function route(target, id = null, mode = "menu") {
                 facing: localFacing,
                 from: x,
                 to: 0.5,
-                time: Math.max(220, ((Math.abs(x - 0.5) * W) / 150) * 1000),
+                // 60px/s — ta sama prędkość co w localWalk() dla tej animacji,
+                // bo krok nóg (stride w loopFrame) jest do niej dopasowany;
+                // przy wyższej prędkości nogi "migały" nienaturalnie szybko.
+                time: Math.max(220, ((Math.abs(x - 0.5) * W) / 60) * 1000),
                 onStart: () => (stage = "route-walk"),
             });
             finalFacing = localFacing;
