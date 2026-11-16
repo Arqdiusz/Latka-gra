@@ -1870,8 +1870,8 @@ function ballDraw() {
 // ramką liczą się do zadania (tak jak przy piłce w aporcie) — reszta
 // to "mydlane" fałszywki: złapanie ich nie daje punktu i pokazuje
 // czerwony "zły ruch" zamiast gwiazdki.
-const BUBBLE_NEED = 10,
-    BUBBLE_GIVE_UP = 75000, // bez złapania dobrej bańki przez tyle ms -> koniec
+const BUBBLE_NEED = 16,
+    BUBBLE_GIVE_UP = 100000, // bez złapania dobrej bańki przez tyle ms -> koniec
     BUBBLE_MAX_ON_SCREEN = 11, // ekran ma być pełny baniek
     BUBBLE_BAD_CHANCE = 0.62, // dobrych mniej niż złych, ale nie trzeba długo czekać
     BUBBLE_MAX_BAD_STREAK = 3, // po max tylu złych pod rząd następna jest gwarantowanie dobra
@@ -1904,7 +1904,7 @@ function bubbleSpawn() {
         squishFreq: 2 + Math.random() * 2,
         pulsePhase: Math.random() * Math.PI * 2, // powolne "rośnie/maleje" całej bańki
         pulseFreq: 0.5 + Math.random() * 0.6,
-        pulseAmp: 0.1 + Math.random() * 0.12,
+        pulseAmp: 0.2 + Math.random() * 0.18,
         good,
         born: clock,
         popped: false,
@@ -1936,7 +1936,7 @@ function bubbleGameDraw() {
     const g = bubbleGame;
     for (const b of g.bubbles) {
         const t = (clock - b.born) / 1000,
-            squish = Math.sin(t * b.squishFreq + b.squishPhase) * 0.05, // lekkie "oddychanie" kształtu
+            squish = Math.sin(t * b.squishFreq + b.squishPhase) * 0.015, // bardzo lekkie "oddychanie" kształtu — główny efekt to pulseAmp (rośnie/maleje)
             pulse = 1 + Math.sin(t * b.pulseFreq + b.pulsePhase) * b.pulseAmp; // cała bańka rośnie/maleje
         bctx.save();
         bctx.translate(b.x, b.y);
@@ -2007,6 +2007,10 @@ function bubbleGameHit(px, py) {
             g.caught++;
             updateBubbleUi();
             if (g.caught >= g.need) bubbleGameFinish(true);
+        } else {
+            // Złapanie złej bańki cofa postęp — trzeba uważać, nie tylko szybko klikać.
+            g.caught = Math.max(0, g.caught - 1);
+            updateBubbleUi();
         }
         return true;
     }
