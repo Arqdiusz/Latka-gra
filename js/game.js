@@ -444,16 +444,27 @@ function updateFetchUi() {
     });
 }
 
-// Licznik złapanych baniek — ikona + pasek postępu, bez tekstu.
+// Licznik złapanych baniek — ikona + pasek postępu, bez tekstu — oraz
+// niebieska "zasłona" na całym ekranie (efekt kąpieli) z przyciskiem X.
 function updateBubbleUi() {
-    const badge = $(".bubbleBadge");
+    const badge = $(".bubbleBadge"),
+        overlay = $(".bubbleOverlay"),
+        close = $(".bubbleClose");
     if (!badge) return;
     const active = !!bubbleGame;
     badge.hidden = !active;
+    if (overlay) overlay.hidden = !active;
+    if (close) close.hidden = !active;
     if (!active) return;
     badge.querySelector("img").src = icons.bubbles;
     badge.querySelector(".bar i").style.width = clamp((bubbleGame.caught / bubbleGame.need) * 100, 0, 100) + "%";
 }
+
+$(".bubbleClose").onclick = () => {
+    // Wyjście z kąpieli przyciskiem X — bez nagrody (jak przerwanie przez menu).
+    if (phase !== "bubble-game") return;
+    bubbleGameFinish(false);
+};
 
 // Kołowy "licznik czasu" na zielonym przycisku resetu — ciemna tarcza
 // zakrywa go stopniowo (0 = pełny zielony, 100 = w pełni zakryty),
@@ -1865,18 +1876,20 @@ function ballDraw() {
 // to "mydlane" fałszywki: złapanie ich nie daje punktu i pokazuje
 // czerwony "zły ruch" zamiast gwiazdki.
 const BUBBLE_NEED = 10,
-    BUBBLE_GIVE_UP = 60000, // bez złapania dobrej bańki przez tyle ms -> koniec
+    BUBBLE_GIVE_UP = 75000, // bez złapania dobrej bańki przez tyle ms -> koniec
     BUBBLE_MAX_ON_SCREEN = 11, // ekran ma być pełny baniek
-    BUBBLE_BAD_CHANCE = 0.56, // dobrych mniej — gra ma trochę potrwać
-    BUBBLE_FAST_CHANCE = 0.3, // część baniek ucieka szybciej — trzeba się streszczać
-    BUBBLE_SPAWN_MIN = 160,
-    BUBBLE_SPAWN_MAX = 420;
+    BUBBLE_BAD_CHANCE = 0.8, // dobrych bardzo mało — gra ma potrwać dłużej
+    BUBBLE_FAST_CHANCE_GOOD = 0.78, // dobre-i-wolne mają być rzadkością
+    BUBBLE_FAST_CHANCE_BAD = 0.45, // ale i złych szybkich jest więcej, dla chaosu
+    BUBBLE_SPAWN_MIN = 140,
+    BUBBLE_SPAWN_MAX = 380;
 
 function bubbleSpawn() {
     if (!bubbleGame || bubbleGame.bubbles.length >= BUBBLE_MAX_ON_SCREEN || !cells.bubbles.length) return;
     const size = 56 + Math.random() * 78, // duże, różne wielkości
         baseX = 24 + size / 2 + Math.random() * (W - 48 - size),
-        fast = Math.random() < BUBBLE_FAST_CHANCE;
+        good = Math.random() > BUBBLE_BAD_CHANCE,
+        fast = Math.random() < (good ? BUBBLE_FAST_CHANCE_GOOD : BUBBLE_FAST_CHANCE_BAD);
     bubbleGame.bubbles.push({
         cell: cells.bubbles[Math.floor(Math.random() * cells.bubbles.length)],
         baseX,
@@ -1892,7 +1905,7 @@ function bubbleSpawn() {
         pulsePhase: Math.random() * Math.PI * 2, // powolne "rośnie/maleje" całej bańki
         pulseFreq: 0.5 + Math.random() * 0.6,
         pulseAmp: 0.1 + Math.random() * 0.12,
-        good: Math.random() > BUBBLE_BAD_CHANCE,
+        good,
         born: clock,
         popped: false,
     });

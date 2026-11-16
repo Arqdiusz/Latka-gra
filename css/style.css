@@ -255,6 +255,45 @@ body {
     background: #dde7d8;
 }
 
+/* "Zasłona" na cały ekran podczas mini-gry z bańkami — efekt wody
+   w kąpieli. Przepuszcza dotyk (łapanie baniek), zakrywa też wizualnie
+   przyciski sterowania. */
+.bubbleOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    background: linear-gradient(180deg, rgba(120, 200, 255, 0.4), rgba(30, 110, 190, 0.55));
+    pointer-events: none;
+}
+
+.bubbleOverlay[hidden] {
+    display: none;
+}
+
+.bubbleClose {
+    position: absolute;
+    right: 9px;
+    top: 9px;
+    z-index: 9;
+    width: 38px;
+    height: 38px;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: #d9534fe6;
+    color: white;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 3px 6px #0003;
+}
+
+.bubbleClose[hidden] {
+    display: none;
+}
+
 .roomTrack {
     position: absolute;
     inset: 0;
