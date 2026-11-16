@@ -1865,28 +1865,33 @@ function ballDraw() {
 // to "mydlane" fałszywki: złapanie ich nie daje punktu i pokazuje
 // czerwony "zły ruch" zamiast gwiazdki.
 const BUBBLE_NEED = 10,
-    BUBBLE_GIVE_UP = 45000, // bez złapania dobrej bańki przez tyle ms -> koniec
-    BUBBLE_MAX_ON_SCREEN = 6,
-    BUBBLE_BAD_CHANCE = 0.3,
-    BUBBLE_SPAWN_MIN = 320,
-    BUBBLE_SPAWN_MAX = 760;
+    BUBBLE_GIVE_UP = 60000, // bez złapania dobrej bańki przez tyle ms -> koniec
+    BUBBLE_MAX_ON_SCREEN = 11, // ekran ma być pełny baniek
+    BUBBLE_BAD_CHANCE = 0.56, // dobrych mniej — gra ma trochę potrwać
+    BUBBLE_FAST_CHANCE = 0.3, // część baniek ucieka szybciej — trzeba się streszczać
+    BUBBLE_SPAWN_MIN = 160,
+    BUBBLE_SPAWN_MAX = 420;
 
 function bubbleSpawn() {
     if (!bubbleGame || bubbleGame.bubbles.length >= BUBBLE_MAX_ON_SCREEN || !cells.bubbles.length) return;
-    const size = 34 + Math.random() * 40, // różne wielkości
-        baseX = 24 + size / 2 + Math.random() * (W - 48 - size);
+    const size = 56 + Math.random() * 78, // duże, różne wielkości
+        baseX = 24 + size / 2 + Math.random() * (W - 48 - size),
+        fast = Math.random() < BUBBLE_FAST_CHANCE;
     bubbleGame.bubbles.push({
         cell: cells.bubbles[Math.floor(Math.random() * cells.bubbles.length)],
         baseX,
         x: baseX,
         y: SH + size,
         size,
-        vy: 48 + Math.random() * 72, // różne prędkości lotu
-        wobbleAmp: 10 + Math.random() * 30, // żeby nie leciały po równej linii
+        vy: (fast ? 150 + Math.random() * 110 : 44 + Math.random() * 60), // część ucieka szybko
+        wobbleAmp: 10 + Math.random() * 34, // żeby nie leciały po równej linii
         wobbleFreq: 1 + Math.random() * 1.7,
         phase: Math.random() * Math.PI * 2,
         squishPhase: Math.random() * Math.PI * 2,
         squishFreq: 2 + Math.random() * 2,
+        pulsePhase: Math.random() * Math.PI * 2, // powolne "rośnie/maleje" całej bańki
+        pulseFreq: 0.5 + Math.random() * 0.6,
+        pulseAmp: 0.1 + Math.random() * 0.12,
         good: Math.random() > BUBBLE_BAD_CHANCE,
         born: clock,
         popped: false,
@@ -1917,10 +1922,11 @@ function bubbleGameDraw() {
     const g = bubbleGame;
     for (const b of g.bubbles) {
         const t = (clock - b.born) / 1000,
-            squish = Math.sin(t * b.squishFreq + b.squishPhase) * 0.14; // "oddychanie"
+            squish = Math.sin(t * b.squishFreq + b.squishPhase) * 0.05, // lekkie "oddychanie" kształtu
+            pulse = 1 + Math.sin(t * b.pulseFreq + b.pulsePhase) * b.pulseAmp; // cała bańka rośnie/maleje
         ctx.save();
         ctx.translate(b.x, b.y);
-        ctx.scale(1 + squish, 1 - squish);
+        ctx.scale(pulse * (1 + squish), pulse * (1 - squish));
         ctx.drawImage(b.cell, -b.size / 2, -b.size / 2, b.size, b.size);
         ctx.restore();
         if (b.good) {
