@@ -1447,6 +1447,12 @@ function fetchFinish(rewarded) {
 }
 
 // ── Rzut ──────────────────────────────────────────────────────
+// Prawdziwy lot piłki między pokojami jest i tak niewidoczny (kamera
+// zostaje w pokoju Łatki, aż ta zacznie biec), więc nie animujemy go
+// wprost. Piłka "teleportuje się" do miejsca lądowania, a jej upadek
+// + odbicie + toczenie odgrywamy jako OSOBNĄ, krótką scenkę dokładnie
+// w momencie, gdy Łatka faktycznie wbiega do pokoju, w którym piłka leży
+// (patrz fetchChaseParts) — tak jak motylek w butterflyEvent().
 function ballThrow(dx, dy) {
     if (phase !== "ball-ready" || !ball || !fetchGame) return;
     const swipe = dx / (scale || 1),
@@ -1456,31 +1462,20 @@ function ballThrow(dx, dy) {
         hasNextRoom = nextIdx >= 0 && nextIdx < order.length,
         // Piłka zawsze leci "na drugą planszę" — do sąsiedniego pokoju,
         // lądując przy DALEKIM końcu (żeby pies miał po co biec przez cały pokój).
-        // Moc rzutu decyduje tylko o łuku i szybkości lotu, nie o odległości.
         // Jeśli to już ostatni pokój w tę stronę — piłka odbija się od ściany.
         land = hasNextRoom
             ? {
                   room: order[nextIdx],
-                  // Piłka ląduje przy przednich łapach psa gdy dobiegnie:
-                  // pies zatrzymuje się ~0.10 od piłki, więc lądowanie
-                  // ustawiamy tak, by approach (pies) + 0.07 offset = land (piłka).
-                  // dir>0: pies wbiega od lewej → piłka jest po jego prawej
-                  // dir<0: pies wbiega od prawej → piłka jest po jego lewej
-                  // Bliżej krawędzi niż poprzednio — animacja chwytu zaczyna się
-                  // z pyskiem wysuniętym trochę dalej do przodu.
+                  // Bliżej krawędzi — animacja chwytu ma pysk wysunięty
+                  // trochę dalej do przodu.
                   x: dir > 0
                       ? clamp(0.80 + power * 0.10, 0.80, 0.92)  // daleki koniec, piłka
                       : clamp(0.20 - power * 0.10, 0.08, 0.20), // daleki koniec, piłka
               }
             : { room: ball.room, x: clamp(ball.x + dir * 0.3, 0.1, 0.9) },
-        // Piłka najpierw ląduje odrobinę bliżej środka (impact), a dopiero
-        // potem dotacza się do właściwego miejsca (land) — żyje jeszcze
-        // chwilę, zamiast zamierać od razu po pierwszym odbiciu.
-        impact = hasNextRoom
-            ? { room: land.room, x: clamp(land.x - dir * 0.06, 0.04, 0.96) }
-            : land,
-        start = worldOf(ball.room, ball.x),
-        travelled = Math.abs(worldOf(land.room, land.x) - start);
+        // Punkt, z którego piłka dotacza się do właściwego miejsca (land)
+        // podczas scenki upadku — odrobinę bliżej środka pokoju.
+        impact = { room: land.room, x: clamp(land.x - dir * 0.06, 0.04, 0.96) };
 
     fetchGame.throws++;
     phase = "ball-fly";
@@ -1488,51 +1483,24 @@ function ballThrow(dx, dy) {
     bubble = null;
     locks();
 
-    // Mocniejszy rzut = szybszy i wyższy łuk (nawet jeśli dystans jest podobny)
-    const flightTime = hasNextRoom ? clamp(900 - power * 380, 480, 900) : clamp(420 + travelled * 620, 420, 650),
-        arc = hasNextRoom ? 150 + power * 140 : 150 + travelled * 110;
+    // Piłka od razu "jest" tam, gdzie wyląduje — wysoko w powietrzu,
+    // gotowa do opadnięcia w scence odgrywanej w fetchChaseParts().
+    ball.room = impact.room;
+    ball.x = impact.x;
+    ball.y = -140;
 
     startQueue([
-        // Piłka leci łukiem, Łatka odprowadza ją wzrokiem
+        // Krótka reakcja na rzut — Łatka patrzy w stronę, w którą poleciała piłka
         {
             sheet: "a01",
             anim: 15, // 16. Patrzenie w górę / łapa
             facing: dir < 0,
-            time: flightTime,
+            time: 380,
             onStart: () => (stage = "ball-fly"),
-            update: (p) => {
-                const w = start + (worldOf(impact.room, impact.x) - start) * p,
-                    pos = worldSplit(w);
-                ball.room = pos.room;
-                ball.x = pos.x;
-                ball.y = -Math.sin(Math.PI * p) * arc;
-                ball.spin += travelled * dir * 0.9;
-            },
-            onEnd: () => {
-                ball.room = impact.room;
-                ball.x = impact.x;
-                ball.y = 0;
-            },
         },
-        // Krótkie odbicie piłki po wylądowaniu
-        {
-            sheet: "a01",
-            anim: 1,
-            tempo: 180,
-            facing: dir < 0,
-            time: 260,
-            onStart: () => (stage = "ball-bounce"),
-            update: (p) => {
-                ball.y = -Math.abs(Math.sin(Math.PI * p * 2)) * 26 * (1 - p);
-                ball.spin += dir * 0.35;
-            },
-            onEnd: () => (ball.y = 0),
-        },
-        // Pogoń + podniesienie + powrót. Jeśli piłka wylądowała kawałek
-        // przed właściwym miejscem (impact !== land), dotoczenie dzieje się
-        // RÓWNOCZEŚNIE z dobiegiem Łatki — tak jak motylek, który leci,
-        // podczas gdy piesek robi coś innego.
-        ...fetchChaseParts(land, impact.x !== land.x ? impact : null),
+        // Pogoń + podniesienie + powrót. Upadek/odbicie/toczenie piłki
+        // dogrywane są w segmencie, w którym Łatka wbiega do pokoju z piłką.
+        ...fetchChaseParts(land, impact),
     ]);
 }
 
@@ -1584,18 +1552,48 @@ function fetchChaseParts(land, impact) {
     const fromDir = land.x > 0.5 ? -1 : 1; // pies wbiega z lewej (1) lub prawej (-1)
     const approach = clamp(land.x + fromDir * 0.12, 0.06, 0.94);
     const run = moveParts(land.room, approach, { label: "ball-chase" });
-    // Jeśli piłka wylądowała trochę przed właściwym miejscem, dotoczenie do
-    // niego dokładamy do OSTATNIEGO etapu dobiegu — dzieje się równocześnie
-    // z bieganiem Łatki (tak jak motyl lecący, gdy piesek robi coś innego
-    // w butterflyEvent()), a nie w osobnym, sztywnym segmencie przed nim.
+    // Scenka upadku piłki (opadnięcie + jedno odbicie + toczenie do land)
+    // dogrywana jest w OSTATNIM etapie dobiegu — a więc dokładnie wtedy,
+    // gdy Łatka faktycznie wbiega do pokoju z piłką (tak jak motyl lecący,
+    // gdy piesek robi coś innego w butterflyEvent()). Czas scenki jest
+    // WŁASNY (oparty na zegarze gry), nie rozciągany/ściskany do długości
+    // samego dobiegu — inaczej toczenie wygląda nienaturalnie szybko na
+    // krótkich odcinkach.
     if (impact) {
         const last = run[run.length - 1],
             fromX = impact.x,
-            toX = land.x;
-        last.update = (p) => {
-            ball.x = fromX + (toX - fromX) * p;
-            ball.y = -Math.abs(Math.sin(Math.PI * p)) * 6 * (1 - p);
-            ball.spin += (toX > fromX ? 1 : -1) * 0.25;
+            toX = land.x,
+            dir = toX > fromX ? 1 : -1,
+            FALL = 260,
+            BOUNCE = 220,
+            ROLL = 380,
+            total = FALL + BOUNCE + ROLL,
+            // Jeśli sam dobieg jest krótszy niż scenka, ściskamy ją
+            // proporcjonalnie, żeby zdążyła się zakończyć na czas.
+            scale = Math.min(1, last.time / total);
+        let fallStart = null;
+        last.update = () => {
+            if (fallStart === null) fallStart = clock;
+            const t = (clock - fallStart) / scale;
+            if (t < FALL) {
+                ball.room = land.room;
+                ball.x = fromX;
+                ball.y = -140 * (1 - t / FALL);
+            } else if (t < FALL + BOUNCE) {
+                const bp = (t - FALL) / BOUNCE;
+                ball.x = fromX;
+                ball.y = -Math.abs(Math.sin(Math.PI * bp)) * 26;
+                ball.spin += dir * 0.35;
+            } else if (t < total) {
+                const rp = (t - FALL - BOUNCE) / ROLL;
+                ball.x = fromX + (toX - fromX) * rp;
+                ball.y = -Math.abs(Math.sin(Math.PI * rp)) * 6 * (1 - rp);
+                ball.spin += dir * 0.25;
+            } else {
+                ball.room = land.room;
+                ball.x = toX;
+                ball.y = 0;
+            }
         };
     }
     parts.push(...run);
