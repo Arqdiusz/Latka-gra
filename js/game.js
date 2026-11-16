@@ -1481,8 +1481,7 @@ function ballThrow(dx, dy) {
         // Punkt, z którego piłka dotacza się do właściwego miejsca (land)
         // podczas scenki upadku — odrobinę bliżej środka pokoju.
         impact = { room: land.room, x: clamp(land.x - dir * 0.06, 0.04, 0.96) },
-        start = worldOf(ball.room, ball.x),
-        travelled = Math.abs(worldOf(impact.room, impact.x) - start);
+        start = worldOf(ball.room, ball.x);
 
     fetchGame.throws++;
     phase = "ball-fly";
@@ -1510,7 +1509,7 @@ function ballThrow(dx, dy) {
                 ball.room = pos.room;
                 ball.x = pos.x;
                 ball.y = -Math.sin(Math.PI * p) * arc;
-                ball.spin += travelled * dir * 0.9;
+                ball.spin += dir * 2.2; // widoczne wirowanie w locie
             },
             onEnd: () => {
                 // Piłka "jest" już w miejscu lądowania — wysoko w powietrzu,
@@ -1586,9 +1585,10 @@ function fetchChaseParts(land, impact) {
             fromX = impact.x,
             toX = land.x,
             dir = toX > fromX ? 1 : -1,
-            // Opadanie zaczyna się od środka pokoju — dłuższy, bardziej
-            // widoczny łuk, zamiast teleportowania się tuż nad fromX.
-            fallStartX = 0.5,
+            // Opadanie zaczyna się od strony drzwi, z której piłka "wleciała"
+            // (ten sam kierunek co w rzucie) — żeby to wyglądało jak ciąg
+            // tego samego łuku, a nie nowa, osobna animacja od środka pokoju.
+            fallStartX = dir > 0 ? -0.08 : 1.08,
             FALL = 520,
             BOUNCE = 220,
             ROLL = 380,
@@ -1601,12 +1601,14 @@ function fetchChaseParts(land, impact) {
             if (fallStart === null) fallStart = clock;
             const t = (clock - fallStart) / scale;
             if (t < FALL) {
-                // Opadanie po łuku od środka pokoju do fromX — wysokość
-                // spada przyspieszając (ease-in), jak końcówka rzutu.
+                // Opadanie po łuku od krawędzi drzwi do fromX — wysokość
+                // spada przyspieszając (ease-in), jak końcówka rzutu;
+                // piłka dalej się kręci, tak jak podczas lotu.
                 const fp = t / FALL;
                 ball.room = land.room;
                 ball.x = fallStartX + (fromX - fallStartX) * fp;
-                ball.y = -160 * (1 - fp) * (1 - fp);
+                ball.y = -180 * (1 - fp) * (1 - fp);
+                ball.spin += dir * 2.2;
             } else if (t < FALL + BOUNCE) {
                 // Odbicie proporcjonalne do wysokości spadania — po 160px
                 // locie samo 26px podskoku wyglądało słabo/sztywno.
