@@ -1310,6 +1310,12 @@ function butterflyEvent() {
         flightFar = {
             x: dir > 0 ? W - 15 : 15,
             y: 200,
+        },
+        // Kawałek bliżej pieska, żeby zawrócenie nie zostawiało motylka za
+        // daleko od miejsca, gdzie zaraz zacznie się animacja chwytania.
+        flightClose = {
+            x: x * W + dir * 70,
+            y: 170,
         };
     butterfly = {
         visible: true,
@@ -1343,6 +1349,20 @@ function butterflyEvent() {
             update: (p) => {
                 butterfly.x = flightFar.x + Math.sin(p * 5) * 7;
                 butterfly.y = flightFar.y + Math.cos(p * 6) * 9;
+            },
+        },
+        {
+            // Krótki dolot bliżej pieska po zawróceniu — żeby animacja
+            // chwytania nie zaczynała się za daleko od tego, gdzie motylek
+            // właśnie był.
+            sheet: "a01",
+            anim: 16,
+            time: 500,
+            onStart: () => (stage = "butterfly-approach"),
+            update: (p) => {
+                const e = p * p * (3 - 2 * p); // smoothstep
+                butterfly.x = flightFar.x + (flightClose.x - flightFar.x) * e;
+                butterfly.y = flightFar.y + (flightClose.y - flightFar.y) * e;
             },
         },
         {
