@@ -1306,10 +1306,10 @@ function butterflyEvent() {
             x: dir > 0 ? -25 : W + 25,
             y: 200,
         },
-        // Koniec pomieszczenia — motylek najpierw przelatuje aż do dalszej
-        // krawędzi, zanim zawróci (patrz segment "butterfly-return" niżej).
+        // Punkt zawrócenia — NIE sama krawędź pomieszczenia (zbyt blisko
+        // ściany), tylko kawałek przed nią, żeby zawrót wyglądał naturalnie.
         flightFar = {
-            x: dir > 0 ? W - 20 : 20,
+            x: dir > 0 ? W * 0.74 : W * 0.26,
             y: 200,
         },
         // Okolice pyszczka pieska — tu motylek faktycznie podlatuje po
@@ -1347,16 +1347,18 @@ function butterflyEvent() {
             },
         },
         {
-            // Zawrócenie — motylek leci od dalszej krawędzi pomieszczenia
-            // z powrotem w okolice pyszczka pieska. Dopiero po dolocie tu
-            // zaczyna się właściwa animacja chwytania (niżej).
+            // Zawrócenie — motylek leci od punktu zawrotu z powrotem w
+            // okolice pyszczka pieska. Wolniej i z łagodnym "uniesieniem" w
+            // środku lotu (nie nurkuje od razu nisko) — dopiero po dolocie
+            // tutaj zaczyna się właściwa animacja chwytania (niżej).
             sheet: "a01",
             anim: 16,
-            time: 700,
+            time: 1500,
             onStart: () => (stage = "butterfly-return"),
             update: (p) => {
-                butterfly.x = flightFar.x + (snout.x - flightFar.x) * p;
-                butterfly.y = flightFar.y + (snout.y - flightFar.y) * p + Math.sin(p * Math.PI * 3) * 10;
+                const e = p * p * (3 - 2 * p); // smoothstep — łagodny start i koniec, bez nagłego nurkowania
+                butterfly.x = flightFar.x + (snout.x - flightFar.x) * e;
+                butterfly.y = flightFar.y + (snout.y - flightFar.y) * e - Math.sin(p * Math.PI) * 28;
             },
         },
         {
