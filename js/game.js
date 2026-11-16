@@ -570,27 +570,6 @@ function repeatPart(s, i, times = 1) {
     };
 }
 
-// Miski na jedzenie/wodę są namalowane na środku pomieszczenia — jeśli
-// pies stoi daleko od środka, niech najpierw podejdzie (obracając się w
-// stronę, w którą idzie), zamiast zaczynać stacjonarną animację w miejscu
-// (co wyglądało, jakby "cofał się" nienaturalnie w stronę miski).
-function walkToSpot(targetX = 0.5, threshold = 0.08) {
-    if (Math.abs(x - targetX) < threshold) return [];
-    const speed = 150; // px/s — spokojny marsz, nie bieg
-    return [
-        {
-            sheet: "a01",
-            anim: 6, // 07. Marsz
-            tempo: 200,
-            motion: "walk",
-            from: x,
-            to: targetX,
-            time: Math.max(280, (Math.abs(targetX - x) * W) / speed * 1000),
-            onStart: () => (stage = "walk-to-spot"),
-        },
-    ];
-}
-
 function activity(id) {
     if (!dirty()) {
         const play = id === "fun" || id === "den";
@@ -641,8 +620,8 @@ function activity(id) {
     phase = "activity";
     locks();
     let parts = [];
-    if (id === "food") parts = [...walkToSpot(), repeatPart("a01", 5)];
-    else if (id === "water") parts = [...walkToSpot(), repeatPart("a01", 2)];
+    if (id === "food") parts = [repeatPart("a01", 5)];
+    else if (id === "water") parts = [repeatPart("a01", 2)];
     else if (id === "brush") {
         const p = getPreset("a02", 21);
         if (numbers(p.intro).length)
@@ -823,7 +802,6 @@ function route(target, id = null, mode = "menu") {
         run = true, // zawsze bieg (anim 02. Bieg/sus), spacer usunięty
         speed = mode === "auto" ? 210 : 210,
         parts = [];
-    left = facing;
 
     function movement(a, b, onEnd) {
         return {
@@ -839,8 +817,28 @@ function route(target, id = null, mode = "menu") {
             onEnd,
         };
     }
+    let finalFacing = facing;
     if (!distance) {
-        if (Math.abs(x - 0.5) * W > 2) parts.push(movement(x, 0.5));
+        // Piesek już jest w tym pokoju. Jeśli stoi poza środkiem (gdzie są
+        // rysowane miski/aktywności), ma się obrócić w stronę środka i podejść
+        // tam spokojnym krokiem — kierunek liczony lokalnie (x vs 0.5), a nie
+        // z `dir`, który dla tego samego pokoju zawsze wychodzi "w prawo" i
+        // powodował nienaturalne cofanie się.
+        if (Math.abs(x - 0.5) * W > 2) {
+            const localFacing = x > 0.5; // trzeba iść w lewo -> patrzy w lewo
+            parts.push({
+                sheet: "a01",
+                anim: 6, // 07. Marsz
+                tempo: 200,
+                motion: "walk",
+                facing: localFacing,
+                from: x,
+                to: 0.5,
+                time: Math.max(220, ((Math.abs(x - 0.5) * W) / 150) * 1000),
+                onStart: () => (stage = "route-walk"),
+            });
+            finalFacing = localFacing;
+        } else finalFacing = left; // już na miejscu — nie zmieniaj obrotu bez powodu
     } else {
         let origin = x;
         for (let i = from; i !== to; i += dir) {
@@ -869,7 +867,7 @@ function route(target, id = null, mode = "menu") {
     parts.push({
         sheet: "a01",
         anim: 16,
-        facing,
+        facing: finalFacing,
         time: 220,
         onEnd: () => finishTravel(id),
     });
