@@ -1604,9 +1604,11 @@ function fetchChaseParts(land, impact) {
                 ball.x = fallStartX + (fromX - fallStartX) * fp;
                 ball.y = -160 * (1 - fp) * (1 - fp);
             } else if (t < FALL + BOUNCE) {
+                // Odbicie proporcjonalne do wysokości spadania — po 160px
+                // locie samo 26px podskoku wyglądało słabo/sztywno.
                 const bp = (t - FALL) / BOUNCE;
                 ball.x = fromX;
-                ball.y = -Math.abs(Math.sin(Math.PI * bp)) * 26;
+                ball.y = -Math.abs(Math.sin(Math.PI * bp)) * 42;
                 ball.spin += dir * 0.35;
             } else if (t < total) {
                 const rp = (t - FALL - BOUNCE) / ROLL;
@@ -1696,6 +1698,23 @@ function ballDraw() {
             stage === "ball-ready"
                 ? GROUND - 18 - h / 2 + ball.y
                 : GROUND + 10 + ball.y - h; // piłka leży na ziemi (10px poniżej linii chodzenia)
+
+    // Cień na ziemi — kurczy się i blednie gdy piłka jest wysoko, rośnie
+    // i ciemnieje w miarę zbliżania się do ziemi. Daje wyraźny punkt
+    // kontaktu w momencie lądowania, zamiast piłki "wisiącej w powietrzu".
+    if (stage !== "ball-ready") {
+        const lift = clamp(-ball.y / 160, 0, 1), // 0 = na ziemi, 1 = wysoko w powietrzu
+            shadowW = w * (1 - lift * 0.5),
+            shadowAlpha = 0.3 * (1 - lift * 0.75);
+        ctx.save();
+        ctx.globalAlpha = shadowAlpha;
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.ellipse(ballScreenX(), GROUND + 10, shadowW / 2, shadowW / 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
     ctx.drawImage(im, bx, by, w, h);
 
     // Animowana ramka zachęcająca do rzutu (pulsująca) — tylko podczas oczekiwania
