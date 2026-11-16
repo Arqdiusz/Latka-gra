@@ -1658,9 +1658,9 @@ function fetchChaseParts(land, impact) {
             // Opadanie + dwa gasnące odbicia (jak prawdziwa piłka), potem
             // krótkie, zwalniające dotoczenie podczas dobiegu psa.
             FALL = 460,
-            FALL_HEIGHT = 230,
+            FALL_HEIGHT = 196, // -15%
             BOUNCE1 = 200,
-            BOUNCE1_HEIGHT = 85,
+            BOUNCE1_HEIGHT = 60,
             BOUNCE2 = 150,
             BOUNCE2_HEIGHT = 34,
             WAIT_TOTAL = FALL + BOUNCE1 + BOUNCE2,
