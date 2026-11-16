@@ -1655,43 +1655,34 @@ function fetchChaseParts(land, impact) {
             // (ten sam kierunek co w rzucie) — żeby to wyglądało jak ciąg
             // tego samego łuku, a nie nowa, osobna animacja od środka pokoju.
             fallStartX = dir > 0 ? -0.08 : 1.08,
-            FALL = 520,
-            FALL_HEIGHT = 230, // wyżej niż poprzednio — mniej "płaski" wlot
-            BOUNCE = 220,
+            FALL = 560,
+            FALL_HEIGHT = 230,
             ROLL = 380;
 
         // Etap 1: pies jest niewidoczny (jeszcze nie wbiegł), piłka sama
-        // opada i odbija się od ziemi.
+        // opada — bez odrębnego odbicia. Łuk SPŁASZCZA SIĘ pod koniec
+        // (jak u szczytu/dołu paraboli), więc płynnie przechodzi w toczenie,
+        // zamiast uderzać w ziemię i podskakiwać.
         const wait = {
             sheet: "a01",
             anim: 15,
             facing: last.facing,
             from: last.from,
             to: last.from,
-            time: FALL + BOUNCE,
+            time: FALL,
             onStart: () => {
                 stage = "ball-land";
                 dogHidden = true;
             },
             update: (p) => {
-                const t = p * (FALL + BOUNCE);
-                if (t < FALL) {
-                    // Opadanie po łuku od krawędzi drzwi do fromX — ruch poziomy
-                    // ma stałą prędkość (jak w locie), a wysokość PRZYSPIESZA
-                    // w dół (prawdziwa grawitacja: wolno na starcie, szybko
-                    // tuż przed ziemią) — inaczej końcówka wygląda płasko.
-                    const fp = t / FALL;
-                    ball.room = land.room;
-                    ball.x = fallStartX + (fromX - fallStartX) * fp;
-                    ball.y = -FALL_HEIGHT * (1 - fp * fp);
-                    ball.spin += dir * 2.2;
-                } else {
-                    // Odbicie proporcjonalne do wysokości spadania.
-                    const bp = (t - FALL) / BOUNCE;
-                    ball.x = fromX;
-                    ball.y = -Math.abs(Math.sin(Math.PI * bp)) * (FALL_HEIGHT * 0.23);
-                    ball.spin += dir * 0.35;
-                }
+                // Opadanie po łuku od krawędzi drzwi do fromX — wysokość
+                // zwalnia pod koniec (ease-out), więc styczna przy ziemi
+                // jest prawie pozioma, jak przy naturalnym dotoczeniu.
+                const fp = p;
+                ball.room = land.room;
+                ball.x = fallStartX + (fromX - fallStartX) * fp;
+                ball.y = -FALL_HEIGHT * (1 - fp) * (1 - fp);
+                ball.spin += dir * 2.2;
             },
             onEnd: () => {
                 ball.x = fromX;
@@ -1707,8 +1698,9 @@ function fetchChaseParts(land, impact) {
             lastOnStart?.();
         };
 
-        // Etap 2: dopiero teraz pies rusza — piłka dotacza się do punktu
-        // lądowania w tempie własnego zegara, podczas gdy pies dobiega.
+        // Etap 2: dopiero teraz pies rusza — piłka DOTACZA SIĘ (bez
+        // podskakiwania, cały czas przy ziemi) do punktu lądowania, w
+        // tempie własnego zegara, podczas gdy pies dobiega.
         const scale = Math.min(1, last.time / ROLL);
         let rollStart = null;
         last.update = () => {
@@ -1717,7 +1709,7 @@ function fetchChaseParts(land, impact) {
             if (t < ROLL) {
                 const rp = t / ROLL;
                 ball.x = fromX + (toX - fromX) * rp;
-                ball.y = -Math.abs(Math.sin(Math.PI * rp)) * 6 * (1 - rp);
+                ball.y = 0;
                 ball.spin += dir * 0.25;
             } else {
                 ball.room = land.room;
