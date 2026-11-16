@@ -1519,15 +1519,6 @@ function ballThrow(dx, dy) {
                 ball.y = -140;
             },
         },
-        // Krótka chwila wyczekania — Łatka nie rusza w pogoń od razu po
-        // rzucie, tylko daje piłce "wylądować", zanim zacznie biec.
-        {
-            sheet: "a01",
-            anim: 18, // 19. Neutralne stanie — baza
-            facing: dir < 0,
-            time: 420,
-            onStart: () => (stage = "ball-wait"),
-        },
         // Pogoń + podniesienie + powrót. Upadek/odbicie/toczenie piłki
         // dogrywane są w segmencie, w którym Łatka wbiega do pokoju z piłką.
         ...fetchChaseParts(land, impact),
@@ -1582,13 +1573,14 @@ function fetchChaseParts(land, impact) {
     const fromDir = land.x > 0.5 ? -1 : 1; // pies wbiega z lewej (1) lub prawej (-1)
     const approach = clamp(land.x + fromDir * 0.12, 0.06, 0.94);
     const run = moveParts(land.room, approach, { label: "ball-chase" });
-    // Scenka upadku piłki (opadnięcie + jedno odbicie + toczenie do land)
-    // dogrywana jest w OSTATNIM etapie dobiegu — a więc dokładnie wtedy,
-    // gdy Łatka faktycznie wbiega do pokoju z piłką (tak jak motyl lecący,
-    // gdy piesek robi coś innego w butterflyEvent()). Czas scenki jest
-    // WŁASNY (oparty na zegarze gry), nie rozciągany/ściskany do długości
-    // samego dobiegu — inaczej toczenie wygląda nienaturalnie szybko na
-    // krótkich odcinkach.
+    // Piłka opada i odbija się DOPIERO gdy Łatka jest już w pokoju
+    // lądowania — ale pies na ten czas ZATRZYMUJE SIĘ przy wejściu
+    // i czeka (patrząc na piłkę), zamiast biec "przez" jeszcze
+    // spadającą piłkę. Dopiero gdy piłka dotknie ziemi, pies rusza
+    // (a resztkę toczenia piłki dogrywamy już podczas jego dobiegu —
+    // tak jak motyl lecący, gdy piesek robi coś innego w
+    // butterflyEvent()). Czasy scenek są WŁASNE (oparte na zegarze
+    // gry), nie rozciągane/ściskane do długości biegu.
     if (impact) {
         const last = run[run.length - 1],
             fromX = impact.x,
@@ -1600,33 +1592,54 @@ function fetchChaseParts(land, impact) {
             fallStartX = dir > 0 ? -0.08 : 1.08,
             FALL = 520,
             BOUNCE = 220,
-            ROLL = 380,
-            total = FALL + BOUNCE + ROLL,
-            // Jeśli sam dobieg jest krótszy niż scenka, ściskamy ją
-            // proporcjonalnie, żeby zdążyła się zakończyć na czas.
-            scale = Math.min(1, last.time / total);
-        let fallStart = null;
-        last.update = () => {
-            if (fallStart === null) fallStart = clock;
-            const t = (clock - fallStart) / scale;
-            if (t < FALL) {
-                // Opadanie po łuku od krawędzi drzwi do fromX — wysokość
-                // spada przyspieszając (ease-in), jak końcówka rzutu;
-                // piłka dalej się kręci, tak jak podczas lotu.
-                const fp = t / FALL;
-                ball.room = land.room;
-                ball.x = fallStartX + (fromX - fallStartX) * fp;
-                ball.y = -180 * (1 - fp) * (1 - fp);
-                ball.spin += dir * 2.2;
-            } else if (t < FALL + BOUNCE) {
-                // Odbicie proporcjonalne do wysokości spadania — po 160px
-                // locie samo 26px podskoku wyglądało słabo/sztywno.
-                const bp = (t - FALL) / BOUNCE;
+            ROLL = 380;
+
+        // Etap 1: pies stoi w miejscu wejścia (tam, gdzie i tak zaczynałby
+        // ostatni odcinek biegu) i czeka, aż piłka opadnie i odbije się.
+        const wait = {
+            sheet: "a01",
+            anim: 15, // 16. Patrzenie w górę / łapa — pies śledzi spadającą piłkę
+            facing: last.facing,
+            from: last.from,
+            to: last.from,
+            time: FALL + BOUNCE,
+            onStart: () => (stage = "ball-land"),
+            update: (p) => {
+                const t = p * (FALL + BOUNCE);
+                if (t < FALL) {
+                    // Opadanie po łuku od krawędzi drzwi do fromX — wysokość
+                    // spada przyspieszając (ease-in), jak końcówka rzutu;
+                    // piłka dalej się kręci, tak jak podczas lotu.
+                    const fp = t / FALL;
+                    ball.room = land.room;
+                    ball.x = fallStartX + (fromX - fallStartX) * fp;
+                    ball.y = -180 * (1 - fp) * (1 - fp);
+                    ball.spin += dir * 2.2;
+                } else {
+                    // Odbicie proporcjonalne do wysokości spadania — po 160px
+                    // locie samo 26px podskoku wyglądało słabo/sztywno.
+                    const bp = (t - FALL) / BOUNCE;
+                    ball.x = fromX;
+                    ball.y = -Math.abs(Math.sin(Math.PI * bp)) * 42;
+                    ball.spin += dir * 0.35;
+                }
+            },
+            onEnd: () => {
                 ball.x = fromX;
-                ball.y = -Math.abs(Math.sin(Math.PI * bp)) * 42;
-                ball.spin += dir * 0.35;
-            } else if (t < total) {
-                const rp = (t - FALL - BOUNCE) / ROLL;
+                ball.y = 0;
+            },
+        };
+        run.splice(run.length - 1, 0, wait);
+
+        // Etap 2: dopiero teraz pies rusza — piłka dotacza się do punktu
+        // lądowania w tempie własnego zegara, podczas gdy pies dobiega.
+        const scale = Math.min(1, last.time / ROLL);
+        let rollStart = null;
+        last.update = () => {
+            if (rollStart === null) rollStart = clock;
+            const t = (clock - rollStart) / scale;
+            if (t < ROLL) {
+                const rp = t / ROLL;
                 ball.x = fromX + (toX - fromX) * rp;
                 ball.y = -Math.abs(Math.sin(Math.PI * rp)) * 6 * (1 - rp);
                 ball.spin += dir * 0.25;
