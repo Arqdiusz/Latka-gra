@@ -1528,32 +1528,11 @@ function ballThrow(dx, dy) {
             },
             onEnd: () => (ball.y = 0),
         },
-        // Dotoczenie do właściwego miejsca — piłka jeszcze się rusza,
-        // gdy Łatka zaczyna biec w jej stronę.
-        ...(impact.room !== land.room || impact.x !== land.x
-            ? [
-                  {
-                      sheet: "a01",
-                      anim: 1,
-                      tempo: 180,
-                      facing: dir < 0,
-                      time: 380,
-                      onStart: () => (stage = "ball-roll"),
-                      update: (p) => {
-                          ball.x = impact.x + (land.x - impact.x) * p;
-                          ball.y = -Math.abs(Math.sin(Math.PI * p)) * 5 * (1 - p);
-                          ball.spin += dir * 0.3;
-                      },
-                      onEnd: () => {
-                          ball.room = land.room;
-                          ball.x = land.x;
-                          ball.y = 0;
-                      },
-                  },
-              ]
-            : []),
-        // Pogoń + podniesienie + powrót
-        ...fetchChaseParts(land),
+        // Pogoń + podniesienie + powrót. Jeśli piłka wylądowała kawałek
+        // przed właściwym miejscem (impact !== land), dotoczenie dzieje się
+        // RÓWNOCZEŚNIE z dobiegiem Łatki — tak jak motylek, który leci,
+        // podczas gdy piesek robi coś innego.
+        ...fetchChaseParts(land, impact.x !== land.x ? impact : null),
     ]);
 }
 
@@ -1593,7 +1572,7 @@ function moveParts(targetRoom, targetX, opts = {}) {
     return parts;
 }
 
-function fetchChaseParts(land) {
+function fetchChaseParts(land, impact) {
     const parts = [];
     // 1. Bieg do piłki — pies wbiega z bliższego końca pokoju i zatrzymuje
     //    się tuż przy piłce (która jest przy dalekim końcu).
@@ -1604,7 +1583,22 @@ function fetchChaseParts(land) {
     // żeby animacja chwytu miała więcej dystansu na "dosięgnięcie" piłki.
     const fromDir = land.x > 0.5 ? -1 : 1; // pies wbiega z lewej (1) lub prawej (-1)
     const approach = clamp(land.x + fromDir * 0.12, 0.06, 0.94);
-    parts.push(...moveParts(land.room, approach, { label: "ball-chase" }));
+    const run = moveParts(land.room, approach, { label: "ball-chase" });
+    // Jeśli piłka wylądowała trochę przed właściwym miejscem, dotoczenie do
+    // niego dokładamy do OSTATNIEGO etapu dobiegu — dzieje się równocześnie
+    // z bieganiem Łatki (tak jak motyl lecący, gdy piesek robi coś innego
+    // w butterflyEvent()), a nie w osobnym, sztywnym segmencie przed nim.
+    if (impact) {
+        const last = run[run.length - 1],
+            fromX = impact.x,
+            toX = land.x;
+        last.update = (p) => {
+            ball.x = fromX + (toX - fromX) * p;
+            ball.y = -Math.abs(Math.sin(Math.PI * p)) * 6 * (1 - p);
+            ball.spin += (toX > fromX ? 1 : -1) * 0.25;
+        };
+    }
+    parts.push(...run);
 
     // 2. Chwyt piłki — 24. Aport_001_chwyt_pilki (kończy się pozą z piłką w pysku,
     //    więc od razu można ruszać w drogę powrotną, bez dodatkowego postoju)
