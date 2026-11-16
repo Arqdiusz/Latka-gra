@@ -1519,6 +1519,15 @@ function ballThrow(dx, dy) {
                 ball.y = -140;
             },
         },
+        // Krótka chwila wyczekania — Łatka nie rusza w pogoń od razu po
+        // rzucie, tylko daje piłce "wylądować", zanim zacznie biec.
+        {
+            sheet: "a01",
+            anim: 18, // 19. Neutralne stanie — baza
+            facing: dir < 0,
+            time: 420,
+            onStart: () => (stage = "ball-wait"),
+        },
         // Pogoń + podniesienie + powrót. Upadek/odbicie/toczenie piłki
         // dogrywane są w segmencie, w którym Łatka wbiega do pokoju z piłką.
         ...fetchChaseParts(land, impact),
