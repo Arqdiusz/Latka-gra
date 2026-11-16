@@ -142,13 +142,15 @@ body {
     filter: grayscale(1);
 }
 
-/* Licznik złapanych baniek przy myciu — ikona + pasek postępu */
+/* Licznik złapanych baniek przy myciu — ikona + pasek postępu.
+   Teraz żyje w .bubbleFull (cały ekran), więc pozycja liczona od góry
+   całej gry, nie samej scenki. */
 .bubbleBadge {
     position: absolute;
     left: 50%;
-    top: 52px;
+    top: 14px;
     transform: translateX(-50%);
-    z-index: 5;
+    z-index: 2;
     width: 190px;
     display: flex;
     align-items: center;
@@ -255,26 +257,34 @@ body {
     background: #dde7d8;
 }
 
-/* "Zasłona" na cały ekran podczas mini-gry z bańkami — efekt wody
-   w kąpieli. Przepuszcza dotyk (łapanie baniek), zakrywa też wizualnie
-   przyciski sterowania. */
-.bubbleOverlay {
+/* Mini-gra z bańkami jako nakładka na CAŁY ekran gry (nagłówek +
+   scenka + dok z menu) — niebieska, półprzezroczysta "woda", a bańki
+   (rysowane na .bubbleCanvas) latają NAD nią, więc są w pełni widoczne. */
+.bubbleFull {
     position: absolute;
     inset: 0;
-    z-index: 8;
+    z-index: 15;
     background: linear-gradient(180deg, rgba(120, 200, 255, 0.4), rgba(30, 110, 190, 0.55));
-    pointer-events: none;
 }
 
-.bubbleOverlay[hidden] {
+.bubbleFull[hidden] {
     display: none;
+}
+
+.bubbleCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    touch-action: none;
 }
 
 .bubbleClose {
     position: absolute;
     right: 9px;
     top: 9px;
-    z-index: 9;
+    z-index: 2;
     width: 38px;
     height: 38px;
     border: 2px solid white;
@@ -288,10 +298,6 @@ body {
     display: grid;
     place-items: center;
     box-shadow: 0 3px 6px #0003;
-}
-
-.bubbleClose[hidden] {
-    display: none;
 }
 
 .roomTrack {

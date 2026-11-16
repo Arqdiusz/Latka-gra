@@ -77,7 +77,9 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v)),
     reduced = matchMedia("(prefers-reduced-motion:reduce)").matches,
     canvas = $("#sceneCanvas"),
     ctx = canvas.getContext("2d"),
-    rewardCtx = $(".card canvas").getContext("2d");
+    rewardCtx = $(".card canvas").getContext("2d"),
+    bubbleCanvas = $(".bubbleCanvas"),
+    bctx = bubbleCanvas.getContext("2d");
 let loaded = false,
     room = "living",
     x = 0.5,
@@ -448,14 +450,15 @@ function updateFetchUi() {
 // niebieska "zasłona" na całym ekranie (efekt kąpieli) z przyciskiem X.
 function updateBubbleUi() {
     const badge = $(".bubbleBadge"),
-        overlay = $(".bubbleOverlay"),
-        close = $(".bubbleClose");
+        full = $(".bubbleFull");
     if (!badge) return;
     const active = !!bubbleGame;
     badge.hidden = !active;
-    if (overlay) overlay.hidden = !active;
-    if (close) close.hidden = !active;
-    if (!active) return;
+    if (full) full.hidden = !active;
+    if (!active) {
+        bctx.clearRect(0, 0, W, H);
+        return;
+    }
     badge.querySelector("img").src = icons.bubbles;
     badge.querySelector(".bar i").style.width = clamp((bubbleGame.caught / bubbleGame.need) * 100, 0, 100) + "%";
 }
@@ -1157,14 +1160,10 @@ canvas.addEventListener("pointerdown", (e) => {
         id: e.pointerId,
         sx: e.clientX,
         sy: e.clientY,
-        kind: phase === "bubble-game" ? "bubble" : null,
+        kind: null,
         dog: petHit(p.x, p.y),
         poop: poopHit(p.x, p.y),
     };
-    if (gesture.kind === "bubble") {
-        // Łapanie baniek — cały ekran jest aktywny, trafienie liczy się od razu
-        bubbleGameHit(p.x, p.y);
-    }
     try {
         canvas.setPointerCapture(e.pointerId);
     } catch (_) {}
@@ -1172,12 +1171,6 @@ canvas.addEventListener("pointerdown", (e) => {
 canvas.addEventListener("pointermove", (e) => {
     const g = gesture;
     if (!g || g.id !== e.pointerId) return;
-    if (g.kind === "bubble") {
-        // Przeciąganie palcem po bańkach też je łapie — chaos jak w prawdziwym myciu
-        const p = pointerXY(e);
-        bubbleGameHit(p.x, p.y);
-        return;
-    }
     const dx = e.clientX - g.sx,
         dy = e.clientY - g.sy;
     if (!g.kind) {
@@ -1211,7 +1204,6 @@ function pointerEnd(e, cancel = false) {
         stopPetting();
         return;
     }
-    if (g.kind === "bubble") return;
     const dx = e.clientX - g.sx,
         dy = e.clientY - g.sy;
     if (g.kind === "throw") {
@@ -1867,10 +1859,13 @@ function ballDraw() {
 }
 
 // ── Mini-gra: łapanie baniek podczas mycia ──────────────────────
-// Cały ekran jest obszarem gry. Bańki (losowy kształt z dwóch
-// arkuszy — 40 wariantów, żeby było "chaotycznie") lecą w górę w
-// różnym tempie, delikatnie "pływając" na boki (nie po prostej
-// linii) i oddychając (spłaszczanie/rozszerzanie), żeby nie
+// Nakładka na CAŁY ekran gry (nagłówek + scenka + dok), własny
+// canvas (.bubbleCanvas) rysowany NAD niebieskim, półprzezroczystym
+// tłem (.bubbleFull, czysty CSS, bańki są więc w pełni widoczne nad
+// "wodą"). Bańki (losowy kształt z dwóch arkuszy — 40 wariantów, żeby
+// było "chaotycznie") lecą w górę w różnym tempie, delikatnie
+// "pływając" na boki (nie po prostej linii) i oddychając
+// (spłaszczanie/rozszerzanie + powolne rośnięcie/malenie), żeby nie
 // wyglądały jak sztywne obiekty. Tylko bańki z pulsującą białą
 // ramką liczą się do zadania (tak jak przy piłce w aporcie) — reszta
 // to "mydlane" fałszywki: złapanie ich nie daje punktu i pokazuje
@@ -1894,7 +1889,7 @@ function bubbleSpawn() {
         cell: cells.bubbles[Math.floor(Math.random() * cells.bubbles.length)],
         baseX,
         x: baseX,
-        y: SH + size,
+        y: H + size,
         size,
         vy: (fast ? 150 + Math.random() * 110 : 44 + Math.random() * 60), // część ucieka szybko
         wobbleAmp: 10 + Math.random() * 34, // żeby nie leciały po równej linii
@@ -1932,30 +1927,31 @@ function bubbleGameUpdate(dt) {
 
 function bubbleGameDraw() {
     if (!bubbleGame) return;
+    bctx.clearRect(0, 0, W, H); // przezroczyste — niebieskie tło .bubbleFull prześwieca pod bańkami
     const g = bubbleGame;
     for (const b of g.bubbles) {
         const t = (clock - b.born) / 1000,
             squish = Math.sin(t * b.squishFreq + b.squishPhase) * 0.05, // lekkie "oddychanie" kształtu
             pulse = 1 + Math.sin(t * b.pulseFreq + b.pulsePhase) * b.pulseAmp; // cała bańka rośnie/maleje
-        ctx.save();
-        ctx.translate(b.x, b.y);
-        ctx.scale(pulse * (1 + squish), pulse * (1 - squish));
-        ctx.drawImage(b.cell, -b.size / 2, -b.size / 2, b.size, b.size);
-        ctx.restore();
+        bctx.save();
+        bctx.translate(b.x, b.y);
+        bctx.scale(pulse * (1 + squish), pulse * (1 - squish));
+        bctx.drawImage(b.cell, -b.size / 2, -b.size / 2, b.size, b.size);
+        bctx.restore();
         if (b.good) {
             // Ta sama pulsująca ramka co przy piłce w aporcie — tu to bańki do złapania.
-            const pulse = 0.5 + 0.5 * Math.sin(clock / 180),
-                r = b.size / 2 + 5 + pulse * 6,
-                alpha = 0.45 + pulse * 0.5;
-            ctx.save();
-            ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
-            ctx.lineWidth = 2.5;
-            ctx.shadowColor = "rgba(255,255,255,0.7)";
-            ctx.shadowBlur = 6;
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
+            const ringPulse = 0.5 + 0.5 * Math.sin(clock / 180),
+                r = b.size / 2 + 5 + ringPulse * 6,
+                alpha = 0.45 + ringPulse * 0.5;
+            bctx.save();
+            bctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+            bctx.lineWidth = 2.5;
+            bctx.shadowColor = "rgba(255,255,255,0.7)";
+            bctx.shadowBlur = 6;
+            bctx.beginPath();
+            bctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+            bctx.stroke();
+            bctx.restore();
         }
     }
     for (const e of g.effects) {
@@ -1964,10 +1960,10 @@ function bubbleGameDraw() {
         const t = clamp((clock - e.born) / 500, 0, 1),
             size = 70 * (0.6 + t * 0.9),
             alpha = 1 - t;
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.drawImage(im, e.x - size / 2, e.y - size / 2, size, size);
-        ctx.restore();
+        bctx.save();
+        bctx.globalAlpha = alpha;
+        bctx.drawImage(im, e.x - size / 2, e.y - size / 2, size, size);
+        bctx.restore();
     }
 }
 
@@ -2013,6 +2009,41 @@ function bubbleStart() {
     startQueue([bubbleReadySegment()]);
     save();
 }
+
+// Dotyk/przeciąganie po całym .bubbleCanvas (cały ekran gry) —
+// niezależne od gestów głównego canvasu, bo nakładka żyje nad
+// nagłówkiem i dokiem, nie tylko nad scenką.
+function bubbleCanvasXY(e) {
+    const r = bubbleCanvas.getBoundingClientRect();
+    return {
+        x: ((e.clientX - r.left) / r.width) * W,
+        y: ((e.clientY - r.top) / r.height) * H,
+    };
+}
+let bubblePointerId = null;
+bubbleCanvas.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || phase !== "bubble-game") return;
+    bubblePointerId = e.pointerId;
+    const p = bubbleCanvasXY(e);
+    bubbleGameHit(p.x, p.y);
+    try {
+        bubbleCanvas.setPointerCapture(e.pointerId);
+    } catch (_) {}
+});
+bubbleCanvas.addEventListener("pointermove", (e) => {
+    if (bubblePointerId !== e.pointerId || phase !== "bubble-game") return;
+    const p = bubbleCanvasXY(e);
+    bubbleGameHit(p.x, p.y); // przeciąganie łapie kolejne bańki po drodze
+});
+function bubblePointerEnd(e) {
+    if (bubblePointerId !== e.pointerId) return;
+    bubblePointerId = null;
+    try {
+        if (bubbleCanvas.hasPointerCapture(e.pointerId)) bubbleCanvas.releasePointerCapture(e.pointerId);
+    } catch (_) {}
+}
+bubbleCanvas.addEventListener("pointerup", bubblePointerEnd);
+bubbleCanvas.addEventListener("pointercancel", bubblePointerEnd);
 
 function bubbleGameFinish(rewarded) {
     const got = rewarded && bubbleGame && bubbleGame.caught > 0;
