@@ -155,6 +155,7 @@ body {
 
 .fetchEnd,
 .fetchRestart {
+    position: relative;
     width: 56px;
     height: 56px;
     border: 3px solid white;
@@ -163,6 +164,7 @@ body {
     cursor: pointer;
     display: grid;
     place-items: center;
+    overflow: hidden;
 }
 
 .fetchEnd {
@@ -173,8 +175,17 @@ body {
     background: #6fb37a;
 }
 
+/* Kołowy licznik czasu do auto-zakończenia — ciemna tarcza rośnie
+   zgodnie z ruchem wskazówek zegara, aż w pełni zakryje przycisk. */
+.fetchRestart__ring {
+    position: absolute;
+    inset: 0;
+    background: conic-gradient(#0000006b calc(var(--pct, 0) * 1%), transparent 0);
+}
+
 .fetchEnd svg,
 .fetchRestart svg {
+    position: relative;
     width: 28px;
     height: 28px;
 }

@@ -441,6 +441,24 @@ function updateFetchUi() {
     });
 }
 
+// Kołowy "licznik czasu" na zielonym przycisku resetu — ciemna tarcza
+// zakrywa go stopniowo (0 = pełny zielony, 100 = w pełni zakryty),
+// dokładnie w tempie 8-sekundowego odliczania z ballReadySegment().
+function restartRing(pct) {
+    const ring = $(".fetchRestart__ring");
+    if (ring) ring.style.setProperty("--pct", Math.max(0, Math.min(100, pct)));
+}
+
+// Odnowienie rzutów — wspólne dla przycisku i dla samej próby rzutu
+// po wyczerpaniu piłek (patrz ballThrow()).
+function renewFetch() {
+    if (!fetchGame) return;
+    fetchGame.throws = 0;
+    fetchGame.hinted = false;
+    say("fun", 2200);
+    startQueue([ballReadySegment()]);
+}
+
 $(".fetchEnd").onclick = () => {
     if (phase !== "ball-ready" || !fetchGame) return;
     fetchFinish(fetchGame.throws > 0);
@@ -448,11 +466,7 @@ $(".fetchEnd").onclick = () => {
 
 $(".fetchRestart").onclick = () => {
     if (phase !== "ball-ready" || !fetchGame || fetchGame.throws < BALL_THROWS) return;
-    fetchGame.throws = 0;
-    fetchGame.hinted = false;
-    fetchGame.limitNotified = false;
-    say("fun", 2200);
-    startQueue([ballReadySegment()]);
+    renewFetch();
 };
 
 function updateArrows() {
@@ -1459,9 +1473,11 @@ function ballReadySegment() {
             phase = "ball-ready";
             stage = "ball-ready";
             if (fetchGame) fetchGame.hinted = outOfThrows;
+            restartRing(0);
             locks();
         },
         update: (p) => {
+            if (outOfThrows) restartRing(p * 100);
             if (fetchGame && !fetchGame.hinted && p * waitTime > BALL_HINT_AFTER) {
                 fetchGame.hinted = true;
                 say("fun", 2600);
@@ -1504,12 +1520,9 @@ function fetchFinish(rewarded) {
 function ballThrow(dx, dy) {
     if (phase !== "ball-ready" || !ball || !fetchGame) return;
     if (fetchGame.throws >= BALL_THROWS) {
-        // Piłki się skończyły — Łatka tylko merda ogonem, czekając,
-        // aż dziecko zakończy zabawę przyciskiem.
-        if (!fetchGame.limitNotified) {
-            fetchGame.limitNotified = true;
-            say("heart", 2200);
-        }
+        // Piłki się skończyły — chęć rzutu (przesunięcie palcem) liczy się
+        // jako odnowienie zabawy, tak samo jak zielony przycisk resetu.
+        renewFetch();
         return;
     }
     const swipe = dx / (scale || 1),
