@@ -1798,7 +1798,10 @@ function bubbleDraw(dt) {
 function draw(dt) {
     ctx.clearRect(0, 0, W, SH);
     ctx.imageSmoothingEnabled = false;
-    groundShadow(x * W, -jumpY / 35, 100, 0.24);
+    // Mniejszy i dużo bardziej przezroczysty niż u piłki — sprite psa jest
+    // rysowany pod kątem/perspektywą, więc duża, wyraźna elipsa "odkleja
+    // się" od sylwetki na którymś końcu. Subtelny akcent wystarczy.
+    groundShadow(x * W, -jumpY / 35, 70, 0.1);
     drawDog(ctx);
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
     if (butterfly?.visible) {
