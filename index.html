@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.4.16</title>
-        <link rel="stylesheet" href="css/style.css?v=26" />
+        <title>Łatka v0.5.0</title>
+        <link rel="stylesheet" href="css/style.css?v=27" />
     </head>
 
     <body>
@@ -15,6 +15,10 @@
                 <canvas id="sceneCanvas" width="384" height="550"></canvas>
                 <div class="roomBadge"><img alt="" /></div>
                 <div class="heartBadge" aria-label="Samopoczucie Łatki"><img alt="Serce" /><div class="bar"><i></i></div></div>
+                <div class="throwsBadge" hidden aria-hidden="true"><img alt="" /><img alt="" /><img alt="" /></div>
+                <button class="fetchEnd" hidden aria-label="Zakończ zabawę z piłką">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13l5 5L20 6" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                </button>
                 <button class="full" aria-label="Pełny ekran">⛶</button
                 ><button class="arrow prev" aria-label="Poprzednie pomieszczenie">‹</button
                 ><button class="arrow next" aria-label="Następne pomieszczenie">›</button
@@ -38,7 +42,7 @@
         </main>
         <div class="rotate"><span>📱 ↻</span>Obróć urządzenie do pionu.<small>Gra jest wstrzymana.</small></div>
         <div class="toast" hidden role="status"></div>
-        <script src="js/arc-carousel.js?v=26"></script>
-        <script src="js/game.js?v=26"></script>
+        <script src="js/arc-carousel.js?v=27"></script>
+        <script src="js/game.js?v=27"></script>
     </body>
 </html>

@@ -417,7 +417,30 @@ function locks() {
     document.querySelectorAll(".arrow").forEach((b) => (b.disabled = !casual()));
     $(".petAccess").disabled = !canPet();
     updateArrows();
+    updateFetchUi();
 }
+
+// Sygnalizacja rzutów (3 piłeczki) + przycisk końca zabawy — tylko
+// podczas aportu, bez tekstu (dzieci 3+ jeszcze nie czytają).
+function updateFetchUi() {
+    const badge = $(".throwsBadge"),
+        endBtn = $(".fetchEnd");
+    if (!badge || !endBtn) return;
+    const active = !!fetchGame;
+    badge.hidden = !active;
+    endBtn.hidden = !active || phase !== "ball-ready";
+    if (!active) return;
+    const src = images.ball0?.src;
+    badge.querySelectorAll("img").forEach((img, i) => {
+        if (src) img.src = src;
+        img.classList.toggle("used", i < fetchGame.throws);
+    });
+}
+
+$(".fetchEnd").onclick = () => {
+    if (phase !== "ball-ready" || !fetchGame) return;
+    fetchFinish(fetchGame.throws > 0);
+};
 
 function updateArrows() {
     const n = order.indexOf(room);
@@ -1315,7 +1338,7 @@ function butterflyEvent() {
    Dziecko rzuca piłkę gestem, Łatka biegnie po nią (również do
    sąsiedniego pokoju), podnosi ją i przynosi z powrotem.
    ═══════════════════════════════════════════════════════════════ */
-const BALL_THROWS = 1, // ile rzutów do nagrody
+const BALL_THROWS = 3, // ile rzutów do nagrody
     BALL_HINT_AFTER = 7000, // po ilu ms bez rzutu Łatka zachęca
     BALL_GIVE_UP = 30000; // po ilu ms bez rzutu zabawa się kończy
 let ball = null, // { room, x, y, spin, carried }
@@ -1410,18 +1433,23 @@ function fetchStart() {
 // przy łapach już w sprite). Osobna piłka rysowana przez ballDraw() z pulsującą
 // ramką dokładnie nad tą z animacji — dzięki temu wygląda jak jeden obiekt.
 function ballReadySegment() {
+    // Gdy piłki się skończyły, nie czekamy pełnych 30s w bezczynności —
+    // Łatka po chwili sama kładzie się spokojnie (dziecko może zakończyć
+    // szybciej przyciskiem ✓).
+    const outOfThrows = !!fetchGame && fetchGame.throws >= BALL_THROWS,
+        waitTime = outOfThrows ? 8000 : BALL_GIVE_UP;
     return {
         sheet: "a02",
         anim: 24, // 25. Aport_002_warowanie
-        time: BALL_GIVE_UP,
+        time: waitTime,
         onStart: () => {
             phase = "ball-ready";
             stage = "ball-ready";
-            if (fetchGame) fetchGame.hinted = false;
+            if (fetchGame) fetchGame.hinted = outOfThrows;
             locks();
         },
         update: (p) => {
-            if (fetchGame && !fetchGame.hinted && p * BALL_GIVE_UP > BALL_HINT_AFTER) {
+            if (fetchGame && !fetchGame.hinted && p * waitTime > BALL_HINT_AFTER) {
                 fetchGame.hinted = true;
                 say("fun", 2600);
                 toast("Przesuń palcem — Łatka czeka na rzut!");
@@ -1462,6 +1490,15 @@ function fetchFinish(rewarded) {
 // w butterflyEvent().
 function ballThrow(dx, dy) {
     if (phase !== "ball-ready" || !ball || !fetchGame) return;
+    if (fetchGame.throws >= BALL_THROWS) {
+        // Piłki się skończyły — Łatka tylko merda ogonem, czekając,
+        // aż dziecko zakończy zabawę przyciskiem.
+        if (!fetchGame.limitNotified) {
+            fetchGame.limitNotified = true;
+            say("heart", 2200);
+        }
+        return;
+    }
     const swipe = dx / (scale || 1),
         dir = Math.abs(swipe) < 10 ? (left ? -1 : 1) : swipe < 0 ? -1 : 1,
         power = clamp(Math.abs(swipe) / W, 0.18, 1),
@@ -1708,8 +1745,10 @@ function ballDropPart() {
             ball.y = 0;
             changeNeeds({ fun: 5, water: -2, sleep: -1 });
             save();
-            if (fetchGame.throws >= BALL_THROWS) fetchFinish(true);
-            else queue = [ballReadySegment()];
+            // Zawsze z powrotem w pozę warowania — nawet po ostatnim rzucie.
+            // Zabawa kończy się dopiero przyciskiem końca albo (po dłuższej
+            // chwili bez rzutu) automatycznie, w ballReadySegment().
+            queue = [ballReadySegment()];
         },
     };
 }

@@ -110,6 +110,70 @@ body {
     background: #fffaf4;
 }
 
+/* Sygnalizacja rzutów w aporcie — 3 piłeczki, bez tekstu */
+.throwsBadge {
+    position: absolute;
+    left: 50%;
+    top: 52px;
+    transform: translateX(-50%);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #fff9;
+    border-radius: 20px;
+    pointer-events: none;
+}
+
+.throwsBadge[hidden] {
+    display: none;
+}
+
+.throwsBadge img {
+    width: 26px;
+    height: 26px;
+    image-rendering: pixelated;
+    transition: opacity 0.3s, filter 0.3s;
+}
+
+.throwsBadge img.used {
+    opacity: 0.3;
+    filter: grayscale(1);
+}
+
+/* Przycisk końca zabawy — duży, wizualny "ptaszek", bez tekstu */
+.fetchEnd {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    z-index: 6;
+    width: 56px;
+    height: 56px;
+    border: 3px solid white;
+    border-radius: 50%;
+    background: #6fb37a;
+    box-shadow: 0 3px 6px #0003;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+}
+
+.fetchEnd svg {
+    width: 28px;
+    height: 28px;
+}
+
+.fetchEnd:focus-visible {
+    outline: 3px solid #9674ab;
+    outline-offset: 2px;
+}
+
+.fetchEnd[hidden] {
+    display: none;
+}
+
 .scene {
     position: relative;
     overflow: hidden;
