@@ -1656,6 +1656,7 @@ function fetchChaseParts(land, impact) {
             // tego samego łuku, a nie nowa, osobna animacja od środka pokoju.
             fallStartX = dir > 0 ? -0.08 : 1.08,
             FALL = 520,
+            FALL_HEIGHT = 230, // wyżej niż poprzednio — mniej "płaski" wlot
             BOUNCE = 220,
             ROLL = 380;
 
@@ -1675,20 +1676,20 @@ function fetchChaseParts(land, impact) {
             update: (p) => {
                 const t = p * (FALL + BOUNCE);
                 if (t < FALL) {
-                    // Opadanie po łuku od krawędzi drzwi do fromX — wysokość
-                    // spada przyspieszając (ease-in), jak końcówka rzutu;
-                    // piłka dalej się kręci, tak jak podczas lotu.
+                    // Opadanie po łuku od krawędzi drzwi do fromX — ruch poziomy
+                    // ma stałą prędkość (jak w locie), a wysokość PRZYSPIESZA
+                    // w dół (prawdziwa grawitacja: wolno na starcie, szybko
+                    // tuż przed ziemią) — inaczej końcówka wygląda płasko.
                     const fp = t / FALL;
                     ball.room = land.room;
                     ball.x = fallStartX + (fromX - fallStartX) * fp;
-                    ball.y = -180 * (1 - fp) * (1 - fp);
+                    ball.y = -FALL_HEIGHT * (1 - fp * fp);
                     ball.spin += dir * 2.2;
                 } else {
-                    // Odbicie proporcjonalne do wysokości spadania — po 160px
-                    // locie samo 26px podskoku wyglądało słabo/sztywno.
+                    // Odbicie proporcjonalne do wysokości spadania.
                     const bp = (t - FALL) / BOUNCE;
                     ball.x = fromX;
-                    ball.y = -Math.abs(Math.sin(Math.PI * bp)) * 42;
+                    ball.y = -Math.abs(Math.sin(Math.PI * bp)) * (FALL_HEIGHT * 0.23);
                     ball.spin += dir * 0.35;
                 }
             },
