@@ -1183,11 +1183,6 @@ function pointerEnd(e, cancel = false) {
         if (!cancel) ballThrow(dx, dy);
         return;
     }
-    if (phase === "ball-ready" && !cancel && !g.kind) {
-        // Samo stuknięcie w ekran też rzuca — krótki rzut przed siebie
-        ballThrow(0, 0);
-        return;
-    }
     if (g.kind === "swipe") {
         if (!cancel && Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
             setOffset(0);
@@ -1555,8 +1550,9 @@ function ballThrow(dx, dy) {
     bubble = null;
     locks();
 
-    // Mocniejszy rzut = szybszy i wyższy łuk
-    const flightTime = clamp(620 - power * 260, 340, 620),
+    // Mocniejszy rzut = szybszy i wyższy łuk — trochę wolniej niż wcześniej,
+    // żeby tempo pasowało do opadania w drugim pokoju (FALL w fetchChaseParts).
+    const flightTime = clamp(760 - power * 260, 460, 760),
         arc = 130 + power * 120;
 
     startQueue([
