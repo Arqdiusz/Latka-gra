@@ -1511,7 +1511,15 @@ function ambientEdgePoint(nearX, nearY) {
         ? { x: -AMBIENT_SIZE, y: nearY } // z lewej
         : side === 1
           ? { x: W + AMBIENT_SIZE, y: nearY } // z prawej
-          : { x: nearX, y: AMBIENT_MARGIN_TOP - AMBIENT_SIZE }; // z góry
+          : {
+                // Z góry — ale nie dokładnie znad celu: punkt startowy (albo
+                // docelowy przy wylocie) jest przesunięty losowo w bok, żeby
+                // odcinek nie był idealnie pionowy (wtedy nawet z wygięciem
+                // prostopadłym z ambientSetupFlight() wyglądał jak sztywna
+                // linia prosto w dół — sam ruch nie miał żadnego "na ukos").
+                x: clamp(nearX + (Math.random() * 2 - 1) * 90, AMBIENT_MARGIN_X, W - AMBIENT_MARGIN_X),
+                y: AMBIENT_MARGIN_TOP - AMBIENT_SIZE,
+            }; // z góry
 }
 
 // Przygotowuje odcinek lotu wlot/wylot (from -> to) tak, by nie był sztywną
