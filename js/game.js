@@ -131,6 +131,11 @@ let loaded = false,
     // wychodzi/rozgląda się/chowa (patrz moleTeaserSpawn/Update/Draw/Hit).
     moleTeaser = null,
     nextMoleSpawn = 0,
+    // Piach zostawiony po schowaniu się kreta — trzeba go kliknąć, żeby
+    // posprzątać (patrz moleDirtRect/Hit/cleanMoleDirt). Dopóki leży, nowy
+    // kopiec się nie pojawia — w świecie gry jest zawsze tylko jedno "coś"
+    // związane z kretem: albo żywy kopiec, albo piach po nim.
+    moleDirt = null,
     // Motylek nakładany na klatki a02 oznaczone zielonym znacznikiem
     // (#00ff43) podczas pogoni/łapania w butterflyEvent() — patrz
     // catchMarker (wykrywane w boot()) i catchMarkerPos().
@@ -165,6 +170,7 @@ try {
                         x: 0.3,
                     }
                   : null;
+        moleDirt = s.moleDirt && order.includes(s.moleDirt.room) ? s.moleDirt : null;
         if (sleeping) room = "living";
         if (poop?.room === room) sleeping = false;
     }
@@ -276,7 +282,7 @@ function updateNeeds(seconds) {
 function save() {
     if (!loaded) return;
     try {
-        localStorage.setItem(KEY, JSON.stringify({ room, sleeping, left, poop }));
+        localStorage.setItem(KEY, JSON.stringify({ room, sleeping, left, poop, moleDirt }));
     } catch (e) {}
     saveNeeds();
 }
@@ -369,6 +375,7 @@ function setRoom(r) {
     nextAmbientSpawn = clock + 2000 + Math.random() * 4000;
     moleTeaser = null;
     nextMoleSpawn = clock + 2500 + Math.random() * 4500;
+    updateMoleDirtAccess();
     buildRooms();
     setOffset(0);
     const key = {
@@ -1071,7 +1078,7 @@ function poopRect() {
     }
     return {
         x: clamp((poop?.x || 0.3) * W, 22, W - 22) - w / 2 + offset,
-        y: GROUND + 24 - h,
+        y: GROUND + 34 - h,
         w,
         h,
     };
@@ -1206,6 +1213,7 @@ canvas.addEventListener("pointerdown", (e) => {
         kind: null,
         dog: petHit(p.x, p.y),
         poop: poopHit(p.x, p.y),
+        moleDirt: moleDirtHit(p.x, p.y),
         butterfly: phase !== "butterfly" ? ambientHit(p.x, p.y) : null,
         mole: casual() ? moleTeaserHit(p.x, p.y) : null,
     };
@@ -1268,6 +1276,7 @@ function pointerEnd(e, cancel = false) {
     if (!g.kind && Math.hypot(dx, dy) <= 12) {
         const p = pointerXY(e);
         if (g.poop && poopHit(p.x, p.y)) cleanPoop();
+        else if (g.moleDirt && moleDirtHit(p.x, p.y)) cleanMoleDirt();
         else if (g.dog && petHit(p.x, p.y)) react();
         else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientFlee(g.butterfly);
         else if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
@@ -1742,12 +1751,13 @@ function ambientDraw() {
    (patrz moleStart() w js/minigame-mole.js); w pozostałych pokojach
    ogrodu (garden/yard) samo się chowa, bez startu gry.
    ═══════════════════════════════════════════════════════════════ */
-const MOLE_TEASER_SIZE = 90,
+const MOLE_TEASER_SIZE = 84,
     MOLE_TEASER_HIT_PAD = 18, // trochę większy obszar trafienia — łatwiej dla małego dziecka
     MOLE_TEASER_MARGIN_X = 50,
-    // Dolny pas sceny — kopiec zawsze "w ziemi", nie wyżej niż pies stoi.
-    MOLE_TEASER_Y_MIN = 350,
-    MOLE_TEASER_Y_MAX = 420,
+    // Trzy stałe "linie" w ziemi, zdecydowanie niżej niż łapy psa (GROUND=425)
+    // — kopiec zawsze wychodzi na jednej z nich (nigdy wyżej, nigdy pomiędzy),
+    // dokładnie tam, gdzie wskazują trzy poziome linie z referencji.
+    MOLE_TEASER_Y_LINES = [460, 484, 508],
     MOLE_TEASER_FRAME_MS = 110, // tempo klatki przy wyłanianiu/chowaniu zapowiedzi
     MOLE_TEASER_HOLD = 1800; // jak długo stoi w pełni na wierzchu, zanim sam się schowa
 
@@ -1756,9 +1766,10 @@ function moleTeaserDuration(presetIdx) {
 }
 
 function moleTeaserSpawn() {
+    const line = MOLE_TEASER_Y_LINES[Math.floor(Math.random() * MOLE_TEASER_Y_LINES.length)];
     moleTeaser = {
         x: MOLE_TEASER_MARGIN_X + Math.random() * (W - MOLE_TEASER_MARGIN_X * 2),
-        y: MOLE_TEASER_Y_MIN + Math.random() * (MOLE_TEASER_Y_MAX - MOLE_TEASER_Y_MIN),
+        y: line,
         state: "emerging",
         stateStart: clock,
     };
@@ -1770,7 +1781,9 @@ function moleTeaserUpdate() {
         return;
     }
     if (!moleTeaser) {
-        if (clock >= nextMoleSpawn) moleTeaserSpawn();
+        // Dopóki leży piach po poprzednim krecie, nowy się nie pojawia —
+        // najpierw trzeba go posprzątać (patrz cleanMoleDirt()).
+        if (!moleDirt && clock >= nextMoleSpawn) moleTeaserSpawn();
         return;
     }
     const m = moleTeaser;
@@ -1786,8 +1799,12 @@ function moleTeaserUpdate() {
         }
     } else if (m.state === "retreating") {
         if (clock - m.stateStart >= moleTeaserDuration(3)) {
+            // Kret schował się do końca — zostaje po nim piach, który trzeba
+            // kliknąć, żeby posprzątać (patrz moleDirtRect/Hit/cleanMoleDirt).
+            moleDirt = { room, x: m.x / W, y: m.y };
+            updateMoleDirtAccess();
+            save();
             moleTeaser = null;
-            nextMoleSpawn = clock + 9000 + Math.random() * 9000;
         }
     }
 }
@@ -1836,6 +1853,59 @@ function moleTeaserDraw() {
         cell = fn ? cells.kret[fn - 1] : null;
     if (!cell) return;
     ctx.drawImage(cell, moleTeaser.x - MOLE_TEASER_SIZE / 2, moleTeaser.y - MOLE_TEASER_SIZE / 2, MOLE_TEASER_SIZE, MOLE_TEASER_SIZE);
+}
+
+// Piach po krecie — ten sam mechanizm co kupka (patrz poopRect()/poopHit()/
+// cleanPoop() wyżej): leży w świecie gry, trzeba go kliknąć, żeby zniknął.
+// Trzyma pozycję względem swojego pokoju (jak kupka), więc widać go też z
+// sąsiedniego pokoju podczas przesuwania planszy.
+function moleDirtRect() {
+    const w = MOLE_TEASER_SIZE,
+        h = MOLE_TEASER_SIZE;
+    let offset = 0;
+    if (moleDirt) {
+        const diff = order.indexOf(moleDirt.room) - order.indexOf(room);
+        offset = diff * W + roomOffset;
+    }
+    return {
+        x: clamp((moleDirt?.x || 0.5) * W, 22, W - 22) - w / 2 + offset,
+        y: (moleDirt?.y || MOLE_TEASER_Y_LINES[0]) - h / 2,
+        w,
+        h,
+    };
+}
+
+function moleDirtHit(px, py) {
+    if (!moleDirt) return false;
+    const r = moleDirtRect();
+    return px > r.x - 10 && px < r.x + r.w + 10 && py > r.y - 10 && py < r.y + r.h + 10;
+}
+
+function updateMoleDirtAccess() {
+    const btn = $(".moleDirtAccess");
+    if (btn) btn.hidden = !(moleDirt && moleDirt.room === room);
+}
+
+function cleanMoleDirt() {
+    if (!casual() || !moleDirt) return;
+    moleDirt = null;
+    changeNeeds({ clean: 2 });
+    updateMoleDirtAccess();
+    say("star", 1600);
+    // Dopiero teraz zaczyna się odliczanie do kolejnego kreta.
+    nextMoleSpawn = clock + 6000 + Math.random() * 9000;
+    save();
+    toast("Piach posprzątany.");
+}
+$(".moleDirtAccess").onclick = cleanMoleDirt;
+
+function moleDirtDraw() {
+    if (!moleDirt || !cells.kret.length) return;
+    if (Math.abs(order.indexOf(moleDirt.room) - order.indexOf(room)) > 1) return;
+    const cell = cells.kret[0]; // "01. Pusty kopiec" — sama grafika kopca, piach bez kreta
+    if (!cell) return;
+    const r = moleDirtRect();
+    ctx.drawImage(cell, r.x, r.y, r.w, r.h);
 }
 
 // Zwraca aktualną klatkę (canvas) wybranego koloru motylka z motyle-new.png
@@ -1958,6 +2028,7 @@ function draw(dt) {
         const r = poopRect();
         ctx.drawImage(images.poop, r.x, r.y, r.w, r.h);
     }
+    moleDirtDraw();
     bubbleDraw(dt);
     bubbleGameDraw();
     moleGameDraw();
@@ -2272,6 +2343,8 @@ window.gameTest = {
         heart: heart(),
         poop,
         dirty: !!dirty(),
+        moleTeaser,
+        moleDirt,
         blockedActivity,
         scale,
         orientationPaused,
@@ -2303,6 +2376,9 @@ window.gameTest = {
     head: headPosition,
     poopRect,
     clean: cleanPoop,
+    moleDirtRect,
+    cleanMoleDirt,
+    moleTeaserSpawn,
     advance: (n) => (clock += n),
     forceVariant: (v) => (forcedVariant = v),
     select: (id, animate = false) =>
@@ -2343,6 +2419,16 @@ window.gameTest = {
     clearPoop: () => {
         poop = null;
         updatePoopAccess();
+        save();
+    },
+    putMoleDirt: (r, pos = 0.5, line = 0) => {
+        moleDirt = { room: r, x: pos, y: MOLE_TEASER_Y_LINES[line] };
+        updateMoleDirtAccess();
+        save();
+    },
+    clearMoleDirt: () => {
+        moleDirt = null;
+        updateMoleDirtAccess();
         save();
     },
 };
@@ -2391,5 +2477,10 @@ $(".devWake").onclick = () => {
 $(".devClean").onclick = () => {
     poop = null;
     updatePoopAccess();
+    save();
+};
+$(".devCleanMole").onclick = () => {
+    moleDirt = null;
+    updateMoleDirtAccess();
     save();
 };
