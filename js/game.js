@@ -1647,7 +1647,7 @@ function ambientDraw() {
             // Zwykły lot trzepocze 2x szybciej niż bazowa wartość z presetu;
             // spłoszony (ucieczka) — 3x szybciej, dla jeszcze większego
             // wrażenia paniki, obok samego zygzakowatego toru lotu.
-            ms = b.state === "fleeing" ? preset.ms / 5 : preset.ms / 3,
+            ms = b.state === "fleeing" ? preset.ms / 3 : preset.ms / 2,
             seqFrames = numbers(preset.seq),
             fi = Math.floor((clock - b.spawnedAt) / ms) % seqFrames.length,
             frameNum = seqFrames[fi],
