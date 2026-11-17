@@ -375,18 +375,19 @@ body {
 /* Pasek postępu — 10 główek kreta (duże, czytelne — gra dla dzieci 3+).
    Złapany kret przygasza swoją główkę; nieumiejętne/spóźnione trafienie
    przywraca jedną z powrotem (patrz .caught). */
+/* Siatka 6×2 (6 w górnym rzędzie, 4 w dolnym — zostają wyśrodkowane dzięki
+   justify-content na gridzie) zamiast jednego, zawijanego rzędu. */
 .moleBadge {
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
     justify-content: center;
-    flex-wrap: wrap;
-    gap: 6px;
+    gap: 6px 8px;
     margin-top: 8px;
 }
 
 .moleBadge img {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     image-rendering: pixelated;
     transition: opacity 0.25s, transform 0.25s, filter 0.25s;
 }

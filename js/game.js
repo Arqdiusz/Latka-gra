@@ -1801,12 +1801,16 @@ function moleTeaserHit(px, py) {
     return Math.hypot(px - moleTeaser.x, py - moleTeaser.y) <= r ? moleTeaser : null;
 }
 
-// Kliknięcie zapowiedzi — zawsze chowa kreta od razu; na Łące dodatkowo
-// startuje pełną mini-grę (moleStart() z js/minigame-mole.js).
+// Kliknięcie zapowiedzi — zawsze chowa kreta (animacją cofania klatek, nie
+// znika od razu — patrz state="retreating" niżej, dokańcza ją
+// moleTeaserUpdate()); na Łące dodatkowo startuje pełną mini-grę
+// (moleTryStart() z js/minigame-mole.js).
 function moleTeaserTap(m) {
     const launch = room === "meadow";
-    moleTeaser = null;
-    nextMoleSpawn = clock + 4000 + Math.random() * 5000;
+    if (m.state !== "retreating") {
+        m.state = "retreating";
+        m.stateStart = clock;
+    }
     if (launch) moleTryStart();
 }
 
@@ -1930,8 +1934,10 @@ function draw(dt) {
     // więc nie wchodzą mu na grzbiet ani pod brzuch. Schowane na czas
     // interaktywnego butterflyEvent(), żeby się wizualnie nie gryzły.
     if (phase !== "butterfly") ambientDraw();
-    if (phase !== "butterfly") moleTeaserDraw();
     if (!dogHidden) drawDog(ctx);
+    // Kret-zapowiedź PRZED pieskiem (na pierwszym planie) — w
+    // przeciwieństwie do motylków-tła, które lecą za nim.
+    if (phase !== "butterfly") moleTeaserDraw();
     catchOverlayDraw();
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
     if (butterfly?.visible) {
