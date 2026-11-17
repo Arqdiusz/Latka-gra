@@ -1324,6 +1324,12 @@ function butterflyEvent() {
     locks();
     const dir = x < 0.5 ? 1 : -1;
     left = dir < 0;
+    // Realna wysokość pyszczka pieska w jego aktualnej pozie (a01/16 —
+    // ustawione przez interrupt() tuż wyżej), a nie wartość "na oko". Dzięki
+    // temu dolot przed chwytaniem (flightClose) i powrotny odlot po nim
+    // (patrz dalej, butterfly.from) kończą się/zaczynają tuż przy nosie, bez
+    // luki między lotem motylka a animacją chwytania.
+    const noseY = headPosition().y + 10;
     const flightStart = {
             x: dir > 0 ? -25 : W + 25,
             y: 200,
@@ -1334,10 +1340,12 @@ function butterflyEvent() {
             y: 200,
         },
         // Kawałek bliżej pieska, żeby zawrócenie nie zostawiało motylka za
-        // daleko od miejsca, gdzie zaraz zacznie się animacja chwytania.
+        // daleko od miejsca, gdzie zaraz zacznie się animacja chwytania —
+        // i tuż przy jego nosie (noseY), żeby nie było luki na starcie
+        // animacji chwytania.
         flightClose = {
             x: x * W + dir * 70,
-            y: 170,
+            y: noseY,
         },
         // Ten sam "płynący" ruch co przy wlocie na mapę (stałe tempo +
         // łagodne kołysanie), żeby dolot po zawróceniu nie wyglądał jak
@@ -1432,9 +1440,13 @@ function butterflyEvent() {
                 // odwrócony na `-dir` (lot w stronę pieska) i nic go nie
                 // zwracało z powrotem — stąd leciał "plecami do przodu".
                 butterfly.dir = dir;
+                // Ten sam punkt odniesienia (noseY) co przy dolocie przed
+                // chwytaniem — ten segment też ustawia pieska na a01/16, więc
+                // to ta sama poza, a motylek "wraca do siebie" tuż przy
+                // nosie, zamiast odlatywać zza dużo wyższej pozycji.
                 butterfly.from = {
                     x: x * W + dir * 82,
-                    y: GROUND - 240,
+                    y: noseY,
                 };
             },
             update: (p) => {
