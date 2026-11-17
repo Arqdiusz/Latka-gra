@@ -1413,6 +1413,11 @@ function butterflyEvent() {
             onStart: () => {
                 stage = "butterfly-leave";
                 butterfly.visible = true;
+                // Odlot leci w stronę `dir` (ta sama strona, z której motylek
+                // pierwotnie wleciał), ale po podejściu do pieska sprite był
+                // odwrócony na `-dir` (lot w stronę pieska) i nic go nie
+                // zwracało z powrotem — stąd leciał "plecami do przodu".
+                butterfly.dir = dir;
                 butterfly.from = {
                     x: x * W + dir * 82,
                     y: GROUND - 240,
