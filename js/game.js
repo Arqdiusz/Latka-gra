@@ -1458,8 +1458,6 @@ function ambientRandomParams() {
         amp2: 0.35 + Math.random() * 0.4,
         seed1: Math.random() * Math.PI * 2,
         seed2: Math.random() * Math.PI * 2,
-        // Lekko różne rozmiary — wrażenie głębi, bez przesady.
-        sizeScale: 0.75 + Math.random() * 0.5,
     };
 }
 
@@ -1590,12 +1588,11 @@ function ambientDraw() {
             frameNum = seqFrames[fi],
             cell = cells.motyle[frameNum - 1];
         if (!cell) continue;
-        const size = AMBIENT_SIZE * b.sizeScale,
-            dx = b.state === "wander" ? Math.cos(b.heading) : b.to.x - b.from.x;
+        const dx = b.state === "wander" ? Math.cos(b.heading) : b.to.x - b.from.x;
         ctx.save();
         ctx.translate(b.x, b.y);
         if (dx < 0) ctx.scale(-1, 1);
-        ctx.drawImage(cell, -size / 2, -size / 2, size, size);
+        ctx.drawImage(cell, -AMBIENT_SIZE / 2, -AMBIENT_SIZE / 2, AMBIENT_SIZE, AMBIENT_SIZE);
         ctx.restore();
     }
 }
