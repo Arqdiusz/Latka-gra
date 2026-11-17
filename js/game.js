@@ -1228,7 +1228,7 @@ function pointerEnd(e, cancel = false) {
         const p = pointerXY(e);
         if (g.poop && poopHit(p.x, p.y)) cleanPoop();
         else if (g.dog && petHit(p.x, p.y)) react();
-        else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientCatch(g.butterfly);
+        else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientFlee(g.butterfly);
     }
 }
 canvas.addEventListener("pointerup", (e) => pointerEnd(e));
@@ -1445,10 +1445,11 @@ function butterflyEvent() {
 // "teleportuje się" na środek), chwilę pofruwa "jak pijany" (kierunek
 // dryfuje przez dwie nałożone fale o różnych okresach, z miękkim
 // zawracaniem od krawędzi obszaru lotu) i wylatuje tą samą drogą — chyba że
-// gracz go kliknie/dotknie. Kolor wylosowany na starcie trzyma przez cały
-// lot. Kliknięcie na razie tylko odgrywa krótki efekt (pstryk + zniknięcie)
-// — docelowo stąd ma startować osobna mini-gra (do zaprojektowania później,
-// patrz ambientCatch()).
+// gracz go spłoszy kliknięciem/dotknięciem: wtedy ucieka od razu, szybciej
+// i chaotycznym zygzakiem (patrz ambientFlee()), zamiast spokojnego wylotu.
+// Kolor wylosowany na starcie trzyma przez cały lot. Na razie spłoszenie to
+// tylko wizualny placeholder — docelowo stąd ma startować osobna mini-gra
+// (do zaprojektowania później).
 const AMBIENT_MAX = 1,
     // Realny rozmiar — rysujemy klatkę 1:1 (kafelek arkusza motyle-new.png
     // to natywne 64×64). Duży i widoczny, bo to już nie tylko dekoracja w
@@ -1457,7 +1458,6 @@ const AMBIENT_MAX = 1,
     // Obszar trafienia trochę większy niż sama grafika — łatwiej trafić
     // palcem na telefonie.
     AMBIENT_HIT_PAD = 12,
-    AMBIENT_CATCH_MS = 380,
     AMBIENT_MARGIN_X = 44,
     AMBIENT_MARGIN_TOP = 44,
     // Pas lotu to wyłącznie górne tło (niebo/dach budy), nad pieskiem —
@@ -1496,7 +1496,7 @@ function ambientEdgePoint(nearX, nearY) {
 // widoczne). Znika dokładnie w obu końcach (sin(0)=sin(kπ)=0), więc start i
 // koniec zostają dokładnie w from/to, a sama krzywizna i strona wygięcia są
 // losowe za każdym razem.
-function ambientSetupFlight(b, state, from, to, speed) {
+function ambientSetupFlight(b, state, from, to, speed, bounceCycles = 1) {
     b.state = state;
     b.phaseStart = clock;
     b.from = from;
@@ -1508,7 +1508,23 @@ function ambientSetupFlight(b, state, from, to, speed) {
     b.perpY = dx / len;
     b.bounceAmp = 10 + Math.random() * 10; // 10–20px wygięcia
     b.bounceSign = Math.random() < 0.5 ? 1 : -1;
+    // Liczba "zygzaków" na całej trasie — 1 dla spokojnego wlotu/wylotu,
+    // więcej dla spłoszonej, chaotycznej ucieczki (patrz ambientFlee()).
+    b.bounceCycles = bounceCycles;
     b.phaseDuration = Math.max(400, (len / speed) * 1000);
+}
+
+// Gracz kliknął/dotknął motylka — płoszymy go: zamiast spokojnego wylotu
+// rusza od razu w chaotyczną, szybką ucieczkę z kilkoma zygzakami,
+// dowolną z trzech krawędzi (jak zwykły wylot, ale bez "wander" pomiędzy).
+// Na razie to tylko wizualny placeholder — docelowo stąd ma startować
+// osobna mini-gra (do zaprojektowania później).
+function ambientFlee(b) {
+    if (!b || b.state === "fleeing") return;
+    const to = ambientEdgePoint(b.x, b.y),
+        // Znacznie szybciej niż spokojny lot — spłoszony motylek.
+        speed = (b.speed || 50) * 2.6;
+    ambientSetupFlight(b, "fleeing", { x: b.x, y: b.y }, to, speed, 3 + Math.floor(Math.random() * 3));
 }
 
 function ambientSpawn() {
@@ -1539,23 +1555,14 @@ function ambientUpdate(dt) {
     const dtS = dt / 1000;
     for (let i = ambient.length - 1; i >= 0; i--) {
         const b = ambient[i];
-        if (b.state === "caught") {
-            // Pozycja zamrożona w miejscu kliknięcia — ambientDraw() robi z
-            // niej krótki "pstryk" (powiększenie + zanik), patrz niżej.
-            if (clock - b.phaseStart >= AMBIENT_CATCH_MS) {
-                ambient.splice(i, 1);
-                // Krócej niż zwykły, losowy odlot — to była reakcja na
-                // interakcję gracza, nie przypadkowe zniknięcie z pola widzenia.
-                nextAmbientSpawn = clock + 4000 + Math.random() * 5000;
-            }
-            continue;
-        }
-        if (b.state === "entering" || b.state === "leaving") {
+        if (b.state === "entering" || b.state === "leaving" || b.state === "fleeing") {
             const p = clamp((clock - b.phaseStart) / b.phaseDuration, 0, 1),
                 // Wygięcie prostopadłe do odcinka from->to (działa tak samo
                 // dla wlotu z boku jak i z góry) — znika dokładnie w obu
-                // końcach, więc start/koniec zostają w from/to.
-                bounce = Math.sin(p * Math.PI * 2) * b.bounceAmp * b.bounceSign;
+                // końcach, więc start/koniec zostają w from/to. Przy
+                // spłoszeniu bounceCycles>1 daje kilka zygzaków zamiast
+                // jednego łagodnego łuku.
+                bounce = Math.sin(p * Math.PI * 2 * b.bounceCycles) * b.bounceAmp * b.bounceSign;
             b.x = b.from.x + (b.to.x - b.from.x) * p + b.perpX * bounce;
             b.y = b.from.y + (b.to.y - b.from.y) * p + b.perpY * bounce;
             if (p >= 1) {
@@ -1568,9 +1575,13 @@ function ambientUpdate(dt) {
                     b.leaveAt = clock + 5000 + Math.random() * 6000;
                 } else {
                     ambient.splice(i, 1);
-                    // Kolejny motylek dopiero po dłuższej, losowej przerwie —
-                    // to ma być rzadki akcent w tle, a nie stały ruch.
-                    nextAmbientSpawn = clock + 9000 + Math.random() * 10000;
+                    // Po spłoszeniu kolejny motylek wraca szybciej niż po
+                    // zwykłym, przypadkowym odlocie — to była reakcja na
+                    // interakcję gracza.
+                    nextAmbientSpawn =
+                        b.state === "fleeing"
+                            ? clock + 4000 + Math.random() * 5000
+                            : clock + 9000 + Math.random() * 10000;
                 }
             }
             continue;
@@ -1607,46 +1618,31 @@ function ambientUpdate(dt) {
     }
 }
 
-// Czy (px,py) trafia w widocznego, jeszcze niezłapanego motylka-tło —
+// Czy (px,py) trafia w widocznego, jeszcze niespłoszonego motylka-tło —
 // używane przy tapnięciu/kliknięciu na scenę (patrz pointerdown/pointerEnd).
 function ambientHit(px, py) {
     for (const b of ambient) {
-        if (b.state === "caught") continue;
+        if (b.state === "fleeing") continue;
         if (Math.hypot(px - b.x, py - b.y) <= AMBIENT_SIZE / 2 + AMBIENT_HIT_PAD) return b;
     }
     return null;
-}
-
-// Gracz kliknął/dotknął motylka-tło. Na razie to tylko wizualny placeholder
-// (pstryk + zniknięcie) — "wstępny zarys" przyszłej mini-gry, która ma się
-// tu docelowo odpalać zamiast tego krótkiego efektu.
-function ambientCatch(b) {
-    if (!b || b.state === "caught") return;
-    b.state = "caught";
-    b.phaseStart = clock;
-    // TODO (przyszła mini-gra): tu będzie start właściwej interakcji,
-    // zamiast samego zniknięcia motylka.
 }
 
 function ambientDraw() {
     if (!images.motyle || !ambient.length) return;
     for (const b of ambient) {
         const preset = CFG.motyle.presets[b.colorIndex],
+            // Spłoszony motylek trzepocze wyraźnie szybciej — dodatkowy
+            // akcent chaosu/paniki obok samego zygzakowatego toru lotu.
+            ms = b.state === "fleeing" ? preset.ms / 2 : preset.ms,
             seqFrames = numbers(preset.seq),
-            fi = Math.floor((clock - b.spawnedAt) / preset.ms) % seqFrames.length,
+            fi = Math.floor((clock - b.spawnedAt) / ms) % seqFrames.length,
             frameNum = seqFrames[fi],
             cell = cells.motyle[frameNum - 1];
         if (!cell) continue;
-        const caught = b.state === "caught",
-            dx = b.state === "wander" ? Math.cos(b.heading) : caught ? 1 : b.to.x - b.from.x;
+        const dx = b.state === "wander" ? Math.cos(b.heading) : b.to.x - b.from.x;
         ctx.save();
         ctx.translate(b.x, b.y);
-        if (caught) {
-            // Krótki "pstryk": lekkie powiększenie + zanikanie do zera.
-            const p = clamp((clock - b.phaseStart) / AMBIENT_CATCH_MS, 0, 1);
-            ctx.globalAlpha = 1 - p;
-            ctx.scale(1 + p * 0.8, 1 + p * 0.8);
-        }
         if (dx < 0) ctx.scale(-1, 1);
         ctx.drawImage(cell, -AMBIENT_SIZE / 2, -AMBIENT_SIZE / 2, AMBIENT_SIZE, AMBIENT_SIZE);
         ctx.restore();
