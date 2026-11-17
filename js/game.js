@@ -1440,7 +1440,7 @@ function butterflyEvent() {
 // z miękkim zawracaniem od krawędzi obszaru lotu) i wylatuje tą samą drogą.
 // Kolor wylosowany na starcie trzyma przez cały lot.
 const AMBIENT_MAX = 2,
-    AMBIENT_SIZE = 60, // 2x — żeby pixel art był wyraźnie widoczny
+    AMBIENT_SIZE = 30, // małe — mają być wyraźnie w głębi tła, nie na planie psa
     AMBIENT_MARGIN_X = 44,
     AMBIENT_MARGIN_TOP = 44,
     // Pas lotu to wyłącznie górne tło (niebo/dach budy), nad pieskiem —
@@ -1475,6 +1475,27 @@ function ambientEdgePoint(nearX, nearY) {
           : { x: nearX, y: AMBIENT_MARGIN_TOP - AMBIENT_SIZE }; // z góry
 }
 
+// Przygotowuje odcinek lotu wlot/wylot (from -> to) tak, by nie był sztywną
+// linią prostą: dokłada wygięcie PROSTOPADLE do kierunku odcinka (a nie np.
+// zawsze "w pionie", co dla pionowego wlotu z góry w ogóle by nie było
+// widoczne). Znika dokładnie w obu końcach (sin(0)=sin(kπ)=0), więc start i
+// koniec zostają dokładnie w from/to, a sama krzywizna i strona wygięcia są
+// losowe za każdym razem.
+function ambientSetupFlight(b, state, from, to, speed) {
+    b.state = state;
+    b.phaseStart = clock;
+    b.from = from;
+    b.to = to;
+    const dx = to.x - from.x,
+        dy = to.y - from.y,
+        len = Math.hypot(dx, dy) || 1;
+    b.perpX = -dy / len;
+    b.perpY = dx / len;
+    b.bounceAmp = 10 + Math.random() * 10; // 10–20px wygięcia
+    b.bounceSign = Math.random() < 0.5 ? 1 : -1;
+    b.phaseDuration = Math.max(400, (len / speed) * 1000);
+}
+
 function ambientSpawn() {
     const colorIndex = Math.floor(Math.random() * CFG.motyle.presets.length),
         // Punkt docelowy wlotu — gdzieś w środku pasa lotu.
@@ -1483,23 +1504,12 @@ function ambientSpawn() {
         // Wlot z boku albo z góry — nigdy "znikąd" na środku ekranu.
         from = ambientEdgePoint(settleX, settleY),
         params = ambientRandomParams(),
-        dist = Math.hypot(settleX - from.x, settleY - from.y);
-    ambient.push({
-        colorIndex,
-        state: "entering",
-        phaseStart: clock,
-        // Wlot leci z tą samą prędkością co późniejszy spokojny "wander"
-        // (params.speed) — stały czas niezależny od odległości wyglądał
-        // nienaturalnie szybko przy dłuższych dolotach (np. z góry).
-        phaseDuration: Math.max(400, (dist / params.speed) * 1000),
-        from,
-        to: { x: settleX, y: settleY },
-        x: from.x,
-        y: from.y,
-        spawnedAt: clock,
-        ...params,
-        leaveAt: Infinity, // ustawiane dopiero, gdy realnie zacznie "wander" (patrz niżej)
-    });
+        b = { colorIndex, x: from.x, y: from.y, spawnedAt: clock, leaveAt: Infinity, ...params };
+    // Wlot leci z tą samą prędkością co późniejszy spokojny "wander"
+    // (params.speed) — stały czas niezależny od odległości wyglądał
+    // nienaturalnie szybko przy dłuższych dolotach (np. z góry).
+    ambientSetupFlight(b, "entering", from, { x: settleX, y: settleY }, params.speed);
+    ambient.push(b);
 }
 
 function ambientUpdate(dt) {
@@ -1515,9 +1525,13 @@ function ambientUpdate(dt) {
     for (let i = ambient.length - 1; i >= 0; i--) {
         const b = ambient[i];
         if (b.state === "entering" || b.state === "leaving") {
-            const p = clamp((clock - b.phaseStart) / b.phaseDuration, 0, 1);
-            b.x = b.from.x + (b.to.x - b.from.x) * p;
-            b.y = b.from.y + (b.to.y - b.from.y) * p + Math.sin(p * Math.PI * 3) * 6;
+            const p = clamp((clock - b.phaseStart) / b.phaseDuration, 0, 1),
+                // Wygięcie prostopadłe do odcinka from->to (działa tak samo
+                // dla wlotu z boku jak i z góry) — znika dokładnie w obu
+                // końcach, więc start/koniec zostają w from/to.
+                bounce = Math.sin(p * Math.PI * 2) * b.bounceAmp * b.bounceSign;
+            b.x = b.from.x + (b.to.x - b.from.x) * p + b.perpX * bounce;
+            b.y = b.from.y + (b.to.y - b.from.y) * p + b.perpY * bounce;
             if (p >= 1) {
                 if (b.state === "entering") {
                     b.state = "wander";
@@ -1537,15 +1551,11 @@ function ambientUpdate(dt) {
         }
         // state === "wander"
         if (clock >= b.leaveAt) {
-            b.state = "leaving";
-            b.phaseStart = clock;
-            b.from = { x: b.x, y: b.y };
             // Strona wylotu losowana od nowa — niezależnie od strony, z
-            // której wleciał, i od tego, dokąd akurat dryfował.
-            b.to = ambientEdgePoint(b.x, b.y);
-            // Tak samo jak przy wlocie — ta sama prędkość co "wander",
-            // żeby wylot nie przyspieszał nienaturalnie.
-            b.phaseDuration = Math.max(400, (Math.hypot(b.to.x - b.x, b.to.y - b.y) / b.speed) * 1000);
+            // której wleciał, i od tego, dokąd akurat dryfował. Ta sama
+            // prędkość co "wander" (b.speed), żeby wylot nie przyspieszał
+            // nienaturalnie.
+            ambientSetupFlight(b, "leaving", { x: b.x, y: b.y }, ambientEdgePoint(b.x, b.y), b.speed);
             continue;
         }
         const t = (clock - b.spawnedAt) / 1000;
