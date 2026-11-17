@@ -15,6 +15,10 @@ const
         a01: [],
         a02: [],
     },
+    // Pozycje zielonych znaczników (#00ff43) wykrytych w klatkach a02 —
+    // klucz to numer klatki (1-based), wartość to {x,y} w lokalnych
+    // pikselach tej klatki. Wypełniane w boot(), patrz extractMarker().
+    catchMarker = {},
     icons = {},
     W = 384,
     H = 768,
@@ -122,6 +126,11 @@ let loaded = false,
     butterfly = null,
     ambient = [], // motylki-tło w ogrodzie/podwórku — dekoracyjne, patrz ambientSpawn/ambientUpdate/ambientDraw
     nextAmbientSpawn = 0,
+    // Motylek nakładany na klatki a02 oznaczone zielonym znacznikiem
+    // (#00ff43) podczas pogoni/łapania w butterflyEvent() — patrz
+    // catchMarker (wykrywane w boot()) i catchMarkerPos().
+    catchButterflyColor = 0,
+    catchButterflyStart = 0,
     bubble = null,
     bubblePos = null,
     scale = 1,
@@ -1008,6 +1017,21 @@ function headPosition() {
     };
 }
 
+// Jak headPosition(), ale dla zielonego znacznika (#00ff43) wykrytego na
+// aktualnie wyświetlanej klatce a02 — albo null, jeśli ta klatka żadnego
+// znacznika nie ma (patrz catchMarker / extractMarker() w boot()). Ta sama
+// matematyka transformacji co w drawDog(), więc nakładka zawsze trzyma się
+// dokładnie wskazanego miejsca, niezależnie od obrotu/skali danej klatki.
+function catchMarkerPos() {
+    const g = geometry(),
+        m = catchMarker[g.f];
+    if (!m) return null;
+    return {
+        x: x * W + (left ? -1 : 1) * ((m.x - g.w / 2) * g.s + g.o.x * BASE),
+        y: GROUND + jumpY + (m.y - g.g) * g.s + g.o.y * BASE,
+    };
+}
+
 function petHit(px, py) {
     if (!loaded) return false;
     const g = geometry();
@@ -1418,6 +1442,12 @@ function butterflyEvent() {
             onStart: () => {
                 stage = "butterfly-chase";
                 butterfly.visible = false;
+                // Kolor losowany przy każdym evencie — tak, żeby z czasem
+                // "każdy kolor brał udział" (nie zawsze ten sam). Rysowany
+                // w draw() przez catchMarkerPos() na klatkach a02
+                // oznaczonych zielonym znacznikiem (patrz extractMarker()).
+                catchButterflyColor = Math.floor(Math.random() * CFG.motyle.presets.length);
+                catchButterflyStart = clock;
             },
         },
         {
@@ -1487,7 +1517,11 @@ const AMBIENT_MAX = 1,
     // Pas lotu to wyłącznie górne tło (niebo/dach budy), nad pieskiem —
     // z grubsza wysokość strzałek nawigacji (top:44% z 550px scenki, tu
     // z małym zapasem), żeby nigdy nie wchodziły na psa.
-    AMBIENT_ZONE_BOTTOM = 232;
+    AMBIENT_ZONE_BOTTOM = 232,
+    // Rozmiar motylka nakładanego na pieska podczas pogoni/łapania (patrz
+    // catchOverlayDraw()) — niezależny od AMBIENT_SIZE, bo to inna skala
+    // kompozycji (blisko pyszczka, nie "duży akcent w tle").
+    CATCH_BUTTERFLY_SIZE = 40;
 
 function ambientRandomParams() {
     return {
@@ -1682,6 +1716,31 @@ function ambientDraw() {
     }
 }
 
+// Motylek "przyklejony" do pieska podczas pogoni/łapania (stage
+// butterfly-chase / butterfly-nose w butterflyEvent()) — pozycja i aktualna
+// klatka a02 same decydują, czy i gdzie go narysować (patrz catchMarkerPos()
+// / catchMarker, wypełniane w boot() przez extractMarker()). Jeśli klatka
+// nie ma znacznika (np. przejściowa poza nim), nic się nie rysuje — bez
+// tego "skakania" nakładki.
+function catchOverlayDraw() {
+    if ((stage !== "butterfly-chase" && stage !== "butterfly-nose") || !images.motyle) return;
+    const pos = catchMarkerPos();
+    if (!pos) return;
+    const preset = CFG.motyle.presets[catchButterflyColor],
+        // To samo tempo co zwykły lot motylków-tło (2x szybciej niż baza).
+        ms = preset.ms / 2,
+        seqFrames = numbers(preset.seq),
+        fi = Math.floor((clock - catchButterflyStart) / ms) % seqFrames.length,
+        frameNum = seqFrames[fi],
+        cell = cells.motyle[frameNum - 1];
+    if (!cell) return;
+    ctx.save();
+    ctx.translate(pos.x, pos.y);
+    if (left) ctx.scale(-1, 1);
+    ctx.drawImage(cell, -CATCH_BUTTERFLY_SIZE / 2, -CATCH_BUTTERFLY_SIZE / 2, CATCH_BUTTERFLY_SIZE, CATCH_BUTTERFLY_SIZE);
+    ctx.restore();
+}
+
 function iconDraw(c, key, x, y, w, h = w) {
     if (key === "poop") {
         const ratio = images.poop.width / images.poop.height;
@@ -1746,6 +1805,7 @@ function draw(dt) {
     // interaktywnego butterflyEvent(), żeby się wizualnie nie gryzły.
     if (phase !== "butterfly") ambientDraw();
     if (!dogHidden) drawDog(ctx);
+    catchOverlayDraw();
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
     if (butterfly?.visible) {
         // O 33% większy niż bazowe 44px (44 * 1.33 ≈ 58.5).
@@ -1828,6 +1888,39 @@ async function loadImage(src) {
     });
     return im;
 }
+
+// Szuka w danych klatki (RGBA, w×h) nasyconego zielonego znacznika #00ff43
+// wstawionego ręcznie przez artystę jako miejsce na motylka — wartość ta
+// jest bardzo odległa od naturalnej palety pieska (brązy/beże/różowe/biel/
+// czerń), więc szeroka tolerancja jest bezpieczna. Zwraca środek
+// bounding-boxa w lokalnych pikselach klatki (albo null, jeśli nic nie
+// znaleziono) i PO DRODZE czyści dopasowane piksele (alpha=0), żeby
+// znacznik nie był widoczny w finalnej grafice.
+function extractMarker(data, w, h) {
+    let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity,
+        found = false;
+    for (let py = 0; py < h; py++) {
+        for (let px = 0; px < w; px++) {
+            const idx = (py * w + px) * 4,
+                r = data[idx],
+                g = data[idx + 1],
+                b = data[idx + 2],
+                a = data[idx + 3];
+            if (a > 100 && r < 60 && g > 180 && b < 110) {
+                found = true;
+                if (px < minX) minX = px;
+                if (px > maxX) maxX = px;
+                if (py < minY) minY = py;
+                if (py > maxY) maxY = py;
+                data[idx + 3] = 0;
+            }
+        }
+    }
+    return found ? { x: (minX + maxX + 1) / 2, y: (minY + maxY + 1) / 2 } : null;
+}
 async function boot() {
     // Załaduj konfigurację z osobnego pliku
     // cache:"no-cache" — przeglądarka zawsze sprawdza, czy plik się zmienił,
@@ -1900,6 +1993,18 @@ async function boot() {
             c.height = h;
             const cx = c.getContext("2d");
             cx.drawImage(im, (f % 6) * w, Math.floor(f / 6) * h, w, h, 0, 0, w, h);
+            if (key === "a02") {
+                // Klatki biorące udział w butterflyEvent() mają wstawiony
+                // zielony znacznik (#00ff43) w miejscu, gdzie ma się
+                // pojawić motylek — wykrywamy go, zapamiętujemy środek
+                // i usuwamy z finalnej grafiki (patrz catchMarkerPos()).
+                const imgData = cx.getImageData(0, 0, w, h),
+                    marker = extractMarker(imgData.data, w, h);
+                if (marker) {
+                    catchMarker[f + 1] = marker;
+                    cx.putImageData(imgData, 0, 0);
+                }
+            }
             cells[key].push(c);
             if (key !== "ui") pixels[key].push(cx.getImageData(0, 0, w, h).data);
         }
