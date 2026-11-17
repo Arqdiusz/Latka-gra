@@ -300,18 +300,120 @@ body {
     box-shadow: 0 3px 6px #0003;
 }
 
-/* Nakładka mini-gry "Kret w ogrodzie" na CAŁY ekran gry (nagłówek +
-   scenka + dok) — ziemista, półprzezroczysta "gleba", krety (rysowane na
-   .moleCanvas) wyskakują NAD nią. Ten sam układ co .bubbleFull. */
+/* Mini-gra "Kret w ogrodzie" — wygląda jak OSOBNE, nieprzezroczyste okno
+   (nie nakładka na scenę, jak przy myciu), zamknięciu własnym nagłówkiem
+   (patrz .moleHeader) — zgodnie z referencyjnym stylem użytkownika
+   (ekran "Kretowisko" z innej jego gry). */
 .moleFull {
     position: absolute;
     inset: 0;
     z-index: 15;
-    background: linear-gradient(180deg, rgba(196, 160, 104, 0.32), rgba(96, 66, 36, 0.52));
+    background: #dcead0;
+    display: flex;
+    flex-direction: column;
 }
 
 .moleFull[hidden] {
     display: none;
+}
+
+.moleHeader {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px 10px;
+    background: #c7e0ad;
+}
+
+.moleBack {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: #6f9a52;
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 2px 5px #0002;
+}
+
+.moleTitle strong {
+    display: block;
+    font-size: 19px;
+    color: #3c5a28;
+}
+
+.moleTitle span {
+    display: block;
+    font-size: 12px;
+    color: #5c7a46;
+}
+
+.moleProgressCard {
+    flex: none;
+    margin: 10px 16px 0;
+    padding: 10px 16px 12px;
+    background: #fffdf3;
+    border-radius: 18px;
+    box-shadow: 0 2px 6px #0002;
+    text-align: center;
+}
+
+.moleCount {
+    font-size: 30px;
+    font-weight: 800;
+    color: #4b6a33;
+    line-height: 1.1;
+}
+
+/* Pasek postępu — 10 główek kreta (duże, czytelne — gra dla dzieci 3+).
+   Złapany kret przygasza swoją główkę; nieumiejętne/spóźnione trafienie
+   przywraca jedną z powrotem (patrz .caught). */
+.moleBadge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.moleBadge img {
+    width: 28px;
+    height: 28px;
+    image-rendering: pixelated;
+    transition: opacity 0.25s, transform 0.25s, filter 0.25s;
+}
+
+.moleBadge img.caught {
+    opacity: 0.25;
+    filter: grayscale(1);
+    transform: scale(0.82);
+}
+
+.moleMsg {
+    flex: none;
+    text-align: center;
+    margin: 10px 16px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #3c5a28;
+}
+
+.moleBoard {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    margin: 10px 16px 16px;
+    border-radius: 22px;
+    overflow: hidden;
+    background: #bcd6a0;
+    box-shadow: inset 0 0 0 4px #a8c98c;
 }
 
 .moleCanvas {
@@ -323,57 +425,83 @@ body {
     touch-action: none;
 }
 
-/* Pasek postępu — 10 główek kreta; złapany kret "chowa" swoją główkę,
-   nieumiejętne trafienie przywraca jedną z powrotem (patrz .caught). */
-.moleBadge {
+/* Pop-up z instrukcją przed startem — ten sam wzorzec co .ballPopup. */
+.molePopup {
     position: absolute;
-    left: 50%;
-    top: 14px;
-    transform: translateX(-50%);
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 10px;
-    background: #fff9;
-    border-radius: 18px;
-    pointer-events: none;
+    inset: 0;
+    background: #3b2e3c38;
+    z-index: 25;
+    display: grid;
+    place-items: center;
+    padding: 20px;
 }
 
-.moleBadge[hidden] {
+.molePopup[hidden] {
     display: none;
 }
 
-.moleBadge img {
-    width: 24px;
-    height: 24px;
+.moleCard {
+    width: 260px;
+    max-width: 100%;
+    background: #fff8ea;
+    border: 5px solid white;
+    border-radius: 30px;
+    box-shadow: 0 6px #0002;
+    text-align: center;
+    padding: 18px 18px 20px;
+}
+
+.moleIntroIcon {
+    display: block;
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 10px;
     image-rendering: pixelated;
-    transition: opacity 0.25s, transform 0.25s;
 }
 
-.moleBadge img.caught {
-    opacity: 0;
-    transform: scale(0.3);
+.moleCard h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: #3c5a28;
 }
 
-.moleClose {
-    position: absolute;
-    right: 9px;
-    top: 9px;
-    z-index: 2;
-    width: 38px;
-    height: 38px;
-    border: 2px solid white;
-    border-radius: 50%;
-    background: #d9534fe6;
-    color: white;
-    font-size: 17px;
-    font-weight: 700;
-    line-height: 1;
+.moleCard p {
+    margin: 0 0 16px;
+    font-size: 15px;
+    line-height: 1.4;
+    color: #59485d;
+}
+
+.moleOk,
+.moleCancel {
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    font: inherit;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 11px 20px;
     cursor: pointer;
-    display: grid;
-    place-items: center;
-    box-shadow: 0 3px 6px #0003;
+}
+
+.moleOk {
+    background: #6f9a52;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.moleOk:hover {
+    background: #5f8a44;
+}
+
+.moleCancel {
+    background: #eee4cf;
+    color: #7a6a4a;
+}
+
+.moleCancel:hover {
+    background: #e4d8bd;
 }
 
 .roomTrack {

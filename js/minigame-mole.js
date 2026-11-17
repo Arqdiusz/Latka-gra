@@ -6,43 +6,97 @@
 // zadeklarowanych w game.js (musi być wczytany PO game.js w
 // index.html) — w tym z grafiki kreta (cells.kret, CFG.kret)
 // wczytanej razem z motylkami w boot().
+//
+// W przeciwieństwie do mycia/aportu to NIE jest przezroczysta nakładka
+// na scenę, tylko osobny, nieprzezroczysty "ekran" (.moleFull — własny
+// nagłówek, karta postępu, plansza) — na wzór referencyjnego stylu
+// użytkownika z innej jego gry.
 // ═══════════════════════════════════════════════════════════════
 
 let moleGame = null; // { need, caught, holes:[...], nextSpawn, effects:[] }
 const moleCanvas = $(".moleCanvas"),
-    mctx = moleCanvas.getContext("2d");
+    mctx = moleCanvas.getContext("2d"),
+    // Wewnętrzna rozdzielczość PLANSZY kreta — niezależna od głównej gry
+    // (W/H=384/768), bo plansza to teraz tylko część ekranu (pod
+    // nagłówkiem/kartą postępu/komunikatem), nie cały ekran. Proporcja
+    // 3∶4 dopasowana do .moleBoard w CSS (aspect-ratio), więc bez
+    // rozciągania.
+    MOLE_W = 348,
+    MOLE_H = 464;
 
-// Pasek postępu — 10 główek kreta (ikona "mole" z latka-ikony.png, ta sama,
-// co już używana jako ikonka pokoju "Łąka"). Zaczyna PEŁNY, każdy złapany
-// kret "chowa" jedną główkę (jak kopiec się chowa) — nieudane/spóźnione
-// trafienie cofa jedną z powrotem (tak samo jak przy bańkach).
+// Komunikat pod kartą postępu — zachęca/informuje, jak w referencyjnym
+// "Masz już 1! Szukaj następnego.".
+function moleMessage(g) {
+    if (!g) return "";
+    if (g.caught === 0) return "Znajdź kreta!";
+    if (g.caught >= g.need) return "Brawo, wszystkie złapane!";
+    return `Masz już ${g.caught}! Szukaj następnego.`;
+}
+
+// Karta postępu: duża liczba "X / 10" + pasek 10 główek kreta (ikona
+// "mole" z latka-ikony.png, ta sama co ikonka pokoju "Łąka"). Każda
+// złapana główka przygasza — nieudane/spóźnione trafienie przywraca
+// jedną z powrotem (patrz .caught w CSS).
 function updateMoleUi() {
     const badge = $(".moleBadge"),
         full = $(".moleFull");
     if (!badge) return;
     const active = !!moleGame;
-    badge.hidden = !active;
     if (full) full.hidden = !active;
     if (!active) {
-        mctx.clearRect(0, 0, W, H);
+        mctx.clearRect(0, 0, MOLE_W, MOLE_H);
         return;
     }
+    $(".moleCountNow").textContent = moleGame.caught;
+    $(".moleCountNeed").textContent = moleGame.need;
+    $(".moleMsg").textContent = moleMessage(moleGame);
     badge.querySelectorAll("img").forEach((img, i) => {
         img.src = icons.mole;
         img.classList.toggle("caught", i < moleGame.caught);
     });
 }
 
-$(".moleClose").onclick = () => {
-    // Wyjście przyciskiem X — bez nagrody (jak przerwanie przez menu), tak
-    // samo jak przy myciu/baniekach.
+$(".moleBack").onclick = () => {
+    // Wyjście przyciskiem cofania — bez nagrody (jak przerwanie przez
+    // menu), tak samo jak przy myciu/baniekach.
     if (phase !== "mole-game") return;
     moleGameFinish(false);
 };
 
+/* ── Pop-up z instrukcją przed startem — wzorzec jak .ballPopup ─── */
+let moleIntroResume = null;
+function moleIntroShow(onOk) {
+    moleIntroResume = onOk;
+    $(".moleIntroIcon").src = icons.mole;
+    $(".molePopup").hidden = false;
+    startQueue([
+        {
+            sheet: "a01",
+            anim: 16,
+            time: 120000,
+            onStart: () => {
+                phase = "mole-intro";
+                stage = "mole-intro";
+                locks();
+            },
+        },
+    ]);
+}
+$(".moleOk").onclick = () => {
+    $(".molePopup").hidden = true;
+    const resume = moleIntroResume;
+    moleIntroResume = null;
+    resume?.();
+};
+$(".moleCancel").onclick = () => {
+    $(".molePopup").hidden = true;
+    moleIntroResume = null;
+    idle(16);
+};
+
 /* ── Siatka dziur — 3 kolumny × 4 rzędy = 12 kopczyków ───────────── */
 const MOLE_NEED = 10,
-    MOLE_HOLE_SIZE = 84,
+    MOLE_HOLE_SIZE = 78,
     MOLE_HIT_PAD = 16,
     MOLE_GIVE_UP = 120000, // bez trafienia ani jednego kreta przez tyle ms -> koniec
     MOLE_FRAME_MS = 85, // bazowe tempo klatki wyłaniania/chowania (przed trudnością)
@@ -51,13 +105,12 @@ const MOLE_NEED = 10,
     MOLE_SPAWN_GAP_MAX = 650,
     MOLE_COLS = 3,
     MOLE_ROWS = 4,
-    MOLE_MARGIN_X = 48,
-    MOLE_TOP = 150,
-    MOLE_BOTTOM = 70;
+    MOLE_MARGIN_X = 26,
+    MOLE_MARGIN_Y = 22;
 
 function buildMoleHoles() {
-    const usableW = W - MOLE_MARGIN_X * 2,
-        usableH = H - MOLE_TOP - MOLE_BOTTOM,
+    const usableW = MOLE_W - MOLE_MARGIN_X * 2,
+        usableH = MOLE_H - MOLE_MARGIN_Y * 2,
         colGap = usableW / MOLE_COLS,
         rowGap = usableH / MOLE_ROWS,
         holes = [];
@@ -65,7 +118,7 @@ function buildMoleHoles() {
         for (let c = 0; c < MOLE_COLS; c++) {
             holes.push({
                 x: MOLE_MARGIN_X + colGap * (c + 0.5),
-                y: MOLE_TOP + rowGap * (r + 0.5),
+                y: MOLE_MARGIN_Y + rowGap * (r + 0.5),
                 state: "idle",
                 stateStart: 0,
             });
@@ -120,7 +173,7 @@ function moleGameUpdate(dt) {
         }
     }
     for (let i = g.effects.length - 1; i >= 0; i--) {
-        if (clock - g.effects[i].born > 500) g.effects.splice(i, 1);
+        if (clock - g.effects[i].born > 700) g.effects.splice(i, 1);
     }
 }
 
@@ -141,7 +194,7 @@ function moleFrameFor(h) {
 
 function moleGameDraw() {
     if (!moleGame) return;
-    mctx.clearRect(0, 0, W, H);
+    mctx.clearRect(0, 0, MOLE_W, MOLE_H);
     const g = moleGame;
     for (const h of g.holes) {
         const fn = moleFrameFor(h),
@@ -149,19 +202,27 @@ function moleGameDraw() {
         if (!cell) continue;
         mctx.drawImage(cell, h.x - MOLE_HOLE_SIZE / 2, h.y - MOLE_HOLE_SIZE / 2, MOLE_HOLE_SIZE, MOLE_HOLE_SIZE);
     }
-    // Efekt trafienia/pudła — te same gwiazdka/krzyżyk co przy bańkach.
+    // Duże, czytelne "+1" / "−1" wyskakujące nad trafioną/pudłowaną dziurą
+    // — żeby dziecko od razu widziało efekt swojego dotknięcia.
     for (const e of g.effects) {
-        const im = images[e.good ? "bubbleStar" : "bubbleWrong"];
-        if (!im) continue;
-        const t = clamp((clock - e.born) / 500, 0, 1),
+        const t = clamp((clock - e.born) / 700, 0, 1),
             ease = 1 - Math.pow(1 - t, 3),
-            overshoot = Math.sin(ease * Math.PI) * 0.22,
-            size = 64 * (0.55 + ease * 0.7 + overshoot),
-            alpha = 1 - t * t;
+            dy = -ease * 36,
+            alpha = 1 - t * t,
+            scale = 0.6 + Math.min(1, ease * 1.6) * 0.5;
         mctx.save();
         mctx.globalAlpha = alpha;
-        mctx.translate(e.x, e.y);
-        mctx.drawImage(im, -size / 2, -size / 2, size, size);
+        mctx.translate(e.x, e.y + dy);
+        mctx.scale(scale, scale);
+        mctx.font = "900 32px system-ui, sans-serif";
+        mctx.textAlign = "center";
+        mctx.textBaseline = "middle";
+        mctx.lineJoin = "round";
+        mctx.lineWidth = 6;
+        mctx.strokeStyle = "#fff";
+        mctx.strokeText(e.text, 0, 0);
+        mctx.fillStyle = e.good ? "#2f8f3f" : "#c0453f";
+        mctx.fillText(e.text, 0, 0);
         mctx.restore();
     }
 }
@@ -180,14 +241,14 @@ function moleGameHit(px, py) {
             h.stateStart = clock;
             h.hitRetreat = true;
             g.caught++;
-            g.effects.push({ x: h.x, y: h.y, born: clock, good: true });
+            g.effects.push({ x: h.x, y: h.y, born: clock, good: true, text: "+1" });
             updateMoleUi();
             if (g.caught >= g.need) moleGameFinish(true);
         } else {
             // Puste miejsce (kopiec bez kreta) albo za wcześnie/za późno —
             // nieumiejętne trafienie cofa jeden już złapany postęp.
             g.caught = Math.max(0, g.caught - 1);
-            g.effects.push({ x: h.x, y: h.y, born: clock, good: false });
+            g.effects.push({ x: h.x, y: h.y, born: clock, good: false, text: "−1" });
             updateMoleUi();
         }
         return true;
@@ -198,7 +259,7 @@ function moleGameHit(px, py) {
 function moleReadySegment() {
     return {
         sheet: "a01",
-        anim: 16, // 17. Spokojne stanie — cała gra toczy się na nakładce nad sceną
+        anim: 16, // 17. Spokojne stanie — cała gra toczy się na osobnym "ekranie" (.moleFull)
         time: MOLE_GIVE_UP,
         onStart: () => {
             phase = "mole-game";
@@ -210,10 +271,13 @@ function moleReadySegment() {
 }
 
 // ── Start zabawy ──────────────────────────────────────────────
-// Te same ograniczenia co przy aporcie/zabawie z budą (fun/den w
-// activity()) — zbyt spragniony/niewyspany piesek najpierw potrzebuje
-// tamtego, a kupka w pokoju blokuje każdą aktywność.
-function moleStart() {
+// Wejście z zapowiedzi na Łące (patrz moleTeaserTap() w game.js) — te same
+// ograniczenia co przy aporcie/zabawie z budą (fun/den w activity()):
+// zbyt spragniony/niewyspany piesek najpierw potrzebuje tamtego, a kupka w
+// pokoju blokuje każdą aktywność. Sprawdzane TU, przed pokazaniem pop-upu
+// z instrukcją — tak jak przy aporcie te same sprawdzenia robi activity()
+// zanim w ogóle pokaże ballIntroShow().
+function moleTryStart() {
     if (!casual()) return;
     if (dirty()) {
         say("poop", 4500);
@@ -230,19 +294,30 @@ function moleStart() {
         toast("Łatka potrzebuje snu przed zabawą.");
         return;
     }
+    moleIntroShow(moleStart);
+}
+
+// Właściwy start — wywoływane jako "resume" z moleIntroShow() PO kliknięciu
+// "Zaczynamy!". W tym momencie phase to już celowo "mole-intro" (nie
+// "casual"), więc bez ponownego sprawdzania warunków tutaj — tak samo jak
+// przy fetchStart()/bubbleStart() (sprawdzenia są wcześniej, w
+// moleTryStart()/activity()).
+function moleStart() {
     moleGame = { need: MOLE_NEED, caught: 0, holes: buildMoleHoles(), nextSpawn: clock + 300, effects: [] };
+    updateMoleUi();
     say("fun", 2200);
     startQueue([moleReadySegment()]);
     save();
 }
 
-// Dotyk/przeciąganie po całym .moleCanvas (cały ekran gry), niezależnie od
-// gestów głównego canvasu — tak samo jak przy bańkach.
+// Dotyk/przeciąganie po całym .moleCanvas, niezależnie od gestów głównego
+// canvasu — tak samo jak przy bańkach, ale przeliczone na wewnętrzną
+// rozdzielczość PLANSZY (MOLE_W/MOLE_H), nie całej gry (W/H).
 function moleCanvasXY(e) {
     const r = moleCanvas.getBoundingClientRect();
     return {
-        x: ((e.clientX - r.left) / r.width) * W,
-        y: ((e.clientY - r.top) / r.height) * H,
+        x: ((e.clientX - r.left) / r.width) * MOLE_W,
+        y: ((e.clientY - r.top) / r.height) * MOLE_H,
     };
 }
 let molePointerId = null;

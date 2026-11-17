@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.53</title>
-        <link rel="stylesheet" href="css/style.css?v=72" />
+        <title>Łatka v0.8.54</title>
+        <link rel="stylesheet" href="css/style.css?v=73" />
     </head>
 
     <body>
@@ -40,11 +40,29 @@
                 <button class="bubbleClose" aria-label="Zakończ mycie">✕</button>
             </div>
             <div class="moleFull" hidden>
-                <canvas class="moleCanvas" width="384" height="768"></canvas>
-                <div class="moleBadge" hidden aria-label="Krety do złapania">
-                    <img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" />
+                <div class="moleHeader">
+                    <button class="moleBack" aria-label="Zakończ zabawę w kreta">‹</button>
+                    <div class="moleTitle"><strong>Kretowisko</strong><span>Zabawa z pieskiem</span></div>
                 </div>
-                <button class="moleClose" aria-label="Zakończ zabawę w kreta">✕</button>
+                <div class="moleProgressCard">
+                    <div class="moleCount"><span class="moleCountNow">0</span> / <span class="moleCountNeed">10</span></div>
+                    <div class="moleBadge" aria-label="Krety do złapania">
+                        <img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" /><img alt="" />
+                    </div>
+                </div>
+                <div class="moleMsg">Znajdź kreta!</div>
+                <div class="moleBoard">
+                    <canvas class="moleCanvas" width="348" height="464"></canvas>
+                </div>
+            </div>
+            <div class="molePopup" hidden>
+                <div class="moleCard">
+                    <img class="moleIntroIcon" alt="" />
+                    <h2>Znajdź 10 kretów!</h2>
+                    <p>Dotykaj palcem kretów, które wyskakują z kopczyków — im szybciej, tym lepiej!</p>
+                    <button class="moleOk">Zaczynamy!</button>
+                    <button class="moleCancel">Wróć do pieska</button>
+                </div>
             </div>
             <div class="popup" hidden>
                 <div class="card"><canvas width="300" height="300"></canvas><img class="reward" alt="Nagroda" /></div>
@@ -76,10 +94,10 @@
             </div>
         </div>
 
-        <script src="js/arc-carousel.js?v=72"></script>
-        <script src="js/game.js?v=72"></script>
-        <script src="js/minigame-fetch.js?v=72"></script>
-        <script src="js/minigame-bubbles.js?v=72"></script>
-        <script src="js/minigame-mole.js?v=72"></script>
+        <script src="js/arc-carousel.js?v=73"></script>
+        <script src="js/game.js?v=73"></script>
+        <script src="js/minigame-fetch.js?v=73"></script>
+        <script src="js/minigame-bubbles.js?v=73"></script>
+        <script src="js/minigame-mole.js?v=73"></script>
     </body>
 </html>

@@ -1807,7 +1807,7 @@ function moleTeaserTap(m) {
     const launch = room === "meadow";
     moleTeaser = null;
     nextMoleSpawn = clock + 4000 + Math.random() * 5000;
-    if (launch) moleStart();
+    if (launch) moleTryStart();
 }
 
 function moleTeaserFrame() {
