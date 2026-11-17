@@ -1346,6 +1346,12 @@ function butterflyEvent() {
     ambient.length = 0;
     nextAmbientSpawn = clock + 2000 + Math.random() * 4000;
     locks();
+    // Kolor i zegar trzepotu wybierane raz, na cały event — ten sam motylek
+    // (ta sama grafika z motyle-new.png) lata od wlotu, przez pogoń i
+    // lądowanie na nosie, aż po odlot. Losowany przy każdym evencie, więc z
+    // czasem każdy z 5 kolorów bierze udział.
+    catchButterflyColor = Math.floor(Math.random() * CFG.motyle.presets.length);
+    catchButterflyStart = clock;
     const dir = x < 0.5 ? 1 : -1;
     left = dir < 0;
     // Realna wysokość pyszczka pieska w jego aktualnej pozie (a01/16 —
@@ -1442,12 +1448,6 @@ function butterflyEvent() {
             onStart: () => {
                 stage = "butterfly-chase";
                 butterfly.visible = false;
-                // Kolor losowany przy każdym evencie — tak, żeby z czasem
-                // "każdy kolor brał udział" (nie zawsze ten sam). Rysowany
-                // w draw() przez catchMarkerPos() na klatkach a02
-                // oznaczonych zielonym znacznikiem (patrz extractMarker()).
-                catchButterflyColor = Math.floor(Math.random() * CFG.motyle.presets.length);
-                catchButterflyStart = clock;
             },
         },
         {
@@ -1518,10 +1518,12 @@ const AMBIENT_MAX = 1,
     // z grubsza wysokość strzałek nawigacji (top:44% z 550px scenki, tu
     // z małym zapasem), żeby nigdy nie wchodziły na psa.
     AMBIENT_ZONE_BOTTOM = 232,
-    // Rozmiar motylka nakładanego na pieska podczas pogoni/łapania (patrz
-    // catchOverlayDraw()) — niezależny od AMBIENT_SIZE, bo to inna skala
-    // kompozycji (blisko pyszczka, nie "duży akcent w tle").
-    CATCH_BUTTERFLY_SIZE = 40;
+    // Rozmiar motylka w całym evencie butterflyEvent() (lot + pogoń +
+    // lądowanie na nosie) — ten sam, jakim dotychczas latał motylek w
+    // fazach lotu (stary bsz=58.5), niezależny od AMBIENT_SIZE (to inna
+    // skala kompozycji: blisko pyszczka/na scenie eventu, nie "duży akcent
+    // w tle").
+    EVENT_BUTTERFLY_SIZE = 58.5;
 
 function ambientRandomParams() {
     return {
@@ -1716,6 +1718,20 @@ function ambientDraw() {
     }
 }
 
+// Zwraca aktualną klatkę (canvas) wybranego koloru motylka z motyle-new.png
+// dla danego "zegara" trzepotu — wspólne dla całego butterflyEvent() (lot +
+// pogoń + lądowanie na nosie), żeby trzepot był ciągły i spójny przez cały
+// event, niezależnie od tego, która faza akurat go rysuje.
+function eventButterflyCell() {
+    const preset = CFG.motyle.presets[catchButterflyColor],
+        // To samo tempo co zwykły lot motylków-tło (2x szybciej niż baza).
+        ms = preset.ms / 2,
+        seqFrames = numbers(preset.seq),
+        fi = Math.floor((clock - catchButterflyStart) / ms) % seqFrames.length,
+        frameNum = seqFrames[fi];
+    return cells.motyle[frameNum - 1];
+}
+
 // Motylek "przyklejony" do pieska podczas pogoni/łapania (stage
 // butterfly-chase / butterfly-nose w butterflyEvent()) — pozycja i aktualna
 // klatka a02 same decydują, czy i gdzie go narysować (patrz catchMarkerPos()
@@ -1726,18 +1742,12 @@ function catchOverlayDraw() {
     if ((stage !== "butterfly-chase" && stage !== "butterfly-nose") || !images.motyle) return;
     const pos = catchMarkerPos();
     if (!pos) return;
-    const preset = CFG.motyle.presets[catchButterflyColor],
-        // To samo tempo co zwykły lot motylków-tło (2x szybciej niż baza).
-        ms = preset.ms / 2,
-        seqFrames = numbers(preset.seq),
-        fi = Math.floor((clock - catchButterflyStart) / ms) % seqFrames.length,
-        frameNum = seqFrames[fi],
-        cell = cells.motyle[frameNum - 1];
+    const cell = eventButterflyCell();
     if (!cell) return;
     ctx.save();
     ctx.translate(pos.x, pos.y);
     if (left) ctx.scale(-1, 1);
-    ctx.drawImage(cell, -CATCH_BUTTERFLY_SIZE / 2, -CATCH_BUTTERFLY_SIZE / 2, CATCH_BUTTERFLY_SIZE, CATCH_BUTTERFLY_SIZE);
+    ctx.drawImage(cell, -EVENT_BUTTERFLY_SIZE / 2, -EVENT_BUTTERFLY_SIZE / 2, EVENT_BUTTERFLY_SIZE, EVENT_BUTTERFLY_SIZE);
     ctx.restore();
 }
 
@@ -1808,13 +1818,16 @@ function draw(dt) {
     catchOverlayDraw();
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
     if (butterfly?.visible) {
-        // O 33% większy niż bazowe 44px (44 * 1.33 ≈ 58.5).
-        const bsz = 58.5;
-        ctx.save();
-        ctx.translate(butterfly.x, butterfly.y);
-        if (butterfly.dir < 0) ctx.scale(-1, 1);
-        ctx.drawImage(images["b" + (Math.floor(clock / 130) % 2)], -bsz / 2, -bsz / 2, bsz, bsz);
-        ctx.restore();
+        // Ten sam motylek (kolor + zegar trzepotu) co w catchOverlayDraw() —
+        // cały event lata jedną, spójną grafiką z motyle-new.png.
+        const cell = eventButterflyCell();
+        if (cell) {
+            ctx.save();
+            ctx.translate(butterfly.x, butterfly.y);
+            if (butterfly.dir < 0) ctx.scale(-1, 1);
+            ctx.drawImage(cell, -EVENT_BUTTERFLY_SIZE / 2, -EVENT_BUTTERFLY_SIZE / 2, EVENT_BUTTERFLY_SIZE, EVENT_BUTTERFLY_SIZE);
+            ctx.restore();
+        }
     }
     ballDraw();
     // Dropping is explicitly a foreground layer and below the dog's walking baseline.
@@ -1940,7 +1953,9 @@ async function boot() {
     CFG.motyle = motyleAnim;
     UI = CFG.ui;
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
-    for (let i = 0; i < 2; i++) images["b" + i] = await loadImage(P.assets.butterflies[i]);
+    // Stary dwuklatkowy motyl-1.png/motyl-2.png (P.assets.butterflies) nie
+    // jest już używany — cały butterflyEvent() lata teraz jedną, spójną
+    // grafiką z motyle-new.png (patrz eventButterflyCell()).
     if (P.assets.motyle) {
         // Arkusz motyle-001.png: siatka cols×rows (patrz CFG.motyle), po
         // jednym wierszu na kolor — tniemy na osobne klatki, tak jak banki
