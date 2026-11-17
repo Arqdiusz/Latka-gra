@@ -367,13 +367,13 @@ body {
     position: absolute;
     top: 44%;
     z-index: 4;
-    width: 40px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
     border: 3px solid white;
-    border-radius: 16px;
+    border-radius: 50%;
     background: #fff8e9df;
     color: #88758f;
-    font-size: 32px;
+    font-size: 28px;
     cursor: pointer;
     transition: opacity 0.12s;
 }
@@ -391,7 +391,7 @@ body {
 }
 
 .arrow.near {
-    opacity: 0.1 !important;
+    opacity: 0.45 !important;
 }
 
 .arrow:focus-visible {
