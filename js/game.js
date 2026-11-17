@@ -443,7 +443,11 @@ function syncMenu() {
 }
 
 function casual() {
-    return loaded && ["idle", "roam", "pause", "look", "butterfly"].includes(phase);
+    // "butterfly" (piesek bawi się ze złapanym motylkiem) celowo NIE jest
+    // tu wymieniony — to zdarzenie, raz uruchomione, musi dobiec końca.
+    // Dzięki temu wszystkie wejścia bramkowane przez casual()/interrupt()
+    // (strzałki, głaskanie, menu, swipe) są podczas niego zablokowane.
+    return loaded && ["idle", "roam", "pause", "look"].includes(phase);
 }
 
 function canPet() {
@@ -1309,6 +1313,14 @@ function butterflyEvent() {
     interrupt();
     phase = "butterfly";
     bubble = null;
+    // Motylki-tło znikają na czas eventu (i tak przestają się rysować/
+    // aktualizować, dopóki phase==="butterfly" — patrz ambientDraw()/
+    // ambientUpdate()) — ale bez wyczyszczenia tablicy wracałyby po evencie
+    // "zamrożone" w czasie sprzed jego startu. Czyścimy je więc tak samo
+    // jak przy zmianie pokoju, z własnym świeżym odliczaniem do kolejnego
+    // wlotu, żeby mogły po prostu zacząć się pojawiać od nowa.
+    ambient.length = 0;
+    nextAmbientSpawn = clock + 2000 + Math.random() * 4000;
     locks();
     const dir = x < 0.5 ? 1 : -1;
     left = dir < 0;
@@ -1632,9 +1644,10 @@ function ambientDraw() {
     if (!images.motyle || !ambient.length) return;
     for (const b of ambient) {
         const preset = CFG.motyle.presets[b.colorIndex],
-            // Spłoszony motylek trzepocze wyraźnie szybciej — dodatkowy
-            // akcent chaosu/paniki obok samego zygzakowatego toru lotu.
-            ms = b.state === "fleeing" ? preset.ms / 2 : preset.ms,
+            // Zwykły lot trzepocze 2x szybciej niż bazowa wartość z presetu;
+            // spłoszony (ucieczka) — 3x szybciej, dla jeszcze większego
+            // wrażenia paniki, obok samego zygzakowatego toru lotu.
+            ms = b.state === "fleeing" ? preset.ms / 3 : preset.ms / 2,
             seqFrames = numbers(preset.seq),
             fi = Math.floor((clock - b.spawnedAt) / ms) % seqFrames.length,
             frameNum = seqFrames[fi],
