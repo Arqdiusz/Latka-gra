@@ -1753,11 +1753,18 @@ function ambientDraw() {
    ═══════════════════════════════════════════════════════════════ */
 const MOLE_TEASER_SIZE = 84,
     MOLE_TEASER_HIT_PAD = 18, // trochę większy obszar trafienia — łatwiej dla małego dziecka
-    MOLE_TEASER_MARGIN_X = 50,
-    // Trzy stałe "linie" w ziemi, zdecydowanie niżej niż łapy psa (GROUND=425)
-    // — kopiec zawsze wychodzi na jednej z nich (nigdy wyżej, nigdy pomiędzy),
-    // dokładnie tam, gdzie wskazują trzy poziome linie z referencji.
-    MOLE_TEASER_Y_LINES = [460, 484, 508],
+    // Trzy stałe "miejsca" w ziemi, zdecydowanie niżej niż łapy psa
+    // (GROUND=425) — kopiec zawsze wychodzi w jednym z nich (nigdy gdzie
+    // indziej), mniej więcej tam, gdzie wskazują trzy obszary z referencji.
+    // Y celowo nie schodzi niżej niż ~465-470 (środek odrobinę niżej jak na
+    // referencji) — niżej nachodziłby wizualnie na powiększoną, zaznaczoną
+    // ikonę w doku (ikony wystają nad kartę doku aż do y≈526 w canvasie,
+    // sprawdzone przez getBoundingClientRect ikon .menu button).
+    MOLE_TEASER_SPOTS = [
+        { x: 76, y: 462 }, // lewo
+        { x: 196, y: 466 }, // środek — odrobinę niżej, bliżej pieska
+        { x: 300, y: 458 }, // prawo
+    ],
     MOLE_TEASER_FRAME_MS = 110, // tempo klatki przy wyłanianiu/chowaniu zapowiedzi
     MOLE_TEASER_HOLD = 1800; // jak długo stoi w pełni na wierzchu, zanim sam się schowa
 
@@ -1766,10 +1773,10 @@ function moleTeaserDuration(presetIdx) {
 }
 
 function moleTeaserSpawn() {
-    const line = MOLE_TEASER_Y_LINES[Math.floor(Math.random() * MOLE_TEASER_Y_LINES.length)];
+    const spot = MOLE_TEASER_SPOTS[Math.floor(Math.random() * MOLE_TEASER_SPOTS.length)];
     moleTeaser = {
-        x: MOLE_TEASER_MARGIN_X + Math.random() * (W - MOLE_TEASER_MARGIN_X * 2),
-        y: line,
+        x: spot.x,
+        y: spot.y,
         state: "emerging",
         stateStart: clock,
     };
@@ -1869,7 +1876,7 @@ function moleDirtRect() {
     }
     return {
         x: clamp((moleDirt?.x || 0.5) * W, 22, W - 22) - w / 2 + offset,
-        y: (moleDirt?.y || MOLE_TEASER_Y_LINES[0]) - h / 2,
+        y: (moleDirt?.y || MOLE_TEASER_SPOTS[0].y) - h / 2,
         w,
         h,
     };
@@ -2421,8 +2428,9 @@ window.gameTest = {
         updatePoopAccess();
         save();
     },
-    putMoleDirt: (r, pos = 0.5, line = 0) => {
-        moleDirt = { room: r, x: pos, y: MOLE_TEASER_Y_LINES[line] };
+    putMoleDirt: (r, spotIdx = 0) => {
+        const spot = MOLE_TEASER_SPOTS[spotIdx];
+        moleDirt = { room: r, x: spot.x / W, y: spot.y };
         updateMoleDirtAccess();
         save();
     },
