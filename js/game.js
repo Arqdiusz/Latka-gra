@@ -1478,7 +1478,7 @@ const AMBIENT_MAX = 1,
     // Realny rozmiar — rysujemy klatkę 1:1 (kafelek arkusza motyle-new.png
     // to natywne 64×64). Duży i widoczny, bo to już nie tylko dekoracja w
     // tle, tylko coś do kliknięcia.
-    AMBIENT_SIZE = 64,
+    AMBIENT_SIZE = 96,
     // Obszar trafienia trochę większy niż sama grafika — łatwiej trafić
     // palcem na telefonie.
     AMBIENT_HIT_PAD = 12,
