@@ -1,0 +1,41 @@
+{
+    "asset": "kret.png",
+    "cols": 4,
+    "rows": 4,
+    "ground": 0,
+    "offsets": {},
+    "presets": [
+        {
+            "name": "01. Pusty kopiec",
+            "seq": "1",
+            "ms": 1000,
+            "intro": "",
+            "outro": "",
+            "repeat": true
+        },
+        {
+            "name": "02. Wyłanianie się",
+            "seq": "2,3,5,6,9",
+            "ms": 85,
+            "intro": "",
+            "outro": "",
+            "repeat": false
+        },
+        {
+            "name": "03. Czujność / rozglądanie",
+            "seq": "9,10,11,12,13,14,15,16,13,10",
+            "ms": 160,
+            "intro": "",
+            "outro": "",
+            "repeat": true
+        },
+        {
+            "name": "04. Chowanie się",
+            "seq": "9,6,3,2,1",
+            "ms": 85,
+            "intro": "",
+            "outro": "",
+            "repeat": false
+        }
+    ]
+}

@@ -10,6 +10,7 @@ const
         ui: [],
         bubbles: [],
         motyle: [],
+        kret: [],
     },
     pixels = {
         a01: [],
@@ -126,6 +127,10 @@ let loaded = false,
     butterfly = null,
     ambient = [], // motylki-tło w ogrodzie/podwórku — dekoracyjne, patrz ambientSpawn/ambientUpdate/ambientDraw
     nextAmbientSpawn = 0,
+    // Kret-zapowiedź mini-gry "Kret w ogrodzie" — jeden kopiec na raz,
+    // wychodzi/rozgląda się/chowa (patrz moleTeaserSpawn/Update/Draw/Hit).
+    moleTeaser = null,
+    nextMoleSpawn = 0,
     // Motylek nakładany na klatki a02 oznaczone zielonym znacznikiem
     // (#00ff43) podczas pogoni/łapania w butterflyEvent() — patrz
     // catchMarker (wykrywane w boot()) i catchMarkerPos().
@@ -214,6 +219,9 @@ const ACTION_EFFECTS = {
     den: { fun: 16, food: -2, water: -2 },
     clean: { clean: 38 },
     brush: { clean: 12, fun: 5 },
+    // Zabawa w kreta — radość jak przy aporcie/bańkach, ale piesek się przy
+    // tym trochę brudzi, głoduje i chce pić (patrz js/minigame-mole.js).
+    mole: { fun: 26, clean: -8, food: -4, water: -5 },
 };
 let needsSaveSeconds = 0;
 function changeNeeds(changes) {
@@ -359,6 +367,8 @@ function setRoom(r) {
     // pokoju (inaczej potrafiły długo nie pojawić się w nowym pokoju).
     ambient.length = 0;
     nextAmbientSpawn = clock + 2000 + Math.random() * 4000;
+    moleTeaser = null;
+    nextMoleSpawn = clock + 2500 + Math.random() * 4500;
     buildRooms();
     setOffset(0);
     const key = {
@@ -466,12 +476,13 @@ function canPet() {
 function locks() {
     // W czasie czekania na rzut / łapania baniek menu zostaje aktywne,
     // żeby dało się wyjść z zabawy
-    document.body.classList.toggle("locked", !casual() && phase !== "ball-ready" && phase !== "bubble-game");
+    document.body.classList.toggle("locked", !casual() && phase !== "ball-ready" && phase !== "bubble-game" && phase !== "mole-game");
     document.querySelectorAll(".arrow").forEach((b) => (b.disabled = !casual()));
     $(".petAccess").disabled = !canPet();
     updateArrows();
     updateFetchUi();
     updateBubbleUi();
+    updateMoleUi();
 }
 
 function updateArrows() {
@@ -527,6 +538,7 @@ function idle(which = null) {
     fetchGame = null;
     dogHidden = false;
     bubbleGame = null;
+    moleGame = null;
     setOffset(0);
     setAnim("a01", which ?? (Math.random() < 0.35 ? 18 : 16));
     idleUntil = clock + Math.max(frames.length * ms, 1800) + Math.random() * 2000;
@@ -1195,6 +1207,7 @@ canvas.addEventListener("pointerdown", (e) => {
         dog: petHit(p.x, p.y),
         poop: poopHit(p.x, p.y),
         butterfly: phase !== "butterfly" ? ambientHit(p.x, p.y) : null,
+        mole: casual() ? moleTeaserHit(p.x, p.y) : null,
     };
     try {
         canvas.setPointerCapture(e.pointerId);
@@ -1257,6 +1270,7 @@ function pointerEnd(e, cancel = false) {
         if (g.poop && poopHit(p.x, p.y)) cleanPoop();
         else if (g.dog && petHit(p.x, p.y)) react();
         else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientFlee(g.butterfly);
+        else if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
     }
 }
 canvas.addEventListener("pointerup", (e) => pointerEnd(e));
@@ -1345,6 +1359,7 @@ function butterflyEvent() {
     // wlotu, żeby mogły po prostu zacząć się pojawiać od nowa.
     ambient.length = 0;
     nextAmbientSpawn = clock + 2000 + Math.random() * 4000;
+    moleTeaser = null;
     locks();
     // Kolor i zegar trzepotu wybierane raz, na cały event — ten sam motylek
     // (ta sama grafika z motyle-new.png) lata od wlotu, przez pogoń i
@@ -1718,6 +1733,107 @@ function ambientDraw() {
     }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   KRET W OGRODZIE — zapowiedź (ambient teaser)
+   Jeden kopiec na raz, w dolnym pasie sceny (ziemia/trawa, NIE pas
+   lotu motylków). Wychodzi z ziemi, czujnie się rozgląda, a potem
+   sam się chowa — albo chowa się OD RAZU po kliknięciu. W pokoju
+   "meadow" (Łąka) kliknięcie DODATKOWO uruchamia pełną mini-grę
+   (patrz moleStart() w js/minigame-mole.js); w pozostałych pokojach
+   ogrodu (garden/yard) samo się chowa, bez startu gry.
+   ═══════════════════════════════════════════════════════════════ */
+const MOLE_TEASER_SIZE = 90,
+    MOLE_TEASER_HIT_PAD = 18, // trochę większy obszar trafienia — łatwiej dla małego dziecka
+    MOLE_TEASER_MARGIN_X = 50,
+    // Dolny pas sceny — kopiec zawsze "w ziemi", nie wyżej niż pies stoi.
+    MOLE_TEASER_Y_MIN = 350,
+    MOLE_TEASER_Y_MAX = 420,
+    MOLE_TEASER_FRAME_MS = 110, // tempo klatki przy wyłanianiu/chowaniu zapowiedzi
+    MOLE_TEASER_HOLD = 1800; // jak długo stoi w pełni na wierzchu, zanim sam się schowa
+
+function moleTeaserDuration(presetIdx) {
+    return numbers(CFG.kret.presets[presetIdx].seq).length * MOLE_TEASER_FRAME_MS;
+}
+
+function moleTeaserSpawn() {
+    moleTeaser = {
+        x: MOLE_TEASER_MARGIN_X + Math.random() * (W - MOLE_TEASER_MARGIN_X * 2),
+        y: MOLE_TEASER_Y_MIN + Math.random() * (MOLE_TEASER_Y_MAX - MOLE_TEASER_Y_MIN),
+        state: "emerging",
+        stateStart: clock,
+    };
+}
+
+function moleTeaserUpdate() {
+    if (!cells.kret.length || !["garden", "yard", "meadow"].includes(room) || phase === "mole-game") {
+        if (moleTeaser) moleTeaser = null;
+        return;
+    }
+    if (!moleTeaser) {
+        if (clock >= nextMoleSpawn) moleTeaserSpawn();
+        return;
+    }
+    const m = moleTeaser;
+    if (m.state === "emerging") {
+        if (clock - m.stateStart >= moleTeaserDuration(1)) {
+            m.state = "alert";
+            m.stateStart = clock;
+        }
+    } else if (m.state === "alert") {
+        if (clock - m.stateStart >= MOLE_TEASER_HOLD) {
+            m.state = "retreating";
+            m.stateStart = clock;
+        }
+    } else if (m.state === "retreating") {
+        if (clock - m.stateStart >= moleTeaserDuration(3)) {
+            moleTeaser = null;
+            nextMoleSpawn = clock + 9000 + Math.random() * 9000;
+        }
+    }
+}
+
+// Trafienie w zapowiedź kreta — tak jak ambientHit() dla motylków-tła, ale
+// to zawsze jeden, konkretny obiekt (bez tablicy). Pomijamy "retreating" —
+// kret już się chowa, za późno.
+function moleTeaserHit(px, py) {
+    if (!moleTeaser || moleTeaser.state === "retreating") return null;
+    const r = MOLE_TEASER_SIZE / 2 + MOLE_TEASER_HIT_PAD;
+    return Math.hypot(px - moleTeaser.x, py - moleTeaser.y) <= r ? moleTeaser : null;
+}
+
+// Kliknięcie zapowiedzi — zawsze chowa kreta od razu; na Łące dodatkowo
+// startuje pełną mini-grę (moleStart() z js/minigame-mole.js).
+function moleTeaserTap(m) {
+    const launch = room === "meadow";
+    moleTeaser = null;
+    nextMoleSpawn = clock + 4000 + Math.random() * 5000;
+    if (launch) moleStart();
+}
+
+function moleTeaserFrame() {
+    const m = moleTeaser;
+    if (!m) return null;
+    if (m.state === "alert") {
+        const frames = numbers(CFG.kret.presets[2].seq),
+            fi = Math.floor((clock - m.stateStart) / 160) % frames.length;
+        return frames[fi];
+    }
+    const presetIdx = m.state === "emerging" ? 1 : 3,
+        frames = numbers(CFG.kret.presets[presetIdx].seq),
+        dur = moleTeaserDuration(presetIdx),
+        p = clamp((clock - m.stateStart) / dur, 0, 0.999),
+        fi = Math.floor(p * frames.length);
+    return frames[fi];
+}
+
+function moleTeaserDraw() {
+    if (!moleTeaser || !cells.kret.length) return;
+    const fn = moleTeaserFrame(),
+        cell = fn ? cells.kret[fn - 1] : null;
+    if (!cell) return;
+    ctx.drawImage(cell, moleTeaser.x - MOLE_TEASER_SIZE / 2, moleTeaser.y - MOLE_TEASER_SIZE / 2, MOLE_TEASER_SIZE, MOLE_TEASER_SIZE);
+}
+
 // Zwraca aktualną klatkę (canvas) wybranego koloru motylka z motyle-new.png
 // dla danego "zegara" trzepotu — wspólne dla całego butterflyEvent() (lot +
 // pogoń + lądowanie na nosie), żeby trzepot był ciągły i spójny przez cały
@@ -1814,6 +1930,7 @@ function draw(dt) {
     // więc nie wchodzą mu na grzbiet ani pod brzuch. Schowane na czas
     // interaktywnego butterflyEvent(), żeby się wizualnie nie gryzły.
     if (phase !== "butterfly") ambientDraw();
+    if (phase !== "butterfly") moleTeaserDraw();
     if (!dogHidden) drawDog(ctx);
     catchOverlayDraw();
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
@@ -1837,6 +1954,7 @@ function draw(dt) {
     }
     bubbleDraw(dt);
     bubbleGameDraw();
+    moleGameDraw();
     if (!$(".popup").hidden) {
         rewardCtx.clearRect(0, 0, 300, 300);
         drawDog(rewardCtx, 150, 255, left, 0.72);
@@ -1878,7 +1996,9 @@ function loopFrame(t) {
             else if (clock >= idleUntil) autonomous();
         }
         if (bubbleGame) bubbleGameUpdate(dt);
+        if (moleGame) moleGameUpdate(dt);
         if (phase !== "butterfly") ambientUpdate(dt);
+        if (phase !== "butterfly") moleTeaserUpdate();
         if (clock >= nextBubble && !sleeping && phase === "idle") {
             // Priorytet: kupka > realnie paląca potrzeba (<=33%) > losowa —
             // dymek ma sygnalizować stan Łatki, a nie być czysto dekoracyjny.
@@ -1942,15 +2062,17 @@ async function boot() {
     P = await fresh("data/config.json");
     // Załaduj animacje z plików edytora (animacje-ustawienia/)
     // — te pliki są źródłem prawdy; config.json trzyma resztę ustawień
-    const [anim01, anim02, motyleAnim] = await Promise.all([
+    const [anim01, anim02, motyleAnim, kretAnim] = await Promise.all([
         fresh("animacje-ustawienia/latka-animacje-01.json"),
         fresh("animacje-ustawienia/latka-animacje-02.json"),
         fresh("animacje-ustawienia/motyle-001-animacje.json"),
+        fresh("animacje-ustawienia/kret-animacje.json"),
     ]);
     CFG = P.config;
     CFG.a01 = anim01;
     CFG.a02 = anim02;
     CFG.motyle = motyleAnim;
+    CFG.kret = kretAnim;
     UI = CFG.ui;
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
     // Stary dwuklatkowy motyl-1.png/motyl-2.png (P.assets.butterflies) nie
@@ -1971,6 +2093,23 @@ async function boot() {
             c.height = mh;
             c.getContext("2d").drawImage(images.motyle, (f % cols) * mw, Math.floor(f / cols) * mh, mw, mh, 0, 0, mw, mh);
             cells.motyle.push(c);
+        }
+    }
+    if (P.assets.kret) {
+        // Arkusz kret.png: siatka 4×4 (patrz CFG.kret) — tniemy tak samo jak
+        // motyle-new.png. Używane do zapowiedzi "kreta w ogrodzie" (ambient,
+        // patrz moleTeaserSpawn/Update/Draw) i do pełnej mini-gry w kreta
+        // (js/minigame-mole.js).
+        images.kret = await loadImage(P.assets.kret);
+        const { cols, rows } = CFG.kret,
+            kw = images.kret.width / cols,
+            kh = images.kret.height / rows;
+        for (let f = 0; f < cols * rows; f++) {
+            const c = document.createElement("canvas");
+            c.width = kw;
+            c.height = kh;
+            c.getContext("2d").drawImage(images.kret, (f % cols) * kw, Math.floor(f / cols) * kh, kw, kh, 0, 0, kw, kh);
+            cells.kret.push(c);
         }
     }
     if (P.assets.balls)
