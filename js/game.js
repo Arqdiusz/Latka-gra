@@ -344,7 +344,10 @@ function buildRooms() {
 
 function setRoom(r) {
     room = r;
-    if (!["garden", "yard"].includes(r)) ambient.length = 0; // motylki-tło tylko na zewnątrz
+    // Motylki-tło generowane od nowa w każdym pokoju (nie mają "przelatywać"
+    // ze sobą między planszami) — ambientUpdate() i tak odtworzy je zaraz,
+    // jeśli nowy pokój to ogród/podwórko.
+    ambient.length = 0;
     buildRooms();
     setOffset(0);
     const key = {
@@ -1435,15 +1438,18 @@ function butterflyEvent() {
 const AMBIENT_MAX = 2,
     AMBIENT_SIZE = 30,
     AMBIENT_MARGIN_X = 26,
-    AMBIENT_MARGIN_TOP = 46,
-    AMBIENT_MARGIN_BOTTOM = 70; // nad ziemią — nie mają fruwać po trawie
+    AMBIENT_MARGIN_TOP = 40,
+    // Pas lotu to wyłącznie górne tło (niebo/dach budy), nad pieskiem —
+    // z grubsza wysokość strzałek nawigacji (top:44% z 550px scenki, tu
+    // z małym zapasem), żeby nigdy nie wchodziły na psa.
+    AMBIENT_ZONE_BOTTOM = 232;
 
 function ambientSpawn() {
     const colorIndex = Math.floor(Math.random() * CFG.motyle.presets.length);
     ambient.push({
         colorIndex,
         x: AMBIENT_MARGIN_X + Math.random() * (W - AMBIENT_MARGIN_X * 2),
-        y: AMBIENT_MARGIN_TOP + Math.random() * (GROUND - AMBIENT_MARGIN_BOTTOM - AMBIENT_MARGIN_TOP),
+        y: AMBIENT_MARGIN_TOP + Math.random() * (AMBIENT_ZONE_BOTTOM - AMBIENT_MARGIN_TOP),
         heading: Math.random() * Math.PI * 2,
         speed: 34 + Math.random() * 26,
         freq1: 0.5 + Math.random() * 0.7,
@@ -1452,6 +1458,8 @@ function ambientSpawn() {
         amp2: 0.35 + Math.random() * 0.4,
         seed1: Math.random() * Math.PI * 2,
         seed2: Math.random() * Math.PI * 2,
+        // Lekko różne rozmiary — wrażenie głębi, bez przesady.
+        sizeScale: 0.75 + Math.random() * 0.5,
         spawnedAt: clock,
     });
 }
@@ -1479,10 +1487,15 @@ function ambientUpdate(dt) {
         if (b.x < AMBIENT_MARGIN_X) turn += steerTo(0);
         else if (b.x > W - AMBIENT_MARGIN_X) turn += steerTo(Math.PI);
         if (b.y < AMBIENT_MARGIN_TOP) turn += steerTo(Math.PI / 2);
-        else if (b.y > GROUND - AMBIENT_MARGIN_BOTTOM) turn += steerTo(-Math.PI / 2);
+        else if (b.y > AMBIENT_ZONE_BOTTOM) turn += steerTo(-Math.PI / 2);
         b.heading += turn * dtS;
         b.x += Math.cos(b.heading) * b.speed * dtS;
         b.y += Math.sin(b.heading) * b.speed * dtS;
+        // Zawracanie jest miękkie (stopniowe), więc samo w sobie może na
+        // moment wyjść poza pas — twardy clamp jako siatka bezpieczeństwa,
+        // żeby naprawdę nigdy nie zeszły niżej niż AMBIENT_ZONE_BOTTOM.
+        b.x = clamp(b.x, AMBIENT_MARGIN_X - 8, W - AMBIENT_MARGIN_X + 8);
+        b.y = clamp(b.y, AMBIENT_MARGIN_TOP - 8, AMBIENT_ZONE_BOTTOM);
     }
 }
 
@@ -1495,11 +1508,12 @@ function ambientDraw() {
             frameNum = seqFrames[fi],
             cell = cells.motyle[frameNum - 1];
         if (!cell) continue;
+        const size = AMBIENT_SIZE * b.sizeScale;
         ctx.save();
         ctx.globalAlpha = Math.min(1, (clock - b.spawnedAt) / 400); // delikatny fade-in po pojawieniu
         ctx.translate(b.x, b.y);
         if (Math.cos(b.heading) < 0) ctx.scale(-1, 1);
-        ctx.drawImage(cell, -AMBIENT_SIZE / 2, -AMBIENT_SIZE / 2, AMBIENT_SIZE, AMBIENT_SIZE);
+        ctx.drawImage(cell, -size / 2, -size / 2, size, size);
         ctx.restore();
     }
 }
@@ -1562,11 +1576,13 @@ function bubbleDraw(dt) {
 function draw(dt) {
     ctx.clearRect(0, 0, W, SH);
     ctx.imageSmoothingEnabled = false;
+    // Motylki-tło rysowane PRZED pieskiem, więc są wizualnie za nim — i
+    // trzymają się wyłącznie górnego pasa "nieba" (patrz AMBIENT_ZONE_BOTTOM),
+    // więc nie wchodzą mu na grzbiet ani pod brzuch. Schowane na czas
+    // interaktywnego butterflyEvent(), żeby się wizualnie nie gryzły.
+    if (phase !== "butterfly") ambientDraw();
     if (!dogHidden) drawDog(ctx);
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
-    // Motylki-tło — schowane na czas interaktywnego butterflyEvent(), żeby
-    // się wizualnie nie gryzły z motylkiem do złapania.
-    if (phase !== "butterfly") ambientDraw();
     if (butterfly?.visible) {
         // O 33% większy niż bazowe 44px (44 * 1.33 ≈ 58.5).
         const bsz = 58.5;
