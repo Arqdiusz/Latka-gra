@@ -345,9 +345,11 @@ function buildRooms() {
 function setRoom(r) {
     room = r;
     // Motylki-tło generowane od nowa w każdym pokoju (nie mają "przelatywać"
-    // ze sobą między planszami) — ambientUpdate() i tak odtworzy je zaraz,
-    // jeśli nowy pokój to ogród/podwórko.
+    // ze sobą między planszami) — i własny, świeży odliczany czas do
+    // następnego wlotu, niezależny od tego, ile zostało w poprzednim
+    // pokoju (inaczej potrafiły długo nie pojawić się w nowym pokoju).
     ambient.length = 0;
+    nextAmbientSpawn = clock + 2000 + Math.random() * 4000;
     buildRooms();
     setOffset(0);
     const key = {
@@ -1430,26 +1432,24 @@ function butterflyEvent() {
 
 // ── Motylki-tło (ogród/podwórko) ─────────────────────────────────────────
 // Czysto dekoracyjne, niezależne od motylka z butterflyEvent() powyżej (ten
-// jest interaktywny — do złapania). Te tylko fruwają losowo w tle, żeby
-// ogród/podwórko "żyło". Każdy raz wylosowany kolor zachowuje przez cały
-// lot (nie zmienia się w trakcie) i lata "jak pijany" — kierunek dryfuje
-// łagodnie (dwie nałożone fale o różnych okresach), z miękkim zawracaniem
-// od krawędzi obszaru lotu, zamiast prostej linii.
-const AMBIENT_MAX = 2,
-    AMBIENT_SIZE = 30,
-    AMBIENT_MARGIN_X = 26,
-    AMBIENT_MARGIN_TOP = 40,
+// jest interaktywny — do złapania). Rzadki akcent w tle, nie główna
+// atrakcja — piesek ma zostać głównym aktorem. Jeden naraz, wlatuje z
+// boku/góry (nigdy nie "teleportuje się" na środek), chwilę pofruwa "jak
+// pijany" (kierunek dryfuje przez dwie nałożone fale o różnych okresach,
+// z miękkim zawracaniem od krawędzi obszaru lotu) i wylatuje tą samą drogą.
+// Kolor wylosowany na starcie trzyma przez cały lot.
+const AMBIENT_MAX = 1,
+    AMBIENT_SIZE = 60, // 2x — żeby pixel art był wyraźnie widoczny
+    AMBIENT_MARGIN_X = 44,
+    AMBIENT_MARGIN_TOP = 44,
     // Pas lotu to wyłącznie górne tło (niebo/dach budy), nad pieskiem —
     // z grubsza wysokość strzałek nawigacji (top:44% z 550px scenki, tu
     // z małym zapasem), żeby nigdy nie wchodziły na psa.
-    AMBIENT_ZONE_BOTTOM = 232;
+    AMBIENT_ZONE_BOTTOM = 232,
+    AMBIENT_FLY_MS = 1100; // czas samego wlotu/wylotu
 
-function ambientSpawn() {
-    const colorIndex = Math.floor(Math.random() * CFG.motyle.presets.length);
-    ambient.push({
-        colorIndex,
-        x: AMBIENT_MARGIN_X + Math.random() * (W - AMBIENT_MARGIN_X * 2),
-        y: AMBIENT_MARGIN_TOP + Math.random() * (AMBIENT_ZONE_BOTTOM - AMBIENT_MARGIN_TOP),
+function ambientRandomParams() {
+    return {
         heading: Math.random() * Math.PI * 2,
         speed: 34 + Math.random() * 26,
         freq1: 0.5 + Math.random() * 0.7,
@@ -1460,7 +1460,35 @@ function ambientSpawn() {
         seed2: Math.random() * Math.PI * 2,
         // Lekko różne rozmiary — wrażenie głębi, bez przesady.
         sizeScale: 0.75 + Math.random() * 0.5,
+    };
+}
+
+function ambientSpawn() {
+    const colorIndex = Math.floor(Math.random() * CFG.motyle.presets.length),
+        // Punkt docelowy wlotu — gdzieś w środku pasa lotu.
+        settleX = AMBIENT_MARGIN_X + Math.random() * (W - AMBIENT_MARGIN_X * 2),
+        settleY = AMBIENT_MARGIN_TOP + Math.random() * (AMBIENT_ZONE_BOTTOM - AMBIENT_MARGIN_TOP),
+        // Wlot z boku albo z góry — nigdy "znikąd" na środku ekranu.
+        side = Math.floor(Math.random() * 3),
+        from =
+            side === 0
+                ? { x: -AMBIENT_SIZE, y: settleY } // z lewej
+                : side === 1
+                  ? { x: W + AMBIENT_SIZE, y: settleY } // z prawej
+                  : { x: settleX, y: AMBIENT_MARGIN_TOP - AMBIENT_SIZE }; // z góry
+    ambient.push({
+        colorIndex,
+        state: "entering",
+        phaseStart: clock,
+        phaseDuration: AMBIENT_FLY_MS,
+        from,
+        to: { x: settleX, y: settleY },
+        x: from.x,
+        y: from.y,
         spawnedAt: clock,
+        ...ambientRandomParams(),
+        // Czas, po jakim zacznie wylatywać — reszta to sam wlot/wylot.
+        leaveAt: clock + AMBIENT_FLY_MS + 4000 + Math.random() * 4000,
     });
 }
 
@@ -1469,13 +1497,37 @@ function ambientUpdate(dt) {
         if (ambient.length) ambient.length = 0;
         return;
     }
-    if (ambient.length < AMBIENT_MAX && clock >= nextAmbientSpawn) {
-        ambientSpawn();
-        // Odstęp losowy, żeby nie latały "jeden za drugim" w rytm.
-        nextAmbientSpawn = clock + 1800 + Math.random() * 4500;
-    }
+    if (ambient.length < AMBIENT_MAX && clock >= nextAmbientSpawn) ambientSpawn();
     const dtS = dt / 1000;
-    for (const b of ambient) {
+    for (let i = ambient.length - 1; i >= 0; i--) {
+        const b = ambient[i];
+        if (b.state === "entering" || b.state === "leaving") {
+            const p = clamp((clock - b.phaseStart) / b.phaseDuration, 0, 1);
+            b.x = b.from.x + (b.to.x - b.from.x) * p;
+            b.y = b.from.y + (b.to.y - b.from.y) * p + Math.sin(p * Math.PI * 3) * 6;
+            if (p >= 1) {
+                if (b.state === "entering") {
+                    b.state = "wander";
+                    b.heading = Math.atan2(b.to.y - b.from.y, b.to.x - b.from.x);
+                } else {
+                    ambient.splice(i, 1);
+                    // Kolejny motylek dopiero po dłuższej, losowej przerwie —
+                    // to ma być rzadki akcent w tle, a nie stały ruch.
+                    nextAmbientSpawn = clock + 9000 + Math.random() * 10000;
+                }
+            }
+            continue;
+        }
+        // state === "wander"
+        if (clock >= b.leaveAt) {
+            b.state = "leaving";
+            b.phaseStart = clock;
+            b.phaseDuration = AMBIENT_FLY_MS;
+            b.from = { x: b.x, y: b.y };
+            // Wylatuje w stronę, w którą już leciał — kontynuacja, nie zwrot.
+            b.to = { x: b.x + Math.cos(b.heading) * 260, y: b.y + Math.sin(b.heading) * 90 };
+            continue;
+        }
         const t = (clock - b.spawnedAt) / 1000;
         // Bazowe "pijane" dryfowanie kierunku — suma dwóch fal.
         let turn = Math.sin(t * b.freq1 + b.seed1) * b.amp1 + Math.sin(t * b.freq2 + b.seed2) * b.amp2;
@@ -1508,11 +1560,11 @@ function ambientDraw() {
             frameNum = seqFrames[fi],
             cell = cells.motyle[frameNum - 1];
         if (!cell) continue;
-        const size = AMBIENT_SIZE * b.sizeScale;
+        const size = AMBIENT_SIZE * b.sizeScale,
+            dx = b.state === "wander" ? Math.cos(b.heading) : b.to.x - b.from.x;
         ctx.save();
-        ctx.globalAlpha = Math.min(1, (clock - b.spawnedAt) / 400); // delikatny fade-in po pojawieniu
         ctx.translate(b.x, b.y);
-        if (Math.cos(b.heading) < 0) ctx.scale(-1, 1);
+        if (dx < 0) ctx.scale(-1, 1);
         ctx.drawImage(cell, -size / 2, -size / 2, size, size);
         ctx.restore();
     }
@@ -1657,7 +1709,10 @@ async function loadImage(src) {
     await new Promise((ok, bad) => {
         im.onload = ok;
         im.onerror = () => bad(Error("Nie można odczytać grafiki."));
-        im.src = src;
+        // Cache-bust — tak samo jak przy JSON-ach z animacjami (fresh()
+        // powyżej), żeby podmieniona grafika była widoczna od razu, bez
+        // czyszczenia cache przeglądarki.
+        im.src = src + (src.includes("?") ? "&" : "?") + "t=" + Date.now();
     });
     return im;
 }

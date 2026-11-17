@@ -8,7 +8,7 @@
         {
             "name": "01. Zielony",
             "seq": "1,2,3,4",
-            "ms": 90,
+            "ms": 180,
             "intro": "",
             "outro": "",
             "repeat": true
@@ -16,7 +16,7 @@
         {
             "name": "02. Czerwony",
             "seq": "5,6,7,8",
-            "ms": 90,
+            "ms": 180,
             "intro": "",
             "outro": "",
             "repeat": true
@@ -24,7 +24,7 @@
         {
             "name": "03. Niebieski",
             "seq": "9,10,11,12",
-            "ms": 90,
+            "ms": 180,
             "intro": "",
             "outro": "",
             "repeat": true
@@ -32,7 +32,7 @@
         {
             "name": "04. Pomarańczowy",
             "seq": "13,14,15,16",
-            "ms": 90,
+            "ms": 180,
             "intro": "",
             "outro": "",
             "repeat": true
@@ -40,7 +40,7 @@
         {
             "name": "05. Różowy",
             "seq": "17,18,19,20",
-            "ms": 90,
+            "ms": 180,
             "intro": "",
             "outro": "",
             "repeat": true
