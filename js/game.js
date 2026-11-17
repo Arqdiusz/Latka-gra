@@ -9,6 +9,7 @@ const
         a02: [],
         ui: [],
         bubbles: [],
+        motyle: [],
     },
     pixels = {
         a01: [],
@@ -119,6 +120,8 @@ let loaded = false,
     petFinishAt = Infinity,
     petLast = 0,
     butterfly = null,
+    ambient = [], // motylki-tło w ogrodzie/podwórku — dekoracyjne, patrz ambientSpawn/ambientUpdate/ambientDraw
+    nextAmbientSpawn = 0,
     bubble = null,
     bubblePos = null,
     scale = 1,
@@ -341,6 +344,7 @@ function buildRooms() {
 
 function setRoom(r) {
     room = r;
+    if (!["garden", "yard"].includes(r)) ambient.length = 0; // motylki-tło tylko na zewnątrz
     buildRooms();
     setOffset(0);
     const key = {
@@ -1421,6 +1425,85 @@ function butterflyEvent() {
     return true;
 }
 
+// ── Motylki-tło (ogród/podwórko) ─────────────────────────────────────────
+// Czysto dekoracyjne, niezależne od motylka z butterflyEvent() powyżej (ten
+// jest interaktywny — do złapania). Te tylko fruwają losowo w tle, żeby
+// ogród/podwórko "żyło". Każdy raz wylosowany kolor zachowuje przez cały
+// lot (nie zmienia się w trakcie) i lata "jak pijany" — kierunek dryfuje
+// łagodnie (dwie nałożone fale o różnych okresach), z miękkim zawracaniem
+// od krawędzi obszaru lotu, zamiast prostej linii.
+const AMBIENT_MAX = 2,
+    AMBIENT_SIZE = 30,
+    AMBIENT_MARGIN_X = 26,
+    AMBIENT_MARGIN_TOP = 46,
+    AMBIENT_MARGIN_BOTTOM = 70; // nad ziemią — nie mają fruwać po trawie
+
+function ambientSpawn() {
+    const colorIndex = Math.floor(Math.random() * CFG.motyle.presets.length);
+    ambient.push({
+        colorIndex,
+        x: AMBIENT_MARGIN_X + Math.random() * (W - AMBIENT_MARGIN_X * 2),
+        y: AMBIENT_MARGIN_TOP + Math.random() * (GROUND - AMBIENT_MARGIN_BOTTOM - AMBIENT_MARGIN_TOP),
+        heading: Math.random() * Math.PI * 2,
+        speed: 34 + Math.random() * 26,
+        freq1: 0.5 + Math.random() * 0.7,
+        freq2: 1.4 + Math.random() * 1.1,
+        amp1: 0.8 + Math.random() * 0.6,
+        amp2: 0.35 + Math.random() * 0.4,
+        seed1: Math.random() * Math.PI * 2,
+        seed2: Math.random() * Math.PI * 2,
+        spawnedAt: clock,
+    });
+}
+
+function ambientUpdate(dt) {
+    if (!images.motyle || !["garden", "yard"].includes(room)) {
+        if (ambient.length) ambient.length = 0;
+        return;
+    }
+    if (ambient.length < AMBIENT_MAX && clock >= nextAmbientSpawn) {
+        ambientSpawn();
+        // Odstęp losowy, żeby nie latały "jeden za drugim" w rytm.
+        nextAmbientSpawn = clock + 1800 + Math.random() * 4500;
+    }
+    const dtS = dt / 1000;
+    for (const b of ambient) {
+        const t = (clock - b.spawnedAt) / 1000;
+        // Bazowe "pijane" dryfowanie kierunku — suma dwóch fal.
+        let turn = Math.sin(t * b.freq1 + b.seed1) * b.amp1 + Math.sin(t * b.freq2 + b.seed2) * b.amp2;
+        // Miękkie zawracanie, gdy zbliża się do krawędzi obszaru lotu.
+        const steerTo = (target) => {
+            let d = ((target - b.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+            return d * 2.4;
+        };
+        if (b.x < AMBIENT_MARGIN_X) turn += steerTo(0);
+        else if (b.x > W - AMBIENT_MARGIN_X) turn += steerTo(Math.PI);
+        if (b.y < AMBIENT_MARGIN_TOP) turn += steerTo(Math.PI / 2);
+        else if (b.y > GROUND - AMBIENT_MARGIN_BOTTOM) turn += steerTo(-Math.PI / 2);
+        b.heading += turn * dtS;
+        b.x += Math.cos(b.heading) * b.speed * dtS;
+        b.y += Math.sin(b.heading) * b.speed * dtS;
+    }
+}
+
+function ambientDraw() {
+    if (!images.motyle || !ambient.length) return;
+    for (const b of ambient) {
+        const preset = CFG.motyle.presets[b.colorIndex],
+            seqFrames = numbers(preset.seq),
+            fi = Math.floor((clock - b.spawnedAt) / preset.ms) % seqFrames.length,
+            frameNum = seqFrames[fi],
+            cell = cells.motyle[frameNum - 1];
+        if (!cell) continue;
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, (clock - b.spawnedAt) / 400); // delikatny fade-in po pojawieniu
+        ctx.translate(b.x, b.y);
+        if (Math.cos(b.heading) < 0) ctx.scale(-1, 1);
+        ctx.drawImage(cell, -AMBIENT_SIZE / 2, -AMBIENT_SIZE / 2, AMBIENT_SIZE, AMBIENT_SIZE);
+        ctx.restore();
+    }
+}
+
 function iconDraw(c, key, x, y, w, h = w) {
     if (key === "poop") {
         const ratio = images.poop.width / images.poop.height;
@@ -1481,6 +1564,9 @@ function draw(dt) {
     ctx.imageSmoothingEnabled = false;
     if (!dogHidden) drawDog(ctx);
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
+    // Motylki-tło — schowane na czas interaktywnego butterflyEvent(), żeby
+    // się wizualnie nie gryzły z motylkiem do złapania.
+    if (phase !== "butterfly") ambientDraw();
     if (butterfly?.visible) {
         // O 33% większy niż bazowe 44px (44 * 1.33 ≈ 58.5).
         const bsz = 58.5;
@@ -1539,6 +1625,7 @@ function loopFrame(t) {
             else if (clock >= idleUntil) autonomous();
         }
         if (bubbleGame) bubbleGameUpdate(dt);
+        if (phase !== "butterfly") ambientUpdate(dt);
         if (clock >= nextBubble && !sleeping && phase === "idle") {
             // Priorytet: kupka > realnie paląca potrzeba (<=33%) > losowa —
             // dymek ma sygnalizować stan Łatki, a nie być czysto dekoracyjny.
@@ -1566,16 +1653,35 @@ async function boot() {
     P = await fresh("data/config.json");
     // Załaduj animacje z plików edytora (animacje-ustawienia/)
     // — te pliki są źródłem prawdy; config.json trzyma resztę ustawień
-    const [anim01, anim02] = await Promise.all([
+    const [anim01, anim02, motyleAnim] = await Promise.all([
         fresh("animacje-ustawienia/latka-animacje-01.json"),
         fresh("animacje-ustawienia/latka-animacje-02.json"),
+        fresh("animacje-ustawienia/motyle-001-animacje.json"),
     ]);
     CFG = P.config;
     CFG.a01 = anim01;
     CFG.a02 = anim02;
+    CFG.motyle = motyleAnim;
     UI = CFG.ui;
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
     for (let i = 0; i < 2; i++) images["b" + i] = await loadImage(P.assets.butterflies[i]);
+    if (P.assets.motyle) {
+        // Arkusz motyle-001.png: siatka cols×rows (patrz CFG.motyle), po
+        // jednym wierszu na kolor — tniemy na osobne klatki, tak jak banki
+        // niżej. Używane na razie do motylków-tła w ogrodzie/podwórku
+        // (ambientDraw/ambientUpdate); później też do nowej mini-gry.
+        images.motyle = await loadImage(P.assets.motyle);
+        const { cols, rows } = CFG.motyle,
+            mw = images.motyle.width / cols,
+            mh = images.motyle.height / rows;
+        for (let f = 0; f < cols * rows; f++) {
+            const c = document.createElement("canvas");
+            c.width = mw;
+            c.height = mh;
+            c.getContext("2d").drawImage(images.motyle, (f % cols) * mw, Math.floor(f / cols) * mh, mw, mh, 0, 0, mw, mh);
+            cells.motyle.push(c);
+        }
+    }
     if (P.assets.balls)
         for (let i = 0; i < P.assets.balls.length; i++)
             images["ball" + i] = await loadImage(P.assets.balls[i]);
