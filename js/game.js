@@ -22,7 +22,7 @@ const
     GROUND = 425,
     BASE = 2.35,
     KEY = "latkaGame0288",
-    order = ["attic", "garden", "yard", "living", "kitchen", "bathroom"];
+    order = ["meadow", "garden", "yard", "living", "kitchen", "bathroom"];
 const items = [
     {
         id: "food",
@@ -358,7 +358,8 @@ function setRoom(r) {
         living: "living",
         kitchen: "kitchen",
         bathroom: "bathroom",
-        attic: "home",
+        // Ikona kreta — zapowiedź przyszłej mini-gry "Złap kreta" na łące.
+        meadow: "mole",
     }[r];
     $(".roomBadge img").src = icons[key];
     $(".roomBadge img").alt = {
@@ -367,7 +368,7 @@ function setRoom(r) {
         living: "Salon",
         kitchen: "Kuchnia",
         bathroom: "Łazienka",
-        attic: "Poddasze",
+        meadow: "Łąka",
     }[r];
     syncMenu();
     updateArrows();
@@ -1445,8 +1446,7 @@ const AMBIENT_MAX = 2,
     // Pas lotu to wyłącznie górne tło (niebo/dach budy), nad pieskiem —
     // z grubsza wysokość strzałek nawigacji (top:44% z 550px scenki, tu
     // z małym zapasem), żeby nigdy nie wchodziły na psa.
-    AMBIENT_ZONE_BOTTOM = 232,
-    AMBIENT_FLY_MS = 1100; // czas samego wlotu/wylotu
+    AMBIENT_ZONE_BOTTOM = 232;
 
 function ambientRandomParams() {
     return {
@@ -1481,25 +1481,32 @@ function ambientSpawn() {
         settleX = AMBIENT_MARGIN_X + Math.random() * (W - AMBIENT_MARGIN_X * 2),
         settleY = AMBIENT_MARGIN_TOP + Math.random() * (AMBIENT_ZONE_BOTTOM - AMBIENT_MARGIN_TOP),
         // Wlot z boku albo z góry — nigdy "znikąd" na środku ekranu.
-        from = ambientEdgePoint(settleX, settleY);
+        from = ambientEdgePoint(settleX, settleY),
+        params = ambientRandomParams(),
+        dist = Math.hypot(settleX - from.x, settleY - from.y);
     ambient.push({
         colorIndex,
         state: "entering",
         phaseStart: clock,
-        phaseDuration: AMBIENT_FLY_MS,
+        // Wlot leci z tą samą prędkością co późniejszy spokojny "wander"
+        // (params.speed) — stały czas niezależny od odległości wyglądał
+        // nienaturalnie szybko przy dłuższych dolotach (np. z góry).
+        phaseDuration: Math.max(400, (dist / params.speed) * 1000),
         from,
         to: { x: settleX, y: settleY },
         x: from.x,
         y: from.y,
         spawnedAt: clock,
-        ...ambientRandomParams(),
-        // Czas, po jakim zacznie wylatywać — reszta to sam wlot/wylot.
-        leaveAt: clock + AMBIENT_FLY_MS + 4000 + Math.random() * 4000,
+        ...params,
+        leaveAt: Infinity, // ustawiane dopiero, gdy realnie zacznie "wander" (patrz niżej)
     });
 }
 
 function ambientUpdate(dt) {
-    if (!images.motyle || !["garden", "yard"].includes(room)) {
+    // "meadow" (dawniej "attic") to wizualnie też ogród/łąka — motylki-tło
+    // lecą i tam. Interaktywny butterflyEvent() (łapanie motylka) na razie
+    // zostaje ograniczony tylko do garden/yard, osobno od tej listy.
+    if (!images.motyle || !["garden", "yard", "meadow"].includes(room)) {
         if (ambient.length) ambient.length = 0;
         return;
     }
@@ -1515,6 +1522,10 @@ function ambientUpdate(dt) {
                 if (b.state === "entering") {
                     b.state = "wander";
                     b.heading = Math.atan2(b.to.y - b.from.y, b.to.x - b.from.x);
+                    // Czas, po jakim zacznie wylatywać, liczony dopiero od
+                    // startu realnego "wander" (nie od wlotu, który trwa
+                    // różnie długo zależnie od odległości).
+                    b.leaveAt = clock + 5000 + Math.random() * 6000;
                 } else {
                     ambient.splice(i, 1);
                     // Kolejny motylek dopiero po dłuższej, losowej przerwie —
@@ -1528,11 +1539,13 @@ function ambientUpdate(dt) {
         if (clock >= b.leaveAt) {
             b.state = "leaving";
             b.phaseStart = clock;
-            b.phaseDuration = AMBIENT_FLY_MS;
             b.from = { x: b.x, y: b.y };
             // Strona wylotu losowana od nowa — niezależnie od strony, z
             // której wleciał, i od tego, dokąd akurat dryfował.
             b.to = ambientEdgePoint(b.x, b.y);
+            // Tak samo jak przy wlocie — ta sama prędkość co "wander",
+            // żeby wylot nie przyspieszał nienaturalnie.
+            b.phaseDuration = Math.max(400, (Math.hypot(b.to.x - b.x, b.to.y - b.y) / b.speed) * 1000);
             continue;
         }
         const t = (clock - b.spawnedAt) / 1000;
