@@ -1523,7 +1523,7 @@ const AMBIENT_MAX = 1,
     // fazach lotu (stary bsz=58.5), niezależny od AMBIENT_SIZE (to inna
     // skala kompozycji: blisko pyszczka/na scenie eventu, nie "duży akcent
     // w tle").
-    EVENT_BUTTERFLY_SIZE = 58.5;
+    EVENT_BUTTERFLY_SIZE = 96.5;
 
 function ambientRandomParams() {
     return {
