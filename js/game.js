@@ -1438,7 +1438,7 @@ function butterflyEvent() {
 // pijany" (kierunek dryfuje przez dwie nałożone fale o różnych okresach,
 // z miękkim zawracaniem od krawędzi obszaru lotu) i wylatuje tą samą drogą.
 // Kolor wylosowany na starcie trzyma przez cały lot.
-const AMBIENT_MAX = 1,
+const AMBIENT_MAX = 2,
     AMBIENT_SIZE = 60, // 2x — żeby pixel art był wyraźnie widoczny
     AMBIENT_MARGIN_X = 44,
     AMBIENT_MARGIN_TOP = 44,
@@ -1463,19 +1463,25 @@ function ambientRandomParams() {
     };
 }
 
+// Losowy punkt poza kadrem (lewa/prawa/góra) dla danego punktu "wewnątrz" —
+// używane niezależnie przy wlocie i przy wylocie, więc strona za każdym
+// razem może wyjść inna.
+function ambientEdgePoint(nearX, nearY) {
+    const side = Math.floor(Math.random() * 3);
+    return side === 0
+        ? { x: -AMBIENT_SIZE, y: nearY } // z lewej
+        : side === 1
+          ? { x: W + AMBIENT_SIZE, y: nearY } // z prawej
+          : { x: nearX, y: AMBIENT_MARGIN_TOP - AMBIENT_SIZE }; // z góry
+}
+
 function ambientSpawn() {
     const colorIndex = Math.floor(Math.random() * CFG.motyle.presets.length),
         // Punkt docelowy wlotu — gdzieś w środku pasa lotu.
         settleX = AMBIENT_MARGIN_X + Math.random() * (W - AMBIENT_MARGIN_X * 2),
         settleY = AMBIENT_MARGIN_TOP + Math.random() * (AMBIENT_ZONE_BOTTOM - AMBIENT_MARGIN_TOP),
         // Wlot z boku albo z góry — nigdy "znikąd" na środku ekranu.
-        side = Math.floor(Math.random() * 3),
-        from =
-            side === 0
-                ? { x: -AMBIENT_SIZE, y: settleY } // z lewej
-                : side === 1
-                  ? { x: W + AMBIENT_SIZE, y: settleY } // z prawej
-                  : { x: settleX, y: AMBIENT_MARGIN_TOP - AMBIENT_SIZE }; // z góry
+        from = ambientEdgePoint(settleX, settleY);
     ambient.push({
         colorIndex,
         state: "entering",
@@ -1524,8 +1530,9 @@ function ambientUpdate(dt) {
             b.phaseStart = clock;
             b.phaseDuration = AMBIENT_FLY_MS;
             b.from = { x: b.x, y: b.y };
-            // Wylatuje w stronę, w którą już leciał — kontynuacja, nie zwrot.
-            b.to = { x: b.x + Math.cos(b.heading) * 260, y: b.y + Math.sin(b.heading) * 90 };
+            // Strona wylotu losowana od nowa — niezależnie od strony, z
+            // której wleciał, i od tego, dokąd akurat dryfował.
+            b.to = ambientEdgePoint(b.x, b.y);
             continue;
         }
         const t = (clock - b.spawnedAt) / 1000;
