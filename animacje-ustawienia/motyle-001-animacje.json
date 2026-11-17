@@ -1,45 +1,45 @@
 {
-    "asset": "motyle-001.png",
-    "cols": 4,
+    "asset": "motyle-new.png",
+    "cols": 3,
     "rows": 5,
     "ground": 0,
     "offsets": {},
     "presets": [
         {
             "name": "01. Zielony",
-            "seq": "1,2,3,4",
+            "seq": "1,2,3",
             "ms": 180,
             "intro": "",
             "outro": "",
             "repeat": true
         },
         {
-            "name": "02. Czerwony",
-            "seq": "5,6,7,8",
+            "name": "02. Żółty",
+            "seq": "4,5,6",
             "ms": 180,
             "intro": "",
             "outro": "",
             "repeat": true
         },
         {
-            "name": "03. Niebieski",
-            "seq": "9,10,11,12",
+            "name": "03. Czerwony",
+            "seq": "7,8,9",
             "ms": 180,
             "intro": "",
             "outro": "",
             "repeat": true
         },
         {
-            "name": "04. Pomarańczowy",
-            "seq": "13,14,15,16",
+            "name": "04. Fioletowy",
+            "seq": "10,11,12",
             "ms": 180,
             "intro": "",
             "outro": "",
             "repeat": true
         },
         {
-            "name": "05. Różowy",
-            "seq": "17,18,19,20",
+            "name": "05. Niebieski",
+            "seq": "13,14,15",
             "ms": 180,
             "intro": "",
             "outro": "",
