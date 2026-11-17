@@ -1166,6 +1166,7 @@ canvas.addEventListener("pointerdown", (e) => {
         kind: null,
         dog: petHit(p.x, p.y),
         poop: poopHit(p.x, p.y),
+        butterfly: phase !== "butterfly" ? ambientHit(p.x, p.y) : null,
     };
     try {
         canvas.setPointerCapture(e.pointerId);
@@ -1227,6 +1228,7 @@ function pointerEnd(e, cancel = false) {
         const p = pointerXY(e);
         if (g.poop && poopHit(p.x, p.y)) cleanPoop();
         else if (g.dog && petHit(p.x, p.y)) react();
+        else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientCatch(g.butterfly);
     }
 }
 canvas.addEventListener("pointerup", (e) => pointerEnd(e));
@@ -1436,16 +1438,26 @@ function butterflyEvent() {
     return true;
 }
 
-// ── Motylki-tło (ogród/podwórko) ─────────────────────────────────────────
-// Czysto dekoracyjne, niezależne od motylka z butterflyEvent() powyżej (ten
-// jest interaktywny — do złapania). Rzadki akcent w tle, nie główna
-// atrakcja — piesek ma zostać głównym aktorem. Jeden naraz, wlatuje z
-// boku/góry (nigdy nie "teleportuje się" na środek), chwilę pofruwa "jak
-// pijany" (kierunek dryfuje przez dwie nałożone fale o różnych okresach,
-// z miękkim zawracaniem od krawędzi obszaru lotu) i wylatuje tą samą drogą.
-// Kolor wylosowany na starcie trzyma przez cały lot.
-const AMBIENT_MAX = 2,
-    AMBIENT_SIZE = 30, // małe — mają być wyraźnie w głębi tła, nie na planie psa
+// ── Motylek-tło (ogród/podwórko/łąka) ────────────────────────────────────
+// Niezależny od motylka z butterflyEvent() powyżej (ten jest automatyczny —
+// piesek go sam goni i łapie). Ten tutaj lata jeden naraz, w realnym
+// rozmiarze (bez pomniejszania), wlatuje z boku/góry (nigdy nie
+// "teleportuje się" na środek), chwilę pofruwa "jak pijany" (kierunek
+// dryfuje przez dwie nałożone fale o różnych okresach, z miękkim
+// zawracaniem od krawędzi obszaru lotu) i wylatuje tą samą drogą — chyba że
+// gracz go kliknie/dotknie. Kolor wylosowany na starcie trzyma przez cały
+// lot. Kliknięcie na razie tylko odgrywa krótki efekt (pstryk + zniknięcie)
+// — docelowo stąd ma startować osobna mini-gra (do zaprojektowania później,
+// patrz ambientCatch()).
+const AMBIENT_MAX = 1,
+    // Realny rozmiar — rysujemy klatkę 1:1 (kafelek arkusza motyle-new.png
+    // to natywne 64×64). Duży i widoczny, bo to już nie tylko dekoracja w
+    // tle, tylko coś do kliknięcia.
+    AMBIENT_SIZE = 64,
+    // Obszar trafienia trochę większy niż sama grafika — łatwiej trafić
+    // palcem na telefonie.
+    AMBIENT_HIT_PAD = 12,
+    AMBIENT_CATCH_MS = 380,
     AMBIENT_MARGIN_X = 44,
     AMBIENT_MARGIN_TOP = 44,
     // Pas lotu to wyłącznie górne tło (niebo/dach budy), nad pieskiem —
@@ -1527,6 +1539,17 @@ function ambientUpdate(dt) {
     const dtS = dt / 1000;
     for (let i = ambient.length - 1; i >= 0; i--) {
         const b = ambient[i];
+        if (b.state === "caught") {
+            // Pozycja zamrożona w miejscu kliknięcia — ambientDraw() robi z
+            // niej krótki "pstryk" (powiększenie + zanik), patrz niżej.
+            if (clock - b.phaseStart >= AMBIENT_CATCH_MS) {
+                ambient.splice(i, 1);
+                // Krócej niż zwykły, losowy odlot — to była reakcja na
+                // interakcję gracza, nie przypadkowe zniknięcie z pola widzenia.
+                nextAmbientSpawn = clock + 4000 + Math.random() * 5000;
+            }
+            continue;
+        }
         if (b.state === "entering" || b.state === "leaving") {
             const p = clamp((clock - b.phaseStart) / b.phaseDuration, 0, 1),
                 // Wygięcie prostopadłe do odcinka from->to (działa tak samo
@@ -1584,6 +1607,27 @@ function ambientUpdate(dt) {
     }
 }
 
+// Czy (px,py) trafia w widocznego, jeszcze niezłapanego motylka-tło —
+// używane przy tapnięciu/kliknięciu na scenę (patrz pointerdown/pointerEnd).
+function ambientHit(px, py) {
+    for (const b of ambient) {
+        if (b.state === "caught") continue;
+        if (Math.hypot(px - b.x, py - b.y) <= AMBIENT_SIZE / 2 + AMBIENT_HIT_PAD) return b;
+    }
+    return null;
+}
+
+// Gracz kliknął/dotknął motylka-tło. Na razie to tylko wizualny placeholder
+// (pstryk + zniknięcie) — "wstępny zarys" przyszłej mini-gry, która ma się
+// tu docelowo odpalać zamiast tego krótkiego efektu.
+function ambientCatch(b) {
+    if (!b || b.state === "caught") return;
+    b.state = "caught";
+    b.phaseStart = clock;
+    // TODO (przyszła mini-gra): tu będzie start właściwej interakcji,
+    // zamiast samego zniknięcia motylka.
+}
+
 function ambientDraw() {
     if (!images.motyle || !ambient.length) return;
     for (const b of ambient) {
@@ -1593,9 +1637,16 @@ function ambientDraw() {
             frameNum = seqFrames[fi],
             cell = cells.motyle[frameNum - 1];
         if (!cell) continue;
-        const dx = b.state === "wander" ? Math.cos(b.heading) : b.to.x - b.from.x;
+        const caught = b.state === "caught",
+            dx = b.state === "wander" ? Math.cos(b.heading) : caught ? 1 : b.to.x - b.from.x;
         ctx.save();
         ctx.translate(b.x, b.y);
+        if (caught) {
+            // Krótki "pstryk": lekkie powiększenie + zanikanie do zera.
+            const p = clamp((clock - b.phaseStart) / AMBIENT_CATCH_MS, 0, 1);
+            ctx.globalAlpha = 1 - p;
+            ctx.scale(1 + p * 0.8, 1 + p * 0.8);
+        }
         if (dx < 0) ctx.scale(-1, 1);
         ctx.drawImage(cell, -AMBIENT_SIZE / 2, -AMBIENT_SIZE / 2, AMBIENT_SIZE, AMBIENT_SIZE);
         ctx.restore();
