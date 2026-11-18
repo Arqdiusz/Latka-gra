@@ -121,7 +121,7 @@ $("#memoPopup .moleCancel").onclick = () => {
 
 // ── Wybór poziomu ────────────────────────────────────────────────
 function memoShowLevels() {
-    const box = $(".memoGrid"),
+    const box = $(".memoLevels .memoGrid"),
         done = memoDone();
     box.innerHTML = "";
     MEMO_LEVELS.forEach((lv, i) => {
