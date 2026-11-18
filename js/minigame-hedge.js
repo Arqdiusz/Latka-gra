@@ -359,7 +359,7 @@ function hedgeGameDraw() {
     // Ostatnio złapany owoc "na kolcach" (tylko jeden).
     const last = g.collected[g.collected.length - 1],
         lc = cellsLast(last);
-    if (lc) c.drawImage(lc, g.hx - 22, HEDGE_Y - HEDGE_SIZE * 0.5 - 8, 44, 44);
+    if (lc) c.drawImage(lc, g.hx - HEDGE_ITEM / 2, HEDGE_Y - HEDGE_SIZE * 0.3 - HEDGE_ITEM * 0.75, HEDGE_ITEM, HEDGE_ITEM); // naturalny rozmiar, osadzony na kolcach
     // Efekty +/- (gwiazdka / zły znaczek jak w bańkach)
     for (const e of g.effects) {
         const im = images[e.good ? "bubbleStar" : "bubbleWrong"];
