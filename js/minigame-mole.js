@@ -28,7 +28,7 @@ const moleCanvas = $(".moleCanvas"),
 // "Masz już 1! Szukaj następnego.".
 function moleMessage(g) {
     if (!g) return "";
-    if (g.won) return "Brawo! Złapałeś wszystkie krety! 🐦";
+    if (g.won) return "Brawo! Złapałeś wszystkie krety! 🎉";
     if (g.caught === 0) return "Znajdź kreta!";
     return `Masz już ${g.caught}! Szukaj następnego.`;
 }
@@ -58,8 +58,10 @@ function updateMoleUi() {
 
 $(".moleBack").onclick = () => {
     // Wyjście przyciskiem cofania — bez nagrody (jak przerwanie przez
-    // menu), tak samo jak przy myciu/baniekach.
-    if (phase !== "mole-game") return;
+    // menu), tak samo jak przy myciu/baniekach. Gdy pokazuje się popup
+    // wygranej (.moleWinPopup), gra jest już skończona — przycisk cofania
+    // (schowany pod popupem) nie powinien nic robić.
+    if (phase !== "mole-game" || !$(".moleWinPopup").hidden) return;
     moleGameFinish(false);
 };
 
@@ -96,8 +98,11 @@ $(".moleCancel").onclick = () => {
 
 /* ── Siatka dziur — 3 kolumny × 4 rzędy = 12 kopczyków ───────────── */
 const MOLE_NEED = 10,
-    // Max duże — ledwo mieszczą się między sąsiadami (patrz buildMoleHoles).
-    MOLE_HOLE_SIZE = 92,
+    // Duże — grafika kreta ma dużo przezroczystego marginesu w komórce
+    // arkusza (realna treść to ok. 87% szerokości/80% wysokości komórki),
+    // więc nawet przy tym rozmiarze sąsiednie kopczyki wizualnie się nie
+    // dotykają (patrz buildMoleHoles).
+    MOLE_HOLE_SIZE = 104,
     MOLE_HIT_PAD = 14,
     MOLE_GIVE_UP = 120000, // bez trafienia ani jednego kreta przez tyle ms -> koniec
     MOLE_FRAME_MS = 85, // bazowe tempo klatki wyłaniania/chowania (przed trudnością)
@@ -107,11 +112,7 @@ const MOLE_NEED = 10,
     MOLE_COLS = 3,
     MOLE_ROWS = 4,
     MOLE_MARGIN_X = 20,
-    MOLE_MARGIN_Y = 18,
-    // Ile trwa świętowanie w OKNIE gry po złapaniu kompletu (ptaszek +
-    // konfetti), zanim dopiero wtedy przechodzimy do wspólnego popupu z
-    // nagrodą — żeby gra nie "wyłączała się" nagle.
-    MOLE_WIN_CELEBRATE_MS = 1400;
+    MOLE_MARGIN_Y = 18;
 
 function buildMoleHoles() {
     const usableW = MOLE_W - MOLE_MARGIN_X * 2,
@@ -167,12 +168,10 @@ function moleSpawnHole() {
 function moleGameUpdate(dt) {
     if (!moleGame) return;
     const g = moleGame;
-    if (g.won) {
-        // Świętowanie (ptaszek + konfetti w moleGameDraw) — krety
-        // zamrożone, dopiero po nim przechodzimy do wspólnego popupu.
-        if (clock - g.wonAt >= MOLE_WIN_CELEBRATE_MS) moleGameFinish(true);
-        return;
-    }
+    // Po wygranej krety zamrożone — popup wygranej (.moleWinPopup, patrz
+    // moleWinShow()) rządzi dalej; moleGameFinish() woła dopiero jego
+    // przycisk "Super!".
+    if (g.won) return;
     const active = g.holes.some((h) => h.state !== "idle");
     if (!active && g.caught < g.need && clock >= (g.nextSpawn || 0)) moleSpawnHole();
     for (const h of g.holes) {
@@ -215,6 +214,25 @@ function moleFrameFor(h) {
     return frames[fi];
 }
 
+// Pulsująca, świecąca obręcz wokół "specjalnego" kreta — dużo wyraźniejsze
+// niż same iskierki (zwłaszcza dla małego dziecka): żółta dla "błyskawicy",
+// fioletowa dla rzadszej "błyskawicy x2" — od razu widać, że to inny kret,
+// jeszcze zanim zauroczą go gwiazdki (moleDrawSparkle niżej).
+function moleDrawAura(h) {
+    const color = h.kind === "lightning2" ? "#8a5cf0" : "#ffb400",
+        pulse = 0.5 + 0.5 * Math.sin(clock / 130);
+    mctx.save();
+    mctx.globalAlpha = 0.55 + 0.3 * pulse;
+    mctx.shadowColor = color;
+    mctx.shadowBlur = 16 + 10 * pulse;
+    mctx.lineWidth = 5;
+    mctx.strokeStyle = color;
+    mctx.beginPath();
+    mctx.arc(h.x, h.y, MOLE_HOLE_SIZE / 2 + 6 + pulse * 3, 0, Math.PI * 2);
+    mctx.stroke();
+    mctx.restore();
+}
+
 // Iskierki wokół "błyskawicy" (i mocniejsze, podkręcone kolorem, wokół
 // "błyskawicy x2") — żeby dziecko od razu widziało, że ten kret jest
 // wyjątkowy i szybko zniknie. Ponownie wykorzystuje gwiazdkę z baniek
@@ -239,57 +257,13 @@ function moleDrawSparkle(h) {
     mctx.restore();
 }
 
-// Świętowanie po złapaniu kompletu — ptaszek na środku planszy + konfetti
-// z tych samych gwiazdek. Trwa MOLE_WIN_CELEBRATE_MS, patrz
-// moleGameUpdate(). Lista konfetti losowana raz (g.confetti), nie co klatkę.
-function moleDrawCelebration(g) {
-    const im = images.bubbleStar;
-    if (!g.confetti) {
-        g.confetti = [];
-        for (let i = 0; i < 18; i++) {
-            g.confetti.push({
-                x: Math.random() * MOLE_W,
-                y: Math.random() * MOLE_H,
-                delay: Math.random() * 300,
-                size: 14 + Math.random() * 22,
-                drift: (Math.random() * 2 - 1) * 20,
-                hue: Math.random() < 0.5,
-            });
-        }
-    }
-    const t = clock - g.wonAt;
-    mctx.save();
-    mctx.fillStyle = "rgba(255,255,255,0.22)";
-    mctx.fillRect(0, 0, MOLE_W, MOLE_H);
-    if (im) {
-        for (const c of g.confetti) {
-            const lt = clamp((t - c.delay) / 900, 0, 1);
-            if (lt <= 0) continue;
-            const alpha = lt < 0.8 ? 1 : 1 - (lt - 0.8) / 0.2,
-                y = c.y - lt * 46,
-                x = c.x + Math.sin(lt * Math.PI * 2) * c.drift,
-                scale = 0.5 + lt * 0.7;
-            mctx.save();
-            mctx.globalAlpha = Math.max(0, alpha);
-            if (c.hue) mctx.filter = "hue-rotate(160deg)";
-            mctx.translate(x, y);
-            mctx.rotate(lt * 2.2);
-            mctx.drawImage(im, (-c.size * scale) / 2, (-c.size * scale) / 2, c.size * scale, c.size * scale);
-            mctx.restore();
-        }
-    }
-    mctx.font = "900 46px system-ui, sans-serif";
-    mctx.textAlign = "center";
-    mctx.textBaseline = "middle";
-    mctx.fillText("🐦", MOLE_W / 2, MOLE_H / 2 + Math.sin(clock / 180) * 6);
-    mctx.restore();
-}
-
 function moleGameDraw() {
     if (!moleGame) return;
     mctx.clearRect(0, 0, MOLE_W, MOLE_H);
     const g = moleGame;
     for (const h of g.holes) {
+        const special = (h.state === "emerging" || h.state === "alert") && h.kind && h.kind !== "normal";
+        if (special) moleDrawAura(h);
         const fn = moleFrameFor(h),
             cell = cells.kret[fn - 1];
         if (!cell) continue;
@@ -298,7 +272,7 @@ function moleGameDraw() {
         if (h.flip) mctx.scale(-1, 1);
         mctx.drawImage(cell, -MOLE_HOLE_SIZE / 2, -MOLE_HOLE_SIZE / 2, MOLE_HOLE_SIZE, MOLE_HOLE_SIZE);
         mctx.restore();
-        if ((h.state === "emerging" || h.state === "alert") && h.kind && h.kind !== "normal") moleDrawSparkle(h);
+        if (special) moleDrawSparkle(h);
     }
     // Duże, czytelne "+1"/"+2"/"+3"/"−1" wyskakujące nad trafioną/pudłowaną
     // dziurą — żeby dziecko od razu widziało efekt swojego dotknięcia.
@@ -323,7 +297,6 @@ function moleGameDraw() {
         mctx.fillText(e.text, 0, 0);
         mctx.restore();
     }
-    if (g.won) moleDrawCelebration(g);
 }
 
 // Trafienie gdziekolwiek na .moleCanvas podczas gry. Liczy się tylko
@@ -348,6 +321,7 @@ function moleGameHit(px, py) {
                 g.won = true;
                 g.wonAt = clock;
                 updateMoleUi();
+                moleWinShow();
             }
         } else {
             // Puste miejsce (kopiec bez kreta) albo za wcześnie/za późno —
@@ -445,9 +419,43 @@ function molePointerEnd(e) {
 moleCanvas.addEventListener("pointerup", molePointerEnd);
 moleCanvas.addEventListener("pointercancel", molePointerEnd);
 
+// Popup wygranej — puchar (ikonka "cup" z latka-ikony, niewykorzystana
+// gdzie indziej) + zielony "ok-check" (NIE ptaszek — patrz dyskusja) +
+// konfetti. Zastępuje poprzednie świętowanie rysowane na mctx.
+const MOLE_CONFETTI_COLORS = ["#f6c445", "#6f9a52", "#9674ab", "#e98a71", "#4fb3bf"];
+function moleWinSpawnConfetti() {
+    const box = $(".moleWinConfetti");
+    if (!box) return;
+    box.innerHTML = "";
+    for (let i = 0; i < 18; i++) {
+        const s = document.createElement("span");
+        s.style.left = Math.random() * 100 + "%";
+        s.style.background = MOLE_CONFETTI_COLORS[Math.floor(Math.random() * MOLE_CONFETTI_COLORS.length)];
+        s.style.animationDelay = Math.random() * 0.4 + "s";
+        s.style.animationDuration = 1.1 + Math.random() * 0.8 + "s";
+        box.appendChild(s);
+    }
+}
+function moleWinShow() {
+    $(".moleWinTrophy").src = icons.cup;
+    moleWinSpawnConfetti();
+    $(".moleWinPopup").hidden = false;
+}
+$(".moleWinOk").onclick = () => {
+    $(".moleWinPopup").hidden = true;
+    moleGameFinish(true);
+};
+
 function moleGameFinish(rewarded) {
     const got = rewarded && moleGame && moleGame.caught > 0;
     moleGame = null;
+    // Chwila wytchnienia po wyjściu z mini-gry — zanim świat zacznie znowu
+    // "żyć" (nowy kret, motylki), żeby nie wyskakiwały natychmiast po
+    // powrocie (patrz prośba użytkownika — "daj jakiś czas pauzy").
+    const grace = clock + 4000 + Math.random() * 2500;
+    nextMoleSpawn = Math.max(nextMoleSpawn, grace);
+    nextAmbientSpawn = Math.max(nextAmbientSpawn, grace);
+    nextButterfly = Math.max(nextButterfly, grace);
     if (got) {
         phase = "activity";
         pending = "fun";

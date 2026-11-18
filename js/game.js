@@ -1783,7 +1783,9 @@ function moleTeaserSpawn() {
 }
 
 function moleTeaserUpdate() {
-    if (!cells.kret.length || !["garden", "yard", "meadow"].includes(room) || phase === "mole-game") {
+    // Kret może wychodzić na KAŻDEJ mapce (nie tylko w ogrodzie/na łące) —
+    // jedyne co go blokuje to brak grafiki albo trwająca pełna mini-gra.
+    if (!cells.kret.length || phase === "mole-game") {
         if (moleTeaser) moleTeaser = null;
         return;
     }
@@ -1904,6 +1906,9 @@ function updateMoleDirtAccess() {
 
 function cleanMoleDirt() {
     if (!casual() || !moleDirt) return;
+    // Na Łące kliknięcie w piach (tak jak w żywego kreta — patrz
+    // moleTeaserTap()) DODATKOWO startuje pełną mini-grę.
+    const launch = room === "meadow" && moleDirt.room === room;
     moleDirt = null;
     changeNeeds({ clean: 2 });
     updateMoleDirtAccess();
@@ -1912,6 +1917,7 @@ function cleanMoleDirt() {
     nextMoleSpawn = clock + 6000 + Math.random() * 9000;
     save();
     toast("Piach posprzątany.");
+    if (launch) moleTryStart();
 }
 $(".moleDirtAccess").onclick = cleanMoleDirt;
 

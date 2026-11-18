@@ -375,17 +375,23 @@ body {
 /* Pasek postępu — 10 główek kreta (duże, czytelne — gra dla dzieci 3+).
    Złapany kret przygasza swoją główkę; nieumiejętne/spóźnione trafienie
    przywraca jedną z powrotem (patrz .caught). */
-/* Siatka 6×2 (6 w górnym rzędzie, 4 w dolnym — zostają wyśrodkowane dzięki
-   justify-content na gridzie) zamiast jednego, zawijanego rzędu. */
+/* Zawijany rząd (flex), nie grid — przy justify-content:center flexbox
+   centruje KAŻDĄ zawiniętą linię osobno, więc niepełny dolny rząd (4 z 10)
+   wychodzi wyśrodkowany, a nie przyklejony do lewej jak w siatce 6 kolumn. */
 .moleBadge {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     gap: 6px 8px;
-    margin-top: 8px;
+    margin: 8px auto 0;
+    /* Dokładnie 6 główek (30px) + 5 odstępów (8px) w rzędzie — żeby zawijanie
+       zawsze dawało 6 górą / 4 dołem, tak jak wcześniej w grid, tylko teraz
+       z dolnym rzędem wyśrodkowanym. */
+    max-width: 220px;
 }
 
 .moleBadge img {
+    flex: 0 0 30px;
     width: 30px;
     height: 30px;
     image-rendering: pixelated;
@@ -503,6 +509,143 @@ body {
 
 .moleCancel:hover {
     background: #e4d8bd;
+}
+
+/* Popup wygranej — karta z pucharem (ikonka "cup" z latka-ikony), zielonym
+   "ok-check" i konfetti, zamiast poprzedniego świętowania rysowanego na
+   canvasie mini-gry. Wyżej (z-index) niż .moleFull, bo pokazuje się NAD
+   zamrożoną planszą gry. */
+.moleWinPopup {
+    position: absolute;
+    inset: 0;
+    background: #3b2e3c38;
+    z-index: 26;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.moleWinPopup[hidden] {
+    display: none;
+}
+
+.moleWinCard {
+    position: relative;
+    width: 260px;
+    max-width: 100%;
+    background: #fff8ea;
+    border: 5px solid white;
+    border-radius: 30px;
+    box-shadow: 0 6px #0002;
+    text-align: center;
+    padding: 28px 18px 22px;
+    overflow: hidden;
+}
+
+.moleWinConfetti {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.moleWinConfetti span {
+    position: absolute;
+    top: -14px;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    opacity: 0;
+    animation: moleConfettiFall 1.5s ease-in forwards;
+}
+
+@keyframes moleConfettiFall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(300px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.moleWinTrophyWrap {
+    position: relative;
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 12px;
+}
+
+.moleWinTrophy {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    animation: moleWinPop 0.5s cubic-bezier(0.3, 1.6, 0.4, 1);
+}
+
+.moleWinCheck {
+    position: absolute;
+    right: -6px;
+    bottom: -6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #3fae56;
+    border: 3px solid white;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 2px 4px #0003;
+    animation: moleWinPop 0.5s 0.15s cubic-bezier(0.3, 1.6, 0.4, 1) backwards;
+}
+
+.moleWinCheck svg {
+    width: 17px;
+    height: 17px;
+}
+
+@keyframes moleWinPop {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+.moleWinCard h2 {
+    position: relative;
+    margin: 0 0 6px;
+    font-size: 20px;
+    color: #3c5a28;
+}
+
+.moleWinCard p {
+    position: relative;
+    margin: 0 0 16px;
+    font-size: 15px;
+    line-height: 1.4;
+    color: #59485d;
+}
+
+.moleWinOk {
+    position: relative;
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    background: #6f9a52;
+    color: white;
+    font: inherit;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 11px 20px;
+    cursor: pointer;
+}
+
+.moleWinOk:hover {
+    background: #5f8a44;
 }
 
 .roomTrack {
