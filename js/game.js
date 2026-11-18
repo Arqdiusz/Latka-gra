@@ -750,8 +750,8 @@ function activity(id) {
         return;
     }
     if (id === "clean") {
-        // Mycie = łapanie baniek na całym ekranie.
-        bubbleStart();
+        // Mycie = łapanie baniek na całym ekranie (najpierw krótki tutorial).
+        bubbleIntroShow(bubbleStart);
         return;
     }
     phase = "activity";

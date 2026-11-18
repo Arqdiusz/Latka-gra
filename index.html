@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.74</title>
-        <link rel="stylesheet" href="css/style.css?v=93" />
+        <title>Łatka v0.8.75</title>
+        <link rel="stylesheet" href="css/style.css?v=94" />
     </head>
 
     <body>
@@ -37,7 +37,7 @@
             </footer>
             <div class="bubbleFull" hidden>
                 <canvas class="bubbleCanvas" width="384" height="768"></canvas>
-                <div class="bubbleBadge" hidden aria-label="Bańki do złapania"><img alt="" /><div class="bar"><i></i></div></div>
+                <div class="bubbleBadge" hidden aria-label="Bańki do złapania"><img alt="" /><div class="bubbleBadgeMain"><div class="bubbleCount"><span class="bubbleCountNow">0</span> / <span class="bubbleCountNeed">16</span></div><div class="bar"><i></i></div></div></div>
                 <button class="bubbleClose" aria-label="Zakończ mycie">✕</button>
             </div>
             <div class="moleFull" hidden>
@@ -79,6 +79,26 @@
                     <button class="moleCancel">Wróć do pieska</button>
                 </div>
             </div>
+            <div class="molePopup bubblePopup" hidden>
+                <div class="moleCard">
+                    <img class="bubbleIntroIcon moleIntroIcon" alt="" />
+                    <h2>Umyjmy Łatkę!</h2>
+                    <div class="bubbleTut">
+                        <div class="bubbleTutItem good">
+                            <div class="bubbleTutPic"><span class="bubbleTutRing"></span><canvas width="72" height="72"></canvas></div>
+                            <img class="bubbleTutMark" alt="" />
+                            <span>Klikaj te<br />z błyszczącą ramką</span>
+                        </div>
+                        <div class="bubbleTutItem bad">
+                            <div class="bubbleTutPic"><canvas width="72" height="72"></canvas></div>
+                            <img class="bubbleTutMark" alt="" />
+                            <span>Tych nie ruszaj,<br />bo tracisz punkt</span>
+                        </div>
+                    </div>
+                    <button class="bubbleOk moleOk">Zaczynamy!</button>
+                    <button class="bubbleCancel moleCancel">Wróć do pieska</button>
+                </div>
+            </div>
             <div class="popup" hidden>
                 <div class="card"><canvas width="300" height="300"></canvas><img class="reward" alt="Nagroda" /></div>
             </div>
@@ -110,10 +130,10 @@
             </div>
         </div>
 
-        <script src="js/arc-carousel.js?v=93"></script>
-        <script src="js/game.js?v=93"></script>
-        <script src="js/minigame-fetch.js?v=93"></script>
-        <script src="js/minigame-bubbles.js?v=93"></script>
-        <script src="js/minigame-mole.js?v=93"></script>
+        <script src="js/arc-carousel.js?v=94"></script>
+        <script src="js/game.js?v=94"></script>
+        <script src="js/minigame-fetch.js?v=94"></script>
+        <script src="js/minigame-bubbles.js?v=94"></script>
+        <script src="js/minigame-mole.js?v=94"></script>
     </body>
 </html>

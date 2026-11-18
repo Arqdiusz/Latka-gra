@@ -22,6 +22,8 @@ function updateBubbleUi() {
         return;
     }
     badge.querySelector("img").src = icons.bubbles;
+    badge.querySelector(".bubbleCountNow").textContent = bubbleGame.caught;
+    badge.querySelector(".bubbleCountNeed").textContent = bubbleGame.need;
     badge.querySelector(".bar i").style.width = clamp((bubbleGame.caught / bubbleGame.need) * 100, 0, 100) + "%";
 }
 
@@ -203,6 +205,45 @@ function bubbleReadySegment() {
         onEnd: () => bubbleGameFinish(!!bubbleGame && bubbleGame.caught > 0),
     };
 }
+
+/* ── Pop-up z instrukcją przed myciem — wzorzec jak .molePopup ──── */
+let bubbleIntroResume = null;
+function bubbleIntroShow(onOk) {
+    bubbleIntroResume = onOk;
+    $(".bubbleIntroIcon").src = icons.bubbles;
+    const cell = cells.bubbles[0];
+    document.querySelectorAll(".bubbleTut canvas").forEach((cv) => {
+        const c = cv.getContext("2d");
+        c.clearRect(0, 0, 72, 72);
+        c.imageSmoothingEnabled = false;
+        if (cell) c.drawImage(cell, 4, 4, 64, 64);
+    });
+    document.querySelectorAll(".bubbleTutMark").forEach((im, i) => (im.src = P.assets[i ? "bubbleWrong" : "bubbleStar"]));
+    $(".bubblePopup").hidden = false;
+    startQueue([
+        {
+            sheet: "a01",
+            anim: 16,
+            time: 120000,
+            onStart: () => {
+                phase = "bubble-intro";
+                stage = "bubble-intro";
+                locks();
+            },
+        },
+    ]);
+}
+$(".bubbleOk").onclick = () => {
+    $(".bubblePopup").hidden = true;
+    const resume = bubbleIntroResume;
+    bubbleIntroResume = null;
+    resume?.();
+};
+$(".bubbleCancel").onclick = () => {
+    $(".bubblePopup").hidden = true;
+    bubbleIntroResume = null;
+    idle(16);
+};
 
 function bubbleStart() {
     bubbleGame = { need: BUBBLE_NEED, caught: 0, bubbles: [], effects: [], nextSpawn: 0, badStreak: 0 };
