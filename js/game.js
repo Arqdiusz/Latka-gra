@@ -56,13 +56,6 @@ const items = [
         color: "#d2e146",
     },
     {
-        id: "den",
-        icon: "den",
-        label: "Buda i kość",
-        room: "yard",
-        color: "#ead1ae",
-    },
-    {
         id: "sleep",
         icon: "sleep",
         label: "Sen",
@@ -480,9 +473,7 @@ function setRoom(r) {
     ambient.length = 0;
     nextAmbientSpawn = clock + 3000 + Math.random() * 7000;
     moleTeaser = null;
-    // Na Łące (ostatnia plansza) kret wychodzi od razu po wejściu — szybki
-    // dostęp do mini-gry; w pozostałych ogrodowych po losowej chwili.
-    nextMoleSpawn = r === "meadow" ? clock + 500 : clock + 5000 + Math.random() * 12500;
+    nextMoleSpawn = clock + 5000 + Math.random() * 12500;
     hedgehog = null;
     nextHedgehogSpawn = clock + 6000 + Math.random() * 14000;
     nextButterfly = clock + 4000 + Math.random() * 8500;
@@ -1477,12 +1468,6 @@ function autoTrip(target = chooseDestination()) {
         nextTrip = clock + 3000;
         return false;
     }
-    // Łąka to "kraina gier" — piesek sam z niej nie wybiega (kamera jedzie za
-    // nim, więc znikałyby wejścia do gier). Potrzebę i tak pokazuje dymek.
-    if (room === "meadow") {
-        nextTrip = clock + 5000;
-        return false;
-    }
     const cRoom = criticalRoom();
     if (cRoom) {
         if (cRoom === room) return false; // już tu jest — czeka na aktywność, nie błąka się dalej
@@ -2078,15 +2063,6 @@ function moleTeaserUpdate() {
         if (moleTeaser) moleTeaser = null;
         return;
     }
-    if (!moleTeaser && room === "meadow") {
-        // Łąka = "kraina gier": kret na stałe czeka po lewej stronie, nigdy się
-        // nie chowa po kliknięciu i nie zostawia piachu — kliknięcie od razu
-        // otwiera mini-grę (patrz moleTeaserTap()).
-        delete moleDirts.meadow;
-        updateMoleDirtAccess();
-        moleTeaser = { x: MEADOW_MOLE.x, y: MEADOW_MOLE.y, state: "emerging", stateStart: clock, permanent: true };
-        return;
-    }
     if (!moleTeaser) {
         // Dopóki leży piach po poprzednim krecie, nowy się nie pojawia —
         // najpierw trzeba go posprzątać (patrz cleanMoleDirt()).
@@ -2155,12 +2131,10 @@ function moleTeaserTap(m) {
         moleTryStart(); // stały kret na Łące — zostaje na miejscu
         return;
     }
-    const launch = room === "meadow";
     if (m.state !== "retreating") {
         m.state = "retreating";
         m.stateStart = clock;
     }
-    if (launch) moleTryStart();
 }
 
 function moleTeaserFrame() {
@@ -2222,9 +2196,6 @@ function updateMoleDirtAccess() {
 
 function cleanMoleDirt() {
     if (!casual() || !moleDirts[room]) return;
-    // Na Łące kliknięcie w piach (tak jak w żywego kreta — patrz
-    // moleTeaserTap()) DODATKOWO startuje pełną mini-grę.
-    const launch = room === "meadow";
     delete moleDirts[room];
     changeNeeds(ACTION_EFFECTS.moleDirt);
     updateMoleDirtAccess();
@@ -2233,7 +2204,6 @@ function cleanMoleDirt() {
     nextMoleSpawn = clock + 7500 + Math.random() * 15000;
     save();
     toast("Piach posprzątany.");
-    if (launch) moleTryStart();
 }
 $(".moleDirtAccess").onclick = cleanMoleDirt;
 
@@ -2742,10 +2712,13 @@ async function boot() {
             ...i,
             svg: '<img alt="" src="' + icons[i.icon] + '">',
         })),
-        selectedId: selected,
+        selectedId: items.some((i) => i.id === selected) ? selected : "sleep",
     });
     root.addEventListener("arc:change", (e) => (selected = e.detail.id));
     root.addEventListener("arc:activate", (e) => action(e.detail.id));
+    // Szybki dostęp do gier — puchar w górnym pasku sceny.
+    $(".gamesAccess img").src = icons.cup;
+    $(".gamesAccess").onclick = () => action("games");
     loaded = true;
     setRoom(room);
     setAnim(sleeping ? "a02" : "a01", sleeping ? 6 : 16);

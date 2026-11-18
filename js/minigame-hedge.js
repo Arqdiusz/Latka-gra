@@ -45,8 +45,10 @@ function sceneVisibleBottom() {
     return v;
 }
 
+// Wejście z rogu Łąki wyłączone (gry są w menu "Gry" i pod pucharem).
+const HEDGE_PEEK_ENABLED = false;
 function hedgePeekVisible() {
-    return room === "meadow" && cells.hedgehog.length && !hedgeGame && !moleGame && !bubbleGame && phase !== "butterfly";
+    return HEDGE_PEEK_ENABLED && room === "meadow" && cells.hedgehog.length && !hedgeGame && !moleGame && !bubbleGame && phase !== "butterfly";
 }
 
 function hedgePeekDraw() {

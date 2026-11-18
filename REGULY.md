@@ -64,6 +64,6 @@ Poniżej 33% piesek sam idzie tam, gdzie go potrzeba, i blokuje inne aktywności
 - czy brudna łapka po kopcu / kupce ma wpływ na nastrój (serce),
 - rzadsze dymki dla „śpiącej" pory dnia.
 
-## 5. Łąka — kraina gier
-- Kret czeka na stałe po lewej stronie Łąki i nigdy się nie chowa ani nie zostawia piachu; kliknięcie otwiera grę.
-- Mordka jeżyka w prawym dolnym rogu otwiera grę z jeżykiem.
+## 5. Gry
+- Dostęp: pozycja „Gry” w menu kołowym albo puchar w górnym pasku sceny → ekran z kafelkami gier.
+- Łąka to zwykła plansza świata (kret, jeżyk, motylki jak w ogrodzie i na podwórku).
