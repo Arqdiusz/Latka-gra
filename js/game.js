@@ -476,6 +476,7 @@ function setRoom(r) {
     moleTeaser = null;
     nextMoleSpawn = clock + 5000 + Math.random() * 12500;
     hedgehog = null;
+    hedgeFruit = null;
     nextHedgehogSpawn = clock + 6000 + Math.random() * 14000;
     nextButterfly = clock + 4000 + Math.random() * 8500;
     if (butterfly?.free) butterfly = null;
@@ -1369,6 +1370,8 @@ canvas.addEventListener("pointerdown", (e) => {
         moleDirt: moleDirtHit(p.x, p.y),
         catchFly: casual() ? butterflyHit(p.x, p.y) : false,
         butterfly: phase !== "butterfly" ? ambientHit(p.x, p.y) : null,
+        hog: casual() ? hedgehogHit(p.x, p.y) : null,
+        fruit: casual() ? hedgeFruitHit(p.x, p.y) : null,
         mole: gameEntryOk() ? moleTeaserHit(p.x, p.y) : null,
         hedge: gameEntryOk() ? hedgePeekHit(p.x, p.y) : false,
     };
@@ -1432,7 +1435,9 @@ function pointerEnd(e, cancel = false) {
         const p = pointerXY(e);
         // Wejścia do gier (kret, jeżyk) mają pierwszeństwo przed pieskiem —
         // inaczej, gdy piesek stał obok kopca, dotyk szedł w "pogłaskanie".
-        if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
+        if (g.hog && hedgehogHit(p.x, p.y) === g.hog) hedgehogScare(g.hog);
+        else if (g.fruit && hedgeFruitHit(p.x, p.y)) hedgeFruitCollect(g.fruit);
+        else if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
         else if (g.hedge && hedgePeekHit(p.x, p.y)) hedgePeekTap();
         else if (g.poop && poopHit(p.x, p.y)) cleanPoop();
         else if (g.moleDirt && moleDirtHit(p.x, p.y)) cleanMoleDirt();
@@ -1546,6 +1551,8 @@ let wlWasBusy = false,
     wlPick = "",
     wlFreeAt = 0;
 function wildlifeBusy(who) {
+    // motylek do złapania i motylek-tło (5 kolorów to tylko losowy kolor) to jedna "grupa"
+    if (who === "butterfly" || who === "ambient") who = "butterflies";
     if (moleTeaser || hedgehog || butterfly || ambient.length) {
         wlWasBusy = true;
         return true;
@@ -1554,7 +1561,7 @@ function wildlifeBusy(who) {
     // zwierzak — inaczej zawsze wygrywałby ten sprawdzany w pętli jako pierwszy.
     if (wlWasBusy) {
         wlWasBusy = false;
-        wlPick = ["mole", "hedgehog", "butterfly", "ambient"][Math.floor(Math.random() * 4)];
+        wlPick = ["mole", "hedgehog", "butterflies"][Math.floor(Math.random() * 3)];
         wlFreeAt = clock;
     }
     return !!wlPick && who !== wlPick && clock - wlFreeAt < 5000;
@@ -2280,16 +2287,51 @@ function catchOverlayDraw() {
    Działa w czasie rzeczywistym tylko na mapach plenerowych (GARDEN_ROOMS), niezależnie od pieska;
    nie jest klikalny. Presety: animacje-ustawienia/hedgehog-animacje.json.
    ═══════════════════════════════════════════════════════════════ */
-const HEDGEHOG_LINE_Y = 345, // y stóp jeżyka (czerwona linia ze screenów)
-    HEDGEHOG_SIZE = 64,
+const HEDGEHOG_LINE_Y = 488, // y stóp jeżyka — pierwszy plan, przed pieskiem
+    HEDGEHOG_SIZE = 140, // jak w grze z jeżykiem
+    HEDGEHOG_SCALE = HEDGEHOG_SIZE / 64, // względem oryginalnych 64 px
     HEDGEHOG_FEET = 55 / 64, // dół sprite'a w komórce (ułamek wysokości)
-    HEDGEHOG_SPEED = 20, // px/s
-    HEDGEHOG_MIN_X = 40,
-    HEDGEHOG_MAX_X = W - 40,
-    HEDGEHOG_FRUIT_SIZE = 26,
-    HEDGEHOG_FRUIT_CHANCE = 0.4;
+    HEDGEHOG_SPEED = 20 * (140 / 64), // px/s (tempo kroków jak dawniej, po skali)
+    HEDGEHOG_FLEE_SPEED = 330, // ucieczka po kliknięciu
+    HEDGEHOG_MIN_X = 70,
+    HEDGEHOG_MAX_X = W - 70,
+    HEDGEHOG_FRUIT_SIZE = 70,
+    HEDGEHOG_FRUIT_CHANCE = 0.65,
+    HEDGEHOG_FRUIT_LIFE = 20000; // ile leży zgubiony owoc
 let hedgehog = null,
+    hedgeFruit = null, // zgubiony owoc: { x, y, idx, born }
     nextHedgehogSpawn = 0;
+
+function hedgehogHit(px, py) {
+    const h = hedgehog;
+    if (!h || h.state === "fleeing") return null;
+    const top = HEDGEHOG_LINE_Y - HEDGEHOG_SIZE * HEDGEHOG_FEET;
+    return Math.abs(px - h.x) <= HEDGEHOG_SIZE * 0.5 && py >= top - 28 && py <= HEDGEHOG_LINE_Y + 18 ? h : null;
+}
+
+// Kliknięty jeżyk gubi owoc i najkrótszą drogą ucieka za ekran.
+function hedgehogScare(h) {
+    if (h.fruit >= 0) {
+        hedgeFruit = { x: h.x - h.dir * 10, y: HEDGEHOG_LINE_Y - 6, idx: h.fruit, born: clock };
+        h.fruit = -1;
+    }
+    h.state = "fleeing";
+    h.dir = h.x < W / 2 ? -1 : 1;
+    h.pauseUntil = 0;
+    h.walkStart = clock;
+}
+
+function hedgeFruitHit(px, py) {
+    const f = hedgeFruit;
+    return f && Math.hypot(px - f.x, py - (f.y - HEDGEHOG_FRUIT_SIZE * 0.4)) <= HEDGEHOG_FRUIT_SIZE * 0.75 ? f : null;
+}
+
+function hedgeFruitCollect(f) {
+    hedgeFruit = null;
+    // lekki "pyk" w miejscu owocu — na razie bez nagrody w statusach
+    fruitPops.push({ x: f.x, y: f.y - 40, born: clock });
+}
+const fruitPops = [];
 
 function hedgehogPickTarget(h) {
     // Cel w głębi planszy, dość daleko od obecnej pozycji — żeby nie dreptał w miejscu.
@@ -2307,6 +2349,8 @@ function hedgehogRollFruit() {
 // a kolejny wejdzie dopiero po przerwie. setRoom() zeruje go tak samo jak
 // motylki/krecika (świeży odliczany czas w każdym pokoju).
 function hedgehogUpdate(dt) {
+    if (hedgeFruit && clock - hedgeFruit.born > HEDGEHOG_FRUIT_LIFE) hedgeFruit = null;
+    if (!GARDEN_ROOMS.includes(room)) hedgeFruit = null;
     if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo")) {
         hedgehog = null;
         return;
@@ -2323,11 +2367,11 @@ function hedgehogUpdate(dt) {
     }
     const h = hedgehog;
     if (clock < h.pauseUntil) return;
-    h.x += h.dir * HEDGEHOG_SPEED * (dt / 1000);
-    if (h.state === "leaving") {
+    h.x += h.dir * (h.state === "fleeing" ? HEDGEHOG_FLEE_SPEED : HEDGEHOG_SPEED) * (dt / 1000);
+    if (h.state === "leaving" || h.state === "fleeing") {
         if (h.x < -HEDGEHOG_SIZE || h.x > W + HEDGEHOG_SIZE) {
             hedgehog = null;
-            nextHedgehogSpawn = clock + 20000 + Math.random() * 25000;
+            nextHedgehogSpawn = clock + 12000 + Math.random() * 15000;
         }
         return;
     }
@@ -2351,7 +2395,7 @@ function hedgehogDraw() {
     if (!h || !cells.hedgehog.length || !GARDEN_ROOMS.includes(room)) return;
     const walking = clock >= h.pauseUntil,
         frames = numbers(CFG.hedgehog.presets[walking ? 0 : 1].seq),
-        ms = CFG.hedgehog.presets[walking ? 0 : 1].ms,
+        ms = CFG.hedgehog.presets[walking ? 0 : 1].ms / (h.state === "fleeing" ? 2.5 : 1),
         fi = walking ? Math.floor((clock - h.walkStart) / ms) % frames.length : 0,
         cell = cells.hedgehog[frames[fi] - 1];
     if (!cell) return;
@@ -2363,10 +2407,40 @@ function hedgehogDraw() {
     if (h.fruit >= 0 && cells.hedgehogGame[h.fruit]) {
         // Owoc na grzbiecie (środek kolców ~ lekko za środkiem sprite'a),
         // delikatnie podskakuje w rytm kroków.
-        const bob = walking ? Math.abs(Math.sin(((clock - h.walkStart) / 95) * 0.52)) * 2 : 0;
-        ctx.drawImage(cells.hedgehogGame[h.fruit], -HEDGEHOG_FRUIT_SIZE / 2 - 4, top + 9 - HEDGEHOG_FRUIT_SIZE * 0.45 - bob, HEDGEHOG_FRUIT_SIZE, HEDGEHOG_FRUIT_SIZE);
+        const bob = walking ? Math.abs(Math.sin(((clock - h.walkStart) / (h.state === "fleeing" ? 40 : 95)) * 0.52)) * 2 : 0;
+        ctx.drawImage(cells.hedgehogGame[h.fruit], -HEDGEHOG_FRUIT_SIZE / 2 - 4 * HEDGEHOG_SCALE, top + 9 * HEDGEHOG_SCALE - HEDGEHOG_FRUIT_SIZE * 0.45 - bob * HEDGEHOG_SCALE, HEDGEHOG_FRUIT_SIZE, HEDGEHOG_FRUIT_SIZE);
     }
     ctx.restore();
+}
+
+function hedgeFruitDraw() {
+    const f = hedgeFruit;
+    if (f && cells.hedgehogGame[f.idx]) {
+        const t = clamp((clock - f.born) / 420, 0, 1),
+            // spada z grzbietu i odbija się raz
+            drop = t < 1 ? (1 - t) * HEDGEHOG_FRUIT_SIZE * 0.9 + Math.abs(Math.sin(t * Math.PI * 2)) * -8 * (1 - t) : 0,
+            fade = clamp((HEDGEHOG_FRUIT_LIFE - (clock - f.born)) / 2500, 0, 1);
+        ctx.save();
+        ctx.globalAlpha = fade;
+        ctx.drawImage(cells.hedgehogGame[f.idx], f.x - HEDGEHOG_FRUIT_SIZE / 2, f.y - HEDGEHOG_FRUIT_SIZE * 0.8 - drop, HEDGEHOG_FRUIT_SIZE, HEDGEHOG_FRUIT_SIZE);
+        ctx.restore();
+    }
+    for (let i = fruitPops.length - 1; i >= 0; i--) {
+        const e = fruitPops[i],
+            t = clamp((clock - e.born) / 550, 0, 1);
+        if (t >= 1) {
+            fruitPops.splice(i, 1);
+            continue;
+        }
+        const im = images.bubbleStar;
+        if (!im) continue;
+        const ease = 1 - Math.pow(1 - t, 3),
+            size = 70 * (0.55 + ease * 0.7);
+        ctx.save();
+        ctx.globalAlpha = 1 - t * t;
+        ctx.drawImage(im, e.x - size / 2, e.y - ease * 40 - size / 2, size, size);
+        ctx.restore();
+    }
 }
 
 function iconDraw(c, key, x, y, w, h = w) {
@@ -2444,8 +2518,6 @@ function draw(dt) {
     // interaktywnego butterflyEvent() — tło ma dalej żyć w czasie
     // rzeczywistym, zamiast znikać na czas pogoni za innym motylkiem.
     ambientDraw();
-    // Jeżyk spaceruje w tle — za pieskiem (po motylkach-tle).
-    hedgehogDraw();
     if (!dogHidden) drawDog(ctx);
     // Kret-zapowiedź PRZED pieskiem (na pierwszym planie) — w
     // przeciwieństwie do motylków-tła, które lecą za nim.
@@ -2457,6 +2529,9 @@ function draw(dt) {
     }
     moleTeaserDraw();
     hedgePeekDraw();
+    // Jeżyk i zgubiony owoc — pierwszy plan, przed pieskiem.
+    hedgeFruitDraw();
+    hedgehogDraw();
     catchOverlayDraw();
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
     if (butterfly?.visible) {
