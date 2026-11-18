@@ -380,11 +380,13 @@ function setRoom(r) {
     // następnego wlotu, niezależny od tego, ile zostało w poprzednim
     // pokoju (inaczej potrafiły długo nie pojawić się w nowym pokoju).
     ambient.length = 0;
-    nextAmbientSpawn = clock + 2000 + Math.random() * 4000;
+    nextAmbientSpawn = clock + 6000 + Math.random() * 14000;
     moleTeaser = null;
-    nextMoleSpawn = clock + 2500 + Math.random() * 4500;
+    nextMoleSpawn = clock + 10000 + Math.random() * 25000;
     hedgehog = null;
-    nextHedgehogSpawn = clock + 4000 + Math.random() * 6000;
+    nextHedgehogSpawn = clock + 12000 + Math.random() * 28000;
+    nextButterfly = clock + 8000 + Math.random() * 17000;
+    if (butterfly?.free) butterfly = null;
     updateMoleDirtAccess();
     buildRooms();
     setOffset(0);
@@ -550,7 +552,10 @@ function idle(which = null) {
     pending = null;
     jumpY = 0;
     boneVisible = false;
-    butterfly = null;
+    // Swobodnie lecący, klikalny motylek (free) żyje własnym życiem i NIE znika
+    // przy każdym powrocie pieska do idle() — dawniej to powodowało, że
+    // pojawiał się na ułamek sekundy i od razu znikał.
+    if (!butterfly?.free) butterfly = null;
     ball = null;
     fetchGame = null;
     dogHidden = false;
@@ -1375,13 +1380,26 @@ function autonomous() {
    piesek podbiega w odpowiednie miejsce, a potem rusza animacja chwytania
    (butterflyCatch). Nieklikniętego motylka ramka znika i wylatuje za ekran.
    ═══════════════════════════════════════════════════════════════ */
-const BUTTERFLY_LINE_Y = 200,
+const CATCH_STAND_X = 0.36, // stały punkt pieska (po lewej; lustrzanie 0.64 po prawej)
+    BUTTERFLY_LINE_Y = 200,
     BUTTERFLY_CROSS_MS = 7000, // przelot przez cały ekran
     BUTTERFLY_CLICKABLE_UNTIL = 0.9, // ułamek drogi, do którego można go kliknąć
     BUTTERFLY_HIT_R = 58;
 
+// Zwierzaki ogrodowe (motylek do złapania, motylki-tło, kret, jeżyk) mają
+// pojawiać się losowo i RZADZIEJ, nie wszystkie naraz: po pojawieniu się
+// któregokolwiek pozostałe dostają wspólną, losową przerwę.
+function wildlifeCooldown() {
+    const t = clock + 10000 + Math.random() * 12000;
+    nextAmbientSpawn = Math.max(nextAmbientSpawn, t);
+    nextMoleSpawn = Math.max(nextMoleSpawn, t);
+    nextHedgehogSpawn = Math.max(nextHedgehogSpawn, t);
+    nextButterfly = Math.max(nextButterfly, t);
+}
+
 function butterflySpawn() {
     if (butterfly || phase === "butterfly") return false;
+    wildlifeCooldown();
     const dir = Math.random() < 0.5 ? 1 : -1;
     catchButterflyColor = Math.floor(Math.random() * CFG.motyle.presets.length);
     catchButterflyStart = clock;
@@ -1401,7 +1419,7 @@ function butterflyFreeUpdate() {
     const p = (clock - b.start) / BUTTERFLY_CROSS_MS;
     if (p >= 1) {
         butterfly = null;
-        nextButterfly = clock + 45000 + Math.random() * 40000;
+        nextButterfly = clock + 25000 + Math.random() * 35000;
         return;
     }
     const x0 = b.dir > 0 ? -25 : W + 25,
@@ -1447,9 +1465,12 @@ function butterflyCatch() {
     b.free = false;
     const bx = b.x,
         by = b.y;
-    // Piesek staje obok motylka i patrzy w jego stronę; wybieramy stronę (dir),
-    // przy której musi przebiec jak najmniej.
-    const stand = (d) => clamp((bx - d * 70) / W, 0.12, 0.88),
+    // Akcja zawsze odbywa się w jednym z dwóch STAŁYCH punktów w środkowej
+    // części ekranu (piesek po lewej patrzy w prawo, po prawej — w lewo), więc
+    // pościg (a02/14 przesuwa pieska o ~0.1) nigdy nie dociera do krawędzi i
+    // nie ścina pieska. Wybieramy punkt bliższy pieskowi; motylek podlatuje
+    // na wysokość jego pyszczka tuż przed nim.
+    const stand = (d) => (d > 0 ? CATCH_STAND_X : 1 - CATCH_STAND_X),
         dir = Math.abs(stand(1) - x) <= Math.abs(stand(-1) - x) ? 1 : -1,
         xd = stand(dir);
     left = dir < 0;
@@ -1458,7 +1479,8 @@ function butterflyCatch() {
     const noseY = headPosition().y + 10,
         flightClose = { x: xd * W + dir * 70, y: noseY },
         cruiseSpeed = 0.19, // px/ms, jak dawniej przy wlocie
-        runDist = Math.abs(xd - x) * W;
+        runDist = Math.abs(xd - x) * W,
+        flyDist = Math.hypot(flightClose.x - bx, flightClose.y - by);
     const queue0 = [];
     if (runDist > 6)
         queue0.push({
@@ -1468,14 +1490,19 @@ function butterflyCatch() {
             facing: xd < x,
             to: xd,
             motion: "run",
-            time: Math.max(320, (runDist / 300) * 1000),
+            time: Math.max(320, (runDist / 300) * 1000, flyDist / 0.35),
             onStart: () => (stage = "butterfly-run"),
-            // Motylek w tym czasie wisi w miejscu i delikatnie się kołysze.
+            // Motylek w tym czasie podlatuje w miejsce spotkania — dociera tam
+            // razem z pieskiem.
             update: (p) => {
-                b.x = bx + Math.sin(p * Math.PI * 2) * 6;
-                b.y = by + Math.sin(p * Math.PI * 2) * 5;
+                b.x = bx + (flightClose.x - bx) * p;
+                b.y = by + (flightClose.y - by) * p + Math.sin(p * Math.PI) * -10;
             },
         });
+    // Gdy motylek już doleciał razem z pieskiem (run), dalszy "dolot" startuje
+    // z miejsca spotkania i trwa tylko chwilę.
+    const ax = runDist > 6 ? flightClose.x : bx,
+        ay = runDist > 6 ? flightClose.y : by;
     startQueue([
         ...queue0,
         {
@@ -1488,11 +1515,11 @@ function butterflyCatch() {
             // ease-out z zera było zbyt szarpane).
             sheet: "a01",
             anim: 16,
-            time: Math.max(260, Math.hypot(flightClose.x - bx, flightClose.y - by) / cruiseSpeed),
+            time: Math.max(260, Math.hypot(flightClose.x - ax, flightClose.y - ay) / cruiseSpeed),
             onStart: () => (stage = "butterfly-approach"),
             update: (p) => {
-                butterfly.x = bx + (flightClose.x - bx) * p;
-                butterfly.y = by + (flightClose.y - by) * p + Math.sin(p * Math.PI * 2) * 6;
+                butterfly.x = ax + (flightClose.x - ax) * p;
+                butterfly.y = ay + (flightClose.y - ay) * p + Math.sin(p * Math.PI * 2) * 6;
             },
         },
         {
@@ -1540,7 +1567,7 @@ function butterflyCatch() {
                 butterfly.y = butterfly.from.y - 90 * p + Math.sin(p * 8) * 6;
             },
             onEnd: () => {
-                nextButterfly = clock + 45000 + Math.random() * 40000;
+                nextButterfly = clock + 25000 + Math.random() * 35000;
                 butterfly = null;
             },
         },
@@ -1654,6 +1681,7 @@ function ambientFlee(b) {
 }
 
 function ambientSpawn() {
+    wildlifeCooldown();
     const colorIndex = Math.floor(Math.random() * CFG.motyle.presets.length),
         // Punkt docelowy wlotu — gdzieś w środku pasa lotu.
         settleX = AMBIENT_MARGIN_X + Math.random() * (W - AMBIENT_MARGIN_X * 2),
@@ -1706,8 +1734,8 @@ function ambientUpdate(dt) {
                     // interakcję gracza.
                     nextAmbientSpawn =
                         b.state === "fleeing"
-                            ? clock + 4000 + Math.random() * 5000
-                            : clock + 9000 + Math.random() * 10000;
+                            ? clock + 15000 + Math.random() * 15000
+                            : clock + 25000 + Math.random() * 35000;
                 }
             }
             continue;
@@ -1807,6 +1835,7 @@ function moleTeaserDuration(presetIdx) {
 }
 
 function moleTeaserSpawn() {
+    wildlifeCooldown();
     const spot = MOLE_TEASER_SPOTS[Math.floor(Math.random() * MOLE_TEASER_SPOTS.length)];
     moleTeaser = {
         x: spot.x,
@@ -1945,7 +1974,7 @@ function cleanMoleDirt() {
     updateMoleDirtAccess();
     say("star", 1600);
     // Dopiero teraz zaczyna się odliczanie do kolejnego kreta.
-    nextMoleSpawn = clock + 6000 + Math.random() * 9000;
+    nextMoleSpawn = clock + 15000 + Math.random() * 30000;
     save();
     toast("Piach posprzątany.");
     if (launch) moleTryStart();
@@ -2043,6 +2072,7 @@ function hedgehogUpdate(dt) {
         // Pierwszy cel w głębi planszy, po stronie przeciwnej do wejścia.
         h.target = side < 0 ? HEDGEHOG_MIN_X + Math.random() * 120 : W - HEDGEHOG_MIN_X - Math.random() * 120;
         hedgehog = h;
+        wildlifeCooldown();
         return;
     }
     const h = hedgehog;
@@ -2051,7 +2081,7 @@ function hedgehogUpdate(dt) {
     if (h.state === "leaving") {
         if (h.x < -HEDGEHOG_SIZE || h.x > W + HEDGEHOG_SIZE) {
             hedgehog = null;
-            nextHedgehogSpawn = clock + 15000 + Math.random() * 20000;
+            nextHedgehogSpawn = clock + 40000 + Math.random() * 50000;
         }
         return;
     }
