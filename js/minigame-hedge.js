@@ -250,14 +250,17 @@ function hedgeGameUpdate(dt) {
     const g = hedgeGame;
     if (!g) return;
     const dtS = dt / 1000;
-    // Jeżyk biegnie za palcem.
+    // Jeżyk podąża za celem płynnie (wygładzanie wykładnicze) — dyskretne
+    // zdarzenia pointermove nie robią szarpnięć ani "stop-start", a
+    // histereza ruchu i kierunku nie pozwala animacji chodu migotać.
     const d = g.tx - g.hx,
-        step = Math.min(Math.abs(d), HEDGE_SPEED * dtS);
-    g.moving = Math.abs(d) > 2;
-    if (g.moving) {
-        g.hx += Math.sign(d) * step;
-        g.facing = Math.sign(d);
-    }
+        prev = g.hx;
+    g.hx += d * (1 - Math.exp(-dt / 70));
+    const speed = Math.abs(g.hx - prev) / Math.max(dtS, 0.001);
+    g.speed = (g.speed || 0) * 0.8 + speed * 0.2;
+    if (g.moving ? g.speed < 12 : g.speed > 40) g.moving = !g.moving;
+    if (Math.abs(d) > 8) g.facing = Math.sign(d);
+    if (g.moving) g.walkT = (g.walkT || 0) + dt * Math.min(1.8, 0.6 + g.speed / 300); // tempo kroków zależy od szybkości
     if (g.won) return;
     if (clock >= g.nextSpawn) hedgeSpawn();
     const backTop = HEDGE_Y - HEDGE_SIZE * 0.3;
@@ -346,7 +349,7 @@ function hedgeGameDraw() {
     }
     // Jeżyk
     const frames = numbers(CFG.hedgehog.presets[0].seq),
-        cell = cells.hedgehog[g.moving ? frames[Math.floor(clock / CFG.hedgehog.presets[0].ms) % frames.length] - 1 : 0];
+        cell = cells.hedgehog[g.moving ? frames[Math.floor((g.walkT || 0) / CFG.hedgehog.presets[0].ms) % frames.length] - 1 : 0];
     c.save();
     c.fillStyle = "rgba(40,80,20,0.25)";
     c.beginPath();
