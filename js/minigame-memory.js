@@ -20,9 +20,9 @@ const memoCanvas = $(".memoCanvas"),
     MEMO_HIT_R = 52,
     MEMO_ZONE = { x0: 44, x1: W - 44, y0: 175, y1: H - 150 },
     MEMO_LEVELS = [
-        { n: 3, copies: 1, speed: 52 },
-        { n: 4, copies: 2, speed: 66 },
-        { n: 5, copies: 2, speed: 80 },
+        { n: 3, copies: 2, speed: 56 },
+        { n: 4, copies: 3, speed: 72 },
+        { n: 5, copies: 3, speed: 88 },
     ],
     MEMO_STORE = "memoLevelsDone";
 
@@ -155,7 +155,9 @@ function memoShuffle(a) {
 function memoStart(level) {
     const lv = MEMO_LEVELS[level],
         total = CFG.motyle.presets.length,
-        seq = memoShuffle([...Array(total).keys()]).slice(0, lv.n);
+        seq = Array.from({ length: lv.n }, () => Math.floor(Math.random() * total));
+    // wzór z powtórzeniami kolorów, ale nie same takie same
+    if (seq.every((c) => c === seq[0])) seq[seq.length - 1] = (seq[0] + 1 + Math.floor(Math.random() * (total - 1))) % total;
     memoGame = { level, lv, seq, step: 0, lives: MEMO_LIVES, state: "show", t0: clock, flies: [], effects: [], over: false, last: clock };
     $(".memoTitle").textContent = "Zapamiętaj!";
     say("fun", 1500);
@@ -352,9 +354,8 @@ function memoHit(px, py) {
     }
     if (!best) return;
     if (best.color === g.seq[g.step]) {
-        // dobry — znikają wszystkie motylki tego koloru
+        // dobry — motylek zostaje w grze (klony i ten sam kolor mogą wrócić we wzorze)
         g.effects.push({ x: best.x, y: best.y - 30, born: clock, good: true });
-        for (const f of g.flies) if (f.color === best.color && !f.gone) f.gone = clock;
         g.step++;
         if (g.step >= g.seq.length) memoWinShow();
     } else {

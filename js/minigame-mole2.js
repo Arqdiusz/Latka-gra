@@ -23,7 +23,9 @@ const m2ctx = $(".mole2Canvas").getContext("2d"),
     MOLE2_HOLD = [1300, 650], // czas na wierzchu: start → koniec gry
     MOLE2_VANISH_MS = 380, // kopiec znika
     MOLE2_PEEK_CHANCE = 0.2,
-    MOLE2_MAX_ACTIVE = [1, 3]; // ile kopców naraz: start → koniec gry
+    MOLE2_DECOYS = [0, 2], // ile atrap (pustych kopców) naraz: start → koniec gry
+    MOLE2_DECOY_LIFE = [1100, 2000], // jak długo stoi atrapa
+    MOLE2_NEXT_GAP = [300, 800]; // przerwa po zniknięciu prawdziwego kopca
 
 function mole2Seq(i) {
     return numbers(CFG.kret.presets[i].seq);
@@ -73,7 +75,7 @@ $("#mole2Popup .moleCancel").onclick = () => {
 
 // ── Start / koniec ───────────────────────────────────────────────
 function mole2Start() {
-    mole2Game = { need: MOLE2_NEED, caught: 0, mounds: [], effects: [], nextSpawn: clock + 600, spawned: 0, won: false };
+    mole2Game = { need: MOLE2_NEED, caught: 0, mounds: [], effects: [], nextSpawn: clock + 600, nextDecoy: clock + 4000, spawned: 0, won: false };
     say("fun", 1500);
     startQueue([
         {
@@ -159,7 +161,7 @@ function mole2Progress(g) {
     return g.caught / g.need;
 }
 
-function mole2Spawn() {
+function mole2Spawn(decoy = false) {
     const g = mole2Game,
         pr = mole2Progress(g);
     let x = 0,
@@ -169,16 +171,19 @@ function mole2Spawn() {
         y = MOLE2_ZONE.y0 + Math.random() * (MOLE2_ZONE.y1 - MOLE2_ZONE.y0);
         if (g.mounds.every((m) => Math.hypot(m.x - x, m.y - y) >= MOLE2_MIN_DIST)) break;
     }
-    g.spawned++;
+    if (!decoy) g.spawned++;
     const hold = MOLE2_HOLD[0] + (MOLE2_HOLD[1] - MOLE2_HOLD[0]) * pr;
     g.mounds.push({
         x,
         y,
         state: "appear",
         stateStart: clock,
-        wait: MOLE2_MOUND_WAIT[0] + Math.random() * (MOLE2_MOUND_WAIT[1] - MOLE2_MOUND_WAIT[0]),
+        decoy,
+        wait: decoy
+            ? MOLE2_DECOY_LIFE[0] + Math.random() * (MOLE2_DECOY_LIFE[1] - MOLE2_DECOY_LIFE[0])
+            : MOLE2_MOUND_WAIT[0] + Math.random() * (MOLE2_MOUND_WAIT[1] - MOLE2_MOUND_WAIT[0]),
         hold: hold * (0.75 + Math.random() * 0.5),
-        peek: g.spawned > 2 && Math.random() < MOLE2_PEEK_CHANCE,
+        peek: !decoy && g.spawned > 2 && Math.random() < MOLE2_PEEK_CHANCE,
         emergeDur: mole2Seq(1).length * MOLE2_FRAME_MS * (Math.random() < 0.3 ? 1.6 : 1), // czasem wolniej
         retreatDur: mole2Seq(3).length * MOLE2_FRAME_MS,
         caught: false,
@@ -189,10 +194,15 @@ function mole2GameUpdate() {
     const g = mole2Game;
     if (!g || g.won) return;
     const pr = mole2Progress(g),
-        maxActive = Math.round(MOLE2_MAX_ACTIVE[0] + (MOLE2_MAX_ACTIVE[1] - MOLE2_MAX_ACTIVE[0]) * pr);
-    if (clock >= g.nextSpawn && g.mounds.length < maxActive) {
-        mole2Spawn();
-        g.nextSpawn = clock + (500 + Math.random() * 700) * (1 - pr * 0.35);
+        realLeft = g.mounds.some((m) => !m.decoy),
+        decoys = g.mounds.filter((m) => m.decoy).length,
+        maxDecoys = Math.round(MOLE2_DECOYS[0] + (MOLE2_DECOYS[1] - MOLE2_DECOYS[0]) * pr);
+    // prawdziwy kopiec: dopiero gdy poprzedni zniknął (złapany albo schowany)
+    if (!realLeft && clock >= g.nextSpawn) mole2Spawn();
+    // atrapy: puste kopce, z których nic nie wyjdzie — stuknięcie = −1
+    if (clock >= g.nextDecoy && decoys < maxDecoys && g.spawned > 1) {
+        mole2Spawn(true);
+        g.nextDecoy = clock + 1200 + Math.random() * 1800;
     }
     for (let i = g.mounds.length - 1; i >= 0; i--) {
         const m = g.mounds[i],
@@ -201,12 +211,15 @@ function mole2GameUpdate() {
                 m.state = s;
                 m.stateStart = clock;
             };
-        if (m.state === "appear" && el >= MOLE2_APPEAR_MS + m.wait) go(m.peek ? "peek" : "emerging");
+        if (m.state === "appear" && el >= MOLE2_APPEAR_MS + m.wait) go(m.decoy ? "vanish" : m.peek ? "peek" : "emerging");
         else if (m.state === "peek" && el >= m.emergeDur * 1.5 + 120) go("vanish");
         else if (m.state === "emerging" && el >= m.emergeDur) go("alert");
         else if (m.state === "alert" && el >= m.hold) go("retreating");
         else if (m.state === "retreating" && el >= m.retreatDur) go("vanish");
-        else if (m.state === "vanish" && el >= MOLE2_VANISH_MS) g.mounds.splice(i, 1);
+        else if (m.state === "vanish" && el >= MOLE2_VANISH_MS) {
+            g.mounds.splice(i, 1);
+            if (!m.decoy) g.nextSpawn = clock + MOLE2_NEXT_GAP[0] + Math.random() * (MOLE2_NEXT_GAP[1] - MOLE2_NEXT_GAP[0]);
+        }
     }
     for (let i = g.effects.length - 1; i >= 0; i--) if (clock - g.effects[i].born > 650) g.effects.splice(i, 1);
 }
@@ -265,6 +278,10 @@ function mole2Hit(px, py) {
     } else if (m.state === "appear") {
         g.caught = Math.max(0, g.caught - 1);
         g.effects.push({ x: m.x, y: m.y - 40, born: clock, good: false });
+        if (m.decoy) {
+            m.state = "vanish";
+            m.stateStart = clock;
+        }
     }
 }
 

@@ -400,6 +400,15 @@ function hedgeGameDraw() {
         c.rotate(e.rot);
         c.scale(e.flip, 1);
         c.drawImage(im, -size / 2, -size / 2, size, size);
+        c.rotate(-e.rot);
+        c.scale(e.flip, 1);
+        c.font = "900 34px system-ui, sans-serif";
+        c.textAlign = "center";
+        c.lineWidth = 6;
+        c.strokeStyle = "#fff";
+        c.fillStyle = e.good ? "#2f8f3d" : "#d9383a";
+        c.strokeText(e.good ? "+1" : "−1", 0, -size / 2 - 4);
+        c.fillText(e.good ? "+1" : "−1", 0, -size / 2 - 4);
         c.restore();
     }
     hedgePanelDraw(g);

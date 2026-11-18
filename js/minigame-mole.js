@@ -105,13 +105,13 @@ const MOLE_NEED = 10,
     MOLE_HOLE_SIZE = 104,
     MOLE_HIT_PAD = 14,
     MOLE_GIVE_UP = 1800000, // bezpiecznik: gra kończy się sama dopiero po 30 min
-    MOLE_FRAME_MS = 85, // bazowe tempo klatki wyłaniania/chowania (przed trudnością)
-    MOLE_HOLD_BASE = 1050, // bazowy czas "czujności" (ile kret stoi w pełni na wierzchu)
+    MOLE_FRAME_MS = 70, // bazowe tempo klatki wyłaniania/chowania (przed trudnością)
+    MOLE_HOLD_BASE = 780, // bazowy czas "czujności" (ile kret stoi w pełni na wierzchu)
     MOLE_EMERGE_CATCH_FROM = 0.35, // od jakiej części wychodzenia kret już się liczy
     MOLE_RETREAT_CATCH_UNTIL = 0.5, // do jakiej części chowania jeszcze się liczy
     MOLE_PEEK_CHANCE = 0.22, // jak często kret tylko wygląda do połowy i się chowa
-    MOLE_SPAWN_GAP_MIN = 260,
-    MOLE_SPAWN_GAP_MAX = 650,
+    MOLE_SPAWN_GAP_MIN = 200,
+    MOLE_SPAWN_GAP_MAX = 520,
     MOLE_COLS = 3,
     MOLE_ROWS = 4,
     MOLE_MARGIN_X = 20,
@@ -151,9 +151,9 @@ function moleSpawnHole() {
         roll = Math.random(),
         kind = roll < 0.04 ? "lightning2" : roll < 0.22 ? "lightning" : "normal",
         kindMul = kind === "lightning2" ? 0.4 : kind === "lightning" ? 0.6 : 1,
-        holdBase = kind === "lightning2" ? 360 : kind === "lightning" ? 580 : MOLE_HOLD_BASE,
-        difficulty = 1 - (g.caught / g.need) * 0.4,
-        mul = clamp(kindMul * difficulty * (0.5 + Math.random() * 1.1), 0.28, 1.6);
+        holdBase = kind === "lightning2" ? 280 : kind === "lightning" ? 440 : MOLE_HOLD_BASE,
+        difficulty = 1 - (g.caught / g.need) * 0.5,
+        mul = clamp(kindMul * difficulty * (0.5 + Math.random() * 1.1), 0.26, 1.25);
     h.kind = kind;
     h.flip = Math.random() < 0.5; // pysk w lewo/prawo — odbite klatki
     h.tempoMul = mul;
