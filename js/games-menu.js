@@ -86,6 +86,7 @@ const GAMES_LIST = [
 function gamesBuild() {
     const box = $(".gamesGrid");
     if (box.childElementCount) return;
+    box.style.setProperty("--gamesRows", Math.ceil(GAMES_LIST.length / 2));
     for (const g of GAMES_LIST) {
         const b = document.createElement("button");
         b.className = "gamesTile";

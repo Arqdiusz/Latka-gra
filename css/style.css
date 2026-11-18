@@ -1986,33 +1986,44 @@ body.locked .gamesAccess {
     height: 150px;
 }
 
-/* Ekran Gry — mniejsze kafelki, trzy w rzędzie */
+/* Ekran Gry: duże kafelki, 2 kolumny, wysokość rozdzielona równo —
+   całość zawsze mieści się na ekranie bez przewijania. */
+.gamesFull {
+    overflow: hidden;
+}
+
 .gamesGrid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(var(--gamesRows, 3), minmax(0, 1fr));
+    gap: 14px;
 }
 
 .gamesTile {
-    padding: 8px 4px 10px;
-    border-width: 3px;
-    border-radius: 20px;
-    font-size: 14px;
-    line-height: 1.2;
-    gap: 4px;
+    min-height: 0;
+    padding: 12px 8px 14px;
+    border-width: 4px;
+    border-radius: 28px;
+    font-size: 20px;
+    line-height: 1.15;
+    gap: 6px;
     text-align: center;
 }
 
 .gamesTile canvas {
-    max-width: 92px;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    aspect-ratio: auto;
+    object-fit: contain;
 }
 
-/* Ekran Gry zawsze mieści się bez przewijania — obrazki kafelków maleją,
-   gdy gier przybywa (wysokość liczona z rozmiaru ekranu Gry). */
-.gamesFull {
-    container-type: size;
-    overflow: hidden;
-}
-
-.gamesTile canvas {
-    max-width: clamp(48px, calc((100cqh - 230px) / 3), 92px);
+/* nieparzysta liczba gier: ostatni kafelek na środku, o szerokości kolumny */
+.gamesTile:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc(50% - 7px);
 }
