@@ -137,9 +137,9 @@ function buildMoleHoles() {
 // Tempo: im więcej już złapanych, tym szybciej (trudniej), plus spory
 // element losowości (szerszy zakres niż na początku) — żeby kolejne krety
 // naprawdę różniły się tempem wychylania/chowania, nie tylko nieznacznie.
-// Rodzaj: zwykły kret (najczęściej), "błyskawica" (rzadka, bardzo krótko
-// na wierzchu, +2 za trafienie, świeci iskierkami) i "błyskawica x2"
-// (bardzo rzadka, jeszcze krócej, +3) — patrz moleDrawSparkle().
+// Rodzaj: zwykły kret oraz szybsze ("lightning", "lightning2") — krócej na
+// wierzchu. Nie są wyróżniane ani lepiej punktowane (każdy kret = +1),
+// szybkość jest tylko utrudnieniem.
 function moleSpawnHole() {
     const g = moleGame,
         idleHoles = g.holes.filter((h) => h.state === "idle");
@@ -214,56 +214,11 @@ function moleFrameFor(h) {
     return frames[fi];
 }
 
-// Pulsująca, świecąca obręcz wokół "specjalnego" kreta — dużo wyraźniejsze
-// niż same iskierki (zwłaszcza dla małego dziecka): żółta dla "błyskawicy",
-// fioletowa dla rzadszej "błyskawicy x2" — od razu widać, że to inny kret,
-// jeszcze zanim zauroczą go gwiazdki (moleDrawSparkle niżej).
-function moleDrawAura(h) {
-    const color = h.kind === "lightning2" ? "#8a5cf0" : "#ffb400",
-        pulse = 0.5 + 0.5 * Math.sin(clock / 130);
-    mctx.save();
-    mctx.globalAlpha = 0.55 + 0.3 * pulse;
-    mctx.shadowColor = color;
-    mctx.shadowBlur = 16 + 10 * pulse;
-    mctx.lineWidth = 5;
-    mctx.strokeStyle = color;
-    mctx.beginPath();
-    mctx.arc(h.x, h.y, MOLE_HOLE_SIZE / 2 + 6 + pulse * 3, 0, Math.PI * 2);
-    mctx.stroke();
-    mctx.restore();
-}
-
-// Iskierki wokół "błyskawicy" (i mocniejsze, podkręcone kolorem, wokół
-// "błyskawicy x2") — żeby dziecko od razu widziało, że ten kret jest
-// wyjątkowy i szybko zniknie. Ponownie wykorzystuje gwiazdkę z baniek
-// (images.bubbleStar), bez potrzeby nowej grafiki.
-function moleDrawSparkle(h) {
-    const im = images.bubbleStar;
-    if (!im) return;
-    const n = h.kind === "lightning2" ? 6 : 4,
-        r = MOLE_HOLE_SIZE / 2 + 10,
-        spin = clock / (h.kind === "lightning2" ? 220 : 320);
-    mctx.save();
-    if (h.kind === "lightning2") mctx.filter = "hue-rotate(210deg) saturate(1.4)";
-    for (let i = 0; i < n; i++) {
-        const a = spin + (i / n) * Math.PI * 2,
-            px = h.x + Math.cos(a) * r,
-            py = h.y + Math.sin(a) * r * 0.7 - MOLE_HOLE_SIZE * 0.12,
-            tw = 0.6 + 0.4 * Math.sin(clock / 90 + i * 1.7),
-            size = (h.kind === "lightning2" ? 20 : 16) * tw;
-        mctx.globalAlpha = 0.65 + 0.35 * tw;
-        mctx.drawImage(im, px - size / 2, py - size / 2, size, size);
-    }
-    mctx.restore();
-}
-
 function moleGameDraw() {
     if (!moleGame) return;
     mctx.clearRect(0, 0, MOLE_W, MOLE_H);
     const g = moleGame;
     for (const h of g.holes) {
-        const special = (h.state === "emerging" || h.state === "alert") && h.kind && h.kind !== "normal";
-        if (special) moleDrawAura(h);
         const fn = moleFrameFor(h),
             cell = cells.kret[fn - 1];
         if (!cell) continue;
@@ -272,7 +227,6 @@ function moleGameDraw() {
         if (h.flip) mctx.scale(-1, 1);
         mctx.drawImage(cell, -MOLE_HOLE_SIZE / 2, -MOLE_HOLE_SIZE / 2, MOLE_HOLE_SIZE, MOLE_HOLE_SIZE);
         mctx.restore();
-        if (special) moleDrawSparkle(h);
     }
     // Duże, czytelne "+1"/"+2"/"+3"/"−1" wyskakujące nad trafioną/pudłowaną
     // dziurą — żeby dziecko od razu widziało efekt swojego dotknięcia.
@@ -312,8 +266,9 @@ function moleGameHit(px, py) {
             h.state = "retreating";
             h.stateStart = clock;
             h.hitRetreat = true;
-            // "Błyskawica"/"błyskawica x2" warte więcej niż zwykły kret.
-            const value = h.kind === "lightning2" ? 3 : h.kind === "lightning" ? 2 : 1;
+            // Szybkie krety nie są wyróżniane ani lepiej punktowane — szybkość
+            // to tylko utrudnienie. Każdy kret = +1.
+            const value = 1;
             g.caught = Math.min(g.need, g.caught + value);
             g.effects.push({ x: h.x, y: h.y, born: clock, good: true, text: "+" + value });
             updateMoleUi();
@@ -441,6 +396,11 @@ function moleWinShow() {
     moleWinSpawnConfetti();
     $(".moleWinPopup").hidden = false;
 }
+$(".moleWinAgain").onclick = () => {
+    $(".moleWinPopup").hidden = true;
+    moleGameFinish(true);
+    moleStart();
+};
 $(".moleWinOk").onclick = () => {
     $(".moleWinPopup").hidden = true;
     moleGameFinish(true);

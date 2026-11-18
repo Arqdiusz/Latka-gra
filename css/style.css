@@ -1183,3 +1183,31 @@ body {
     top: 4px;
     bottom: auto;
 }
+
+/* "Zagraj ponownie" na kartach końcowych mini-gier. */
+.winAgain {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+    border: none;
+    border-radius: 14px;
+    font: inherit;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 11px 20px;
+    background: #eee4cf;
+    color: #7a6a4a;
+    cursor: pointer;
+}
+
+.winAgain:hover {
+    background: #e4d8bd;
+}
+
+.winAgain svg {
+    width: 20px;
+    height: 20px;
+}

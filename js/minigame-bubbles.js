@@ -310,6 +310,11 @@ function bubbleWinShow() {
     moleWinSpawnConfetti(".bubbleWinPopup .moleWinConfetti");
     $(".bubbleWinPopup").hidden = false;
 }
+$(".bubbleWinAgain").onclick = () => {
+    $(".bubbleWinPopup").hidden = true;
+    bubbleGameFinish(true);
+    bubbleStart();
+};
 $(".bubbleWinOk").onclick = () => {
     $(".bubbleWinPopup").hidden = true;
     bubbleGameFinish(true);
