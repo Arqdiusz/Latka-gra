@@ -146,6 +146,7 @@ let loaded = false,
     // catchMarker (wykrywane w boot()) i catchMarkerPos().
     catchButterflyColor = 0,
     catchButterflyStart = 0,
+    catchLastSpot = null, // ostatnia pozycja nakładki motylka przy pieskowi (start odlotu)
     bubble = null,
     bubblePos = null,
     scale = 1,
@@ -1455,8 +1456,30 @@ function butterflyFrameDraw(b) {
     ctx.restore();
 }
 
-// Start właściwego "Chwytania motylka" po kliknięciu: piesek podbiega w
-// miejsce, w którym motylek wisi, dopiero potem rusza animacja z pościgiem.
+// Pozycja zielonego znacznika (miejsca motylka narysowanego w grafice) na
+// klatce f arkusza sh dla pieska stojącego w x=xf, zwróconego w lewo (lf) lub
+// w prawo — ta sama matematyka co catchMarkerPos(), ale dla dowolnej klatki.
+function catchSpotFor(sh, f, xf, lf) {
+    const m = catchMarker[f];
+    if (!m || !cells[sh][f - 1]) return null;
+    const o = { x: 0, y: 0, scale: 100, ...CFG[sh].offsets[String(f)] },
+        sc = ((BASE * o.scale) / 100) * 0.7;
+    return {
+        x: xf * W + (lf ? -1 : 1) * ((m.x - cells[sh][f - 1].width / 2) * sc + o.x * BASE),
+        y: GROUND + (m.y - CFG[sh].ground) * sc + o.y * BASE,
+    };
+}
+
+// Strefy, w których piesek może zacząć pościg w danym kierunku (dir=+1 — w
+// prawo): pościg przesuwa go o ~0.1 w stronę motylka, a motylek jest ~93 px
+// przed nim, więc blisko krawędzi grafika by wychodziła poza ekran.
+const CATCH_ZONE = { 1: [0.26, 0.5], "-1": [0.5, 0.74] };
+
+// Start właściwego "Chwytania motylka" po kliknięciu: piesek (jeśli trzeba)
+// podchodzi do bezpiecznej strefy PATRZĄC w stronę, w którą idzie, motylek
+// leci na swoje miejsce przed jego pyszczkiem (dokładnie tam, gdzie grafika
+// pościgu ma zielony znacznik — bez skoku nakładki), i dopiero potem rusza
+// animacja chwytania.
 function butterflyCatch() {
     const b = butterfly;
     if (!b?.free || !casual() || sleeping || dirty()) return false;
@@ -1467,44 +1490,47 @@ function butterflyCatch() {
     b.free = false;
     const bx = b.x,
         by = b.y;
-    // Akcja zawsze odbywa się w jednym z dwóch STAŁYCH punktów w środkowej
-    // części ekranu (piesek po lewej patrzy w prawo, po prawej — w lewo), więc
-    // pościg (a02/14 przesuwa pieska o ~0.1) nigdy nie dociera do krawędzi i
-    // nie ścina pieska. Wybieramy punkt bliższy pieskowi; motylek podlatuje
-    // na wysokość jego pyszczka tuż przed nim.
-    const stand = (d) => (d > 0 ? CATCH_STAND_X : 1 - CATCH_STAND_X),
-        dir = Math.abs(stand(1) - x) <= Math.abs(stand(-1) - x) ? 1 : -1,
-        xd = stand(dir);
+    // Wybór kierunku: minimalny koszt = dystans do strefy + kara za cofanie się
+    // tyłem (piesek idzie zawsze przodem) + mała kara za patrzenie w stronę
+    // przeciwną niż motylek.
+    const side = bx >= x * W ? 1 : -1,
+        plan = [1, -1].map((d) => {
+            const [lo, hi] = CATCH_ZONE[d],
+                xd = clamp(x, lo, hi),
+                move = xd - x;
+            return { dir: d, xd, cost: Math.abs(move) + (move * d < 0 ? 0.25 : 0) + (d === side ? 0 : 0.1) };
+        }).sort((p, q) => p.cost - q.cost)[0],
+        dir = plan.dir,
+        xd = plan.xd,
+        first = numbers(getPreset("a02", 14).seq)[0];
     left = dir < 0;
     b.dir = -dir; // motylek zwrócony w stronę pieska
-    // Realna wysokość pyszczka w pozie a01/16 (ustawionej przez interrupt()).
-    const noseY = headPosition().y + 10,
-        flightClose = { x: xd * W + dir * 70, y: noseY },
-        cruiseSpeed = 0.19, // px/ms, jak dawniej przy wlocie
+    // Miejsce spotkania = znacznik pierwszej klatki pościgu (a02/14).
+    const spot = catchSpotFor("a02", first, xd, dir < 0) || { x: xd * W + dir * 93, y: 231 },
+        cruiseSpeed = 0.19, // px/ms
         runDist = Math.abs(xd - x) * W,
-        flyDist = Math.hypot(flightClose.x - bx, flightClose.y - by);
+        flyDist = Math.hypot(spot.x - bx, spot.y - by);
     const queue0 = [];
     if (runDist > 6)
         queue0.push({
             sheet: "a01",
             anim: 1,
             tempo: 180,
-            facing: xd < x,
+            facing: dir < 0,
             to: xd,
             motion: "run",
-            time: Math.max(320, (runDist / 300) * 1000, flyDist / 0.35),
+            time: Math.max(400, (runDist / 260) * 1000, flyDist / 0.3),
             onStart: () => (stage = "butterfly-run"),
-            // Motylek w tym czasie podlatuje w miejsce spotkania — dociera tam
-            // razem z pieskiem.
+            // Motylek podlatuje w miejsce spotkania razem z pieskiem (łagodny
+            // łuk, bez zygzaków), tak by dotarł tam, kiedy piesek staje.
             update: (p) => {
-                b.x = bx + (flightClose.x - bx) * p;
-                b.y = by + (flightClose.y - by) * p + Math.sin(p * Math.PI) * -10;
+                const e = p * p * (3 - 2 * p);
+                b.x = bx + (spot.x - bx) * e;
+                b.y = by + (spot.y - by) * e - Math.sin(p * Math.PI) * 14;
             },
         });
-    // Gdy motylek już doleciał razem z pieskiem (run), dalszy "dolot" startuje
-    // z miejsca spotkania i trwa tylko chwilę.
-    const ax = runDist > 6 ? flightClose.x : bx,
-        ay = runDist > 6 ? flightClose.y : by;
+    const ax = runDist > 6 ? spot.x : bx,
+        ay = runDist > 6 ? spot.y : by;
     startQueue([
         ...queue0,
         {
@@ -1517,11 +1543,14 @@ function butterflyCatch() {
             // ease-out z zera było zbyt szarpane).
             sheet: "a01",
             anim: 16,
-            time: Math.max(260, Math.hypot(flightClose.x - ax, flightClose.y - ay) / cruiseSpeed),
+            facing: dir < 0,
+            // Krótka chwila "patrzenia na motylka" przed skokiem (min. 450 ms).
+            time: Math.max(450, Math.hypot(spot.x - ax, spot.y - ay) / cruiseSpeed),
             onStart: () => (stage = "butterfly-approach"),
             update: (p) => {
-                butterfly.x = ax + (flightClose.x - ax) * p;
-                butterfly.y = ay + (flightClose.y - ay) * p + Math.sin(p * Math.PI * 2) * 6;
+                const e = p * p * (3 - 2 * p);
+                butterfly.x = ax + (spot.x - ax) * e;
+                butterfly.y = ay + (spot.y - ay) * e + Math.sin(p * Math.PI * 2) * 4;
             },
         },
         {
@@ -1555,18 +1584,16 @@ function butterflyCatch() {
                 // odwrócony na `-dir` (lot w stronę pieska) i nic go nie
                 // zwracało z powrotem — stąd leciał "plecami do przodu".
                 butterfly.dir = dir;
-                // Ten sam punkt odniesienia (noseY) co przy dolocie przed
-                // chwytaniem — ten segment też ustawia pieska na a01/16, więc
-                // to ta sama poza, a motylek "wraca do siebie" tuż przy
-                // nosie, zamiast odlatywać zza dużo wyższej pozycji.
-                butterfly.from = {
-                    x: x * W + dir * 82,
-                    y: noseY,
-                };
+                // Start odlotu dokładnie tam, gdzie nakładka motylka była na
+                // ostatniej klatce chwytania (catchLastSpot) — bez skoku.
+                butterfly.from = catchLastSpot || { x: x * W + dir * 84, y: 256 };
+                butterfly.x = butterfly.from.x;
+                butterfly.y = butterfly.from.y;
             },
             update: (p) => {
-                butterfly.x = butterfly.from.x + dir * 190 * p;
-                butterfly.y = butterfly.from.y - 90 * p + Math.sin(p * 8) * 6;
+                const e = p * p * (3 - 2 * p) * 0.6 + p * 0.4; // łagodny rozbieg
+                butterfly.x = butterfly.from.x + dir * 190 * e;
+                butterfly.y = butterfly.from.y - 90 * e + Math.sin(p * 8) * 5 * p;
             },
             onEnd: () => {
                 nextButterfly = clock + 12500 + Math.random() * 17500;
@@ -2018,6 +2045,7 @@ function catchOverlayDraw() {
     if ((stage !== "butterfly-chase" && stage !== "butterfly-nose") || !images.motyle) return;
     const pos = catchMarkerPos();
     if (!pos) return;
+    catchLastSpot = pos;
     const cell = eventButterflyCell();
     if (!cell) return;
     ctx.save();
