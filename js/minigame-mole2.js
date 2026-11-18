@@ -273,7 +273,8 @@ function mole2Hit(px, py) {
         g.caught = Math.min(g.need, g.caught + 1);
         g.effects.push({ x: m.x, y: m.y - 40, born: clock, good: true });
         if (g.caught >= g.need) mole2WinShow();
-    } else if (m.state === "appear") {
+    } else if (m.state === "appear" || (!m.caught && (m.state === "emerging" || m.state === "retreating" || m.state === "peek"))) {
+        // pusty kopiec, atrapa albo kret niewyjęty do końca (za wcześnie / za późno) = −1
         g.caught = Math.max(0, g.caught - 1);
         g.effects.push({ x: m.x, y: m.y - 40, born: clock, good: false });
         if (m.decoy) {
