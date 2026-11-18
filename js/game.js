@@ -380,12 +380,12 @@ function setRoom(r) {
     // następnego wlotu, niezależny od tego, ile zostało w poprzednim
     // pokoju (inaczej potrafiły długo nie pojawić się w nowym pokoju).
     ambient.length = 0;
-    nextAmbientSpawn = clock + 6000 + Math.random() * 14000;
+    nextAmbientSpawn = clock + 3000 + Math.random() * 7000;
     moleTeaser = null;
-    nextMoleSpawn = clock + 10000 + Math.random() * 25000;
+    nextMoleSpawn = clock + 5000 + Math.random() * 12500;
     hedgehog = null;
-    nextHedgehogSpawn = clock + 12000 + Math.random() * 28000;
-    nextButterfly = clock + 8000 + Math.random() * 17000;
+    nextHedgehogSpawn = clock + 6000 + Math.random() * 14000;
+    nextButterfly = clock + 4000 + Math.random() * 8500;
     if (butterfly?.free) butterfly = null;
     updateMoleDirtAccess();
     buildRooms();
@@ -520,7 +520,7 @@ function interrupt() {
     segment = null;
     if (phase === "butterfly") {
         butterfly = null;
-        nextButterfly = clock + 45000;
+        nextButterfly = clock + 22500;
     }
     phase = "idle";
     jumpY = 0;
@@ -1386,11 +1386,13 @@ const CATCH_STAND_X = 0.36, // stały punkt pieska (po lewej; lustrzanie 0.64 po
     BUTTERFLY_CLICKABLE_UNTIL = 0.9, // ułamek drogi, do którego można go kliknąć
     BUTTERFLY_HIT_R = 58;
 
-// Zwierzaki ogrodowe (motylek do złapania, motylki-tło, kret, jeżyk) mają
-// pojawiać się losowo i RZADZIEJ, nie wszystkie naraz: po pojawieniu się
-// któregokolwiek pozostałe dostają wspólną, losową przerwę.
+// Zwierzaki ogrodowe (motylek do złapania, motylki-tło, kret, jeżyk) mogą być
+// widoczne równocześnie (nakładać się w czasie), ale NIE mogą startować
+// jednocześnie: po pojawieniu się któregokolwiek pozostałe dostają krótki
+// "oddech" (WILDLIFE_STAGGER_MS + losowo do 1 s).
+const WILDLIFE_STAGGER_MS = 3000;
 function wildlifeCooldown() {
-    const t = clock + 10000 + Math.random() * 12000;
+    const t = clock + WILDLIFE_STAGGER_MS + Math.random() * 1000;
     nextAmbientSpawn = Math.max(nextAmbientSpawn, t);
     nextMoleSpawn = Math.max(nextMoleSpawn, t);
     nextHedgehogSpawn = Math.max(nextHedgehogSpawn, t);
@@ -1413,13 +1415,13 @@ function butterflyFreeUpdate() {
     if (!b?.free) return;
     if (!["garden", "yard"].includes(room) || sleeping) {
         butterfly = null;
-        nextButterfly = clock + 20000;
+        nextButterfly = clock + 10000;
         return;
     }
     const p = (clock - b.start) / BUTTERFLY_CROSS_MS;
     if (p >= 1) {
         butterfly = null;
-        nextButterfly = clock + 25000 + Math.random() * 35000;
+        nextButterfly = clock + 12500 + Math.random() * 17500;
         return;
     }
     const x0 = b.dir > 0 ? -25 : W + 25,
@@ -1567,7 +1569,7 @@ function butterflyCatch() {
                 butterfly.y = butterfly.from.y - 90 * p + Math.sin(p * 8) * 6;
             },
             onEnd: () => {
-                nextButterfly = clock + 25000 + Math.random() * 35000;
+                nextButterfly = clock + 12500 + Math.random() * 17500;
                 butterfly = null;
             },
         },
@@ -1734,8 +1736,8 @@ function ambientUpdate(dt) {
                     // interakcję gracza.
                     nextAmbientSpawn =
                         b.state === "fleeing"
-                            ? clock + 15000 + Math.random() * 15000
-                            : clock + 25000 + Math.random() * 35000;
+                            ? clock + 7500 + Math.random() * 7500
+                            : clock + 12500 + Math.random() * 17500;
                 }
             }
             continue;
@@ -1974,7 +1976,7 @@ function cleanMoleDirt() {
     updateMoleDirtAccess();
     say("star", 1600);
     // Dopiero teraz zaczyna się odliczanie do kolejnego kreta.
-    nextMoleSpawn = clock + 15000 + Math.random() * 30000;
+    nextMoleSpawn = clock + 7500 + Math.random() * 15000;
     save();
     toast("Piach posprzątany.");
     if (launch) moleTryStart();
@@ -2081,7 +2083,7 @@ function hedgehogUpdate(dt) {
     if (h.state === "leaving") {
         if (h.x < -HEDGEHOG_SIZE || h.x > W + HEDGEHOG_SIZE) {
             hedgehog = null;
-            nextHedgehogSpawn = clock + 40000 + Math.random() * 50000;
+            nextHedgehogSpawn = clock + 20000 + Math.random() * 25000;
         }
         return;
     }
