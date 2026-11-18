@@ -1805,9 +1805,18 @@ function moleTeaserUpdate() {
             m.stateStart = clock;
         }
     } else if (m.state === "retreating") {
-        if (clock - m.stateStart >= moleTeaserDuration(3)) {
-            // Kret schował się do końca — zostaje po nim piach, który trzeba
-            // kliknąć, żeby posprzątać (patrz moleDirtRect/Hit/cleanMoleDirt).
+        // Podmieniamy zapowiedź na piach dokładnie w momencie, gdy animacja
+        // chowania ("9,6,3,2,1") i tak pokazuje klatkę nr 3 — tę samą, której
+        // używa moleDirtDraw(). Bez tego kopiec najpierw kurczyłby się aż do
+        // maleńkiej klatki 1, a potem nagle "skakał" do dużego piachu; tak
+        // podmiana jest niewidoczna, bo to ta sama grafika w tym samym
+        // miejscu i rozmiarze — po prostu zamraża animację na tej klatce.
+        // Gdy trwa popup startowy pełnej gry (faza "mole-intro"), wstrzymujemy
+        // tę zamianę — jeśli gracz kliknie "Zaczynamy!", kret został
+        // "złapany" do gry, a nie po prostu uciekł, więc piach w ogóle nie
+        // powinien zostać (patrz górny warunek wyżej, zerujący moleTeaser
+        // przy phase==="mole-game").
+        if (phase !== "mole-intro" && clock - m.stateStart >= 2 * MOLE_TEASER_FRAME_MS) {
             moleDirt = { room, x: m.x / W, y: m.y };
             updateMoleDirtAccess();
             save();
