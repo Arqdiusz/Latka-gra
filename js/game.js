@@ -2428,6 +2428,7 @@ function draw(dt) {
     moleGameDraw();
     hedgeGameDraw();
     hedgeWinDraw();
+    moleWinDraw();
     if (!$(".bubbleWinPopup").hidden) {
         bubbleWinCtx.clearRect(0, 0, 260, 210);
         drawDog(bubbleWinCtx, 130, 196, left, 0.85);

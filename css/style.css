@@ -1279,3 +1279,112 @@ body {
     margin: 0 0 14px;
     font-size: 14px;
 }
+
+/* ── Duże ekrany końcowe i duże przyciski (gra dla małych dzieci) ───── */
+.moleWinCard {
+    width: min(100%, 360px);
+    padding: 34px 22px 26px;
+    border-radius: 38px;
+}
+
+.moleWinCard h2 {
+    font-size: 36px;
+    margin-bottom: 8px;
+}
+
+.moleWinCard p {
+    font-size: 21px;
+    margin-bottom: 22px;
+}
+
+.moleWinTrophyWrap {
+    width: 190px;
+    height: 190px;
+    margin-bottom: 10px;
+}
+
+.moleWinMole {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+.moleWinCheck {
+    width: 58px;
+    height: 58px;
+    right: -8px;
+    bottom: 6px;
+    border-width: 4px;
+}
+
+.moleWinCheck svg {
+    width: 32px;
+    height: 32px;
+}
+
+.bubbleWinDogWrap {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 260 / 210;
+    margin-bottom: 10px;
+}
+
+.hedgeWinPopup .bubbleWinDogWrap {
+    aspect-ratio: 260 / 170;
+}
+
+.bubbleWinDogWrap .moleWinCheck {
+    right: 8px;
+    top: 4px;
+    bottom: auto;
+}
+
+.moleWinOk,
+.winAgain {
+    min-height: 68px;
+    border-radius: 22px;
+    font-size: 24px;
+    padding: 16px 22px;
+}
+
+.winAgain {
+    margin-top: 12px;
+    gap: 12px;
+}
+
+.winAgain svg {
+    width: 30px;
+    height: 30px;
+}
+
+/* Ekrany startowe — większe karty i przyciski */
+.moleCard {
+    width: 310px;
+    padding: 22px 20px 24px;
+}
+
+.moleCard h2 {
+    font-size: 24px;
+}
+
+.moleCard p {
+    font-size: 17px;
+}
+
+.bubbleTutItem {
+    font-size: 15px;
+}
+
+.moleOk,
+.moleCancel,
+.ballOk {
+    min-height: 60px;
+    border-radius: 20px;
+    font-size: 20px;
+    padding: 14px 20px;
+}
+
+.moleOk {
+    margin-bottom: 12px;
+}

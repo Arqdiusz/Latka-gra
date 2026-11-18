@@ -106,7 +106,8 @@ const MOLE_NEED = 10,
     MOLE_HIT_PAD = 14,
     MOLE_GIVE_UP = 120000, // bez trafienia ani jednego kreta przez tyle ms -> koniec
     MOLE_FRAME_MS = 85, // bazowe tempo klatki wyłaniania/chowania (przed trudnością)
-    MOLE_HOLD_BASE = 1500, // bazowy czas "czujności" (ile kret stoi w pełni na wierzchu)
+    MOLE_HOLD_BASE = 1050, // bazowy czas "czujności" (ile kret stoi w pełni na wierzchu)
+    MOLE_PEEK_CHANCE = 0.22, // jak często kret tylko wygląda do połowy i się chowa
     MOLE_SPAWN_GAP_MIN = 260,
     MOLE_SPAWN_GAP_MAX = 650,
     MOLE_COLS = 3,
@@ -149,7 +150,7 @@ function moleSpawnHole() {
         kind = roll < 0.04 ? "lightning2" : roll < 0.22 ? "lightning" : "normal",
         kindMul = kind === "lightning2" ? 0.4 : kind === "lightning" ? 0.6 : 1,
         holdBase = kind === "lightning2" ? 360 : kind === "lightning" ? 580 : MOLE_HOLD_BASE,
-        difficulty = 1 - (g.caught / g.need) * 0.3,
+        difficulty = 1 - (g.caught / g.need) * 0.4,
         mul = clamp(kindMul * difficulty * (0.5 + Math.random() * 1.1), 0.28, 1.6);
     h.kind = kind;
     h.flip = Math.random() < 0.5; // pysk w lewo/prawo — odbite klatki
@@ -158,9 +159,19 @@ function moleSpawnHole() {
     h.retreatDur = numbers(CFG.kret.presets[3].seq).length * MOLE_FRAME_MS * mul;
     // Czas "czujności" losowany NIEZALEŻNIE od tempa animacji, żeby krety
     // różniły się od siebie na dwa niezależne sposoby naraz.
-    h.holdDur = clamp(holdBase * (0.75 + Math.random() * 0.6), 220, 1900);
+    h.holdDur = clamp(holdBase * (0.7 + Math.random() * 0.6), 220, 1400);
     h.alertMs = Math.max(70, 140 * mul);
     h.hitRetreat = false;
+    // Zmyłka: kret wychodzi tylko do połowy i od razu się chowa — nie da się
+    // go złapać (i nie karzemy za dotknięcie). Nie na samym początku gry.
+    g.spawnCount = (g.spawnCount || 0) + 1;
+    if (g.spawnCount > 2 && Math.random() < MOLE_PEEK_CHANCE) {
+        h.kind = "normal";
+        h.peekDur = h.emergeDur * 1.5 + 120;
+        h.state = "peek";
+        h.stateStart = clock;
+        return;
+    }
     h.state = "emerging";
     h.stateStart = clock;
 }
@@ -175,7 +186,12 @@ function moleGameUpdate(dt) {
     const active = g.holes.some((h) => h.state !== "idle");
     if (!active && g.caught < g.need && clock >= (g.nextSpawn || 0)) moleSpawnHole();
     for (const h of g.holes) {
-        if (h.state === "emerging") {
+        if (h.state === "peek") {
+            if (clock - h.stateStart >= h.peekDur) {
+                h.state = "idle";
+                g.nextSpawn = clock + MOLE_SPAWN_GAP_MIN + Math.random() * (MOLE_SPAWN_GAP_MAX - MOLE_SPAWN_GAP_MIN);
+            }
+        } else if (h.state === "emerging") {
             if (clock - h.stateStart >= h.emergeDur) {
                 h.state = "alert";
                 h.stateStart = clock;
@@ -204,6 +220,13 @@ function moleFrameFor(h) {
     if (h.state === "alert") {
         const frames = numbers(CFG.kret.presets[2].seq),
             fi = Math.floor((clock - h.stateStart) / h.alertMs) % frames.length;
+        return frames[fi];
+    }
+    if (h.state === "peek") {
+        // Klatki wychodzenia do ~połowy i z powrotem (sinus po sekwencji).
+        const frames = numbers(CFG.kret.presets[1].seq),
+            p = clamp((clock - h.stateStart) / h.peekDur, 0, 1),
+            fi = Math.min(frames.length - 1, Math.round(Math.sin(p * Math.PI) * (frames.length - 1) * 0.5));
         return frames[fi];
     }
     const presetIdx = h.state === "emerging" ? 1 : 3,
@@ -278,6 +301,8 @@ function moleGameHit(px, py) {
                 updateMoleUi();
                 moleWinShow();
             }
+        } else if (h.state === "peek") {
+            return true; // zmyłka — dotknięcie nic nie daje i nie karze
         } else {
             // Puste miejsce (kopiec bez kreta) albo za wcześnie/za późno —
             // nieumiejętne trafienie cofa jeden już złapany postęp.
@@ -392,7 +417,7 @@ function moleWinSpawnConfetti(sel = "#moleWinPopup .moleWinConfetti") {
     }
 }
 function moleWinShow() {
-    $("#moleWinPopup .moleWinTrophy").src = icons.cup;
+    moleWinT0 = clock;
     moleWinSpawnConfetti();
     $("#moleWinPopup").hidden = false;
 }
@@ -423,4 +448,27 @@ function moleGameFinish(rewarded) {
         save();
         idle(16);
     } else idle(16);
+}
+
+// Karta wygranej: zamiast pucharu — kret wychodzi z kopca, rozgląda się i
+// chowa; po chwili przerwy znów (pętla).
+let moleWinT0 = 0;
+const moleWinCtx = $("#moleWinPopup .moleWinMole").getContext("2d");
+function moleWinDraw() {
+    if ($("#moleWinPopup").hidden || !cells.kret.length) return;
+    const emerge = numbers(CFG.kret.presets[1].seq),
+        look = numbers(CFG.kret.presets[2].seq),
+        back = numbers(CFG.kret.presets[3].seq),
+        eMs = emerge.length * 110,
+        lMs = 1700,
+        bMs = back.length * 110,
+        gap = 1100,
+        t = (clock - moleWinT0) % (eMs + lMs + bMs + gap);
+    let fn = numbers(CFG.kret.presets[0].seq)[0];
+    if (t < eMs) fn = emerge[Math.min(emerge.length - 1, Math.floor(t / 110))];
+    else if (t < eMs + lMs) fn = look[Math.floor((t - eMs) / 160) % look.length];
+    else if (t < eMs + lMs + bMs) fn = back[Math.min(back.length - 1, Math.floor((t - eMs - lMs) / 110))];
+    moleWinCtx.clearRect(0, 0, 200, 200);
+    moleWinCtx.imageSmoothingEnabled = false;
+    if (cells.kret[fn - 1]) moleWinCtx.drawImage(cells.kret[fn - 1], 0, 0, 200, 200);
 }
