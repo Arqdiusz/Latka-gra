@@ -1078,7 +1078,7 @@ function poopRect() {
     }
     return {
         x: clamp((poop?.x || 0.3) * W, 22, W - 22) - w / 2 + offset,
-        y: GROUND + 34 - h,
+        y: GROUND + 25 - h,
         w,
         h,
     };
