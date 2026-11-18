@@ -1119,7 +1119,7 @@ function spawnPoop() {
             onEnd: () => {
                 poop = {
                     room,
-                    x: clamp(x + (left ? 1 : -1) * 0.3, 0.08, 0.92),
+                    x: clamp(x + (left ? 1 : -1) * 0.24, 0.08, 0.92),
                 };
                 updatePoopAccess();
                 say("poop", 4500);
