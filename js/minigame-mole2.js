@@ -257,7 +257,7 @@ function mole2Hit(px, py) {
         bd = 1e9;
     for (const m of g.mounds) {
         const d = Math.hypot(px - m.x, py - (m.y - MOLE2_SIZE * 0.12));
-        if (d <= MOLE2_SIZE * 0.5 && d < bd) {
+        if (d <= MOLE2_SIZE * 0.58 && d < bd) {
             best = m;
             bd = d;
         }
@@ -274,8 +274,11 @@ function mole2Hit(px, py) {
         g.caught = Math.min(g.need, g.caught + 1);
         g.effects.push({ x: m.x, y: m.y - 40, born: clock, good: true });
         if (g.caught >= g.need) mole2WinShow();
-    } else if (m.state === "appear" || (!m.caught && (m.state === "emerging" || m.state === "retreating" || m.state === "peek"))) {
-        // pusty kopiec, atrapa albo kret niewyjęty do końca (za wcześnie / za późno) = −1
+    } else if (!m.caught && clock - (m.penAt || -1e9) > 350) {
+        // pusty kopiec, atrapa (też gasnąca), kopiec po niepewnym krecie albo kret
+        // niewyjęty do końca (za wcześnie / za późno) = −1; 350 ms ochrony przed
+        // podwójnym naliczeniem przy dwukrotnym stuknięciu
+        m.penAt = clock;
         g.caught = Math.max(0, g.caught - 1);
         g.effects.push({ x: m.x, y: m.y - 40, born: clock, good: false });
         if (m.decoy) {
