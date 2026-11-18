@@ -20,10 +20,10 @@ const m2ctx = $(".mole2Canvas").getContext("2d"),
     MOLE2_FRAME_MS = 62,
     MOLE2_APPEAR_MS = 260, // kopiec wyrasta
     MOLE2_MOUND_WAIT = [150, 450], // sam kopiec przed wyjściem kreta
-    MOLE2_HOLD = [850, 380], // czas na wierzchu: start → koniec gry
+    MOLE2_HOLD = [950, 480], // liczy się tylko kret w pełni wyjęty // czas na wierzchu: start → koniec gry
     MOLE2_VANISH_MS = 380, // kopiec znika
     MOLE2_PEEK_CHANCE = 0.2,
-    MOLE2_DECOYS = [1, 1], // ile atrap (pustych kopców) naraz: start → koniec gry
+    MOLE2_DECOYS = [1, 3], // ile atrap (pustych kopców) naraz: start → koniec gry
     MOLE2_DECOY_LIFE = [1100, 2000], // jak długo stoi atrapa
     MOLE2_NEXT_GAP = [180, 520]; // przerwa po zniknięciu prawdziwego kopca
 
@@ -75,7 +75,7 @@ $("#mole2Popup .moleCancel").onclick = () => {
 
 // ── Start / koniec ───────────────────────────────────────────────
 function mole2Start() {
-    mole2Game = { need: MOLE2_NEED, caught: 0, mounds: [], effects: [], nextSpawn: clock + 600, nextDecoy: clock + 6000, spawned: 0, won: false };
+    mole2Game = { need: MOLE2_NEED, caught: 0, mounds: [], effects: [], nextSpawn: clock + 600, nextDecoy: clock + 3000, spawned: 0, won: false };
     say("fun", 1500);
     startQueue([
         {
@@ -200,10 +200,10 @@ function mole2GameUpdate() {
     // prawdziwy kopiec: dopiero gdy poprzedni zniknął (złapany albo schowany)
     if (!realLeft && clock >= g.nextSpawn) mole2Spawn();
     // atrapy: puste kopce, z których nic nie wyjdzie — stuknięcie = −1
-    // rzadko: od 4. kreta, co kilka sekund i nie za każdym razem
-    if (clock >= g.nextDecoy && g.spawned > 3) {
-        if (decoys < maxDecoys && Math.random() < 0.6) mole2Spawn(true);
-        g.nextDecoy = clock + 4500 + Math.random() * 5500;
+    // od 3. kreta, często — do 3 atrap naraz pod koniec gry
+    if (clock >= g.nextDecoy && g.spawned > 2) {
+        if (decoys < maxDecoys && Math.random() < 0.85) mole2Spawn(true);
+        g.nextDecoy = clock + 900 + Math.random() * 1500;
     }
     for (let i = g.mounds.length - 1; i >= 0; i--) {
         const m = g.mounds[i],
@@ -264,11 +264,8 @@ function mole2Hit(px, py) {
     if (!best) return;
     const m = best,
         el = clock - m.stateStart,
-        visible =
-            !m.caught &&
-            (m.state === "alert" ||
-                (m.state === "emerging" && el >= m.emergeDur * MOLE_EMERGE_CATCH_FROM) ||
-                (m.state === "retreating" && el <= m.retreatDur * MOLE_RETREAT_CATCH_UNTIL));
+        // tylko kret w pełni wyjęty (alert) — wychodzący i chowający się nie liczą się
+        visible = !m.caught && m.state === "alert";
     if (visible) {
         m.caught = true;
         m.state = "retreating";
