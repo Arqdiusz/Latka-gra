@@ -416,25 +416,35 @@ function hedgePanelDraw(g) {
 
 // ── Sterowanie: jeżyk biegnie za palcem (po całym ekranie) ───────
 let hedgePointerId = null;
+// Sterowanie względne: dotyk NIE przenosi jeżyka — liczy się dopiero
+// przesunięcie palca od miejsca, w którym go przyłożono.
+let hedgeGrab = null; // { px, hx }
 function hedgeCanvasX(e) {
     const r = hedgeCanvas.getBoundingClientRect();
-    return clamp(((e.clientX - r.left) / r.width) * W, HEDGE_SIZE * 0.4, W - HEDGE_SIZE * 0.4);
+    return ((e.clientX - r.left) / r.width) * W;
+}
+function hedgeClampX(x) {
+    return clamp(x, HEDGE_SIZE * 0.4, W - HEDGE_SIZE * 0.4);
 }
 hedgeCanvas.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || phase !== "hedge-game" || !hedgeGame) return;
     hedgePointerId = e.pointerId;
-    hedgeGame.tx = hedgeCanvasX(e);
+    hedgeGrab = { px: hedgeCanvasX(e), hx: hedgeGame.hx };
+    hedgeGame.tx = hedgeGame.hx;
     try {
         hedgeCanvas.setPointerCapture(e.pointerId);
     } catch (_) {}
 });
 hedgeCanvas.addEventListener("pointermove", (e) => {
     if (hedgePointerId !== e.pointerId || phase !== "hedge-game" || !hedgeGame) return;
-    hedgeGame.tx = hedgeCanvasX(e);
+    if (!hedgeGrab) return;
+    hedgeGame.tx = hedgeClampX(hedgeGrab.hx + (hedgeCanvasX(e) - hedgeGrab.px));
 });
 function hedgePointerEnd(e) {
     if (hedgePointerId !== e.pointerId) return;
     hedgePointerId = null;
+    hedgeGrab = null;
+    if (hedgeGame) hedgeGame.tx = hedgeGame.hx; // puszczony palec — jeżyk staje
 }
 hedgeCanvas.addEventListener("pointerup", hedgePointerEnd);
 hedgeCanvas.addEventListener("pointercancel", hedgePointerEnd);
