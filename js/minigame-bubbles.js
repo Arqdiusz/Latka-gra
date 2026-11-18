@@ -44,7 +44,7 @@ $(".bubbleClose").onclick = () => {
 // to "mydlane" fałszywki: złapanie ich nie daje punktu i pokazuje
 // czerwony "zły ruch" zamiast gwiazdki.
 const BUBBLE_NEED = 16,
-    BUBBLE_GIVE_UP = 100000, // bez złapania dobrej bańki przez tyle ms -> koniec
+    BUBBLE_GIVE_UP = 1800000, // bezpiecznik: kąpiel kończy się sama dopiero po 30 min
     BUBBLE_MAX_ON_SCREEN = 11, // ekran ma być pełny baniek
     BUBBLE_BAD_CHANCE = 0.62, // dobrych mniej niż złych, ale nie trzeba długo czekać
     BUBBLE_MAX_BAD_STREAK = 3, // po max tylu złych pod rząd następna jest gwarantowanie dobra

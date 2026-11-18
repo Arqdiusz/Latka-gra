@@ -104,7 +104,7 @@ const MOLE_NEED = 10,
     // dotykają (patrz buildMoleHoles).
     MOLE_HOLE_SIZE = 104,
     MOLE_HIT_PAD = 14,
-    MOLE_GIVE_UP = 120000, // bez trafienia ani jednego kreta przez tyle ms -> koniec
+    MOLE_GIVE_UP = 1800000, // bezpiecznik: gra kończy się sama dopiero po 30 min
     MOLE_FRAME_MS = 85, // bazowe tempo klatki wyłaniania/chowania (przed trudnością)
     MOLE_HOLD_BASE = 1050, // bazowy czas "czujności" (ile kret stoi w pełni na wierzchu)
     MOLE_EMERGE_CATCH_FROM = 0.35, // od jakiej części wychodzenia kret już się liczy

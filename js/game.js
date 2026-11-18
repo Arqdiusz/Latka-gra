@@ -1461,6 +1461,12 @@ function autoTrip(target = chooseDestination()) {
         nextTrip = clock + 3000;
         return false;
     }
+    // Łąka to "kraina gier" — piesek sam z niej nie wybiega (kamera jedzie za
+    // nim, więc znikałyby wejścia do gier). Potrzebę i tak pokazuje dymek.
+    if (room === "meadow") {
+        nextTrip = clock + 5000;
+        return false;
+    }
     const cRoom = criticalRoom();
     if (cRoom) {
         if (cRoom === room) return false; // już tu jest — czeka na aktywność, nie błąka się dalej

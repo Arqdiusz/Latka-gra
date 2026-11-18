@@ -24,8 +24,25 @@ const hctx = $(".hedgeCanvas").getContext("2d"),
 // Rysowana w drugim, prawym dolnym rogu sceny pod skosem — reszta jeżyka
 // "chowa się" za dołem sceny i kołowym menu. Delikatnie się wysuwa/chowa.
 function hedgePeekPose() {
-    // Nieruchomo — wystaje tylko pyszczek (bez kołysania).
-    return { x: W - 56, y: SH - 42, rot: 0.62, size: 150 };
+    // Nieruchomo — wystaje tylko pyszczek (bez kołysania). Krawędź, zza
+    // której wystaje, to GÓRA DOKU z menu (na telefonach dok zachodzi na dół
+    // sceny i zasłaniał jeżyka razem z miejscem do kliknięcia).
+    return { x: W - 56, y: sceneVisibleBottom() - 42, rot: 0.62, size: 150 };
+}
+
+// Dolna widoczna krawędź sceny w jednostkach canvasu (góra doku, jeśli na
+// niego zachodzi). Liczone raz na klatkę.
+let sceneBottomCache = { t: -1, v: SH };
+function sceneVisibleBottom() {
+    if (sceneBottomCache.t === clock) return sceneBottomCache.v;
+    let v = SH;
+    try {
+        const r = canvas.getBoundingClientRect(),
+            d = $(".dock").getBoundingClientRect();
+        if (r.height > 0 && d.top < r.bottom) v = clamp(((d.top - r.top) / r.height) * SH, SH * 0.6, SH);
+    } catch (_) {}
+    sceneBottomCache = { t: clock, v };
+    return v;
 }
 
 function hedgePeekVisible() {
@@ -46,8 +63,14 @@ function hedgePeekDraw() {
 
 function hedgePeekHit(px, py) {
     if (!hedgePeekVisible()) return false;
-    const p = hedgePeekPose();
-    return Math.hypot(px - (p.x - 26), py - (p.y - 34)) <= 58;
+    // Cały widoczny jeżyk (obrócony prostokąt grafiki), nie tylko pyszczek —
+    // łatwiej trafić małym palcem; plus spory zapas.
+    const p = hedgePeekPose(),
+        dx = px - p.x,
+        dy = py - p.y,
+        lx = dx * Math.cos(-p.rot) - dy * Math.sin(-p.rot),
+        ly = dx * Math.sin(-p.rot) + dy * Math.cos(-p.rot);
+    return py <= sceneVisibleBottom() && Math.abs(lx) <= p.size * 0.5 && Math.abs(ly) <= p.size * 0.45;
 }
 
 function hedgePeekTap() {
@@ -116,7 +139,7 @@ function hedgeReadySegment() {
     return {
         sheet: "a01",
         anim: 16,
-        time: 600000,
+        time: 1800000, // bezpiecznik 30 min
         onStart: () => {
             phase = "hedge-game";
             stage = "hedge-game";
