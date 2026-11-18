@@ -2526,6 +2526,7 @@ function loopFrame(t) {
         }
         if (bubbleGame) bubbleGameUpdate(dt);
         if (moleGame) moleGameUpdate(dt);
+        if (fetchGame || !$(".fetchEnd").hidden) updateFetchUi();
         if (hedgeGame) hedgeGameUpdate(dt);
         if (mole2Game) mole2GameUpdate(dt);
         // Działają zawsze, też podczas butterflyEvent() (phase==="butterfly") —

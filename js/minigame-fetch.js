@@ -17,7 +17,9 @@ function updateFetchUi() {
         ready = active && phase === "ball-ready",
         outOfThrows = active && fetchGame.throws >= BALL_THROWS;
     badge.hidden = !active;
-    endBtn.hidden = !ready;
+    // X widoczny PRZEZ CAŁĄ zabawę (także gdy piłka leci i piesek biegnie),
+    // żeby dało się ją przerwać w dowolnym momencie.
+    endBtn.hidden = !active || phase === "ball-intro";
     restartBtn.hidden = !ready || !outOfThrows;
     if (!active) return;
     const src = images.ball0?.src;
@@ -46,7 +48,12 @@ function renewFetch() {
 }
 
 $(".fetchEnd").onclick = () => {
-    if (phase !== "ball-ready" || !fetchGame) return;
+    if (!fetchGame || phase === "ball-intro") return;
+    // Przerwanie w dowolnym momencie: zatrzymaj bieg/lot piłki i zakończ.
+    queue = [];
+    segment = null;
+    jumpY = 0;
+    x = clamp(x, 0.1, 0.9);
     fetchFinish(fetchGame.throws > 0);
 };
 
