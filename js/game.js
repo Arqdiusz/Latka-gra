@@ -1595,6 +1595,12 @@ function butterflyFreeUpdate() {
         const t = clamp((clock - b.lure.t0) / b.lure.T, 0, 1),
             e = t * t * (3 - 2 * t);
         b.y = b.y + (b.lure.spot.y - b.y) * e;
+        // Spłoszony zygzak (jak ucieczka motylków-tła): sinusoidalne
+        // wygięcia toru, zerowe dokładnie na początku i na końcu, więc motylek
+        // startuje z miejsca kliknięcia i kończy dokładnie w punkcie pościgu.
+        const z = Math.sin(t * Math.PI * 2 * b.lure.cycles);
+        b.y += z * b.lure.amp;
+        b.x += Math.sin(t * Math.PI * 4 * b.lure.cycles) * 5;
     } else {
         b.plan = casual() && !dirty() ? butterflyPlan() : null;
     }
@@ -1658,7 +1664,14 @@ function butterflyCatch() {
     bubble = null;
     locks();
     const { dir, xd, T, walk, dist, m } = pl;
-    b.lure = { t0: clock, T, spot: pl.spot, done: false };
+    b.lure = {
+        t0: clock,
+        T,
+        spot: pl.spot,
+        done: false,
+        cycles: clamp(Math.round(T / 450), 2, 6), // liczba zygzaków
+        amp: (10 + Math.random() * 10) * (Math.random() < 0.5 ? 1 : -1),
+    };
     const parts = [];
     if (dist >= 6)
         parts.push({
@@ -2172,7 +2185,7 @@ function moleDirtDraw() {
 function eventButterflyCell() {
     const preset = CFG.motyle.presets[catchButterflyColor],
         // To samo tempo co zwykły lot motylków-tło (2x szybciej niż baza).
-        ms = preset.ms / 2,
+        ms = butterfly?.lure && !butterfly.lure.done ? preset.ms / 3 : preset.ms / 2, // spłoszony trzepocze szybciej
         seqFrames = numbers(preset.seq),
         fi = Math.floor((clock - catchButterflyStart) / ms) % seqFrames.length,
         frameNum = seqFrames[fi];
