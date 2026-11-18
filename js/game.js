@@ -2840,6 +2840,9 @@ async function boot() {
         root.addEventListener(
             name,
             (e) => {
+                // Dotknięcie menu przerywa AUTONOMICZNY bieg pieska (jego własny
+                // pomysł) — inaczej menu, w tym puchar z grami, byłoby martwe.
+                if (!casual() && phase === "travel" && travelMode === "auto") idle(16);
                 if (!casual()) {
                     e.preventDefault();
                     e.stopImmediatePropagation();
