@@ -321,6 +321,7 @@ const ACTION_EFFECTS = {
     // Jeżyk i owoce (js/minigame-hedge.js) — zdrowa zabawa na trawie.
     hedgehog: { fun: 24, water: -3, clean: -2 },
     memory: { fun: 24, water: -3, clean: -2 },
+    pairs: { fun: 20, water: -2 },
     // Złapany motylek — krótka, lekka frajda.
     butterfly: { fun: 6, water: -1 },
     // Pojedynczy rzut piłki w aporcie (minigame-fetch.js).
@@ -663,6 +664,11 @@ function idle(which = null) {
     hedgeGame = null;
     mole2Game = null;
     memoGame = null;
+    if (typeof pairsGame !== "undefined" && pairsGame) {
+        clearTimeout(pairsGame.timer);
+        pairsGame = null;
+        $(".pairsFull").hidden = true;
+    }
     setOffset(0);
     setAnim("a01", which ?? (Math.random() < 0.35 ? 18 : 16));
     idleUntil = clock + Math.max(frames.length * ms, 1800) + Math.random() * 2000;
@@ -2087,7 +2093,7 @@ function moleTeaserSpawn() {
 function moleTeaserUpdate() {
     // Kret może wychodzić na KAŻDEJ mapce (nie tylko w ogrodzie/na łące) —
     // jedyne co go blokuje to brak grafiki albo trwająca pełna mini-gra.
-    if (!cells.kret.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo")) {
+    if (!cells.kret.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo") || phase.startsWith("pairs")) {
         if (moleTeaser) moleTeaser = null;
         return;
     }
@@ -2353,7 +2359,7 @@ function hedgehogRollFruit() {
 function hedgehogUpdate(dt) {
     if (hedgeFruit && clock - hedgeFruit.born > HEDGEHOG_FRUIT_LIFE) hedgeFruit = null;
     if (!GARDEN_ROOMS.includes(room)) hedgeFruit = null;
-    if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo")) {
+    if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo") || phase.startsWith("pairs")) {
         hedgehog = null;
         return;
     }

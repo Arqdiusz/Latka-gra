@@ -55,6 +55,32 @@ const GAMES_LIST = [
         },
         start: () => memoTryStart(),
     },
+    {
+        id: "pairs",
+        name: "Znajdź pary",
+        // dwie odkryte karty z jabłkiem i jedna zakryta
+        draw: (c, s) => {
+            const card = (x, y, rot, face) => {
+                c.save();
+                c.translate(x, y);
+                c.rotate(rot);
+                c.fillStyle = face ? "#fffdf3" : "#f3a64a";
+                c.strokeStyle = face ? "#e2d6bb" : "#fff";
+                c.lineWidth = 4;
+                c.beginPath();
+                c.roundRect(-s * 0.2, -s * 0.25, s * 0.4, s * 0.5, 10);
+                c.fill();
+                c.stroke();
+                const im = face ? cells.hedgehogGame[5] : cells.ui[UI.map.paw - 1];
+                if (im) c.drawImage(im, -s * 0.15, -s * 0.15, s * 0.3, s * 0.3);
+                c.restore();
+            };
+            card(s * 0.27, s * 0.52, -0.18, true);
+            card(s * 0.73, s * 0.52, 0.18, true);
+            card(s * 0.5, s * 0.46, 0, false);
+        },
+        start: () => pairsTryStart(),
+    },
 ];
 
 function gamesBuild() {

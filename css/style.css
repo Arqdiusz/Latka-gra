@@ -1401,7 +1401,8 @@ body {
 
 /* Ekran wyboru gier (menu "Gry") */
 .gamesFull,
-.memoLevels {
+.memoLevels,
+.pairsLevels {
     position: absolute;
     inset: 0;
     z-index: 16;
@@ -1414,7 +1415,8 @@ body {
 }
 
 .gamesFull[hidden],
-.memoLevels[hidden] {
+.memoLevels[hidden],
+.pairsLevels[hidden] {
     display: none;
 }
 
@@ -1434,7 +1436,8 @@ body {
 }
 
 .gamesClose,
-.memoLevelsClose {
+.memoLevelsClose,
+.pairsLevelsClose {
     width: 48px;
     height: 48px;
     border: 3px solid white;
@@ -1771,4 +1774,214 @@ body.locked .gamesAccess {
     color: #7a6a4a;
     border-width: 3px;
     box-shadow: none;
+}
+
+/* ── Znajdź pary (memory) ────────────────────────────────────────── */
+.pairsFull {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    background: #a3d45c url("../tla/001.png") top center / 100% auto no-repeat;
+}
+
+.pairsFull[hidden] {
+    display: none;
+}
+
+.pairsTitle {
+    position: absolute;
+    left: 18px;
+    top: 10px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 0 #3c7a2a, 0 0 8px #3c7a2aaa;
+}
+
+.pairsCount {
+    position: absolute;
+    right: 68px;
+    top: 12px;
+    height: 38px;
+    min-width: 76px;
+    padding: 0 12px;
+    display: grid;
+    place-items: center;
+    border-radius: 19px;
+    background: #fffdf3;
+    border: 3px solid white;
+    box-shadow: 0 3px 6px #0002;
+    font-size: 20px;
+    font-weight: 900;
+    color: #59485d;
+}
+
+.pairsClose {
+    position: absolute;
+    right: 14px;
+    top: 10px;
+    width: 42px;
+    height: 42px;
+    border: 3px solid white;
+    border-radius: 50%;
+    background: #d9534f;
+    color: white;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 3px 6px #0003;
+}
+
+.pairsBoard {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 66px;
+    bottom: 16px;
+    display: grid;
+    place-content: center;
+    perspective: 900px;
+}
+
+.pairsCard {
+    position: relative;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.pairsInner {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 0.38s cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.pairsCard.up .pairsInner {
+    transform: rotateY(180deg);
+}
+
+.pairsBack,
+.pairsFace {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--pairsRadius, 14px);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border: 3px solid white;
+    box-shadow: 0 3px 7px #0003;
+    display: grid;
+    place-items: center;
+}
+
+.pairsBack {
+    background: #f3a64a radial-gradient(circle at 50% 42%, #f8c070 0 30%, transparent 31%);
+}
+
+.pairsBack::after {
+    content: "";
+    width: 46%;
+    aspect-ratio: 1;
+    background: #fff8;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='6' cy='9' r='2.4'/%3E%3Ccircle cx='10' cy='5' r='2.4'/%3E%3Ccircle cx='14' cy='5' r='2.4'/%3E%3Ccircle cx='18' cy='9' r='2.4'/%3E%3Cpath d='M12 11c-3 0-6 4-6 6.5 0 1.8 1.4 2.5 3 2.5 1.2 0 2-.6 3-.6s1.8.6 3 .6c1.6 0 3-.7 3-2.5C18 15 15 11 12 11z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='6' cy='9' r='2.4'/%3E%3Ccircle cx='10' cy='5' r='2.4'/%3E%3Ccircle cx='14' cy='5' r='2.4'/%3E%3Ccircle cx='18' cy='9' r='2.4'/%3E%3Cpath d='M12 11c-3 0-6 4-6 6.5 0 1.8 1.4 2.5 3 2.5 1.2 0 2-.6 3-.6s1.8.6 3 .6c1.6 0 3-.7 3-2.5C18 15 15 11 12 11z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.pairsFace {
+    background: #fffdf3;
+    transform: rotateY(180deg);
+}
+
+.pairsFace img {
+    width: 78%;
+    height: 78%;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+.pairsCard.found .pairsFace {
+    background: #e9f7dc;
+    border-color: #8cc56a;
+    animation: pairsFound 0.5s 0.3s ease-out;
+}
+
+.pairsCard.joker .pairsFace {
+    background: #fff4c9;
+    border-color: #f6c445;
+}
+
+.pairsCard.joker {
+    cursor: default;
+}
+
+@keyframes pairsFound {
+    40% {
+        transform: rotateY(180deg) scale(1.1);
+    }
+}
+
+.pairsStar {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    width: 64%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: pairsStarUp 0.9s ease-out forwards;
+    z-index: 2;
+}
+
+@keyframes pairsStarUp {
+    from {
+        opacity: 1;
+        transform: translate(-50%, -20%) scale(0.5);
+    }
+    to {
+        opacity: 0;
+        transform: translate(-50%, -110%) scale(1.15);
+    }
+}
+
+.pairsTutCards {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 0 0 18px;
+}
+
+.pairsMini {
+    width: 64px;
+    height: 80px;
+    border-radius: 12px;
+    background: #fffdf3;
+    border: 3px solid #e2d6bb;
+    display: grid;
+    place-items: center;
+}
+
+.pairsMini.back {
+    background: #f3a64a;
+    border-color: white;
+    box-shadow: 0 2px 5px #0002;
+}
+
+.pairsMini img {
+    width: 80%;
+    image-rendering: pixelated;
+}
+
+#pairsPopup .moleCard p {
+    font-size: 16px;
+}
+
+#pairsWinPopup .moleWinTrophyWrap {
+    width: 150px;
+    height: 150px;
 }
