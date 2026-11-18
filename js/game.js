@@ -1967,7 +1967,7 @@ function catchOverlayDraw() {
    (HEDGEHOG_LINE_Y, wyżej niż łapy pieska), co jakiś czas przystaje.
    Czasem niesie na kolcach coś dobrego (owoc z hedgehog-game.png, dolny
    rząd — słodycze z górnego rzędu są "złe", więc nigdy ich nie niesie).
-   Działa w czasie rzeczywistym w każdym pokoju, niezależnie od pieska;
+   Działa w czasie rzeczywistym tylko na mapach plenerowych (HEDGEHOG_ROOMS), niezależnie od pieska;
    nie jest klikalny. Presety: animacje-ustawienia/hedgehog-animacje.json.
    ═══════════════════════════════════════════════════════════════ */
 const HEDGEHOG_LINE_Y = 345, // y stóp jeżyka (czerwona linia ze screenów)
@@ -1989,8 +1989,11 @@ function hedgehogPickTarget(h) {
     h.dir = h.target >= h.x ? 1 : -1;
 }
 
+// Tylko plenerowe mapy (ogród/podwórko/łąka) — w domu jeża nie ma.
+const HEDGEHOG_ROOMS = ["garden", "yard", "meadow"];
+
 function hedgehogUpdate(dt) {
-    if (!cells.hedgehog.length) return;
+    if (!cells.hedgehog.length || !HEDGEHOG_ROOMS.includes(room)) return;
     if (!hedgehog) {
         hedgehog = { x: HEDGEHOG_MIN_X + Math.random() * (HEDGEHOG_MAX_X - HEDGEHOG_MIN_X), dir: 1, target: 0, pauseUntil: 0, fruit: -1, walkStart: clock };
         hedgehogPickTarget(hedgehog);
@@ -2010,7 +2013,7 @@ function hedgehogUpdate(dt) {
 
 function hedgehogDraw() {
     const h = hedgehog;
-    if (!h || !cells.hedgehog.length) return;
+    if (!h || !cells.hedgehog.length || !HEDGEHOG_ROOMS.includes(room)) return;
     const walking = clock >= h.pauseUntil,
         frames = numbers(CFG.hedgehog.presets[walking ? 0 : 1].seq),
         ms = CFG.hedgehog.presets[walking ? 0 : 1].ms,
