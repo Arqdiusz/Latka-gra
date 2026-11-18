@@ -119,6 +119,7 @@ let loaded = false,
     idleUntil = 6500,
     nextTrip = 15000,
     nextPoop = 45000,
+    nextRegularPoop = 240000,
     nextBubble = 9000,
     nextButterfly = 28000,
     stage = "",
@@ -1172,7 +1173,7 @@ function poopRect() {
     }
     return {
         x: clamp((poop?.x || 0.3) * W, 22, W - 22) - w / 2 + offset,
-        y: GROUND + 25 - h,
+        y: GROUND + 38 - h, // pierwszy plan: tuż pod linią podłogi pieska
         w,
         h,
     };
@@ -1197,6 +1198,20 @@ function cleanPoop() {
     toast("Posprzątane — można znów wybrać czynność.");
 }
 
+// Kupka z logiki, nie z losu (patrz REGULY.md): przejedzony piesek (jedzenie
+// >= POOP_FULL_AT) robi kupkę, a jedzenie mu spada o 10–15; poza tym "zwykłe"
+// trawienie co kilka minut. Po każdej kupce przerwa (nextPoop).
+const POOP_BEHIND = 0.24, // kupka za ogonem pieska
+    POOP_FULL_AT = 90,
+    POOP_COOLDOWN_MS = 90000,
+    POOP_REGULAR_MS = [240000, 420000],
+    POOP_REGULAR_MIN_FOOD = 40;
+function poopUrge() {
+    if (clock < nextPoop) return false;
+    if (stats.food >= POOP_FULL_AT) return true;
+    return clock >= nextRegularPoop && stats.food >= POOP_REGULAR_MIN_FOOD;
+}
+
 function spawnPoop() {
     if (!casual() || sleeping || poop) return false;
     interrupt();
@@ -1213,8 +1228,11 @@ function spawnPoop() {
             onEnd: () => {
                 poop = {
                     room,
-                    x: clamp(x + (left ? 1 : -1) * 0.24, 0.08, 0.92),
+                    x: clamp(x + (left ? 1 : -1) * POOP_BEHIND, 0.08, 0.92),
                 };
+                // Najedzony piesek po kupce jest lżejszy: -10…-15; zwykłe
+                // trawienie zabiera mniej.
+                changeNeeds({ food: stats.food >= POOP_FULL_AT ? -(10 + Math.random() * 5) : -(5 + Math.random() * 3) });
                 updatePoopAccess();
                 say("poop", 4500);
                 save();
@@ -1227,7 +1245,8 @@ function spawnPoop() {
             time: 350,
         },
     ]);
-    nextPoop = clock + 60000;
+    nextPoop = clock + POOP_COOLDOWN_MS;
+    nextRegularPoop = clock + POOP_REGULAR_MS[0] + Math.random() * (POOP_REGULAR_MS[1] - POOP_REGULAR_MS[0]);
     return true;
 }
 $(".poopAccess").onclick = cleanPoop;
@@ -2308,6 +2327,12 @@ function draw(dt) {
     if (!dogHidden) drawDog(ctx);
     // Kret-zapowiedź PRZED pieskiem (na pierwszym planie) — w
     // przeciwieństwie do motylków-tła, które lecą za nim.
+    // Kupka: pierwszy plan, tuż pod linią podłogi pieska — ale za kretem
+    // (kret rysowany zaraz po niej, więc jest przed kupką).
+    if (poop && Math.abs(order.indexOf(poop.room) - order.indexOf(room)) <= 1) {
+        const r = poopRect();
+        ctx.drawImage(images.poop, r.x, r.y, r.w, r.h);
+    }
     moleTeaserDraw();
     catchOverlayDraw();
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
@@ -2325,11 +2350,6 @@ function draw(dt) {
         }
     }
     ballDraw();
-    // Dropping is explicitly a foreground layer and below the dog's walking baseline.
-    if (poop && Math.abs(order.indexOf(poop.room) - order.indexOf(room)) <= 1) {
-        const r = poopRect();
-        ctx.drawImage(images.poop, r.x, r.y, r.w, r.h);
-    }
     moleDirtDraw();
     bubbleDraw(dt);
     bubbleGameDraw();
@@ -2368,7 +2388,7 @@ function loopFrame(t) {
         } else if (phase === "petting") {
             if (clock >= petFinishAt || (!gesture && clock - petLast > 3000)) endPetting();
         } else if (phase === "idle" && !sleeping && !gesture && !menu.drag) {
-            if (clock >= nextPoop && !poop) spawnPoop();
+            if (!poop && poopUrge()) spawnPoop();
             else if (clock >= nextTrip) autoTrip();
             else if (clock >= idleUntil) autonomous();
         }

@@ -25,6 +25,14 @@ jedzenie 0,65 · woda 1,0 · zabawa 0,8 · sen 0,55 · czystość 0,35.
 Podczas snu wszystko spada o połowę, a sen rośnie o 12 pkt/min.
 Poniżej 33% piesek sam idzie tam, gdzie go potrzeba, i blokuje inne aktywności (pierwszeństwo ma pilna potrzeba).
 
+## 2a. Kupka (z logiki, nie z losu)
+
+- **Przejedzony** (jedzenie ≥ 90%): piesek robi kupkę, gdy tylko stoi spokojnie; jedzenie spada mu o 10–15.
+- **Zwykłe trawienie:** co 4–7 min, o ile jedzenie ≥ 40%; jedzenie spada o 5–8.
+- Po każdej kupce przerwa minimum 90 s. Głodny piesek (< 40%) nie robi kupki.
+- Kupka leży na pierwszym planie, tuż pod linią podłogi pieska, za jego ogonem; kret jest przed nią.
+- Stałe: `POOP_FULL_AT`, `POOP_COOLDOWN_MS`, `POOP_REGULAR_MS`, `POOP_REGULAR_MIN_FOOD`, `POOP_BEHIND` w `js/game.js`.
+
 ## 3. Wpływ aktywności na statusy
 
 | Aktywność | jedz. | woda | zabawa | sen | czyst. |
