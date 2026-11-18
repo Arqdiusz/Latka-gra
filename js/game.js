@@ -317,6 +317,8 @@ const ACTION_EFFECTS = {
     // Zabawa w kreta — radość jak przy aporcie/bańkach, ale piesek się przy
     // tym trochę brudzi, głoduje i chce pić (patrz js/minigame-mole.js).
     mole: { fun: 26, clean: -8, food: -4, water: -5 },
+    // Jeżyk i owoce (js/minigame-hedge.js) — zdrowa zabawa na trawie.
+    hedgehog: { fun: 24, water: -3, clean: -2 },
     // Złapany motylek — krótka, lekka frajda.
     butterfly: { fun: 6, water: -1 },
     // Pojedynczy rzut piłki w aporcie (minigame-fetch.js).
@@ -651,6 +653,7 @@ function idle(which = null) {
     dogHidden = false;
     bubbleGame = null;
     moleGame = null;
+    hedgeGame = null;
     setOffset(0);
     setAnim("a01", which ?? (Math.random() < 0.35 ? 18 : 16));
     idleUntil = clock + Math.max(frames.length * ms, 1800) + Math.random() * 2000;
@@ -1348,6 +1351,7 @@ canvas.addEventListener("pointerdown", (e) => {
         catchFly: casual() ? butterflyHit(p.x, p.y) : false,
         butterfly: phase !== "butterfly" ? ambientHit(p.x, p.y) : null,
         mole: casual() ? moleTeaserHit(p.x, p.y) : null,
+        hedge: casual() ? hedgePeekHit(p.x, p.y) : false,
     };
     try {
         canvas.setPointerCapture(e.pointerId);
@@ -1413,6 +1417,7 @@ function pointerEnd(e, cancel = false) {
         else if (g.dog && petHit(p.x, p.y)) react();
         else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientFlee(g.butterfly);
         else if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
+        else if (g.hedge && hedgePeekHit(p.x, p.y)) hedgePeekTap();
     }
 }
 canvas.addEventListener("pointerup", (e) => pointerEnd(e));
@@ -2034,7 +2039,7 @@ function moleTeaserSpawn() {
 function moleTeaserUpdate() {
     // Kret może wychodzić na KAŻDEJ mapce (nie tylko w ogrodzie/na łące) —
     // jedyne co go blokuje to brak grafiki albo trwająca pełna mini-gra.
-    if (!cells.kret.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game") {
+    if (!cells.kret.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge")) {
         if (moleTeaser) moleTeaser = null;
         return;
     }
@@ -2248,7 +2253,7 @@ function hedgehogRollFruit() {
 // a kolejny wejdzie dopiero po przerwie. setRoom() zeruje go tak samo jak
 // motylki/krecika (świeży odliczany czas w każdym pokoju).
 function hedgehogUpdate(dt) {
-    if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game") {
+    if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge")) {
         hedgehog = null;
         return;
     }
@@ -2386,6 +2391,7 @@ function draw(dt) {
         ctx.drawImage(images.poop, r.x, r.y, r.w, r.h);
     }
     moleTeaserDraw();
+    hedgePeekDraw();
     catchOverlayDraw();
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
     if (butterfly?.visible) {
@@ -2406,6 +2412,8 @@ function draw(dt) {
     bubbleDraw(dt);
     bubbleGameDraw();
     moleGameDraw();
+    hedgeGameDraw();
+    hedgeWinDraw();
     if (!$(".bubbleWinPopup").hidden) {
         bubbleWinCtx.clearRect(0, 0, 260, 210);
         drawDog(bubbleWinCtx, 130, 196, left, 0.85);
@@ -2450,6 +2458,7 @@ function loopFrame(t) {
         }
         if (bubbleGame) bubbleGameUpdate(dt);
         if (moleGame) moleGameUpdate(dt);
+        if (hedgeGame) hedgeGameUpdate(dt);
         // Działają zawsze, też podczas butterflyEvent() (phase==="butterfly") —
         // tło ma dalej żyć w czasie rzeczywistym, niezależnie od scenki
         // pogoni za motylkiem na pierwszym planie.

@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.82</title>
-        <link rel="stylesheet" href="css/style.css?v=101" />
+        <title>Łatka v0.8.83</title>
+        <link rel="stylesheet" href="css/style.css?v=102" />
     </head>
 
     <body>
@@ -40,6 +40,11 @@
                 <div class="bubbleBadge" hidden aria-label="Bańki do złapania"><img alt="" /><div class="bar"><i></i></div></div>
                 <div class="bubbleTitle">Czas na kąpiel!</div>
                 <button class="bubbleClose" aria-label="Zakończ mycie">✕</button>
+            </div>
+            <div class="hedgeFull" hidden>
+                <canvas class="hedgeCanvas" width="384" height="768"></canvas>
+                <div class="hedgeTitle">Łap owoce!</div>
+                <button class="hedgeClose" aria-label="Zakończ zabawę z jeżykiem">✕</button>
             </div>
             <div class="moleFull" hidden>
                 <div class="moleHeader">
@@ -85,6 +90,42 @@
                     <p>Jamniczek jest czyściutki!</p>
                     <button class="bubbleWinOk moleWinOk">Super!</button>
                     <button class="winAgain bubbleWinAgain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                </div>
+            </div>
+            <div class="molePopup hedgePopup" hidden>
+                <div class="moleCard">
+                    <img class="hedgeIntroIcon moleIntroIcon" alt="" />
+                    <h2>Jeżyk łapie owoce!</h2>
+                    <div class="bubbleTut">
+                        <div class="bubbleTutItem">
+                            <canvas class="hedgeTutGood" width="170" height="64"></canvas>
+                            <span class="bubbleTutMark ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
+                            <span>Łap owoce<br />+1 punkt</span>
+                        </div>
+                        <div class="bubbleTutItem">
+                            <canvas class="hedgeTutBad" width="170" height="64"></canvas>
+                            <span class="bubbleTutMark no" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" /></svg></span>
+                            <span>Unikaj słodyczy<br />−1 punkt</span>
+                        </div>
+                    </div>
+                    <p>Przesuwaj palcem, żeby jeżyk biegał. Zbierz 10 owoców!</p>
+                    <button class="hedgeOk moleOk">Zaczynamy!</button>
+                    <button class="hedgeCancel moleCancel">Wróć do pieska</button>
+                </div>
+            </div>
+            <div class="moleWinPopup hedgeWinPopup" hidden>
+                <div class="moleWinCard">
+                    <div class="moleWinConfetti"></div>
+                    <div class="bubbleWinDogWrap" style="height:170px">
+                        <canvas class="hedgeWinPic bubbleWinDog" width="260" height="170"></canvas>
+                        <div class="moleWinCheck" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </div>
+                    </div>
+                    <h2>Brawo!</h2>
+                    <p>Jeżyk ma pełny brzuszek owoców!</p>
+                    <button class="hedgeWinOk moleWinOk">Super!</button>
+                    <button class="winAgain hedgeWinAgain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
                 </div>
             </div>
             <div class="molePopup" hidden>
@@ -147,10 +188,11 @@
             </div>
         </div>
 
-        <script src="js/arc-carousel.js?v=101"></script>
-        <script src="js/game.js?v=101"></script>
-        <script src="js/minigame-fetch.js?v=101"></script>
-        <script src="js/minigame-bubbles.js?v=101"></script>
-        <script src="js/minigame-mole.js?v=101"></script>
+        <script src="js/arc-carousel.js?v=102"></script>
+        <script src="js/game.js?v=102"></script>
+        <script src="js/minigame-fetch.js?v=102"></script>
+        <script src="js/minigame-bubbles.js?v=102"></script>
+        <script src="js/minigame-mole.js?v=102"></script>
+        <script src="js/minigame-hedge.js?v=102"></script>
     </body>
 </html>
