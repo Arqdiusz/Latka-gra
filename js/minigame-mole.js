@@ -458,22 +458,9 @@ function moleGameFinish(rewarded) {
     nextButterfly = Math.max(nextButterfly, grace);
     nextHedgehogSpawn = Math.max(nextHedgehogSpawn, grace);
     if (got) {
-        phase = "activity";
-        pending = "fun";
-        locks();
-        $(".popup").hidden = false;
-        $(".reward").src = icons.mole;
-        startQueue([
-            {
-                sheet: "a01",
-                anim: 16,
-                time: 1800,
-                onStart: () => {
-                    changeNeeds(ACTION_EFFECTS.mole);
-                    save();
-                },
-                onEnd: () => ($(".popup").hidden = true),
-            },
-        ]);
+        // Karta wygranej (.moleWinPopup) już była nagrodą — bez drugiego popupu.
+        changeNeeds(ACTION_EFFECTS.mole);
+        save();
+        idle(16);
     } else idle(16);
 }

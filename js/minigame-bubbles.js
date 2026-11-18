@@ -291,7 +291,9 @@ bubbleCanvas.addEventListener("pointercancel", bubblePointerEnd);
 
 // Ekran końcowy (jak przy kreciku): konfetti, zielona fajka i Łatka w
 // animacji a01 "14. Otrząsanie" (indeks 13); wyjście dopiero po "Super!".
-const BUBBLE_WIN_ANIM = 13;
+const BUBBLE_WIN_ANIM = 13,
+    BUBBLE_LOOK_ANIM = 3, // 04. Rozglądanie się
+    BUBBLE_SIT_ANIM = 18; // Siad — spokojnie
 function bubbleWinShow() {
     const g = bubbleGame;
     if (!g || g.won) return;
@@ -299,7 +301,10 @@ function bubbleWinShow() {
     g.bubbles.length = 0;
     phase = "bubble-win";
     stage = "bubble-win";
-    startQueue([{ sheet: "a01", anim: BUBBLE_WIN_ANIM, time: 600000 }]);
+    // Otrząśnięcie raz, potem w pętli: rozglądanie się ↔ siad-spokojnie.
+    const calm = [];
+    for (let i = 0; i < 40; i++) calm.push(repeatPart("a01", BUBBLE_LOOK_ANIM), repeatPart("a01", BUBBLE_SIT_ANIM));
+    startQueue([repeatPart("a01", BUBBLE_WIN_ANIM), ...calm]);
     phase = "bubble-win";
     locks();
     moleWinSpawnConfetti(".bubbleWinPopup .moleWinConfetti");
@@ -319,24 +324,10 @@ function bubbleGameFinish(rewarded) {
     const got = rewarded && bubbleGame && bubbleGame.caught > 0;
     bubbleGame = null;
     if (got) {
-        phase = "activity";
-        pending = "clean";
-        locks();
-        // Popup z nagrodą od razu po złapaniu kompletu baniek.
-        $(".popup").hidden = false;
-        $(".reward").src = icons.clean;
-        startQueue([
-            {
-                sheet: "a01",
-                anim: 16,
-                time: 1800,
-                onStart: () => {
-                    changeNeeds(ACTION_EFFECTS.clean);
-                    save();
-                },
-                onEnd: () => ($(".popup").hidden = true),
-            },
-        ]);
+        // Karta końcowa (.bubbleWinPopup) już była nagrodą — bez drugiego popupu.
+        changeNeeds(ACTION_EFFECTS.clean);
+        save();
+        idle(16);
     } else idle(16);
 }
 
