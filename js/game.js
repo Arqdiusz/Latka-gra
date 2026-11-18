@@ -1537,11 +1537,28 @@ const BUTTERFLY_LINE_Y = 200,
     BUTTERFLY_CLICKABLE_UNTIL = 0.9, // ułamek drogi, do którego można go kliknąć
     BUTTERFLY_HIT_R = 58;
 
-// Zwierzaki ogrodowe (motylek do złapania, motylki-tło, kret, jeżyk) mogą być
-// widoczne równocześnie (nakładać się w czasie), ale NIE mogą startować
-// jednocześnie: po pojawieniu się któregokolwiek pozostałe dostają krótki
-// "oddech" (WILDLIFE_STAGGER_MS + losowo do 1 s).
+// Zwierzaki ogrodowe (motylek do złapania, motylek-tło, kret, jeżyk): na
+// scenie jest NAJWYŻEJ JEDEN naraz — wiele równoczesnych animacji przytłacza.
+// Nowy zwierzak startuje dopiero, gdy poprzedni zniknie (wildlifeBusy), a po
+// każdym starcie pozostałe dostają jeszcze krótki "oddech".
 const WILDLIFE_STAGGER_MS = 3000;
+let wlWasBusy = false,
+    wlPick = "",
+    wlFreeAt = 0;
+function wildlifeBusy(who) {
+    if (moleTeaser || hedgehog || butterfly || ambient.length) {
+        wlWasBusy = true;
+        return true;
+    }
+    // Scena właśnie się zwolniła: przez 5 s pierwszeństwo ma losowo wybrany
+    // zwierzak — inaczej zawsze wygrywałby ten sprawdzany w pętli jako pierwszy.
+    if (wlWasBusy) {
+        wlWasBusy = false;
+        wlPick = ["mole", "hedgehog", "butterfly", "ambient"][Math.floor(Math.random() * 4)];
+        wlFreeAt = clock;
+    }
+    return !!wlPick && who !== wlPick && clock - wlFreeAt < 5000;
+}
 function wildlifeCooldown() {
     const t = clock + WILDLIFE_STAGGER_MS + Math.random() * 1000;
     nextAmbientSpawn = Math.max(nextAmbientSpawn, t);
@@ -1906,7 +1923,7 @@ function ambientUpdate(dt) {
         if (ambient.length) ambient.length = 0;
         return;
     }
-    if (ambient.length < AMBIENT_MAX && clock >= nextAmbientSpawn) ambientSpawn();
+    if (ambient.length < AMBIENT_MAX && clock >= nextAmbientSpawn && !wildlifeBusy("ambient")) ambientSpawn();
     const dtS = dt / 1000;
     for (let i = ambient.length - 1; i >= 0; i--) {
         const b = ambient[i];
@@ -2068,7 +2085,7 @@ function moleTeaserUpdate() {
     if (!moleTeaser) {
         // Dopóki leży piach po poprzednim krecie, nowy się nie pojawia —
         // najpierw trzeba go posprzątać (patrz cleanMoleDirt()).
-        if (!moleDirts[room] && clock >= nextMoleSpawn && !(phase === "travel" && travelMode === "auto")) moleTeaserSpawn();
+        if (!moleDirts[room] && clock >= nextMoleSpawn && !wildlifeBusy("mole") && !(phase === "travel" && travelMode === "auto")) moleTeaserSpawn();
         return;
     }
     const m = moleTeaser;
@@ -2295,7 +2312,7 @@ function hedgehogUpdate(dt) {
         return;
     }
     if (!hedgehog) {
-        if (clock < nextHedgehogSpawn || (phase === "travel" && travelMode === "auto")) return;
+        if (clock < nextHedgehogSpawn || wildlifeBusy("hedgehog") || (phase === "travel" && travelMode === "auto")) return;
         const side = Math.random() < 0.5 ? -1 : 1, // -1: z lewej, 1: z prawej
             h = { x: side < 0 ? -HEDGEHOG_SIZE : W + HEDGEHOG_SIZE, dir: -side, target: 0, state: "entering", legs: 1 + Math.floor(Math.random() * 2), pauseUntil: 0, fruit: hedgehogRollFruit(), walkStart: clock };
         // Pierwszy cel w głębi planszy, po stronie przeciwnej do wejścia.
@@ -2518,7 +2535,7 @@ function loopFrame(t) {
         // Działają zawsze, też podczas butterflyEvent() (phase==="butterfly") —
         // tło ma dalej żyć w czasie rzeczywistym, niezależnie od scenki
         // pogoni za motylkiem na pierwszym planie.
-        if (!butterfly && clock >= nextButterfly && casual() && !sleeping && !dirty() && !menu.drag && ["garden", "yard"].includes(room)) butterflySpawn();
+        if (!butterfly && clock >= nextButterfly && !wildlifeBusy("butterfly") && casual() && !sleeping && !dirty() && !menu.drag && ["garden", "yard"].includes(room)) butterflySpawn();
         butterflyFreeUpdate();
         ambientUpdate(dt);
         hedgehogUpdate(dt);
