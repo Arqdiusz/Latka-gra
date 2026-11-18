@@ -1360,15 +1360,11 @@ function butterflyEvent() {
     interrupt();
     phase = "butterfly";
     bubble = null;
-    // Motylki-tło znikają na czas eventu (i tak przestają się rysować/
-    // aktualizować, dopóki phase==="butterfly" — patrz ambientDraw()/
-    // ambientUpdate()) — ale bez wyczyszczenia tablicy wracałyby po evencie
-    // "zamrożone" w czasie sprzed jego startu. Czyścimy je więc tak samo
-    // jak przy zmianie pokoju, z własnym świeżym odliczaniem do kolejnego
-    // wlotu, żeby mogły po prostu zacząć się pojawiać od nowa.
-    ambient.length = 0;
-    nextAmbientSpawn = clock + 2000 + Math.random() * 4000;
-    moleTeaser = null;
+    // Motylki-tło i zapowiedź kreta NIE są już zerowane/chowane na czas
+    // eventu — świat ma dalej żyć "w czasie rzeczywistym" w tle, podczas
+    // gdy piesek goni swojego motylka na pierwszym planie (patrz
+    // ambientUpdate()/moleTeaserUpdate() w loopFrame() i ambientDraw()/
+    // moleTeaserDraw() w draw() — też bez gałęzi phase==="butterfly").
     locks();
     // Kolor i zegar trzepotu wybierane raz, na cały event — ten sam motylek
     // (ta sama grafika z motyle-new.png) lata od wlotu, przez pogoń i
@@ -2023,13 +2019,14 @@ function draw(dt) {
     ctx.imageSmoothingEnabled = false;
     // Motylki-tło rysowane PRZED pieskiem, więc są wizualnie za nim — i
     // trzymają się wyłącznie górnego pasa "nieba" (patrz AMBIENT_ZONE_BOTTOM),
-    // więc nie wchodzą mu na grzbiet ani pod brzuch. Schowane na czas
-    // interaktywnego butterflyEvent(), żeby się wizualnie nie gryzły.
-    if (phase !== "butterfly") ambientDraw();
+    // więc nie wchodzą mu na grzbiet ani pod brzuch. Rysowane też podczas
+    // interaktywnego butterflyEvent() — tło ma dalej żyć w czasie
+    // rzeczywistym, zamiast znikać na czas pogoni za innym motylkiem.
+    ambientDraw();
     if (!dogHidden) drawDog(ctx);
     // Kret-zapowiedź PRZED pieskiem (na pierwszym planie) — w
     // przeciwieństwie do motylków-tła, które lecą za nim.
-    if (phase !== "butterfly") moleTeaserDraw();
+    moleTeaserDraw();
     catchOverlayDraw();
     if (boneVisible) iconDraw(ctx, "bone", x * W + 20, GROUND - 30, 37);
     if (butterfly?.visible) {
@@ -2096,8 +2093,11 @@ function loopFrame(t) {
         }
         if (bubbleGame) bubbleGameUpdate(dt);
         if (moleGame) moleGameUpdate(dt);
-        if (phase !== "butterfly") ambientUpdate(dt);
-        if (phase !== "butterfly") moleTeaserUpdate();
+        // Działają zawsze, też podczas butterflyEvent() (phase==="butterfly") —
+        // tło ma dalej żyć w czasie rzeczywistym, niezależnie od scenki
+        // pogoni za motylkiem na pierwszym planie.
+        ambientUpdate(dt);
+        moleTeaserUpdate();
         if (clock >= nextBubble && !sleeping && phase === "idle") {
             // Priorytet: kupka > realnie paląca potrzeba (<=33%) > losowa —
             // dymek ma sygnalizować stan Łatki, a nie być czysto dekoracyjny.
