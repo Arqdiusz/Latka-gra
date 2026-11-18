@@ -456,6 +456,7 @@ function moleGameFinish(rewarded) {
     nextMoleSpawn = Math.max(nextMoleSpawn, grace);
     nextAmbientSpawn = Math.max(nextAmbientSpawn, grace);
     nextButterfly = Math.max(nextButterfly, grace);
+    nextHedgehogSpawn = Math.max(nextHedgehogSpawn, grace);
     if (got) {
         phase = "activity";
         pending = "fun";

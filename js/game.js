@@ -377,6 +377,8 @@ function setRoom(r) {
     nextAmbientSpawn = clock + 2000 + Math.random() * 4000;
     moleTeaser = null;
     nextMoleSpawn = clock + 2500 + Math.random() * 4500;
+    hedgehog = null;
+    nextHedgehogSpawn = clock + 4000 + Math.random() * 6000;
     updateMoleDirtAccess();
     buildRooms();
     setOffset(0);
@@ -1963,7 +1965,7 @@ function catchOverlayDraw() {
 
 /* ═══════════════════════════════════════════════════════════════
    JEŻYK — spacerowicz w tle (za pieskiem)
-   Wolno przechadza się tam i z powrotem po stałej "linii spaceru"
+   Od czasu do czasu wchodzi, wolno się przechadza po stałej "linii spaceru"
    (HEDGEHOG_LINE_Y, wyżej niż łapy pieska), co jakiś czas przystaje.
    Czasem niesie na kolcach coś dobrego (owoc z hedgehog-game.png, dolny
    rząd — słodycze z górnego rzędu są "złe", więc nigdy ich nie niesie).
@@ -1978,36 +1980,62 @@ const HEDGEHOG_LINE_Y = 345, // y stóp jeżyka (czerwona linia ze screenów)
     HEDGEHOG_MAX_X = W - 40,
     HEDGEHOG_FRUIT_SIZE = 26,
     HEDGEHOG_FRUIT_CHANCE = 0.4;
-let hedgehog = null;
+// Tylko plenerowe mapy (ogród/podwórko/łąka) — w domu jeża nie ma.
+const HEDGEHOG_ROOMS = ["garden", "yard", "meadow"];
+let hedgehog = null,
+    nextHedgehogSpawn = 0;
 
 function hedgehogPickTarget(h) {
-    // Cel w przeciwną stronę / losowy, dość daleko — żeby nie dreptał w miejscu.
-    const far = Math.random() < 0.7;
-    h.target = far
-        ? (h.x < W / 2 ? W / 2 + Math.random() * (HEDGEHOG_MAX_X - W / 2) : HEDGEHOG_MIN_X + Math.random() * (W / 2 - HEDGEHOG_MIN_X))
-        : clamp(h.x + (Math.random() * 2 - 1) * 120, HEDGEHOG_MIN_X, HEDGEHOG_MAX_X);
+    // Cel w głębi planszy, dość daleko od obecnej pozycji — żeby nie dreptał w miejscu.
+    do h.target = HEDGEHOG_MIN_X + Math.random() * (HEDGEHOG_MAX_X - HEDGEHOG_MIN_X);
+    while (Math.abs(h.target - h.x) < 80);
     h.dir = h.target >= h.x ? 1 : -1;
 }
 
-// Tylko plenerowe mapy (ogród/podwórko/łąka) — w domu jeża nie ma.
-const HEDGEHOG_ROOMS = ["garden", "yard", "meadow"];
+function hedgehogRollFruit() {
+    return Math.random() < HEDGEHOG_FRUIT_CHANCE ? 4 + Math.floor(Math.random() * 4) : -1;
+}
 
+// Jak motylki-tło i kret: pojawia się "od czasu do czasu" — wchodzi zza
+// krawędzi, przechadza się (1–2 odcinki z postojami), wychodzi za krawędź,
+// a kolejny wejdzie dopiero po przerwie. setRoom() zeruje go tak samo jak
+// motylki/krecika (świeży odliczany czas w każdym pokoju).
 function hedgehogUpdate(dt) {
-    if (!cells.hedgehog.length || !HEDGEHOG_ROOMS.includes(room)) return;
+    if (!cells.hedgehog.length || !HEDGEHOG_ROOMS.includes(room) || phase === "mole-game") {
+        hedgehog = null;
+        return;
+    }
     if (!hedgehog) {
-        hedgehog = { x: HEDGEHOG_MIN_X + Math.random() * (HEDGEHOG_MAX_X - HEDGEHOG_MIN_X), dir: 1, target: 0, pauseUntil: 0, fruit: -1, walkStart: clock };
-        hedgehogPickTarget(hedgehog);
-        if (Math.random() < HEDGEHOG_FRUIT_CHANCE) hedgehog.fruit = 4 + Math.floor(Math.random() * 4);
+        if (clock < nextHedgehogSpawn) return;
+        const side = Math.random() < 0.5 ? -1 : 1, // -1: z lewej, 1: z prawej
+            h = { x: side < 0 ? -HEDGEHOG_SIZE : W + HEDGEHOG_SIZE, dir: -side, target: 0, state: "entering", legs: 1 + Math.floor(Math.random() * 2), pauseUntil: 0, fruit: hedgehogRollFruit(), walkStart: clock };
+        // Pierwszy cel w głębi planszy, po stronie przeciwnej do wejścia.
+        h.target = side < 0 ? HEDGEHOG_MIN_X + Math.random() * 120 : W - HEDGEHOG_MIN_X - Math.random() * 120;
+        hedgehog = h;
+        return;
     }
     const h = hedgehog;
     if (clock < h.pauseUntil) return;
     h.x += h.dir * HEDGEHOG_SPEED * (dt / 1000);
+    if (h.state === "leaving") {
+        if (h.x < -HEDGEHOG_SIZE || h.x > W + HEDGEHOG_SIZE) {
+            hedgehog = null;
+            nextHedgehogSpawn = clock + 15000 + Math.random() * 20000;
+        }
+        return;
+    }
     if ((h.dir > 0 && h.x >= h.target) || (h.dir < 0 && h.x <= h.target)) {
-        // Dotarł — postój, potem nowy cel (i losowo nowy ładunek na kolcach).
-        h.pauseUntil = clock + 1500 + Math.random() * 3500;
-        hedgehogPickTarget(h);
-        h.fruit = Math.random() < HEDGEHOG_FRUIT_CHANCE ? 4 + Math.floor(Math.random() * 4) : -1;
+        // Dotarł — postój; potem kolejny odcinek albo wyjście za krawędź.
+        h.state = "walking";
+        h.pauseUntil = clock + 1500 + Math.random() * 3000;
         h.walkStart = h.pauseUntil;
+        h.fruit = hedgehogRollFruit();
+        if (--h.legs > 0) hedgehogPickTarget(h);
+        else {
+            h.state = "leaving";
+            h.dir = Math.random() < 0.5 ? -1 : 1;
+            h.target = h.dir < 0 ? -HEDGEHOG_SIZE * 2 : W + HEDGEHOG_SIZE * 2;
+        }
     }
 }
 
