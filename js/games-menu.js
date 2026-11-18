@@ -93,6 +93,9 @@ function gamesBuild() {
         b.innerHTML = '<canvas width="160" height="160"></canvas><span></span>';
         b.querySelector("span").textContent = g.name;
         b.onclick = () => {
+            // Dotyk, który otworzył ekran (puchar w menu kołowym leży dokładnie pod
+            // kafelkiem na dole), kończy się "kliknięciem" już na kafelku — ignorujemy.
+            if (Date.now() - gamesShownAt < 600) return;
             $(".gamesFull").hidden = true;
             idle(16);
             g.start();
@@ -101,7 +104,9 @@ function gamesBuild() {
     }
 }
 
+let gamesShownAt = 0;
 function gamesShow() {
+    gamesShownAt = Date.now();
     gamesBuild();
     $$games(".gamesTile canvas").forEach((cv, i) => {
         const c = cv.getContext("2d");
