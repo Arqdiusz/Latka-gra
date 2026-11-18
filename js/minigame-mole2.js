@@ -172,7 +172,8 @@ function mole2Spawn(decoy = false) {
         if (g.mounds.every((m) => Math.hypot(m.x - x, m.y - y) >= MOLE2_MIN_DIST)) break;
     }
     if (!decoy) g.spawned++;
-    const hold = MOLE2_HOLD[0] + (MOLE2_HOLD[1] - MOLE2_HOLD[0]) * pr;
+    const flash = !decoy && g.spawned > 1 && Math.random() < 0.28, // błyskawiczny: ledwo stoi i znika
+        hold = MOLE2_HOLD[0] + (MOLE2_HOLD[1] - MOLE2_HOLD[0]) * pr;
     g.mounds.push({
         x,
         y,
@@ -182,10 +183,10 @@ function mole2Spawn(decoy = false) {
         wait: decoy
             ? MOLE2_DECOY_LIFE[0] + Math.random() * (MOLE2_DECOY_LIFE[1] - MOLE2_DECOY_LIFE[0])
             : MOLE2_MOUND_WAIT[0] + Math.random() * (MOLE2_MOUND_WAIT[1] - MOLE2_MOUND_WAIT[0]),
-        hold: hold * (0.75 + Math.random() * 0.5),
-        peek: !decoy && g.spawned > 2 && Math.random() < MOLE2_PEEK_CHANCE,
+        hold: Math.max(260, hold * (flash ? 0.35 : 0.7 + Math.random() * 0.6)),
+        peek: decoy ? Math.random() < 0.55 : g.spawned > 2 && Math.random() < MOLE2_PEEK_CHANCE, // atrapy też często "wyglądają" do połowy
         emergeDur: mole2Seq(1).length * MOLE2_FRAME_MS * (Math.random() < 0.3 ? 1.6 : 1), // czasem wolniej
-        retreatDur: mole2Seq(3).length * MOLE2_FRAME_MS,
+        retreatDur: mole2Seq(3).length * MOLE2_FRAME_MS * (flash ? 0.5 : 0.8 + Math.random() * 0.8),
         caught: false,
     });
 }
@@ -212,7 +213,7 @@ function mole2GameUpdate() {
                 m.state = s;
                 m.stateStart = clock;
             };
-        if (m.state === "appear" && el >= MOLE2_APPEAR_MS + m.wait) go(m.decoy ? "vanish" : m.peek ? "peek" : "emerging");
+        if (m.state === "appear" && el >= MOLE2_APPEAR_MS + m.wait) go(m.peek ? "peek" : m.decoy ? "vanish" : "emerging");
         else if (m.state === "peek" && el >= m.emergeDur * 1.5 + 120) go("vanish");
         else if (m.state === "emerging" && el >= m.emergeDur) go("alert");
         else if (m.state === "alert" && el >= m.hold) go("retreating");
