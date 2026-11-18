@@ -1751,19 +1751,19 @@ function ambientDraw() {
    (patrz moleStart() w js/minigame-mole.js); w pozostałych pokojach
    ogrodu (garden/yard) samo się chowa, bez startu gry.
    ═══════════════════════════════════════════════════════════════ */
-const MOLE_TEASER_SIZE = 84,
+const MOLE_TEASER_SIZE = 126, // o 50% większy niż bazowe 84
     MOLE_TEASER_HIT_PAD = 18, // trochę większy obszar trafienia — łatwiej dla małego dziecka
     // Trzy stałe "miejsca" w ziemi, zdecydowanie niżej niż łapy psa
     // (GROUND=425) — kopiec zawsze wychodzi w jednym z nich (nigdy gdzie
     // indziej), mniej więcej tam, gdzie wskazują trzy obszary z referencji.
-    // Y celowo nie schodzi niżej niż ~465-470 (środek odrobinę niżej jak na
-    // referencji) — niżej nachodziłby wizualnie na powiększoną, zaznaczoną
+    // Y podniesione względem samej referencji, żeby przy większym kreciku
+    // (MOLE_TEASER_SIZE) dół kopca nie nachodził na powiększoną, zaznaczoną
     // ikonę w doku (ikony wystają nad kartę doku aż do y≈526 w canvasie,
     // sprawdzone przez getBoundingClientRect ikon .menu button).
     MOLE_TEASER_SPOTS = [
-        { x: 76, y: 462 }, // lewo
-        { x: 196, y: 466 }, // środek — odrobinę niżej, bliżej pieska
-        { x: 300, y: 458 }, // prawo
+        { x: 76, y: 448 }, // lewo
+        { x: 196, y: 452 }, // środek — odrobinę niżej, bliżej pieska
+        { x: 300, y: 444 }, // prawo
     ],
     MOLE_TEASER_FRAME_MS = 110, // tempo klatki przy wyłanianiu/chowaniu zapowiedzi
     MOLE_TEASER_HOLD = 1800; // jak długo stoi w pełni na wierzchu, zanim sam się schowa
@@ -1909,7 +1909,7 @@ $(".moleDirtAccess").onclick = cleanMoleDirt;
 function moleDirtDraw() {
     if (!moleDirt || !cells.kret.length) return;
     if (Math.abs(order.indexOf(moleDirt.room) - order.indexOf(room)) > 1) return;
-    const cell = cells.kret[0]; // "01. Pusty kopiec" — sama grafika kopca, piach bez kreta
+    const cell = cells.kret[2]; // klatka nr 3 (3. od lewej w 1. rzędzie arkusza) — piach po krecie
     if (!cell) return;
     const r = moleDirtRect();
     ctx.drawImage(cell, r.x, r.y, r.w, r.h);
