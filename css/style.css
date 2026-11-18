@@ -2031,3 +2031,13 @@ body.locked .gamesAccess {
     justify-self: center;
     width: calc(50% - 7px);
 }
+
+/* Ekran Gry: marginesy 8% od góry i od dołu */
+.gamesFull {
+    padding-top: 8%;
+}
+
+.gamesGrid {
+    top: calc(8% + 70px);
+    bottom: 8%;
+}

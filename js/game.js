@@ -1055,10 +1055,13 @@ function action(id) {
         idle(16);
     }
     if (id === "games") {
-        if (gameEntryOk() && !sleeping) {
-            interrupt();
-            gamesShow();
-        }
+        // Puchar działa zawsze: budzi śpiącego pieska i przerywa autonomiczny bieg.
+        if (!loaded || phase === "games-menu") return;
+        if (sleeping) wake();
+        if (!gameEntryOk() && !(phase === "travel" && travelMode === "auto") && !sleeping) return;
+        if (!casual()) idle(16);
+        interrupt();
+        gamesShow();
         return;
     }
     if (!casual()) return;
