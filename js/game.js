@@ -1586,6 +1586,7 @@ function butterflySpawn() {
 
 // Swobodny przelot (zanim gracz go kliknie) — wołane co klatkę z loopFrame().
 const BUTTERFLY_SPEED = (W + 50) / BUTTERFLY_CROSS_MS; // px/ms
+const LURE_SPEED = 2; // po kliknięciu motylek leci do punktu pościgu 2x szybciej
 const CATCH_MIN_WAIT = 250; // ms patrzenia na motylka tuż przed skokiem
 
 // Plan "Chwytania motylka": motylek leci dalej swoim torem, a to PIESEK
@@ -1603,8 +1604,8 @@ function butterflyPlan() {
         if (!isFinite(A)) return null;
         const [lo, hi] = CATCH_ZONE[dir];
         for (let T = 900; T <= 3500; T += 100) {
-            if (b.p + T / BUTTERFLY_CROSS_MS > 0.92) break;
-            const sx = b.x + bd * BUTTERFLY_SPEED * T;
+            if (b.p + (LURE_SPEED * T) / BUTTERFLY_CROSS_MS > 0.92) break;
+            const sx = b.x + bd * BUTTERFLY_SPEED * LURE_SPEED * T;
             let xd = (sx - A) / W;
             if (xd < lo || xd > hi) continue;
             let dist = Math.abs(xd - x) * W;
@@ -1629,7 +1630,7 @@ function butterflyFreeUpdate() {
         return;
     }
     if (b.lure?.done) return;
-    const p = (clock - b.start) / BUTTERFLY_CROSS_MS;
+    const p = b.lure ? b.lure.p0 + (LURE_SPEED * (clock - b.lure.t0)) / BUTTERFLY_CROSS_MS : (clock - b.start) / BUTTERFLY_CROSS_MS;
     if (p >= 1) {
         butterfly = null;
         nextButterfly = clock + 12500 + Math.random() * 17500;
@@ -1716,6 +1717,7 @@ function butterflyCatch() {
     const { dir, xd, T, walk, dist, m } = pl;
     b.lure = {
         t0: clock,
+        p0: b.p,
         T,
         spot: pl.spot,
         done: false,
