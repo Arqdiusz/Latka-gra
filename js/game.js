@@ -2375,21 +2375,29 @@ function bubbleDraw(dt) {
     }
     const h = headPosition(),
         size = clamp(UI.bubbleSize, 60, 106),
+        // Przy krawędzi pokoju (piesek wchodzi/wychodzi) chmurka gaśnie i znika,
+        // zamiast "przyklejać się" do brzegu ekranu i żyć własnym życiem.
+        edgeAlpha = clamp((Math.min(h.x, W - h.x) - 26) / 56, 0, 1),
         target = {
             x: clamp(h.x - size * (left ? 0.36 : 0.64), 6, W - size - 6),
             y: clamp(h.y - size - 12, 6, SH - size - 6),
         };
+    if (edgeAlpha <= 0) {
+        bubblePos = null;
+        return;
+    }
     if (!bubblePos)
         bubblePos = {
             ...target,
         };
-    const blend = 1 - Math.exp(-dt / 110);
+    const blend = 1 - Math.exp(-dt / 70);
     bubblePos.x += (target.x - bubblePos.x) * blend;
     bubblePos.y += (target.y - bubblePos.y) * blend;
     const bx = clamp(bubblePos.x, 6, W - size - 6),
         by = clamp(bubblePos.y, 6, SH - size - 6),
         type = bubble.type || "thought";
     ctx.save();
+    ctx.globalAlpha = edgeAlpha;
     if (left) {
         ctx.translate(bx + size, by);
         ctx.scale(-1, 1);
@@ -2398,6 +2406,8 @@ function bubbleDraw(dt) {
     ctx.restore();
     const center = P.bubbleCenters[type] || [0.5, 0.4],
         symbol = Math.min(UI.bubbleSymbolSize, size * 0.58);
+    ctx.save();
+    ctx.globalAlpha = edgeAlpha;
     iconDraw(
         ctx,
         bubble.icon,
@@ -2405,6 +2415,7 @@ function bubbleDraw(dt) {
         by + center[1] * size - symbol / 2 - 1,
         symbol
     );
+    ctx.restore();
 }
 
 function draw(dt) {
