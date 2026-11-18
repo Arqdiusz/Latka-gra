@@ -1475,3 +1475,40 @@ body {
     aspect-ratio: 1;
     image-rendering: pixelated;
 }
+
+/* Ikony na przyciskach startowych: duży "Play" i strzałka wstecz */
+.moleOk,
+.moleCancel,
+.ballOk {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.moleOk::before,
+.ballOk::before {
+    content: "";
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.moleOk,
+.ballOk {
+    min-height: 68px;
+    font-size: 22px;
+}
+
+.moleCancel::before {
+    content: "";
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15 4l-8 8 8 8' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15 4l-8 8 8 8' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
