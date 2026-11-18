@@ -217,7 +217,6 @@ function memoWinShow() {
     g.flies.length = 0;
     memoMarkDone(g.level);
     $("#memoWinPopup .memoWinImg").src = icons.cup;
-    $("#memoWinPopup .memoNext").hidden = g.level >= MEMO_LEVELS.length - 1;
     moleWinSpawnConfetti("#memoWinPopup .moleWinConfetti");
     startQueue([{ sheet: "a01", anim: 13, time: 600000 }]);
     memoEndOpen("#memoWinPopup", g.level);
@@ -236,10 +235,22 @@ $("#memoWinPopup .memoExit").onclick = () => {
     memoFinish(true);
 };
 $("#memoWinPopup .memoNext").onclick = () => {
+    // "Wybierz poziom": nagroda za wygraną i powrót do ekranu poziomów
     $("#memoWinPopup").hidden = true;
-    const l = memoLastLevel;
     memoFinish(true);
-    memoStart(Math.min(l + 1, MEMO_LEVELS.length - 1));
+    startQueue([
+        {
+            sheet: "a01",
+            anim: 16,
+            time: 1800000,
+            onStart: () => {
+                phase = "memo-intro";
+                stage = "memo-intro";
+                locks();
+            },
+        },
+    ]);
+    memoShowLevels();
 };
 $("#memoWinPopup .winAgain").onclick = () => {
     $("#memoWinPopup").hidden = true;

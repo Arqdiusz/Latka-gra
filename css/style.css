@@ -2005,3 +2005,14 @@ body.locked .gamesAccess {
 .gamesTile canvas {
     max-width: 92px;
 }
+
+/* Ekran Gry zawsze mieści się bez przewijania — obrazki kafelków maleją,
+   gdy gier przybywa (wysokość liczona z rozmiaru ekranu Gry). */
+.gamesFull {
+    container-type: size;
+    overflow: hidden;
+}
+
+.gamesTile canvas {
+    max-width: clamp(48px, calc((100cqh - 230px) / 3), 92px);
+}

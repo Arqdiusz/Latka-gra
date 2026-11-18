@@ -276,7 +276,6 @@ function pairsWinShow() {
     pairsLastLevel = g.level;
     pairsMarkDone(g.level);
     $("#pairsWinPopup .memoWinImg").src = icons.cup;
-    $("#pairsWinPopup .memoNext").hidden = g.level >= PAIRS_LEVELS.length - 1;
     moleWinSpawnConfetti("#pairsWinPopup .moleWinConfetti");
     startQueue([{ sheet: "a01", anim: 13, time: 600000 }]);
     phase = "pairs-end";
@@ -289,10 +288,22 @@ $("#pairsWinPopup .memoExit").onclick = () => {
     pairsFinish(true);
 };
 $("#pairsWinPopup .memoNext").onclick = () => {
+    // "Wybierz poziom": nagroda za wygraną i powrót do ekranu poziomów
     $("#pairsWinPopup").hidden = true;
-    const l = pairsLastLevel;
     pairsFinish(true);
-    pairsStart(Math.min(l + 1, PAIRS_LEVELS.length - 1));
+    startQueue([
+        {
+            sheet: "a01",
+            anim: 16,
+            time: 1800000,
+            onStart: () => {
+                phase = "pairs-intro";
+                stage = "pairs-intro";
+                locks();
+            },
+        },
+    ]);
+    pairsShowLevels();
 };
 $("#pairsWinPopup .winAgain").onclick = () => {
     $("#pairsWinPopup").hidden = true;
