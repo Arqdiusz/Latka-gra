@@ -541,6 +541,8 @@
     ],
     "motyle": "animacje/motyle-new.png",
     "kret": "animacje/kret.png",
+        "hedgehog": "animacje/hedgehog.png",
+        "hedgehogGame": "animacje/hedgehog-game.png",
     "balls": [
       "animacje/ball-1.png",
       "animacje/ball-2.png",

@@ -1,0 +1,25 @@
+{
+    "asset": "hedgehog.png",
+    "cols": 3,
+    "rows": 4,
+    "ground": 0,
+    "offsets": {},
+    "presets": [
+        {
+            "name": "01. Spacer",
+            "seq": "1,2,3,4,5,6,7,8,9,10,11,12",
+            "ms": 95,
+            "intro": "",
+            "outro": "",
+            "repeat": true
+        },
+        {
+            "name": "02. Postój",
+            "seq": "1",
+            "ms": 1000,
+            "intro": "",
+            "outro": "",
+            "repeat": true
+        }
+    ]
+}

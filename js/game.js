@@ -11,6 +11,8 @@ const
         bubbles: [],
         motyle: [],
         kret: [],
+        hedgehog: [],
+        hedgehogGame: [],
     },
     pixels = {
         a01: [],
@@ -1959,6 +1961,76 @@ function catchOverlayDraw() {
     ctx.restore();
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   JEŻYK — spacerowicz w tle (za pieskiem)
+   Wolno przechadza się tam i z powrotem po stałej "linii spaceru"
+   (HEDGEHOG_LINE_Y, wyżej niż łapy pieska), co jakiś czas przystaje.
+   Czasem niesie na kolcach coś dobrego (owoc z hedgehog-game.png, dolny
+   rząd — słodycze z górnego rzędu są "złe", więc nigdy ich nie niesie).
+   Działa w czasie rzeczywistym w każdym pokoju, niezależnie od pieska;
+   nie jest klikalny. Presety: animacje-ustawienia/hedgehog-animacje.json.
+   ═══════════════════════════════════════════════════════════════ */
+const HEDGEHOG_LINE_Y = 345, // y stóp jeżyka (czerwona linia ze screenów)
+    HEDGEHOG_SIZE = 64,
+    HEDGEHOG_FEET = 55 / 64, // dół sprite'a w komórce (ułamek wysokości)
+    HEDGEHOG_SPEED = 20, // px/s
+    HEDGEHOG_MIN_X = 40,
+    HEDGEHOG_MAX_X = W - 40,
+    HEDGEHOG_FRUIT_SIZE = 26,
+    HEDGEHOG_FRUIT_CHANCE = 0.4;
+let hedgehog = null;
+
+function hedgehogPickTarget(h) {
+    // Cel w przeciwną stronę / losowy, dość daleko — żeby nie dreptał w miejscu.
+    const far = Math.random() < 0.7;
+    h.target = far
+        ? (h.x < W / 2 ? W / 2 + Math.random() * (HEDGEHOG_MAX_X - W / 2) : HEDGEHOG_MIN_X + Math.random() * (W / 2 - HEDGEHOG_MIN_X))
+        : clamp(h.x + (Math.random() * 2 - 1) * 120, HEDGEHOG_MIN_X, HEDGEHOG_MAX_X);
+    h.dir = h.target >= h.x ? 1 : -1;
+}
+
+function hedgehogUpdate(dt) {
+    if (!cells.hedgehog.length) return;
+    if (!hedgehog) {
+        hedgehog = { x: HEDGEHOG_MIN_X + Math.random() * (HEDGEHOG_MAX_X - HEDGEHOG_MIN_X), dir: 1, target: 0, pauseUntil: 0, fruit: -1, walkStart: clock };
+        hedgehogPickTarget(hedgehog);
+        if (Math.random() < HEDGEHOG_FRUIT_CHANCE) hedgehog.fruit = 4 + Math.floor(Math.random() * 4);
+    }
+    const h = hedgehog;
+    if (clock < h.pauseUntil) return;
+    h.x += h.dir * HEDGEHOG_SPEED * (dt / 1000);
+    if ((h.dir > 0 && h.x >= h.target) || (h.dir < 0 && h.x <= h.target)) {
+        // Dotarł — postój, potem nowy cel (i losowo nowy ładunek na kolcach).
+        h.pauseUntil = clock + 1500 + Math.random() * 3500;
+        hedgehogPickTarget(h);
+        h.fruit = Math.random() < HEDGEHOG_FRUIT_CHANCE ? 4 + Math.floor(Math.random() * 4) : -1;
+        h.walkStart = h.pauseUntil;
+    }
+}
+
+function hedgehogDraw() {
+    const h = hedgehog;
+    if (!h || !cells.hedgehog.length) return;
+    const walking = clock >= h.pauseUntil,
+        frames = numbers(CFG.hedgehog.presets[walking ? 0 : 1].seq),
+        ms = CFG.hedgehog.presets[walking ? 0 : 1].ms,
+        fi = walking ? Math.floor((clock - h.walkStart) / ms) % frames.length : 0,
+        cell = cells.hedgehog[frames[fi] - 1];
+    if (!cell) return;
+    const top = HEDGEHOG_LINE_Y - HEDGEHOG_SIZE * HEDGEHOG_FEET;
+    ctx.save();
+    ctx.translate(h.x, 0);
+    if (h.dir < 0) ctx.scale(-1, 1);
+    ctx.drawImage(cell, -HEDGEHOG_SIZE / 2, top, HEDGEHOG_SIZE, HEDGEHOG_SIZE);
+    if (h.fruit >= 0 && cells.hedgehogGame[h.fruit]) {
+        // Owoc na grzbiecie (środek kolców ~ lekko za środkiem sprite'a),
+        // delikatnie podskakuje w rytm kroków.
+        const bob = walking ? Math.abs(Math.sin(((clock - h.walkStart) / 95) * 0.52)) * 2 : 0;
+        ctx.drawImage(cells.hedgehogGame[h.fruit], -HEDGEHOG_FRUIT_SIZE / 2 - 4, top + 9 - HEDGEHOG_FRUIT_SIZE * 0.45 - bob, HEDGEHOG_FRUIT_SIZE, HEDGEHOG_FRUIT_SIZE);
+    }
+    ctx.restore();
+}
+
 function iconDraw(c, key, x, y, w, h = w) {
     if (key === "poop") {
         const ratio = images.poop.width / images.poop.height;
@@ -2023,6 +2095,8 @@ function draw(dt) {
     // interaktywnego butterflyEvent() — tło ma dalej żyć w czasie
     // rzeczywistym, zamiast znikać na czas pogoni za innym motylkiem.
     ambientDraw();
+    // Jeżyk spaceruje w tle — za pieskiem (po motylkach-tle).
+    hedgehogDraw();
     if (!dogHidden) drawDog(ctx);
     // Kret-zapowiedź PRZED pieskiem (na pierwszym planie) — w
     // przeciwieństwie do motylków-tła, które lecą za nim.
@@ -2097,6 +2171,7 @@ function loopFrame(t) {
         // tło ma dalej żyć w czasie rzeczywistym, niezależnie od scenki
         // pogoni za motylkiem na pierwszym planie.
         ambientUpdate(dt);
+        hedgehogUpdate(dt);
         moleTeaserUpdate();
         if (clock >= nextBubble && !sleeping && phase === "idle") {
             // Priorytet: kupka > realnie paląca potrzeba (<=33%) > losowa —
@@ -2161,17 +2236,21 @@ async function boot() {
     P = await fresh("data/config.json");
     // Załaduj animacje z plików edytora (animacje-ustawienia/)
     // — te pliki są źródłem prawdy; config.json trzyma resztę ustawień
-    const [anim01, anim02, motyleAnim, kretAnim] = await Promise.all([
+    const [anim01, anim02, motyleAnim, kretAnim, hedgehogAnim, hedgehogGameAnim] = await Promise.all([
         fresh("animacje-ustawienia/latka-animacje-01.json"),
         fresh("animacje-ustawienia/latka-animacje-02.json"),
         fresh("animacje-ustawienia/motyle-001-animacje.json"),
         fresh("animacje-ustawienia/kret-animacje.json"),
+        fresh("animacje-ustawienia/hedgehog-animacje.json"),
+        fresh("animacje-ustawienia/hedgehog-game-animacje.json"),
     ]);
     CFG = P.config;
     CFG.a01 = anim01;
     CFG.a02 = anim02;
     CFG.motyle = motyleAnim;
     CFG.kret = kretAnim;
+    CFG.hedgehog = hedgehogAnim;
+    CFG.hedgehogGame = hedgehogGameAnim;
     UI = CFG.ui;
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
     // Stary dwuklatkowy motyl-1.png/motyl-2.png (P.assets.butterflies) nie
@@ -2209,6 +2288,22 @@ async function boot() {
             c.height = kh;
             c.getContext("2d").drawImage(images.kret, (f % cols) * kw, Math.floor(f / cols) * kh, kw, kh, 0, 0, kw, kh);
             cells.kret.push(c);
+        }
+    }
+    // Jeżyk: arkusz spaceru (3×4) i arkusz słodyczy/owoców (4×2) — oba tniemy
+    // na osobne klatki. Spacerujący jeżyk: patrz hedgehogUpdate/Draw.
+    for (const key of ["hedgehog", "hedgehogGame"]) {
+        if (!P.assets[key]) continue;
+        images[key] = await loadImage(P.assets[key]);
+        const { cols, rows } = CFG[key],
+            cw = images[key].width / cols,
+            ch = images[key].height / rows;
+        for (let f = 0; f < cols * rows; f++) {
+            const c = document.createElement("canvas");
+            c.width = cw;
+            c.height = ch;
+            c.getContext("2d").drawImage(images[key], (f % cols) * cw, Math.floor(f / cols) * ch, cw, ch, 0, 0, cw, ch);
+            cells[key].push(c);
         }
     }
     if (P.assets.balls)
