@@ -184,7 +184,7 @@ function bubbleGameHit(px, py) {
         if (b.good) {
             g.caught++;
             updateBubbleUi();
-            if (g.caught >= g.need) bubbleGameFinish(true);
+            if (g.caught >= g.need) bubbleWinShow();
         } else {
             // Złapanie złej bańki cofa postęp — trzeba uważać, nie tylko szybko klikać.
             g.caught = Math.max(0, g.caught - 1);
@@ -289,7 +289,33 @@ function bubblePointerEnd(e) {
 bubbleCanvas.addEventListener("pointerup", bubblePointerEnd);
 bubbleCanvas.addEventListener("pointercancel", bubblePointerEnd);
 
+// Ekran końcowy (jak przy kreciku): konfetti, zielona fajka i Łatka w
+// animacji a01 "14. Otrząsanie" (indeks 13); wyjście dopiero po "Super!".
+const BUBBLE_WIN_ANIM = 13;
+function bubbleWinShow() {
+    const g = bubbleGame;
+    if (!g || g.won) return;
+    g.won = true;
+    g.bubbles.length = 0;
+    phase = "bubble-win";
+    stage = "bubble-win";
+    startQueue([{ sheet: "a01", anim: BUBBLE_WIN_ANIM, time: 600000 }]);
+    phase = "bubble-win";
+    locks();
+    moleWinSpawnConfetti(".bubbleWinPopup .moleWinConfetti");
+    $(".bubbleWinPopup").hidden = false;
+}
+$(".bubbleWinOk").onclick = () => {
+    $(".bubbleWinPopup").hidden = true;
+    bubbleGameFinish(true);
+};
+
 function bubbleGameFinish(rewarded) {
+    const grace = clock + 4000 + Math.random() * 2500;
+    nextMoleSpawn = Math.max(nextMoleSpawn, grace);
+    nextAmbientSpawn = Math.max(nextAmbientSpawn, grace);
+    nextButterfly = Math.max(nextButterfly, grace);
+    nextHedgehogSpawn = Math.max(nextHedgehogSpawn, grace);
     const got = rewarded && bubbleGame && bubbleGame.caught > 0;
     bubbleGame = null;
     if (got) {

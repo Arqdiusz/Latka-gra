@@ -423,8 +423,8 @@ moleCanvas.addEventListener("pointercancel", molePointerEnd);
 // gdzie indziej) + zielony "ok-check" (NIE ptaszek — patrz dyskusja) +
 // konfetti. Zastępuje poprzednie świętowanie rysowane na mctx.
 const MOLE_CONFETTI_COLORS = ["#f6c445", "#6f9a52", "#9674ab", "#e98a71", "#4fb3bf"];
-function moleWinSpawnConfetti() {
-    const box = $(".moleWinConfetti");
+function moleWinSpawnConfetti(sel = ".moleWinPopup:not(.bubbleWinPopup) .moleWinConfetti") {
+    const box = $(sel);
     if (!box) return;
     box.innerHTML = "";
     for (let i = 0; i < 18; i++) {

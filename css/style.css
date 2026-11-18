@@ -230,10 +230,10 @@ body {
 
 .bubbleTutRing {
     position: absolute;
-    inset: -7px;
+    inset: -3px;
     border-radius: 50%;
-    border: 5px solid white;
-    box-shadow: 0 0 0 2px #1f6aa5, inset 0 0 0 2px #1f6aa5, 0 0 10px white;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px #1f6aa5, inset 0 0 0 1.5px #1f6aa5;
     animation: bubbleTutPulse 0.9s ease-in-out infinite;
 }
 
@@ -1161,4 +1161,25 @@ body {
 .devActions button {
     flex: 1 1 auto;
     padding: 5px 4px;
+}
+
+/* Ekran końcowy mycia — jak przy kreciku, ale z pieskiem zamiast pucharu. */
+.bubbleWinDogWrap {
+    position: relative;
+    width: 260px;
+    max-width: 100%;
+    height: 210px;
+    margin: 0 auto 6px;
+}
+
+.bubbleWinDog {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+.bubbleWinDogWrap .moleWinCheck {
+    right: 14px;
+    top: 4px;
+    bottom: auto;
 }

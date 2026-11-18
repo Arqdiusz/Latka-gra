@@ -89,6 +89,7 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v)),
     canvas = $("#sceneCanvas"),
     ctx = canvas.getContext("2d"),
     rewardCtx = $(".card canvas").getContext("2d"),
+    bubbleWinCtx = $(".bubbleWinDog").getContext("2d"),
     bubbleCanvas = $(".bubbleCanvas"),
     bctx = bubbleCanvas.getContext("2d");
 let loaded = false,
@@ -2361,6 +2362,10 @@ function draw(dt) {
     bubbleDraw(dt);
     bubbleGameDraw();
     moleGameDraw();
+    if (!$(".bubbleWinPopup").hidden) {
+        bubbleWinCtx.clearRect(0, 0, 260, 210);
+        drawDog(bubbleWinCtx, 130, 196, left, 0.85);
+    }
     if (!$(".popup").hidden) {
         rewardCtx.clearRect(0, 0, 300, 300);
         drawDog(rewardCtx, 150, 255, left, 0.72);
