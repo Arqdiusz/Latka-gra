@@ -24,10 +24,8 @@ const hctx = $(".hedgeCanvas").getContext("2d"),
 // Rysowana w drugim, prawym dolnym rogu sceny pod skosem — reszta jeżyka
 // "chowa się" za dołem sceny i kołowym menu. Delikatnie się wysuwa/chowa.
 function hedgePeekPose() {
-    const t = clock / 1000,
-        slide = 0.5 + 0.5 * Math.sin(t * 1.3), // 0..1 wysunięcie
-        wiggle = Math.sin(t * 2.6) * 0.04;
-    return { x: W - 56, y: SH - 36 - slide * 12, rot: 0.62 + wiggle, size: 150 };
+    // Nieruchomo — wystaje tylko pyszczek (bez kołysania).
+    return { x: W - 56, y: SH - 42, rot: 0.62, size: 150 };
 }
 
 function hedgePeekVisible() {
@@ -53,7 +51,7 @@ function hedgePeekHit(px, py) {
 }
 
 function hedgePeekTap() {
-    if (!casual()) return;
+    if (!gameEntryOk()) return;
     if (dirty()) {
         say("poop", 4500);
         toast("Najpierw posprzątaj kupkę w tym pomieszczeniu.");

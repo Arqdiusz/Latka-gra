@@ -337,7 +337,7 @@ function moleReadySegment() {
 // z instrukcją — tak jak przy aporcie te same sprawdzenia robi activity()
 // zanim w ogóle pokaże ballIntroShow().
 function moleTryStart() {
-    if (!casual()) return;
+    if (!gameEntryOk()) return;
     if (dirty()) {
         say("poop", 4500);
         toast("Najpierw posprzątaj kupkę w tym pomieszczeniu.");

@@ -572,6 +572,12 @@ function syncMenu() {
     // menu?.select(selected, { animate: false });
 }
 
+// Wejście do mini-gry z Łąki (kret, jeżyk) działa też, gdy piesek akurat
+// reaguje na dotyk / robi coś krótkiego — dotyk dziecka ma pierwszeństwo.
+function gameEntryOk() {
+    return casual() || (loaded && !sleeping && ["reaction"].includes(phase));
+}
+
 function casual() {
     // "butterfly" (piesek bawi się ze złapanym motylkiem) celowo NIE jest
     // tu wymieniony — to zdarzenie, raz uruchomione, musi dobiec końca.
@@ -1334,10 +1340,14 @@ function settleSwipe(dir, commit) {
 canvas.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
     if (gesture) {
+        // Drugi palec w trakcie gestu — anuluj jak dawniej. Ale jeśli to
+        // "wiszący" gest po zgubionym pointerup (inny pointerId, ten sam
+        // jeden palec), NIE połykamy nowego dotyku — po prostu zaczynamy od nowa.
+        const stale = gesture.id !== e.pointerId && e.isPrimary;
         if (gesture.kind === "pet") stopPetting();
         if (phase === "swipe-preview") { phase = "idle"; setOffset(0); }
         gesture = null;
-        return;
+        if (!stale) return;
     }
     const p = pointerXY(e);
     gesture = {
@@ -1350,8 +1360,8 @@ canvas.addEventListener("pointerdown", (e) => {
         moleDirt: moleDirtHit(p.x, p.y),
         catchFly: casual() ? butterflyHit(p.x, p.y) : false,
         butterfly: phase !== "butterfly" ? ambientHit(p.x, p.y) : null,
-        mole: casual() ? moleTeaserHit(p.x, p.y) : null,
-        hedge: casual() ? hedgePeekHit(p.x, p.y) : false,
+        mole: gameEntryOk() ? moleTeaserHit(p.x, p.y) : null,
+        hedge: gameEntryOk() ? hedgePeekHit(p.x, p.y) : false,
     };
     try {
         canvas.setPointerCapture(e.pointerId);
@@ -1411,13 +1421,15 @@ function pointerEnd(e, cancel = false) {
     if (cancel) return;
     if (!g.kind && Math.hypot(dx, dy) <= 12) {
         const p = pointerXY(e);
-        if (g.poop && poopHit(p.x, p.y)) cleanPoop();
+        // Wejścia do gier (kret, jeżyk) mają pierwszeństwo przed pieskiem —
+        // inaczej, gdy piesek stał obok kopca, dotyk szedł w "pogłaskanie".
+        if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
+        else if (g.hedge && hedgePeekHit(p.x, p.y)) hedgePeekTap();
+        else if (g.poop && poopHit(p.x, p.y)) cleanPoop();
         else if (g.moleDirt && moleDirtHit(p.x, p.y)) cleanMoleDirt();
         else if (g.catchFly && butterflyHit(p.x, p.y)) butterflyCatch();
         else if (g.dog && petHit(p.x, p.y)) react();
         else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientFlee(g.butterfly);
-        else if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
-        else if (g.hedge && hedgePeekHit(p.x, p.y)) hedgePeekTap();
     }
 }
 canvas.addEventListener("pointerup", (e) => pointerEnd(e));
@@ -2015,7 +2027,7 @@ function moleTeaserDuration(presetIdx) {
     return numbers(CFG.kret.presets[presetIdx].seq).length * MOLE_TEASER_FRAME_MS;
 }
 
-const MEADOW_MOLE = { x: 84, y: 450 }; // stały kret na Łące (lewa strona)
+const MEADOW_MOLE = { x: 84, y: 450, standMs: 3200, hiddenMs: 1400 }; // stały kret na Łące (lewa strona)
 let moleLastX = -999;
 function moleTeaserSpawn() {
     wildlifeCooldown();
@@ -2060,6 +2072,18 @@ function moleTeaserUpdate() {
         return;
     }
     const m = moleTeaser;
+    if (m.permanent) {
+        // Stały kret na Łące: wychodzi, STOI spokojnie (jedna klatka, bez
+        // "telepania"), chowa się, chwila przerwy i od nowa — jak na karcie
+        // końcowej. Klikalny w każdej fazie (kopiec jest zawsze widoczny).
+        const el = clock - m.stateStart,
+            next = { emerging: ["stand", moleTeaserDuration(1)], stand: ["retreating", MEADOW_MOLE.standMs], retreating: ["hidden", moleTeaserDuration(3)], hidden: ["emerging", MEADOW_MOLE.hiddenMs] }[m.state];
+        if (next && el >= next[1]) {
+            m.state = next[0];
+            m.stateStart = clock;
+        }
+        return;
+    }
     if (m.state === "emerging") {
         if (clock - m.stateStart >= moleTeaserDuration(1)) {
             m.state = "alert";
@@ -2095,7 +2119,7 @@ function moleTeaserUpdate() {
 // to zawsze jeden, konkretny obiekt (bez tablicy). Pomijamy "retreating" —
 // kret już się chowa, za późno.
 function moleTeaserHit(px, py) {
-    if (!moleTeaser || moleTeaser.state === "retreating") return null;
+    if (!moleTeaser || (moleTeaser.state === "retreating" && !moleTeaser.permanent)) return null;
     const r = MOLE_TEASER_SIZE / 2 + MOLE_TEASER_HIT_PAD;
     return Math.hypot(px - moleTeaser.x, py - moleTeaser.y) <= r ? moleTeaser : null;
 }
@@ -2120,6 +2144,11 @@ function moleTeaserTap(m) {
 function moleTeaserFrame() {
     const m = moleTeaser;
     if (!m) return null;
+    if (m.state === "stand") {
+        const f = numbers(CFG.kret.presets[1].seq);
+        return f[f.length - 1]; // ostatnia klatka wyjścia — kret stoi nieruchomo
+    }
+    if (m.state === "hidden") return numbers(CFG.kret.presets[0].seq)[0]; // sam kopiec
     if (m.state === "alert") {
         const frames = numbers(CFG.kret.presets[2].seq),
             fi = Math.floor((clock - m.stateStart) / 160) % frames.length;
