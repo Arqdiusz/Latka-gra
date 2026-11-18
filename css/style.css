@@ -1388,3 +1388,85 @@ body {
 .moleOk {
     margin-bottom: 12px;
 }
+
+/* Ekran wyboru gier (menu "Gry") */
+.gamesFull {
+    position: absolute;
+    inset: 0;
+    z-index: 16;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 14px 16px 24px;
+    background: linear-gradient(180deg, #bfe6ff 0%, #e6f6d6 70%, #cfeab0 100%);
+    overflow-y: auto;
+}
+
+.gamesFull[hidden] {
+    display: none;
+}
+
+.gamesHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+}
+
+.gamesHeader h2 {
+    margin: 0 0 0 4px;
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 0 #3a7bb0, 0 0 10px #3a7bb088;
+}
+
+.gamesClose {
+    width: 48px;
+    height: 48px;
+    border: 3px solid white;
+    border-radius: 50%;
+    background: #d9534f;
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 3px 6px #0003;
+}
+
+.gamesGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.gamesTile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px 16px;
+    border: 4px solid white;
+    border-radius: 28px;
+    background: #fffdf3;
+    box-shadow: 0 4px 10px #0002;
+    font: inherit;
+    font-size: 20px;
+    font-weight: 800;
+    color: #59485d;
+    cursor: pointer;
+    min-width: 0;
+}
+
+.gamesTile:active {
+    transform: scale(0.97);
+}
+
+.gamesTile canvas {
+    width: 100%;
+    max-width: 150px;
+    aspect-ratio: 1;
+    image-rendering: pixelated;
+}

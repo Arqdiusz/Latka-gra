@@ -83,6 +83,14 @@ const items = [
         room: "living",
         color: "#ffdfb5",
     },
+    {
+        // Wybór mini-gier (js/games-menu.js) — bez pokoju, piesek nigdzie nie idzie.
+        id: "games",
+        icon: "cup",
+        label: "Gry",
+        room: null,
+        color: "#f6d36b",
+    },
 ];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v)),
     reduced = matchMedia("(prefers-reduced-motion:reduce)").matches,
@@ -1044,6 +1052,13 @@ function action(id) {
     if (phase === "bubble-game") {
         bubbleGame = null;
         idle(16);
+    }
+    if (id === "games") {
+        if (gameEntryOk() && !sleeping) {
+            interrupt();
+            gamesShow();
+        }
+        return;
     }
     if (!casual()) return;
     const i = items.find((i) => i.id === id);

@@ -97,7 +97,8 @@ function hedgePeekTap() {
 let hedgeIntroResume = null;
 function hedgeIntroShow(onOk) {
     hedgeIntroResume = onOk;
-    $(".hedgeIntroIcon").src = icons.garden;
+    // Ikona: jeżyk (nie ikona ogrodu — wyglądała jak kret).
+    if (cells.hedgehog[0]) $(".hedgeIntroIcon").src = cells.hedgehog[0].toDataURL("image/png");
     const draw = (cv, idxs) => {
         const c = cv.getContext("2d");
         c.clearRect(0, 0, cv.width, cv.height);
