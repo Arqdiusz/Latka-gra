@@ -1411,6 +1411,41 @@ function butterflySpawn() {
 }
 
 // Swobodny przelot (zanim gracz go kliknie) — wołane co klatkę z loopFrame().
+const BUTTERFLY_SPEED = (W + 50) / BUTTERFLY_CROSS_MS; // px/ms
+const CATCH_MIN_WAIT = 250; // ms patrzenia na motylka tuż przed skokiem
+
+// Plan "Chwytania motylka": motylek leci dalej swoim torem, a to PIESEK
+// ustawia się tak, żeby w chwili T motylek był dokładnie tam, gdzie grafika
+// pościgu (a02/14) ma zielony znacznik. Szukamy kierunku pieska (dir) i czasu
+// T (0,9–3,5 s) o najmniejszym koszcie — krótki czas, bez cofania się tyłem.
+function butterflyPlan() {
+    const b = butterfly;
+    if (!b?.free || b.lure) return null;
+    const first = numbers(getPreset("a02", 14).seq)[0],
+        bd = b.dir > 0 ? 1 : -1;
+    let best = null;
+    for (const dir of [1, -1]) {
+        const A = catchSpotFor("a02", first, 0.5, dir < 0)?.x - 0.5 * W;
+        if (!isFinite(A)) return null;
+        const [lo, hi] = CATCH_ZONE[dir];
+        for (let T = 900; T <= 3500; T += 100) {
+            if (b.p + T / BUTTERFLY_CROSS_MS > 0.92) break;
+            const sx = b.x + bd * BUTTERFLY_SPEED * T;
+            let xd = (sx - A) / W;
+            if (xd < lo || xd > hi) continue;
+            let dist = Math.abs(xd - x) * W;
+            if (dist < 6) xd = x;
+            const back = dist >= 6 && (xd - x) * dir < 0;
+            const walk = dist < 48,
+                m = dist < 6 ? 0 : walk ? (dist / 60) * 1000 : Math.max(350, (dist / 260) * 1000);
+            if (m + CATCH_MIN_WAIT + (back ? 250 : 0) > T) continue; // back: bieg przodem do celu i dopiero obrót
+            const c = T + dist * 2 + (back ? 1500 : 0) + ((dir < 0) !== left && dist < 6 ? 150 : 0);
+            if (!best || c < best.cost) best = { dir, T, xd, m, walk, dist, cost: c, spot: { x: sx, y: catchSpotFor("a02", first, xd, dir < 0)?.y ?? 231 } };
+        }
+    }
+    return best;
+}
+
 function butterflyFreeUpdate() {
     const b = butterfly;
     if (!b?.free) return;
@@ -1419,6 +1454,7 @@ function butterflyFreeUpdate() {
         nextButterfly = clock + 10000;
         return;
     }
+    if (b.lure?.done) return;
     const p = (clock - b.start) / BUTTERFLY_CROSS_MS;
     if (p >= 1) {
         butterfly = null;
@@ -1430,17 +1466,27 @@ function butterflyFreeUpdate() {
     b.p = p;
     b.x = x0 + (x1 - x0) * p;
     b.y = BUTTERFLY_LINE_Y + Math.sin(p * Math.PI * 4) * 13;
+    if (b.lure) {
+        // wysokość łagodnie schodzi do wysokości znacznika pościgu
+        const t = clamp((clock - b.lure.t0) / b.lure.T, 0, 1),
+            e = t * t * (3 - 2 * t);
+        b.y = b.y + (b.lure.spot.y - b.y) * e;
+    } else {
+        b.plan = casual() && !dirty() ? butterflyPlan() : null;
+    }
+    b.ringA = clamp((b.ringA || 0) + ((b.plan && !b.lure ? 1 : -1) * (clock - (b.lc ?? clock))) / 300, 0, 1);
+    b.lc = clock;
 }
 
 function butterflyHit(px, py) {
     const b = butterfly;
-    return !!(b?.free && b.p < BUTTERFLY_CLICKABLE_UNTIL && Math.hypot(px - b.x, py - b.y) <= BUTTERFLY_HIT_R);
+    return !!(b?.free && !b.lure && b.plan && b.ringA > 0.2 && Math.hypot(px - b.x, py - b.y) <= BUTTERFLY_HIT_R);
 }
 
 // Delikatna, okrągła, pulsująca ramka wokół klikalnego motylka.
 function butterflyFrameDraw(b) {
     const pulse = 0.5 + 0.5 * Math.sin(clock / 260),
-        fade = clamp((BUTTERFLY_CLICKABLE_UNTIL - b.p) / 0.06, 0, 1); // gaśnie tuż przed końcem klikalności
+        fade = b.ringA || 0; // gaśnie, gdy chwycenie nie jest już możliwe
     if (fade <= 0) return;
     ctx.save();
     ctx.globalAlpha = fade;
@@ -1473,85 +1519,44 @@ function catchSpotFor(sh, f, xf, lf) {
 // Strefy, w których piesek może zacząć pościg w danym kierunku (dir=+1 — w
 // prawo): pościg przesuwa go o ~0.1 w stronę motylka, a motylek jest ~93 px
 // przed nim, więc blisko krawędzi grafika by wychodziła poza ekran.
-const CATCH_ZONE = { 1: [0.26, 0.5], "-1": [0.5, 0.74] };
+const CATCH_ZONE = { 1: [0.2, 0.62], "-1": [0.38, 0.8] };
 
-// Start właściwego "Chwytania motylka" po kliknięciu: piesek (jeśli trzeba)
-// podchodzi do bezpiecznej strefy PATRZĄC w stronę, w którą idzie, motylek
-// leci na swoje miejsce przed jego pyszczkiem (dokładnie tam, gdzie grafika
-// pościgu ma zielony znacznik — bez skoku nakładki), i dopiero potem rusza
-// animacja chwytania.
+// Start właściwego "Chwytania motylka" po kliknięciu: motylek leci dalej jak
+// leciał, a piesek (obrót / krok / bieg) ustawia się tak, żeby w chwili T
+// motylek był w miejscu znacznika pościgu. Dopiero wtedy rusza animacja.
 function butterflyCatch() {
     const b = butterfly;
-    if (!b?.free || !casual() || sleeping || dirty()) return false;
+    if (!b?.free || b.lure || !casual() || sleeping || dirty()) return false;
+    const pl = butterflyPlan();
+    if (!pl) return false;
     interrupt();
     phase = "butterfly";
     bubble = null;
     locks();
-    b.free = false;
-    const bx = b.x,
-        by = b.y;
-    // Wybór kierunku: minimalny koszt = dystans do strefy + kara za cofanie się
-    // tyłem (piesek idzie zawsze przodem) + mała kara za patrzenie w stronę
-    // przeciwną niż motylek.
-    const side = bx >= x * W ? 1 : -1,
-        plan = [1, -1].map((d) => {
-            const [lo, hi] = CATCH_ZONE[d],
-                xd = clamp(x, lo, hi),
-                move = xd - x;
-            return { dir: d, xd, cost: Math.abs(move) + (move * d < 0 ? 0.25 : 0) + (d === side ? 0 : 0.1) };
-        }).sort((p, q) => p.cost - q.cost)[0],
-        dir = plan.dir,
-        xd = plan.xd,
-        first = numbers(getPreset("a02", 14).seq)[0];
-    left = dir < 0;
-    b.dir = -dir; // motylek zwrócony w stronę pieska
-    // Miejsce spotkania = znacznik pierwszej klatki pościgu (a02/14).
-    const spot = catchSpotFor("a02", first, xd, dir < 0) || { x: xd * W + dir * 93, y: 231 },
-        cruiseSpeed = 0.19, // px/ms
-        runDist = Math.abs(xd - x) * W,
-        flyDist = Math.hypot(spot.x - bx, spot.y - by);
-    const queue0 = [];
-    if (runDist > 6)
-        queue0.push({
+    const { dir, xd, T, walk, dist, m } = pl;
+    b.lure = { t0: clock, T, spot: pl.spot, done: false };
+    const parts = [];
+    if (dist >= 6)
+        parts.push({
             sheet: "a01",
-            anim: 1,
-            tempo: 180,
-            facing: dir < 0,
+            anim: walk ? 6 : 1,
+            tempo: walk ? undefined : 180,
+            facing: xd < x,
             to: xd,
-            motion: "run",
-            time: Math.max(400, (runDist / 260) * 1000, flyDist / 0.3),
+            motion: walk ? "walk" : "run",
+            time: Math.max(1, m),
             onStart: () => (stage = "butterfly-run"),
-            // Motylek podlatuje w miejsce spotkania razem z pieskiem (łagodny
-            // łuk, bez zygzaków), tak by dotarł tam, kiedy piesek staje.
-            update: (p) => {
-                const e = p * p * (3 - 2 * p);
-                b.x = bx + (spot.x - bx) * e;
-                b.y = by + (spot.y - by) * e - Math.sin(p * Math.PI) * 14;
-            },
         });
-    const ax = runDist > 6 ? spot.x : bx,
-        ay = runDist > 6 ? spot.y : by;
+    const moveT = parts.length ? parts[0].time : 0;
     startQueue([
-        ...queue0,
+        ...parts,
         {
-            // Krótki dolot bliżej pieska po zawróceniu — żeby animacja
-            // chwytania nie zaczynała się za daleko od tego, gdzie motylek
-            // właśnie był. Startuje dokładnie z pozycji, w której skończyło
-            // się zawrócenie (watchEnd), więc nie ma skoku pozycji. Stałe
-            // tempo (cruiseSpeed) + kołysanie — tak jak przy wlocie na mapę,
-            // żeby to nie wyglądało na wystrzał z procy (próbowane wcześniej
-            // ease-out z zera było zbyt szarpane).
+            // Piesek stoi zwrócony do motylka i czeka na właściwy moment.
             sheet: "a01",
             anim: 16,
             facing: dir < 0,
-            // Krótka chwila "patrzenia na motylka" przed skokiem (min. 450 ms).
-            time: Math.max(450, Math.hypot(spot.x - ax, spot.y - ay) / cruiseSpeed),
+            time: Math.max(CATCH_MIN_WAIT, T - moveT),
             onStart: () => (stage = "butterfly-approach"),
-            update: (p) => {
-                const e = p * p * (3 - 2 * p);
-                butterfly.x = ax + (spot.x - ax) * e;
-                butterfly.y = ay + (spot.y - ay) * e + Math.sin(p * Math.PI * 2) * 4;
-            },
         },
         {
             sheet: "a02",
@@ -1561,7 +1566,10 @@ function butterflyCatch() {
             time: duration("a02", 14) * 2,
             onStart: () => {
                 stage = "butterfly-chase";
-                butterfly.visible = false;
+                if (butterfly) {
+                    butterfly.visible = false;
+                    if (butterfly.lure) butterfly.lure.done = true;
+                }
             },
         },
         {
@@ -2229,7 +2237,7 @@ function draw(dt) {
         // Ten sam motylek (kolor + zegar trzepotu) co w catchOverlayDraw() —
         // cały event lata jedną, spójną grafiką z motyle-new.png.
         const cell = eventButterflyCell();
-        if (butterfly.free) butterflyFrameDraw(butterfly);
+        if (butterfly.free && !butterfly.lure?.done) butterflyFrameDraw(butterfly);
         if (cell) {
             ctx.save();
             ctx.translate(butterfly.x, butterfly.y);
