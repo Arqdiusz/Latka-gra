@@ -125,6 +125,7 @@ let loaded = false,
     nextButterfly = 28000,
     stage = "",
     travelMode = "",
+    travelTarget = "",
     jumpY = 0,
     pending = null,
     menu = null,
@@ -255,6 +256,9 @@ const BUBBLE_RULES = {
 const bubbleLast = { poop: -1e9, need: -1e9 };
 let nextWishBubble = 30000;
 
+// Ikona pokoju (ta sama co na plakietce pokoju) — dymek w drodze do niego.
+const ROOM_ICON = { yard: "den", garden: "garden", living: "living", kitchen: "kitchen", bathroom: "bathroom", meadow: "mole" };
+
 function bubbleWish() {
     const w = [];
     if (butterfly?.free && !butterfly.lure && butterfly.plan) w.push("butterfly");
@@ -269,8 +273,11 @@ function bubbleThink() {
     const R = BUBBLE_RULES,
         crit = criticalNeed();
     // (3) w drodze do pilnej potrzeby dymek towarzyszy pieskowi.
-    if (phase === "travel" && travelMode === "auto" && crit) {
-        if (!bubble || bubble.until < clock + 400) say(crit, 1200);
+    if (phase === "travel" && travelMode === "auto") {
+        // Dymek z celem biegu: pilna potrzeba albo ikona pokoju, do którego
+        // piesek zmierza ("co mu chodzi po głowie").
+        const icon = crit || ROOM_ICON[travelTarget];
+        if (icon && (!bubble || bubble.until < clock + 400)) say(icon, 1200);
         return;
     }
     if (phase !== "idle" || clock < nextBubble) return;
@@ -931,6 +938,7 @@ function route(target, id = null, mode = "menu") {
     wake();
     phase = "travel";
     travelMode = mode;
+    travelTarget = target;
     pending = id;
     bubble = null;
     locks();
@@ -1424,8 +1432,18 @@ function chooseDestination() {
     return a[0];
 }
 
+// Coś dzieje się w świecie (kret, jeżyk, motylek do złapania) — piesek wtedy
+// stoi spokojnie, żeby dało się to kliknąć, i nie wybiega sam w drogę.
+function worldBusy() {
+    return !!(moleTeaser || hedgehog || butterfly);
+}
+
 function autoTrip(target = chooseDestination()) {
     if (!casual() || sleeping || gesture || menu.drag) return false;
+    if (worldBusy()) {
+        nextTrip = clock + 3000;
+        return false;
+    }
     const cRoom = criticalRoom();
     if (cRoom) {
         if (cRoom === room) return false; // już tu jest — czeka na aktywność, nie błąka się dalej
@@ -2010,7 +2028,7 @@ function moleTeaserUpdate() {
     if (!moleTeaser) {
         // Dopóki leży piach po poprzednim krecie, nowy się nie pojawia —
         // najpierw trzeba go posprzątać (patrz cleanMoleDirt()).
-        if (!moleDirts[room] && clock >= nextMoleSpawn) moleTeaserSpawn();
+        if (!moleDirts[room] && clock >= nextMoleSpawn && !(phase === "travel" && travelMode === "auto")) moleTeaserSpawn();
         return;
     }
     const m = moleTeaser;
@@ -2222,7 +2240,7 @@ function hedgehogUpdate(dt) {
         return;
     }
     if (!hedgehog) {
-        if (clock < nextHedgehogSpawn) return;
+        if (clock < nextHedgehogSpawn || (phase === "travel" && travelMode === "auto")) return;
         const side = Math.random() < 0.5 ? -1 : 1, // -1: z lewej, 1: z prawej
             h = { x: side < 0 ? -HEDGEHOG_SIZE : W + HEDGEHOG_SIZE, dir: -side, target: 0, state: "entering", legs: 1 + Math.floor(Math.random() * 2), pauseUntil: 0, fruit: hedgehogRollFruit(), walkStart: clock };
         // Pierwszy cel w głębi planszy, po stronie przeciwnej do wejścia.

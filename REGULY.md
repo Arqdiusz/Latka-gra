@@ -19,6 +19,10 @@ Zasada: **domyślnie dymka nie ma**. Pojawia się tylko, gdy coś znaczy.
 - Priorytet: kupka > pilna potrzeba > chęć. Jedno naraz.
 - Serce / gwiazdka (głaskanie, sprzątanie) to reakcje na dotyk, nie podlegają tym regułom.
 
+### Samodzielne wycieczki pieska
+- W drodze piesek ma dymek z celem: ikona pokoju (albo pilnej potrzeby).
+- Gdy na ekranie jest kret, jeżyk lub motylek do złapania, piesek nie rusza w drogę (sprawdza ponownie co 3 s), a w czasie biegu nowe zwierzęta się nie pojawiają.
+
 ## 2. Potrzeby — spadek w czasie (punktów na minutę)
 
 jedzenie 0,65 · woda 1,0 · zabawa 0,8 · sen 0,55 · czystość 0,35.
