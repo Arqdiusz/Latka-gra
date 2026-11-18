@@ -225,6 +225,77 @@ function blockedNeedToast() {
     toast("Łatka najpierw potrzebuje: " + (NEED_GENITIVE[id] || id) + ".");
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   REGUŁY DYMKÓW (wersja wyjściowa — do strojenia; opis w REGULY.md)
+   Dymek nad głową ma coś znaczyć, a nie być tłem. Domyślnie go NIE MA.
+   Pojawia się tylko, gdy:
+   1) leży kupka (czyszczenie)                    — co poopEveryMs,
+   2) potrzeba spadła do needAt (≈33%) lub niżej   — co needEveryMs
+      (przy ≤ needUrgentAt częściej: needUrgentEveryMs),
+   3) piesek BIEGNIE do pokoju, w którym czegoś pilnie potrzebuje
+      (dymek z potrzebą towarzyszy mu całą drogę),
+   4) rzadkie "chęci" (wishEveryMs): motylek do złapania, kret/kopiec,
+      piłka (gdy zabawa < wishFunBelow) — tylko gdy nic pilniejszego nie czeka.
+   Reakcje na dotyk (serce, gwiazdka) to osobna sprawa i zostają jak były.
+   ═══════════════════════════════════════════════════════════════ */
+const BUBBLE_RULES = {
+    checkEveryMs: 2000,
+    showMs: 3500,
+    poopEveryMs: 20000,
+    needAt: CRITICAL_THRESHOLD,
+    needEveryMs: 25000,
+    needUrgentAt: 15,
+    needUrgentEveryMs: 12000,
+    wishEveryMs: 60000, // + losowo do wishJitterMs
+    wishJitterMs: 30000,
+    wishFunBelow: 60,
+};
+const bubbleLast = { poop: -1e9, need: -1e9 };
+let nextWishBubble = 30000;
+
+function bubbleWish() {
+    const w = [];
+    if (butterfly?.free && !butterfly.lure && butterfly.plan) w.push("butterfly");
+    if (moleTeaser || moleDirts[room]) w.push("mole");
+    if (stats.fun < BUBBLE_RULES.wishFunBelow) w.push("fun");
+    return w.length ? w[Math.floor(Math.random() * w.length)] : null;
+}
+
+// Wołane co klatkę; samo pilnuje częstotliwości.
+function bubbleThink() {
+    if (sleeping || gesture || menu.drag) return;
+    const R = BUBBLE_RULES,
+        crit = criticalNeed();
+    // (3) w drodze do pilnej potrzeby dymek towarzyszy pieskowi.
+    if (phase === "travel" && travelMode === "auto" && crit) {
+        if (!bubble || bubble.until < clock + 400) say(crit, 1200);
+        return;
+    }
+    if (phase !== "idle" || clock < nextBubble) return;
+    nextBubble = clock + R.checkEveryMs;
+    if (bubble && clock < bubble.until) return;
+    if (dirty()) {
+        if (clock - bubbleLast.poop >= R.poopEveryMs) {
+            bubbleLast.poop = clock;
+            say("poop", R.showMs + 500);
+        }
+        return;
+    }
+    if (crit) {
+        const every = stats[crit] <= R.needUrgentAt ? R.needUrgentEveryMs : R.needEveryMs;
+        if (clock - bubbleLast.need >= every) {
+            bubbleLast.need = clock;
+            say(crit, R.showMs);
+        }
+        return;
+    }
+    if (clock >= nextWishBubble) {
+        const w = bubbleWish();
+        nextWishBubble = clock + R.wishEveryMs + Math.random() * R.wishJitterMs;
+        if (w) say(w, R.showMs);
+    }
+}
+
 const NEEDS_KEY = "latka-potrzeby-v1";
 const NEEDS_DECAY = { food: 0.65, water: 1, fun: 0.8, sleep: 0.55, clean: 0.35 };
 const ACTION_EFFECTS = {
@@ -237,6 +308,13 @@ const ACTION_EFFECTS = {
     // Zabawa w kreta — radość jak przy aporcie/bańkach, ale piesek się przy
     // tym trochę brudzi, głoduje i chce pić (patrz js/minigame-mole.js).
     mole: { fun: 26, clean: -8, food: -4, water: -5 },
+    // Złapany motylek — krótka, lekka frajda.
+    butterfly: { fun: 6, water: -1 },
+    // Pojedynczy rzut piłki w aporcie (minigame-fetch.js).
+    throw: { fun: 5, water: -2, sleep: -1 },
+    // Posprzątanie kupki / piachu po krecie.
+    poop: { clean: 6 },
+    moleDirt: { clean: 2 },
 };
 let needsSaveSeconds = 0;
 function changeNeeds(changes) {
@@ -1112,7 +1190,7 @@ function cleanPoop() {
     wake();
     poop = null;
     blockedActivity = null;
-    changeNeeds({ clean: 6 });
+    changeNeeds(ACTION_EFFECTS.poop);
     updatePoopAccess();
     say("star");
     save();
@@ -1381,8 +1459,7 @@ function autonomous() {
    piesek podbiega w odpowiednie miejsce, a potem rusza animacja chwytania
    (butterflyCatch). Nieklikniętego motylka ramka znika i wylatuje za ekran.
    ═══════════════════════════════════════════════════════════════ */
-const CATCH_STAND_X = 0.36, // stały punkt pieska (po lewej; lustrzanie 0.64 po prawej)
-    BUTTERFLY_LINE_Y = 200,
+const BUTTERFLY_LINE_Y = 200,
     BUTTERFLY_CROSS_MS = 7000, // przelot przez cały ekran
     BUTTERFLY_CLICKABLE_UNTIL = 0.9, // ułamek drogi, do którego można go kliknąć
     BUTTERFLY_HIT_R = 58;
@@ -1604,6 +1681,7 @@ function butterflyCatch() {
                 butterfly.y = butterfly.from.y - 90 * e + Math.sin(p * 8) * 5 * p;
             },
             onEnd: () => {
+                changeNeeds(ACTION_EFFECTS.butterfly);
                 nextButterfly = clock + 12500 + Math.random() * 17500;
                 butterfly = null;
             },
@@ -2007,7 +2085,7 @@ function cleanMoleDirt() {
     // moleTeaserTap()) DODATKOWO startuje pełną mini-grę.
     const launch = room === "meadow";
     delete moleDirts[room];
-    changeNeeds({ clean: 2 });
+    changeNeeds(ACTION_EFFECTS.moleDirt);
     updateMoleDirtAccess();
     say("star", 1600);
     // Dopiero teraz zaczyna się odliczanie do kolejnego kreta.
@@ -2304,12 +2382,7 @@ function loopFrame(t) {
         ambientUpdate(dt);
         hedgehogUpdate(dt);
         moleTeaserUpdate();
-        if (clock >= nextBubble && !sleeping && phase === "idle") {
-            // Priorytet: kupka > realnie paląca potrzeba (<=33%) > losowa —
-            // dymek ma sygnalizować stan Łatki, a nie być czysto dekoracyjny.
-            say(dirty() ? "poop" : criticalNeed() || ["food", "water", "fun", "sleep", "clean"][Math.floor(Math.random() * 5)]);
-            nextBubble = clock + 14000;
-        }
+        bubbleThink();
         draw(dt);
     }
     requestAnimationFrame(loopFrame);

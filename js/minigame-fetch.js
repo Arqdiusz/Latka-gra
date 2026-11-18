@@ -473,7 +473,7 @@ function ballDropPart() {
             ball.room = room;
             ball.x = clamp(x + (left ? -0.19 : 0.19), 0.12, 0.88);
             ball.y = 0;
-            changeNeeds({ fun: 5, water: -2, sleep: -1 });
+            changeNeeds(ACTION_EFFECTS.throw);
             save();
             // Zawsze z powrotem w pozę warowania — nawet po ostatnim rzucie.
             // Zabawa kończy się dopiero przyciskiem końca albo (po dłuższej

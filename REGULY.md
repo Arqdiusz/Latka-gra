@@ -1,0 +1,51 @@
+# Łatka — reguły gry (wersja wyjściowa, do strojenia)
+
+Wszystkie liczby są w kodzie w jednym miejscu (`js/game.js`): `BUBBLE_RULES`,
+`NEEDS_DECAY`, `ACTION_EFFECTS`, `CRITICAL_THRESHOLD`. Zmieniamy je tam.
+
+## 1. Dymki nad głową pieska
+
+Zasada: **domyślnie dymka nie ma**. Pojawia się tylko, gdy coś znaczy.
+
+| # | Kiedy | Co pokazuje | Jak często |
+|---|-------|-------------|------------|
+| 1 | Leży kupka | kupka | co 20 s |
+| 2 | Potrzeba ≤ 33% (najniższa z nich) | ikona potrzeby | co 25 s; przy ≤ 15% co 12 s |
+| 3 | Piesek sam biegnie do pokoju, w którym czegoś pilnie potrzebuje | ikona potrzeby, cały czas w drodze | ciągle w czasie biegu |
+| 4 | Wszystko w porządku — rzadka „chęć" | motylek (gdy da się go złapać), kret / kopiec (gdy jest w pokoju), piłka (gdy zabawa < 60%) | co 60–90 s, losowo jedna |
+
+- Przy pełnych statusach i bez zdarzeń: zero dymków.
+- Dymek pokazuje się tylko gdy piesek stoi (nie biega, nie śpi, nie jest głaskany) — wyjątek: pkt 3.
+- Priorytet: kupka > pilna potrzeba > chęć. Jedno naraz.
+- Serce / gwiazdka (głaskanie, sprzątanie) to reakcje na dotyk, nie podlegają tym regułom.
+
+## 2. Potrzeby — spadek w czasie (punktów na minutę)
+
+jedzenie 0,65 · woda 1,0 · zabawa 0,8 · sen 0,55 · czystość 0,35.
+Podczas snu wszystko spada o połowę, a sen rośnie o 12 pkt/min.
+Poniżej 33% piesek sam idzie tam, gdzie go potrzeba, i blokuje inne aktywności (pierwszeństwo ma pilna potrzeba).
+
+## 3. Wpływ aktywności na statusy
+
+| Aktywność | jedz. | woda | zabawa | sen | czyst. |
+|-----------|:----:|:----:|:------:|:---:|:------:|
+| Jedzenie | +28 | −3 | | | |
+| Woda | | +35 | | | |
+| Zabawa (po zakończeniu rzutów) | | −5 | +24 | −4 | −3 |
+| Pojedynczy rzut piłki | | −2 | +5 | −1 | |
+| Legowisko / kość (den) | −2 | −2 | +16 | | |
+| Mycie (bańki) | | | | | +38 |
+| Szczotkowanie | | | +5 | | +12 |
+| Kretowisko (minigra) | −4 | −5 | +26 | | −8 |
+| Złapany motylek | | −1 | +6 | | |
+| Sprzątanie kupki | | | | | +6 |
+| Sprzątanie piachu po krecie | | | | | +2 |
+| Sen | | | | +12/min | |
+
+(Wartości w `ACTION_EFFECTS`.) Wszystkie statusy są ograniczone do 0–100.
+
+## 4. Do rozważenia później
+- głaskanie: +zabawa (teraz nic nie zmienia),
+- jeżyk: osobna minigra (za jakieś 10 godzin),
+- czy brudna łapka po kopcu / kupce ma wpływ na nastrój (serce),
+- rzadsze dymki dla „śpiącej" pory dnia.
