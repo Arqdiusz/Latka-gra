@@ -291,6 +291,27 @@ function hedgeCatch(it) {
     }
 }
 
+let hedgeBgCache = null;
+function hedgeBg() {
+    if (hedgeBgCache) return hedgeBgCache;
+    const img = new Image(),
+        bg = { img, fill: "#a3d45c" };
+    img.onload = () => {
+        try {
+            // Kolor dolnego rzędu grafiki — pas dołożony pod nią ma się zlać.
+            const cv = document.createElement("canvas");
+            cv.width = img.naturalWidth;
+            cv.height = img.naturalHeight;
+            const x = cv.getContext("2d");
+            x.drawImage(img, 0, 0);
+            const d = x.getImageData(img.naturalWidth >> 1, img.naturalHeight - 1, 1, 1).data;
+            bg.fill = `rgb(${d[0]},${d[1]},${d[2]})`;
+        } catch (_) {}
+    };
+    img.src = (P.assets.rooms && P.assets.rooms.meadow) || "tla/001.png";
+    return (hedgeBgCache = bg);
+}
+
 function cellsLast(n) {
     return n === undefined ? null : cells.hedgehogGame[n];
 }
@@ -301,16 +322,18 @@ function hedgeGameDraw() {
     const c = hctx;
     c.clearRect(0, 0, W, H);
     c.imageSmoothingEnabled = false;
-    // Tło: niebo + trawa
-    const sky = c.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, "#9bd8ff");
-    sky.addColorStop(0.55, "#d9f2ff");
-    sky.addColorStop(0.56, "#9fd672");
-    sky.addColorStop(1, "#7cc255");
-    c.fillStyle = sky;
-    c.fillRect(0, 0, W, H);
-    c.fillStyle = "#8ccc62";
-    for (let i = 0; i < 7; i++) c.fillRect(0, H * 0.6 + i * 54, W, 22);
+    // Tło: grafika Łąki dopasowana do szerokości, przyklejona do góry; jeśli
+    // ekran jest wyższy — dołożony zielony pas w kolorze dolnej krawędzi.
+    const bg = hedgeBg();
+    if (bg.img.complete && bg.img.naturalWidth) {
+        const bh = (W * bg.img.naturalHeight) / bg.img.naturalWidth;
+        c.fillStyle = bg.fill;
+        c.fillRect(0, 0, W, H);
+        c.drawImage(bg.img, 0, 0, W, bh);
+    } else {
+        c.fillStyle = bg.fill;
+        c.fillRect(0, 0, W, H);
+    }
     // Przedmioty
     for (const it of g.items) {
         const cell = cells.hedgehogGame[it.idx];
