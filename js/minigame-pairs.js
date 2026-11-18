@@ -2,8 +2,8 @@
 // ═══════════════════════════════════════════════════════════════
 // ZNAJDŹ PARY — klasyczne memory: odkrywasz po dwie karty, para zostaje
 // odkryta. Bez kar, bez czasu — czysta zabawa dla 3+.
-// Poziomy: ⭐ 3×3 (4 pary + piesek-jokier na środku, bo 9 kart to liczba
-// nieparzysta), ⭐⭐ 4×3 (6 par), ⭐⭐⭐ 6×5 (15 par).
+// Poziomy: ⭐ 4×3 (6 par), ⭐⭐ 5×4 (10 par), ⭐⭐⭐ 6×5 (15 par).
+// (Obsługa karty-jokera dla nieparzystej liczby kart zostaje w kodzie.)
 // Karty to zwykłe przyciski DOM z obrotem 3D (CSS). Obrazki: ikony gry,
 // owoce i słodycze z gry z jeżykiem, kolorowe motylki, jeżyk. Każda gra
 // losuje pary, unikając tych z poprzedniej rozgrywki.
@@ -13,8 +13,8 @@
 let pairsGame = null;
 
 const PAIRS_LEVELS = [
-        { cols: 3, rows: 3, joker: true },
         { cols: 3, rows: 4 },
+        { cols: 4, rows: 5 },
         { cols: 5, rows: 6 },
     ],
     PAIRS_STORE = "pairsLevelsDone",

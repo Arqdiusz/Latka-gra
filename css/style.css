@@ -1985,3 +1985,23 @@ body.locked .gamesAccess {
     width: 150px;
     height: 150px;
 }
+
+/* Ekran Gry — mniejsze kafelki, trzy w rzędzie */
+.gamesGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.gamesTile {
+    padding: 8px 4px 10px;
+    border-width: 3px;
+    border-radius: 20px;
+    font-size: 14px;
+    line-height: 1.2;
+    gap: 4px;
+    text-align: center;
+}
+
+.gamesTile canvas {
+    max-width: 92px;
+}
