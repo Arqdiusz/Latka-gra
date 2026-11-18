@@ -463,7 +463,9 @@ function setRoom(r) {
     ambient.length = 0;
     nextAmbientSpawn = clock + 3000 + Math.random() * 7000;
     moleTeaser = null;
-    nextMoleSpawn = clock + 5000 + Math.random() * 12500;
+    // Na Łące (ostatnia plansza) kret wychodzi od razu po wejściu — szybki
+    // dostęp do mini-gry; w pozostałych ogrodowych po losowej chwili.
+    nextMoleSpawn = r === "meadow" ? clock + 500 : clock + 5000 + Math.random() * 12500;
     hedgehog = null;
     nextHedgehogSpawn = clock + 6000 + Math.random() * 14000;
     nextButterfly = clock + 4000 + Math.random() * 8500;
@@ -1969,6 +1971,7 @@ const MOLE_TEASER_SIZE = 126, // o 50% większy niż bazowe 84
         { x: 196, y: 452 }, // środek — odrobinę niżej, bliżej pieska
         { x: 300, y: 444 }, // prawo
     ],
+    MOLE_TEASER_Y = [442, 456], // zakres wysokości (y) wyjścia kreta
     MOLE_TEASER_FRAME_MS = 110, // tempo klatki przy wyłanianiu/chowaniu zapowiedzi
     MOLE_TEASER_HOLD = 1800; // jak długo stoi w pełni na wierzchu, zanim sam się schowa
 
@@ -1976,12 +1979,22 @@ function moleTeaserDuration(presetIdx) {
     return numbers(CFG.kret.presets[presetIdx].seq).length * MOLE_TEASER_FRAME_MS;
 }
 
+let moleLastX = -999;
 function moleTeaserSpawn() {
     wildlifeCooldown();
-    const spot = MOLE_TEASER_SPOTS[Math.floor(Math.random() * MOLE_TEASER_SPOTS.length)];
+    // Miejsce losowe na CAŁEJ szerokości (z marginesem na połowę rozmiaru
+    // kreta) i w lekko zmiennej wysokości — nie z trzech stałych punktów.
+    // Nowy kopiec nie ląduje tuż obok poprzedniego w tym samym miejscu.
+    const half = MOLE_TEASER_SIZE / 2 + 4;
+    let sx = 0;
+    for (let i = 0; i < 6; i++) {
+        sx = half + Math.random() * (W - 2 * half);
+        if (Math.abs(sx - moleLastX) > 60) break;
+    }
+    moleLastX = sx;
     moleTeaser = {
-        x: spot.x,
-        y: spot.y,
+        x: sx,
+        y: MOLE_TEASER_Y[0] + Math.random() * (MOLE_TEASER_Y[1] - MOLE_TEASER_Y[0]),
         state: "emerging",
         stateStart: clock,
     };
