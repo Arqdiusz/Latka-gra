@@ -1224,6 +1224,7 @@ canvas.addEventListener("pointerdown", (e) => {
         dog: petHit(p.x, p.y),
         poop: poopHit(p.x, p.y),
         moleDirt: moleDirtHit(p.x, p.y),
+        catchFly: casual() ? butterflyHit(p.x, p.y) : false,
         butterfly: phase !== "butterfly" ? ambientHit(p.x, p.y) : null,
         mole: casual() ? moleTeaserHit(p.x, p.y) : null,
     };
@@ -1287,6 +1288,7 @@ function pointerEnd(e, cancel = false) {
         const p = pointerXY(e);
         if (g.poop && poopHit(p.x, p.y)) cleanPoop();
         else if (g.moleDirt && moleDirtHit(p.x, p.y)) cleanMoleDirt();
+        else if (g.catchFly && butterflyHit(p.x, p.y)) butterflyCatch();
         else if (g.dog && petHit(p.x, p.y)) react();
         else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientFlee(g.butterfly);
         else if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
@@ -1364,94 +1366,118 @@ function autonomous() {
     } else idle();
 }
 
-function butterflyEvent() {
-    if (!casual() || sleeping || dirty() || !["garden", "yard"].includes(room) || menu.drag || gesture)
-        return false;
+/* ═══════════════════════════════════════════════════════════════
+   MOTYLEK DO ZŁAPANIA ("Chwytanie motylka")
+   Co jakiś czas (garden/yard) przez ekran przelatuje motylek po linii
+   y≈BUTTERFLY_LINE_Y, otoczony delikatną, okrągłą, pulsującą ramką.
+   Piesek w tym czasie dalej robi swoje (nic go nie blokuje). Gdy gracz
+   kliknie motylka (dopóki nie przeleciał BUTTERFLY_CLICKABLE_UNTIL drogi),
+   piesek podbiega w odpowiednie miejsce, a potem rusza animacja chwytania
+   (butterflyCatch). Nieklikniętego motylka ramka znika i wylatuje za ekran.
+   ═══════════════════════════════════════════════════════════════ */
+const BUTTERFLY_LINE_Y = 200,
+    BUTTERFLY_CROSS_MS = 7000, // przelot przez cały ekran
+    BUTTERFLY_CLICKABLE_UNTIL = 0.9, // ułamek drogi, do którego można go kliknąć
+    BUTTERFLY_HIT_R = 58;
+
+function butterflySpawn() {
+    if (butterfly || phase === "butterfly") return false;
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    catchButterflyColor = Math.floor(Math.random() * CFG.motyle.presets.length);
+    catchButterflyStart = clock;
+    butterfly = { visible: true, free: true, x: dir > 0 ? -25 : W + 25, y: BUTTERFLY_LINE_Y, dir, start: clock, p: 0 };
+    return true;
+}
+
+// Swobodny przelot (zanim gracz go kliknie) — wołane co klatkę z loopFrame().
+function butterflyFreeUpdate() {
+    const b = butterfly;
+    if (!b?.free) return;
+    if (!["garden", "yard"].includes(room) || sleeping) {
+        butterfly = null;
+        nextButterfly = clock + 20000;
+        return;
+    }
+    const p = (clock - b.start) / BUTTERFLY_CROSS_MS;
+    if (p >= 1) {
+        butterfly = null;
+        nextButterfly = clock + 45000 + Math.random() * 40000;
+        return;
+    }
+    const x0 = b.dir > 0 ? -25 : W + 25,
+        x1 = b.dir > 0 ? W + 25 : -25;
+    b.p = p;
+    b.x = x0 + (x1 - x0) * p;
+    b.y = BUTTERFLY_LINE_Y + Math.sin(p * Math.PI * 4) * 13;
+}
+
+function butterflyHit(px, py) {
+    const b = butterfly;
+    return !!(b?.free && b.p < BUTTERFLY_CLICKABLE_UNTIL && Math.hypot(px - b.x, py - b.y) <= BUTTERFLY_HIT_R);
+}
+
+// Delikatna, okrągła, pulsująca ramka wokół klikalnego motylka.
+function butterflyFrameDraw(b) {
+    const pulse = 0.5 + 0.5 * Math.sin(clock / 260),
+        fade = clamp((BUTTERFLY_CLICKABLE_UNTIL - b.p) / 0.06, 0, 1); // gaśnie tuż przed końcem klikalności
+    if (fade <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 44 + pulse * 5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${0.1 + 0.08 * pulse})`;
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = `rgba(255,255,255,${0.6 + 0.3 * pulse})`;
+    ctx.shadowColor = "rgba(255,190,235,0.95)";
+    ctx.shadowBlur = 8 + pulse * 8;
+    ctx.stroke();
+    ctx.restore();
+}
+
+// Start właściwego "Chwytania motylka" po kliknięciu: piesek podbiega w
+// miejsce, w którym motylek wisi, dopiero potem rusza animacja z pościgiem.
+function butterflyCatch() {
+    const b = butterfly;
+    if (!b?.free || !casual() || sleeping || dirty()) return false;
     interrupt();
     phase = "butterfly";
     bubble = null;
-    // Motylki-tło i zapowiedź kreta NIE są już zerowane/chowane na czas
-    // eventu — świat ma dalej żyć "w czasie rzeczywistym" w tle, podczas
-    // gdy piesek goni swojego motylka na pierwszym planie (patrz
-    // ambientUpdate()/moleTeaserUpdate() w loopFrame() i ambientDraw()/
-    // moleTeaserDraw() w draw() — też bez gałęzi phase==="butterfly").
     locks();
-    // Kolor i zegar trzepotu wybierane raz, na cały event — ten sam motylek
-    // (ta sama grafika z motyle-new.png) lata od wlotu, przez pogoń i
-    // lądowanie na nosie, aż po odlot. Losowany przy każdym evencie, więc z
-    // czasem każdy z 5 kolorów bierze udział.
-    catchButterflyColor = Math.floor(Math.random() * CFG.motyle.presets.length);
-    catchButterflyStart = clock;
-    const dir = x < 0.5 ? 1 : -1;
+    b.free = false;
+    const bx = b.x,
+        by = b.y;
+    // Piesek staje obok motylka i patrzy w jego stronę; wybieramy stronę (dir),
+    // przy której musi przebiec jak najmniej.
+    const stand = (d) => clamp((bx - d * 70) / W, 0.12, 0.88),
+        dir = Math.abs(stand(1) - x) <= Math.abs(stand(-1) - x) ? 1 : -1,
+        xd = stand(dir);
     left = dir < 0;
-    // Realna wysokość pyszczka pieska w jego aktualnej pozie (a01/16 —
-    // ustawione przez interrupt() tuż wyżej), a nie wartość "na oko". Dzięki
-    // temu dolot przed chwytaniem (flightClose) i powrotny odlot po nim
-    // (patrz dalej, butterfly.from) kończą się/zaczynają tuż przy nosie, bez
-    // luki między lotem motylka a animacją chwytania.
-    const noseY = headPosition().y + 10;
-    const flightStart = {
-            x: dir > 0 ? -25 : W + 25,
-            y: 200,
-        },
-        // Koniec ekranu — motylek dolatuje tu i zawraca (patrz niżej).
-        flightFar = {
-            x: dir > 0 ? W - 15 : 15,
-            y: 200,
-        },
-        // Kawałek bliżej pieska, żeby zawrócenie nie zostawiało motylka za
-        // daleko od miejsca, gdzie zaraz zacznie się animacja chwytania —
-        // i tuż przy jego nosie (noseY), żeby nie było luki na starcie
-        // animacji chwytania.
-        flightClose = {
-            x: x * W + dir * 70,
-            y: noseY,
-        },
-        // Ten sam "płynący" ruch co przy wlocie na mapę (stałe tempo +
-        // łagodne kołysanie), żeby dolot po zawróceniu nie wyglądał jak
-        // wystrzał z procy.
-        cruiseSpeed = Math.abs(flightFar.x - flightStart.x) / 2200, // px/ms, tak jak przy wlocie
-        // Punkt, w którym kończy się zawrócenie (patrz segment "watch" —
-        // sin(5), sin(6) to wartości na jego ostatniej klatce, p=1), żeby
-        // dolot zaczynał się bez skoku pozycji.
-        watchEnd = { x: flightFar.x + Math.sin(5) * 7, y: flightFar.y + Math.sin(6) * 9 };
-    butterfly = {
-        visible: true,
-        x: flightStart.x,
-        y: flightStart.y,
-        dir,
-    };
+    b.dir = -dir; // motylek zwrócony w stronę pieska
+    // Realna wysokość pyszczka w pozie a01/16 (ustawionej przez interrupt()).
+    const noseY = headPosition().y + 10,
+        flightClose = { x: xd * W + dir * 70, y: noseY },
+        cruiseSpeed = 0.19, // px/ms, jak dawniej przy wlocie
+        runDist = Math.abs(xd - x) * W;
+    const queue0 = [];
+    if (runDist > 6)
+        queue0.push({
+            sheet: "a01",
+            anim: 1,
+            tempo: 180,
+            facing: xd < x,
+            to: xd,
+            motion: "run",
+            time: Math.max(320, (runDist / 300) * 1000),
+            onStart: () => (stage = "butterfly-run"),
+            // Motylek w tym czasie wisi w miejscu i delikatnie się kołysze.
+            update: (p) => {
+                b.x = bx + Math.sin(p * Math.PI * 2) * 6;
+                b.y = by + Math.sin(p * Math.PI * 2) * 5;
+            },
+        });
     startQueue([
-        {
-            sheet: "a01",
-            anim: 16,
-            time: 2200,
-            onStart: () => (stage = "butterfly-flight"),
-            update: (p) => {
-                butterfly.x = flightStart.x + (flightFar.x - flightStart.x) * p;
-                butterfly.y =
-                    flightStart.y + (flightFar.y - flightStart.y) * p + Math.sin(p * Math.PI * 4) * 13;
-            },
-        },
-        {
-            // Krótkie zawrócenie na końcu ekranu — tylko odbicie sprite'a
-            // (zwrócony zgodnie z nowym kierunkiem lotu) na bardzo drobny
-            // moment. Skrócone z 450ms, bo dłuższe wisienie w miejscu tuż
-            // przed dolotem (który też zaczynał się od zera prędkości)
-            // wyglądało, jakby motylek się zacinał.
-            sheet: "a01",
-            anim: 3,
-            time: 180,
-            onStart: () => {
-                stage = "butterfly-watch";
-                butterfly.dir = -dir;
-            },
-            update: (p) => {
-                // sin(0)=0, więc start jest ciągły z końcem lotu (flightFar).
-                butterfly.x = flightFar.x + Math.sin(p * 5) * 7;
-                butterfly.y = flightFar.y + Math.sin(p * 6) * 9;
-            },
-        },
+        ...queue0,
         {
             // Krótki dolot bliżej pieska po zawróceniu — żeby animacja
             // chwytania nie zaczynała się za daleko od tego, gdzie motylek
@@ -1462,18 +1488,18 @@ function butterflyEvent() {
             // ease-out z zera było zbyt szarpane).
             sheet: "a01",
             anim: 16,
-            time: Math.max(260, Math.hypot(flightClose.x - watchEnd.x, flightClose.y - watchEnd.y) / cruiseSpeed),
+            time: Math.max(260, Math.hypot(flightClose.x - bx, flightClose.y - by) / cruiseSpeed),
             onStart: () => (stage = "butterfly-approach"),
             update: (p) => {
-                butterfly.x = watchEnd.x + (flightClose.x - watchEnd.x) * p;
-                butterfly.y = watchEnd.y + (flightClose.y - watchEnd.y) * p + Math.sin(p * Math.PI * 2) * 6;
+                butterfly.x = bx + (flightClose.x - bx) * p;
+                butterfly.y = by + (flightClose.y - by) * p + Math.sin(p * Math.PI * 2) * 6;
             },
         },
         {
             sheet: "a02",
             anim: 14,
             facing: dir < 0,
-            to: clamp(x + dir * 0.1, 0.35, 0.65),
+            to: clamp(xd + dir * 0.1, 0.1, 0.9),
             time: duration("a02", 14) * 2,
             onStart: () => {
                 stage = "butterfly-chase";
@@ -1523,8 +1549,8 @@ function butterflyEvent() {
 }
 
 // ── Motylek-tło (ogród/podwórko/łąka) ────────────────────────────────────
-// Niezależny od motylka z butterflyEvent() powyżej (ten jest automatyczny —
-// piesek go sam goni i łapie). Ten tutaj lata jeden naraz, w realnym
+// Niezależny od motylka do złapania (butterflySpawn/butterflyCatch powyżej) —
+// (ten jest klikany — piesek podbiega i go łapie). Ten tutaj lata jeden naraz, w realnym
 // rozmiarze (bez pomniejszania), wlatuje z boku/góry (nigdy nie
 // "teleportuje się" na środek), chwilę pofruwa "jak pijany" (kierunek
 // dryfuje przez dwie nałożone fale o różnych okresach, z miękkim
@@ -2143,6 +2169,7 @@ function draw(dt) {
         // Ten sam motylek (kolor + zegar trzepotu) co w catchOverlayDraw() —
         // cały event lata jedną, spójną grafiką z motyle-new.png.
         const cell = eventButterflyCell();
+        if (butterfly.free) butterflyFrameDraw(butterfly);
         if (cell) {
             ctx.save();
             ctx.translate(butterfly.x, butterfly.y);
@@ -2197,8 +2224,6 @@ function loopFrame(t) {
         } else if (phase === "idle" && !sleeping && !gesture && !menu.drag) {
             if (clock >= nextPoop && !poop) spawnPoop();
             else if (clock >= nextTrip) autoTrip();
-            else if (clock >= nextButterfly && !dirty() && ["garden", "yard"].includes(room))
-                butterflyEvent();
             else if (clock >= idleUntil) autonomous();
         }
         if (bubbleGame) bubbleGameUpdate(dt);
@@ -2206,6 +2231,8 @@ function loopFrame(t) {
         // Działają zawsze, też podczas butterflyEvent() (phase==="butterfly") —
         // tło ma dalej żyć w czasie rzeczywistym, niezależnie od scenki
         // pogoni za motylkiem na pierwszym planie.
+        if (!butterfly && clock >= nextButterfly && casual() && !sleeping && !dirty() && !menu.drag && ["garden", "yard"].includes(room)) butterflySpawn();
+        butterflyFreeUpdate();
         ambientUpdate(dt);
         hedgehogUpdate(dt);
         moleTeaserUpdate();
@@ -2520,7 +2547,8 @@ window.gameTest = {
     action,
     touch: react,
     poop: spawnPoop,
-    butterfly: butterflyEvent,
+    butterfly: butterflySpawn,
+    butterflyCatch,
     fetchStart: (...a) => fetchStart(...a),
     throwBall: (...a) => ballThrow(...a),
     confirmBallIntro: () => $(".ballOk").click(),
