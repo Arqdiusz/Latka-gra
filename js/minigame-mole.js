@@ -61,7 +61,7 @@ $(".moleBack").onclick = () => {
     // menu), tak samo jak przy myciu/baniekach. Gdy pokazuje się popup
     // wygranej (.moleWinPopup), gra jest już skończona — przycisk cofania
     // (schowany pod popupem) nie powinien nic robić.
-    if (phase !== "mole-game" || !$(".moleWinPopup").hidden) return;
+    if (phase !== "mole-game" || !$("#moleWinPopup").hidden) return;
     moleGameFinish(false);
 };
 
@@ -69,8 +69,8 @@ $(".moleBack").onclick = () => {
 let moleIntroResume = null;
 function moleIntroShow(onOk) {
     moleIntroResume = onOk;
-    $(".moleIntroIcon").src = icons.mole;
-    $(".molePopup").hidden = false;
+    $("#molePopup .moleIntroIcon").src = icons.mole;
+    $("#molePopup").hidden = false;
     startQueue([
         {
             sheet: "a01",
@@ -84,14 +84,14 @@ function moleIntroShow(onOk) {
         },
     ]);
 }
-$(".moleOk").onclick = () => {
-    $(".molePopup").hidden = true;
+$("#molePopup .moleOk").onclick = () => {
+    $("#molePopup").hidden = true;
     const resume = moleIntroResume;
     moleIntroResume = null;
     resume?.();
 };
-$(".moleCancel").onclick = () => {
-    $(".molePopup").hidden = true;
+$("#molePopup .moleCancel").onclick = () => {
+    $("#molePopup").hidden = true;
     moleIntroResume = null;
     idle(16);
 };
@@ -378,7 +378,7 @@ moleCanvas.addEventListener("pointercancel", molePointerEnd);
 // gdzie indziej) + zielony "ok-check" (NIE ptaszek — patrz dyskusja) +
 // konfetti. Zastępuje poprzednie świętowanie rysowane na mctx.
 const MOLE_CONFETTI_COLORS = ["#f6c445", "#6f9a52", "#9674ab", "#e98a71", "#4fb3bf"];
-function moleWinSpawnConfetti(sel = ".moleWinPopup:not(.bubbleWinPopup) .moleWinConfetti") {
+function moleWinSpawnConfetti(sel = "#moleWinPopup .moleWinConfetti") {
     const box = $(sel);
     if (!box) return;
     box.innerHTML = "";
@@ -392,17 +392,17 @@ function moleWinSpawnConfetti(sel = ".moleWinPopup:not(.bubbleWinPopup) .moleWin
     }
 }
 function moleWinShow() {
-    $(".moleWinTrophy").src = icons.cup;
+    $("#moleWinPopup .moleWinTrophy").src = icons.cup;
     moleWinSpawnConfetti();
-    $(".moleWinPopup").hidden = false;
+    $("#moleWinPopup").hidden = false;
 }
-$(".moleWinAgain").onclick = () => {
-    $(".moleWinPopup").hidden = true;
+$("#moleWinPopup .moleWinAgain").onclick = () => {
+    $("#moleWinPopup").hidden = true;
     moleGameFinish(true);
     moleStart();
 };
-$(".moleWinOk").onclick = () => {
-    $(".moleWinPopup").hidden = true;
+$("#moleWinPopup .moleWinOk").onclick = () => {
+    $("#moleWinPopup").hidden = true;
     moleGameFinish(true);
 };
 
