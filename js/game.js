@@ -2780,6 +2780,21 @@ document.querySelectorAll(".devPanel .devRow button").forEach((btn) => {
         devRefresh();
     };
 });
+// Przycisk DEV jest ukryty: 5 kliknięć w serduszko przy pasku samopoczucia
+// (w ciągu 3 s) pokazuje go, kolejne 5 — chowa go (razem z panelem).
+{
+    let taps = [];
+    $(".heartBadge").addEventListener("click", () => {
+        const now = performance.now();
+        taps = taps.filter((t) => now - t < 3000);
+        taps.push(now);
+        if (taps.length < 5) return;
+        taps = [];
+        const t = $(".devToggle");
+        t.hidden = !t.hidden;
+        if (t.hidden) $(".devPanel").hidden = true;
+    });
+}
 $(".devToggle").onclick = () => {
     $(".devPanel").hidden = !$(".devPanel").hidden;
     devRefresh();
