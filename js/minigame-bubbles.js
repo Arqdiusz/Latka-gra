@@ -22,8 +22,6 @@ function updateBubbleUi() {
         return;
     }
     badge.querySelector("img").src = icons.bubbles;
-    badge.querySelector(".bubbleCountNow").textContent = bubbleGame.caught;
-    badge.querySelector(".bubbleCountNeed").textContent = bubbleGame.need;
     badge.querySelector(".bar i").style.width = clamp((bubbleGame.caught / bubbleGame.need) * 100, 0, 100) + "%";
 }
 
@@ -124,12 +122,17 @@ function bubbleGameDraw() {
                 r = b.size / 2 + 5 + ringPulse * 6,
                 alpha = 0.45 + ringPulse * 0.5;
             bctx.save();
-            bctx.strokeStyle = `rgba(255,255,255,${alpha})`;
-            bctx.lineWidth = 2.5;
-            bctx.shadowColor = "rgba(255,255,255,0.7)";
-            bctx.shadowBlur = 6;
+            // Ciemnoniebieski kontur + gruba biała obwódka — widać na jasnej i
+            // ciemnej wodzie, a nie tylko "delikatnie".
             bctx.beginPath();
             bctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+            bctx.lineWidth = 8;
+            bctx.strokeStyle = `rgba(20,85,140,${0.35 + ringPulse * 0.3})`;
+            bctx.stroke();
+            bctx.lineWidth = 5;
+            bctx.strokeStyle = `rgba(255,255,255,${0.75 + ringPulse * 0.25})`;
+            bctx.shadowColor = "rgba(255,255,255,0.9)";
+            bctx.shadowBlur = 10;
             bctx.stroke();
             bctx.restore();
         }
@@ -218,7 +221,6 @@ function bubbleIntroShow(onOk) {
         c.imageSmoothingEnabled = false;
         if (cell) c.drawImage(cell, 4, 4, 64, 64);
     });
-    document.querySelectorAll(".bubbleTutMark").forEach((im, i) => (im.src = P.assets[i ? "bubbleWrong" : "bubbleStar"]));
     $(".bubblePopup").hidden = false;
     startQueue([
         {

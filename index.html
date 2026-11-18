@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.75</title>
-        <link rel="stylesheet" href="css/style.css?v=94" />
+        <title>Łatka v0.8.76</title>
+        <link rel="stylesheet" href="css/style.css?v=95" />
     </head>
 
     <body>
@@ -37,7 +37,8 @@
             </footer>
             <div class="bubbleFull" hidden>
                 <canvas class="bubbleCanvas" width="384" height="768"></canvas>
-                <div class="bubbleBadge" hidden aria-label="Bańki do złapania"><img alt="" /><div class="bubbleBadgeMain"><div class="bubbleCount"><span class="bubbleCountNow">0</span> / <span class="bubbleCountNeed">16</span></div><div class="bar"><i></i></div></div></div>
+                <div class="bubbleBadge" hidden aria-label="Bańki do złapania"><img alt="" /><div class="bar"><i></i></div></div>
+                <div class="bubbleTitle">Czas na kąpiel!</div>
                 <button class="bubbleClose" aria-label="Zakończ mycie">✕</button>
             </div>
             <div class="moleFull" hidden>
@@ -82,16 +83,16 @@
             <div class="molePopup bubblePopup" hidden>
                 <div class="moleCard">
                     <img class="bubbleIntroIcon moleIntroIcon" alt="" />
-                    <h2>Umyjmy Łatkę!</h2>
+                    <h2>Czas na kąpiel!</h2>
                     <div class="bubbleTut">
                         <div class="bubbleTutItem good">
                             <div class="bubbleTutPic"><span class="bubbleTutRing"></span><canvas width="72" height="72"></canvas></div>
-                            <img class="bubbleTutMark" alt="" />
+                            <span class="bubbleTutMark ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
                             <span>Klikaj te<br />z błyszczącą ramką</span>
                         </div>
                         <div class="bubbleTutItem bad">
                             <div class="bubbleTutPic"><canvas width="72" height="72"></canvas></div>
-                            <img class="bubbleTutMark" alt="" />
+                            <span class="bubbleTutMark no" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" /></svg></span>
                             <span>Tych nie ruszaj,<br />bo tracisz punkt</span>
                         </div>
                     </div>
@@ -130,10 +131,10 @@
             </div>
         </div>
 
-        <script src="js/arc-carousel.js?v=94"></script>
-        <script src="js/game.js?v=94"></script>
-        <script src="js/minigame-fetch.js?v=94"></script>
-        <script src="js/minigame-bubbles.js?v=94"></script>
-        <script src="js/minigame-mole.js?v=94"></script>
+        <script src="js/arc-carousel.js?v=95"></script>
+        <script src="js/game.js?v=95"></script>
+        <script src="js/minigame-fetch.js?v=95"></script>
+        <script src="js/minigame-bubbles.js?v=95"></script>
+        <script src="js/minigame-mole.js?v=95"></script>
     </body>
 </html>
