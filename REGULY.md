@@ -49,7 +49,7 @@ Poniżej 33% piesek sam idzie tam, gdzie go potrzeba, i blokuje inne aktywności
 | Legowisko / kość (den) | −2 | −2 | +16 | | |
 | Mycie (bańki) | | | | | +38 |
 | Szczotkowanie | | | +5 | | +12 |
-| Kretowisko (minigra) | −4 | −5 | +26 | | −8 |
+| Kretowisko / Krety na łące (minigry) | −4 | −5 | +26 | | −8 |
 | Jeżyk i owoce (minigra) | | −3 | +24 | | −2 |
 | Złapany motylek | | −1 | +6 | | |
 | Sprzątanie kupki | | | | | +6 |

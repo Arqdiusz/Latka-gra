@@ -19,6 +19,21 @@ const GAMES_LIST = [
         start: () => moleTryStart(),
     },
     {
+        id: "mole2",
+        name: "Krety na łące",
+        // kret na kawałku trawy
+        draw: (c, s) => {
+            c.fillStyle = "#9fd672";
+            c.beginPath();
+            c.ellipse(s / 2, s * 0.8, s * 0.46, s * 0.17, 0, 0, Math.PI * 2);
+            c.fill();
+            const f = numbers(CFG.kret.presets[2].seq),
+                cell = cells.kret[f[2] - 1];
+            if (cell) c.drawImage(cell, s * 0.06, s * 0.02, s * 0.88, s * 0.88);
+        },
+        start: () => mole2TryStart(),
+    },
+    {
         id: "hedge",
         name: "Jeżyk i owoce",
         draw: (c, s) => {

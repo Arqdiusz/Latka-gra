@@ -668,6 +668,7 @@ function idle(which = null) {
     bubbleGame = null;
     moleGame = null;
     hedgeGame = null;
+    mole2Game = null;
     setOffset(0);
     setAnim("a01", which ?? (Math.random() < 0.35 ? 18 : 16));
     idleUntil = clock + Math.max(frames.length * ms, 1800) + Math.random() * 2000;
@@ -2073,7 +2074,7 @@ function moleTeaserSpawn() {
 function moleTeaserUpdate() {
     // Kret może wychodzić na KAŻDEJ mapce (nie tylko w ogrodzie/na łące) —
     // jedyne co go blokuje to brak grafiki albo trwająca pełna mini-gra.
-    if (!cells.kret.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge")) {
+    if (!cells.kret.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2")) {
         if (moleTeaser) moleTeaser = null;
         return;
     }
@@ -2317,7 +2318,7 @@ function hedgehogRollFruit() {
 // a kolejny wejdzie dopiero po przerwie. setRoom() zeruje go tak samo jak
 // motylki/krecika (świeży odliczany czas w każdym pokoju).
 function hedgehogUpdate(dt) {
-    if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge")) {
+    if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2")) {
         hedgehog = null;
         return;
     }
@@ -2477,8 +2478,10 @@ function draw(dt) {
     bubbleGameDraw();
     moleGameDraw();
     hedgeGameDraw();
+    mole2GameDraw();
     hedgeWinDraw();
     moleWinDraw();
+    mole2WinDraw();
     if (!$(".bubbleWinPopup").hidden) {
         bubbleWinCtx.clearRect(0, 0, 260, 210);
         drawDog(bubbleWinCtx, 130, 196, left, 0.85);
@@ -2524,6 +2527,7 @@ function loopFrame(t) {
         if (bubbleGame) bubbleGameUpdate(dt);
         if (moleGame) moleGameUpdate(dt);
         if (hedgeGame) hedgeGameUpdate(dt);
+        if (mole2Game) mole2GameUpdate(dt);
         // Działają zawsze, też podczas butterflyEvent() (phase==="butterfly") —
         // tło ma dalej żyć w czasie rzeczywistym, niezależnie od scenki
         // pogoni za motylkiem na pierwszym planie.

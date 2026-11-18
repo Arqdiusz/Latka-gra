@@ -1213,18 +1213,21 @@ body {
 }
 
 /* Mini-gra Jeżyk i owoce — nakładka na cały ekran (jak .bubbleFull). */
-.hedgeFull {
+.hedgeFull,
+.mole2Full {
     position: absolute;
     inset: 0;
     z-index: 15;
     background: #9fd672;
 }
 
-.hedgeFull[hidden] {
+.hedgeFull[hidden],
+.mole2Full[hidden] {
     display: none;
 }
 
-.hedgeCanvas {
+.hedgeCanvas,
+.mole2Canvas {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -1233,7 +1236,8 @@ body {
     touch-action: none;
 }
 
-.hedgeTitle {
+.hedgeTitle,
+.mole2Title {
     position: absolute;
     left: 18px;
     top: 10px;
@@ -1248,7 +1252,8 @@ body {
     z-index: 2;
 }
 
-.hedgeClose {
+.hedgeClose,
+.mole2Close {
     position: absolute;
     right: 14px;
     top: 10px;
