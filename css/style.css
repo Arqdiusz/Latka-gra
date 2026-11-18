@@ -1624,3 +1624,41 @@ body.locked .gamesAccess {
     margin: 0 auto 10px;
     image-rendering: pixelated;
 }
+
+/* ── Odstępy między przyciskami na kartach (start / koniec gier) ───── */
+.moleCard {
+    width: min(100%, 346px);
+    padding: 26px 22px 28px;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.moleWinCard {
+    width: min(100%, 372px);
+    padding: 34px 24px 30px;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.moleCard > button,
+.moleWinCard > button {
+    margin: 0;
+}
+
+.moleCard > button + button,
+.moleWinCard > button + button {
+    margin-top: 18px;
+}
+
+.moleCard p,
+.moleWinCard p {
+    margin-bottom: 24px;
+}
+
+.moleWinCard > .winAgain {
+    margin-top: 18px;
+}
+
+.bubbleTut {
+    margin-bottom: 22px;
+}
