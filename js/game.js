@@ -1191,6 +1191,7 @@ function cleanPoop() {
     wake();
     poop = null;
     blockedActivity = null;
+    if (Math.random() < POOP_GAG_CHANCE) poopGagAt = clock + POOP_GAG_DELAY_MS[0] + Math.random() * (POOP_GAG_DELAY_MS[1] - POOP_GAG_DELAY_MS[0]);
     changeNeeds(ACTION_EFFECTS.poop);
     updatePoopAccess();
     say("star");
@@ -1202,11 +1203,16 @@ function cleanPoop() {
 // >= POOP_FULL_AT) robi kupkę, a jedzenie mu spada o 10–15; poza tym "zwykłe"
 // trawienie co kilka minut. Po każdej kupce przerwa (nextPoop).
 const POOP_BEHIND = 0.24, // kupka za ogonem pieska
-    POOP_FULL_AT = 90,
-    POOP_COOLDOWN_MS = 90000,
-    POOP_REGULAR_MS = [240000, 420000],
-    POOP_REGULAR_MIN_FOOD = 40;
+    POOP_FULL_AT = 85,
+    POOP_COOLDOWN_MS = 45000,
+    POOP_REGULAR_MS = [120000, 240000],
+    POOP_REGULAR_MIN_FOOD = 25,
+    // Żart: tuż po posprzątaniu piesek czasem robi następną kupkę.
+    POOP_GAG_CHANCE = 0.1,
+    POOP_GAG_DELAY_MS = [5000, 10000];
+let poopGagAt = 0;
 function poopUrge() {
+    if (poopGagAt && clock >= poopGagAt) return true;
     if (clock < nextPoop) return false;
     if (stats.food >= POOP_FULL_AT) return true;
     return clock >= nextRegularPoop && stats.food >= POOP_REGULAR_MIN_FOOD;
@@ -1217,7 +1223,8 @@ function spawnPoop() {
     interrupt();
     phase = "toilet";
     locks();
-    const facing = left;
+    const gag = !!poopGagAt && clock >= poopGagAt;
+    poopGagAt = 0;
     startQueue([
         {
             sheet: "a01",
@@ -1232,7 +1239,7 @@ function spawnPoop() {
                 };
                 // Najedzony piesek po kupce jest lżejszy: -10…-15; zwykłe
                 // trawienie zabiera mniej.
-                changeNeeds({ food: stats.food >= POOP_FULL_AT ? -(10 + Math.random() * 5) : -(5 + Math.random() * 3) });
+                changeNeeds({ food: gag ? -3 : stats.food >= POOP_FULL_AT ? -(10 + Math.random() * 5) : -(5 + Math.random() * 3) });
                 updatePoopAccess();
                 say("poop", 4500);
                 save();
