@@ -2015,6 +2015,7 @@ function moleTeaserDuration(presetIdx) {
     return numbers(CFG.kret.presets[presetIdx].seq).length * MOLE_TEASER_FRAME_MS;
 }
 
+const MEADOW_MOLE = { x: 84, y: 450 }; // stały kret na Łące (lewa strona)
 let moleLastX = -999;
 function moleTeaserSpawn() {
     wildlifeCooldown();
@@ -2043,6 +2044,15 @@ function moleTeaserUpdate() {
         if (moleTeaser) moleTeaser = null;
         return;
     }
+    if (!moleTeaser && room === "meadow") {
+        // Łąka = "kraina gier": kret na stałe czeka po lewej stronie, nigdy się
+        // nie chowa po kliknięciu i nie zostawia piachu — kliknięcie od razu
+        // otwiera mini-grę (patrz moleTeaserTap()).
+        delete moleDirts.meadow;
+        updateMoleDirtAccess();
+        moleTeaser = { x: MEADOW_MOLE.x, y: MEADOW_MOLE.y, state: "emerging", stateStart: clock, permanent: true };
+        return;
+    }
     if (!moleTeaser) {
         // Dopóki leży piach po poprzednim krecie, nowy się nie pojawia —
         // najpierw trzeba go posprzątać (patrz cleanMoleDirt()).
@@ -2056,7 +2066,7 @@ function moleTeaserUpdate() {
             m.stateStart = clock;
         }
     } else if (m.state === "alert") {
-        if (clock - m.stateStart >= MOLE_TEASER_HOLD) {
+        if (!m.permanent && clock - m.stateStart >= MOLE_TEASER_HOLD) {
             m.state = "retreating";
             m.stateStart = clock;
         }
@@ -2095,6 +2105,10 @@ function moleTeaserHit(px, py) {
 // moleTeaserUpdate()); na Łące dodatkowo startuje pełną mini-grę
 // (moleTryStart() z js/minigame-mole.js).
 function moleTeaserTap(m) {
+    if (m.permanent) {
+        moleTryStart(); // stały kret na Łące — zostaje na miejscu
+        return;
+    }
     const launch = room === "meadow";
     if (m.state !== "retreating") {
         m.state = "retreating";

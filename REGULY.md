@@ -63,3 +63,7 @@ Poniżej 33% piesek sam idzie tam, gdzie go potrzeba, i blokuje inne aktywności
 - jeżyk: osobna minigra (za jakieś 10 godzin),
 - czy brudna łapka po kopcu / kupce ma wpływ na nastrój (serce),
 - rzadsze dymki dla „śpiącej" pory dnia.
+
+## 5. Łąka — kraina gier
+- Kret czeka na stałe po lewej stronie Łąki i nigdy się nie chowa ani nie zostawia piachu; kliknięcie otwiera grę.
+- Mordka jeżyka w prawym dolnym rogu otwiera grę z jeżykiem.
