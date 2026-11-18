@@ -1993,8 +1993,12 @@ body.locked .gamesAccess {
 }
 
 .gamesGrid {
-    flex: 1;
-    min-height: 0;
+    /* pozycja absolutna = jednoznaczna wysokość (działa też w Safari) */
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: 76px;
+    bottom: 24px;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: repeat(var(--gamesRows, 3), minmax(0, 1fr));
     gap: 14px;
