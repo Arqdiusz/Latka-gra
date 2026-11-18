@@ -1662,3 +1662,113 @@ body.locked .gamesAccess {
 .bubbleTut {
     margin-bottom: 22px;
 }
+
+/* ── Ekran ładowania ─────────────────────────────────────────────── */
+.load {
+    padding: 20px;
+}
+
+.loadBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: min(100%, 340px);
+    color: #59485d;
+}
+
+.loadTitle {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.1;
+    text-align: center;
+    color: #7a5230;
+}
+
+.loadDog {
+    width: 192px;
+    height: 192px;
+    image-rendering: pixelated;
+}
+
+.loadBar {
+    width: 100%;
+    height: 24px;
+    border-radius: 12px;
+    background: #ecdcbf;
+    border: 3px solid white;
+    box-shadow: 0 2px 6px #0002;
+    overflow: hidden;
+}
+
+.loadBar i {
+    display: block;
+    height: 100%;
+    width: 4%;
+    border-radius: 9px;
+    background: linear-gradient(180deg, #f8b84a, #ee9a2a);
+}
+
+.loadMsg {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.loadReady {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.loadReady[hidden],
+.loadBar[hidden],
+.loadMsg[hidden] {
+    display: none;
+}
+
+.loadHint {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.loadPlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 76px;
+    border: 4px solid white;
+    border-radius: 26px;
+    background: #6f9a52;
+    color: white;
+    font: inherit;
+    font-size: 21px;
+    font-weight: 800;
+    padding: 12px 18px;
+    box-shadow: 0 5px 12px #0003;
+    cursor: pointer;
+}
+
+.loadPlay svg {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.loadPlay:active {
+    transform: scale(0.97);
+}
+
+.loadWindow {
+    min-height: 56px;
+    font-size: 19px;
+    background: #eee4cf;
+    color: #7a6a4a;
+    border-width: 3px;
+    box-shadow: none;
+}

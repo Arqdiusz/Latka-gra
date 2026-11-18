@@ -2528,7 +2528,14 @@ function loopFrame(t) {
     }
     requestAnimationFrame(loopFrame);
 }
-async function loadImage(src) {
+// Grafiki wczytują się RÓWNOLEGLE (boot() uruchamia je wszystkie naraz), a
+// kolejne wywołania loadImage() dla tego samego adresu dostają ten sam wynik.
+const imgCache = new Map();
+function loadImage(src) {
+    if (!imgCache.has(src)) imgCache.set(src, loadImageNow(src));
+    return imgCache.get(src);
+}
+async function loadImageNow(src) {
     const im = new Image();
     await new Promise((ok, bad) => {
         im.onload = ok;
@@ -2578,7 +2585,10 @@ async function boot() {
     // cache:"no-cache" — przeglądarka zawsze sprawdza, czy plik się zmienił,
     // więc po wgraniu nowego JSON-a zmiany widać bez czyszczenia cache
     const fresh = (u) => fetch(u, { cache: "no-cache" }).then((r) => r.json());
+    const lp = (v) => window.loadScreen?.progress(v);
+    lp(0.04);
     P = await fresh("data/config.json");
+    lp(0.1);
     // Załaduj animacje z plików edytora (animacje-ustawienia/)
     // — te pliki są źródłem prawdy; config.json trzyma resztę ustawień
     const [anim01, anim02, motyleAnim, kretAnim, hedgehogAnim, hedgehogGameAnim] = await Promise.all([
@@ -2589,6 +2599,22 @@ async function boot() {
         fresh("animacje-ustawienia/hedgehog-animacje.json"),
         fresh("animacje-ustawienia/hedgehog-game-animacje.json"),
     ]);
+    lp(0.16);
+    // Wszystkie grafiki naraz (tła pokoi też — żeby nic nie "doskakiwało" w grze);
+    // pasek ładowania rośnie z każdą wczytaną grafiką.
+    {
+        const a = P.assets,
+            urls = [a.a01, a.a02, a.ui, a.poop, a.motyle, a.kret, a.hedgehog, a.hedgehogGame, a.bubbleStar, a.bubbleWrong, ...(a.balls || []), ...(a.bubbles || []), ...Object.values(a.rooms || {})].filter(Boolean);
+        let done = 0;
+        window.bootImages = Promise.all(
+            urls.map((u) =>
+                loadImage(u).then(() => {
+                    done++;
+                    lp(0.16 + 0.78 * (done / urls.length));
+                })
+            )
+        );
+    }
     CFG = P.config;
     CFG.a01 = anim01;
     CFG.a02 = anim02;
@@ -2735,10 +2761,14 @@ async function boot() {
     // Szybki dostęp do gier — puchar w górnym pasku sceny.
     $(".gamesAccess img").src = icons.cup;
     $(".gamesAccess").onclick = () => action("games");
+    lp(0.98);
     loaded = true;
     setRoom(room);
     setAnim(sleeping ? "a02" : "a01", sleeping ? 6 : 16);
     if (dirty()) say("poop", 4000);
+    // Gra gotowa — ekran ładowania pokazuje duży przycisk i czeka na dotknięcie
+    // (to też gest potrzebny do pełnego ekranu). Dopiero potem rusza pętla gry.
+    if (window.loadScreen) await window.loadScreen.ready();
     $(".load").hidden = true;
     locks();
     resize();
@@ -2781,12 +2811,10 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 window.addEventListener("error", (e) => {
-    $(".load").hidden = false;
-    $(".load").textContent = "Błąd wersji testowej: " + e.message;
+    window.loadScreen?.error("Błąd wersji testowej: " + e.message);
 });
 boot().catch((e) => {
-    $(".load").hidden = false;
-    $(".load").textContent = e.message;
+    window.loadScreen?.error(e.message);
 });
 window.gameTest = {
     state: () => ({
