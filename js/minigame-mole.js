@@ -107,6 +107,8 @@ const MOLE_NEED = 10,
     MOLE_GIVE_UP = 120000, // bez trafienia ani jednego kreta przez tyle ms -> koniec
     MOLE_FRAME_MS = 85, // bazowe tempo klatki wyłaniania/chowania (przed trudnością)
     MOLE_HOLD_BASE = 1050, // bazowy czas "czujności" (ile kret stoi w pełni na wierzchu)
+    MOLE_EMERGE_CATCH_FROM = 0.35, // od jakiej części wychodzenia kret już się liczy
+    MOLE_RETREAT_CATCH_UNTIL = 0.5, // do jakiej części chowania jeszcze się liczy
     MOLE_PEEK_CHANCE = 0.22, // jak często kret tylko wygląda do połowy i się chowa
     MOLE_SPAWN_GAP_MIN = 260,
     MOLE_SPAWN_GAP_MAX = 650,
@@ -285,12 +287,20 @@ function moleGameHit(px, py) {
     for (const h of g.holes) {
         const r = MOLE_HOLE_SIZE / 2 + MOLE_HIT_PAD;
         if (Math.hypot(px - h.x, py - h.y) > r) continue;
-        if (h.state === "alert") {
+        // Czy kret jest WIDOCZNIE na wierzchu? Liczymy nie tylko pełną
+        // "czujność", ale też drugą część wychodzenia i pierwszą część
+        // chowania — inaczej wolno wychodzący kret, wyraźnie już widoczny,
+        // dawał −1 ("za wcześnie").
+        const el = clock - h.stateStart,
+            visible =
+                h.state === "alert" ||
+                (h.state === "emerging" && el >= h.emergeDur * MOLE_EMERGE_CATCH_FROM) ||
+                (h.state === "retreating" && !h.hitRetreat && el <= h.retreatDur * MOLE_RETREAT_CATCH_UNTIL);
+        if (visible) {
             h.state = "retreating";
             h.stateStart = clock;
             h.hitRetreat = true;
-            // Szybkie krety nie są wyróżniane ani lepiej punktowane — szybkość
-            // to tylko utrudnienie. Każdy kret = +1.
+            // Każdy kret = +1 (szybkość to tylko utrudnienie).
             const value = 1;
             g.caught = Math.min(g.need, g.caught + value);
             g.effects.push({ x: h.x, y: h.y, born: clock, good: true, text: "+" + value });
@@ -301,15 +311,14 @@ function moleGameHit(px, py) {
                 updateMoleUi();
                 moleWinShow();
             }
-        } else if (h.state === "peek") {
-            return true; // zmyłka — dotknięcie nic nie daje i nie karze
-        } else {
-            // Puste miejsce (kopiec bez kreta) albo za wcześnie/za późno —
-            // nieumiejętne trafienie cofa jeden już złapany postęp.
+        } else if (h.state === "idle") {
+            // −1 tylko za stuknięcie w pusty kopiec (nie ma tam kreta).
             g.caught = Math.max(0, g.caught - 1);
             g.effects.push({ x: h.x, y: h.y, born: clock, good: false, text: "−1" });
             updateMoleUi();
         }
+        // Pozostałe: zmyłka (peek), sam początek wychodzenia, koniec chowania
+        // albo drugie stuknięcie w już złapanego kreta — bez punktu i bez kary.
         return true;
     }
     return false;
