@@ -320,6 +320,7 @@ const ACTION_EFFECTS = {
     mole: { fun: 26, clean: -8, food: -4, water: -5 },
     // Jeżyk i owoce (js/minigame-hedge.js) — zdrowa zabawa na trawie.
     hedgehog: { fun: 24, water: -3, clean: -2 },
+    memory: { fun: 24, water: -3, clean: -2 },
     // Złapany motylek — krótka, lekka frajda.
     butterfly: { fun: 6, water: -1 },
     // Pojedynczy rzut piłki w aporcie (minigame-fetch.js).
@@ -660,6 +661,7 @@ function idle(which = null) {
     moleGame = null;
     hedgeGame = null;
     mole2Game = null;
+    memoGame = null;
     setOffset(0);
     setAnim("a01", which ?? (Math.random() < 0.35 ? 18 : 16));
     idleUntil = clock + Math.max(frames.length * ms, 1800) + Math.random() * 2000;
@@ -2059,7 +2061,7 @@ function moleTeaserSpawn() {
 function moleTeaserUpdate() {
     // Kret może wychodzić na KAŻDEJ mapce (nie tylko w ogrodzie/na łące) —
     // jedyne co go blokuje to brak grafiki albo trwająca pełna mini-gra.
-    if (!cells.kret.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2")) {
+    if (!cells.kret.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo")) {
         if (moleTeaser) moleTeaser = null;
         return;
     }
@@ -2288,7 +2290,7 @@ function hedgehogRollFruit() {
 // a kolejny wejdzie dopiero po przerwie. setRoom() zeruje go tak samo jak
 // motylki/krecika (świeży odliczany czas w każdym pokoju).
 function hedgehogUpdate(dt) {
-    if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2")) {
+    if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo")) {
         hedgehog = null;
         return;
     }
@@ -2449,6 +2451,8 @@ function draw(dt) {
     moleGameDraw();
     hedgeGameDraw();
     mole2GameDraw();
+    memoGameDraw();
+    memoEndDraw();
     hedgeWinDraw();
     moleWinDraw();
     mole2WinDraw();
@@ -2499,6 +2503,7 @@ function loopFrame(t) {
         if (fetchGame || !$(".fetchEnd").hidden) updateFetchUi();
         if (hedgeGame) hedgeGameUpdate(dt);
         if (mole2Game) mole2GameUpdate(dt);
+        if (memoGame) memoGameUpdate();
         // Działają zawsze, też podczas butterflyEvent() (phase==="butterfly") —
         // tło ma dalej żyć w czasie rzeczywistym, niezależnie od scenki
         // pogoni za motylkiem na pierwszym planie.

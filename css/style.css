@@ -1214,7 +1214,8 @@ body {
 
 /* Mini-gra Jeżyk i owoce — nakładka na cały ekran (jak .bubbleFull). */
 .hedgeFull,
-.mole2Full {
+.mole2Full,
+.memoFull {
     position: absolute;
     inset: 0;
     z-index: 15;
@@ -1222,12 +1223,14 @@ body {
 }
 
 .hedgeFull[hidden],
-.mole2Full[hidden] {
+.mole2Full[hidden],
+.memoFull[hidden] {
     display: none;
 }
 
 .hedgeCanvas,
-.mole2Canvas {
+.mole2Canvas,
+.memoCanvas {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -1237,7 +1240,8 @@ body {
 }
 
 .hedgeTitle,
-.mole2Title {
+.mole2Title,
+.memoTitle {
     position: absolute;
     left: 18px;
     top: 10px;
@@ -1253,7 +1257,8 @@ body {
 }
 
 .hedgeClose,
-.mole2Close {
+.mole2Close,
+.memoClose {
     position: absolute;
     right: 14px;
     top: 10px;
@@ -1395,7 +1400,8 @@ body {
 }
 
 /* Ekran wyboru gier (menu "Gry") */
-.gamesFull {
+.gamesFull,
+.memoLevels {
     position: absolute;
     inset: 0;
     z-index: 16;
@@ -1407,7 +1413,8 @@ body {
     overflow-y: auto;
 }
 
-.gamesFull[hidden] {
+.gamesFull[hidden],
+.memoLevels[hidden] {
     display: none;
 }
 
@@ -1426,7 +1433,8 @@ body {
     text-shadow: 0 2px 0 #3a7bb0, 0 0 10px #3a7bb088;
 }
 
-.gamesClose {
+.gamesClose,
+.memoLevelsClose {
     width: 48px;
     height: 48px;
     border: 3px solid white;
@@ -1538,4 +1546,81 @@ body {
 body.locked .gamesAccess {
     pointer-events: none;
     opacity: 0.5;
+}
+
+/* ── Pamięć motylków ─────────────────────────────────────────────── */
+.memoGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.memoTile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 20px 12px 18px;
+    border: 4px solid white;
+    border-radius: 28px;
+    background: #fffdf3;
+    box-shadow: 0 4px 10px #0002;
+    font: inherit;
+    font-weight: 800;
+    color: #59485d;
+    cursor: pointer;
+}
+
+.memoTile:active {
+    transform: scale(0.97);
+}
+
+.memoStars {
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: 4px;
+    color: #f6b72b;
+    text-shadow: 0 2px 0 #c98a12;
+}
+
+.memoTileTxt {
+    font-size: 22px;
+}
+
+.memoTileCup {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 52px;
+    height: 52px;
+    transform: translateY(-50%);
+    image-rendering: pixelated;
+}
+
+#memoPopup .bubbleTutItem canvas {
+    width: 100%;
+    max-width: 170px;
+    height: auto;
+    image-rendering: pixelated;
+}
+
+#memoPopup .moleCard p {
+    margin: 0 0 14px;
+    font-size: 14px;
+}
+
+#memoWinPopup .moleWinTrophyWrap {
+    width: 150px;
+    height: 150px;
+}
+
+.memoLosePic {
+    display: block;
+    width: 100%;
+    max-width: 260px;
+    height: auto;
+    margin: 0 auto 10px;
+    image-rendering: pixelated;
 }

@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.99</title>
-        <link rel="stylesheet" href="css/style.css?v=118" />
+        <title>Łatka v0.8.100</title>
+        <link rel="stylesheet" href="css/style.css?v=119" />
     </head>
 
     <body>
@@ -52,6 +52,18 @@
                 <canvas class="mole2Canvas" width="384" height="768"></canvas>
                 <div class="mole2Title">Krety na łące!</div>
                 <button class="mole2Close" aria-label="Zakończ zabawę z kretami">✕</button>
+            </div>
+            <div class="memoFull" hidden>
+                <canvas class="memoCanvas" width="384" height="768"></canvas>
+                <div class="memoTitle">Zapamiętaj!</div>
+                <button class="memoClose" aria-label="Zakończ zabawę w motylki">✕</button>
+            </div>
+            <div class="memoLevels" hidden>
+                <div class="gamesHeader">
+                    <h2>Wybierz poziom</h2>
+                    <button class="memoLevelsClose" aria-label="Wróć do pieska">✕</button>
+                </div>
+                <div class="memoGrid"></div>
             </div>
             <div class="hedgeFull" hidden>
                 <canvas class="hedgeCanvas" width="384" height="768"></canvas>
@@ -164,6 +176,50 @@
                     <button class="winAgain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
                 </div>
             </div>
+            <div class="molePopup" id="memoPopup" hidden>
+                <div class="moleCard">
+                    <img class="moleIntroIcon" alt="" />
+                    <h2>Pamięć motylków!</h2>
+                    <div class="bubbleTut">
+                        <div class="bubbleTutItem">
+                            <canvas class="memoTutShow" width="190" height="76"></canvas>
+                            <span>Zapamiętaj kolejność<br />motylków</span>
+                        </div>
+                        <div class="bubbleTutItem">
+                            <canvas class="memoTutPlay" width="190" height="76"></canvas>
+                            <span>Klikaj je po kolei,<br />gdy zaczną latać</span>
+                        </div>
+                    </div>
+                    <p>Masz 3 serduszka na pomyłki. Każdy poziom ma więcej motylków!</p>
+                    <button class="moleOk">Zaczynamy!</button>
+                    <button class="moleCancel">Wróć do pieska</button>
+                </div>
+            </div>
+            <div class="moleWinPopup" id="memoWinPopup" hidden>
+                <div class="moleWinCard">
+                    <div class="moleWinConfetti"></div>
+                    <div class="moleWinTrophyWrap">
+                        <img class="moleWinTrophy memoWinImg" alt="Puchar" />
+                        <div class="moleWinCheck" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </div>
+                    </div>
+                    <h2>Brawo!</h2>
+                    <p>Zapamiętałaś wszystkie motylki!</p>
+                    <button class="memoNext moleWinOk">Następny poziom</button>
+                    <button class="winAgain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="moleWinOk memoExit">Super!</button>
+                </div>
+            </div>
+            <div class="moleWinPopup" id="memoLosePopup" hidden>
+                <div class="moleWinCard">
+                    <canvas class="memoLosePic" width="260" height="110"></canvas>
+                    <h2>Prawie się udało!</h2>
+                    <p>Spróbujmy jeszcze raz — motylki czekają.</p>
+                    <button class="winAgain memoTry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Jeszcze raz</button>
+                    <button class="moleWinOk memoExit">Wróć do pieska</button>
+                </div>
+            </div>
             <div class="molePopup" id="molePopup" hidden>
                 <div class="moleCard">
                     <img class="moleIntroIcon" alt="" />
@@ -224,13 +280,14 @@
             </div>
         </div>
 
-        <script src="js/arc-carousel.js?v=118"></script>
-        <script src="js/game.js?v=118"></script>
-        <script src="js/minigame-fetch.js?v=118"></script>
-        <script src="js/minigame-bubbles.js?v=118"></script>
-        <script src="js/minigame-mole.js?v=118"></script>
-        <script src="js/minigame-hedge.js?v=118"></script>
-        <script src="js/minigame-mole2.js?v=118"></script>
-        <script src="js/games-menu.js?v=118"></script>
+        <script src="js/arc-carousel.js?v=119"></script>
+        <script src="js/game.js?v=119"></script>
+        <script src="js/minigame-fetch.js?v=119"></script>
+        <script src="js/minigame-bubbles.js?v=119"></script>
+        <script src="js/minigame-mole.js?v=119"></script>
+        <script src="js/minigame-hedge.js?v=119"></script>
+        <script src="js/minigame-mole2.js?v=119"></script>
+        <script src="js/minigame-memory.js?v=119"></script>
+        <script src="js/games-menu.js?v=119"></script>
     </body>
 </html>

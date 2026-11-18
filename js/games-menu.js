@@ -44,6 +44,17 @@ const GAMES_LIST = [
         },
         start: () => hedgePeekTap(),
     },
+    {
+        id: "memo",
+        name: "Pamięć motylków",
+        draw: (c, s) => {
+            [0, 3, 4].forEach((col, i) => {
+                const cell = memoCell(col, 0);
+                if (cell) c.drawImage(cell, s * (0.02 + i * 0.32), s * (0.3 + (i === 1 ? -0.1 : 0.08)), s * 0.4, s * 0.4);
+            });
+        },
+        start: () => memoTryStart(),
+    },
 ];
 
 function gamesBuild() {
