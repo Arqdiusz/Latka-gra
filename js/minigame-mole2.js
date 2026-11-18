@@ -17,15 +17,15 @@ const m2ctx = $(".mole2Canvas").getContext("2d"),
     MOLE2_SIZE = 124,
     MOLE2_ZONE = { x0: 64, x1: W - 64, y0: 400, y1: H - 86 }, // trawa
     MOLE2_MIN_DIST = 118,
-    MOLE2_FRAME_MS = 85,
-    MOLE2_APPEAR_MS = 320, // kopiec wyrasta
-    MOLE2_MOUND_WAIT = [250, 700], // sam kopiec przed wyjściem kreta
-    MOLE2_HOLD = [1300, 650], // czas na wierzchu: start → koniec gry
+    MOLE2_FRAME_MS = 62,
+    MOLE2_APPEAR_MS = 260, // kopiec wyrasta
+    MOLE2_MOUND_WAIT = [150, 450], // sam kopiec przed wyjściem kreta
+    MOLE2_HOLD = [850, 380], // czas na wierzchu: start → koniec gry
     MOLE2_VANISH_MS = 380, // kopiec znika
     MOLE2_PEEK_CHANCE = 0.2,
-    MOLE2_DECOYS = [0, 2], // ile atrap (pustych kopców) naraz: start → koniec gry
+    MOLE2_DECOYS = [1, 1], // ile atrap (pustych kopców) naraz: start → koniec gry
     MOLE2_DECOY_LIFE = [1100, 2000], // jak długo stoi atrapa
-    MOLE2_NEXT_GAP = [300, 800]; // przerwa po zniknięciu prawdziwego kopca
+    MOLE2_NEXT_GAP = [180, 520]; // przerwa po zniknięciu prawdziwego kopca
 
 function mole2Seq(i) {
     return numbers(CFG.kret.presets[i].seq);
@@ -75,7 +75,7 @@ $("#mole2Popup .moleCancel").onclick = () => {
 
 // ── Start / koniec ───────────────────────────────────────────────
 function mole2Start() {
-    mole2Game = { need: MOLE2_NEED, caught: 0, mounds: [], effects: [], nextSpawn: clock + 600, nextDecoy: clock + 4000, spawned: 0, won: false };
+    mole2Game = { need: MOLE2_NEED, caught: 0, mounds: [], effects: [], nextSpawn: clock + 600, nextDecoy: clock + 6000, spawned: 0, won: false };
     say("fun", 1500);
     startQueue([
         {
@@ -200,9 +200,10 @@ function mole2GameUpdate() {
     // prawdziwy kopiec: dopiero gdy poprzedni zniknął (złapany albo schowany)
     if (!realLeft && clock >= g.nextSpawn) mole2Spawn();
     // atrapy: puste kopce, z których nic nie wyjdzie — stuknięcie = −1
-    if (clock >= g.nextDecoy && decoys < maxDecoys && g.spawned > 1) {
-        mole2Spawn(true);
-        g.nextDecoy = clock + 1200 + Math.random() * 1800;
+    // rzadko: od 4. kreta, co kilka sekund i nie za każdym razem
+    if (clock >= g.nextDecoy && g.spawned > 3) {
+        if (decoys < maxDecoys && Math.random() < 0.6) mole2Spawn(true);
+        g.nextDecoy = clock + 4500 + Math.random() * 5500;
     }
     for (let i = g.mounds.length - 1; i >= 0; i--) {
         const m = g.mounds[i],
@@ -325,6 +326,14 @@ function mole2GameDraw() {
         c.save();
         c.globalAlpha = 1 - t * t;
         c.drawImage(im, e.x - size / 2, e.y - ease * 40 - size / 2, size, size);
+        c.font = "900 34px system-ui, sans-serif";
+        c.textAlign = "center";
+        c.lineJoin = "round";
+        c.lineWidth = 6;
+        c.strokeStyle = "#fff";
+        c.fillStyle = e.good ? "#2f8f3d" : "#d9383a";
+        c.strokeText(e.good ? "+1" : "−1", e.x, e.y - ease * 40 - size / 2 - 4);
+        c.fillText(e.good ? "+1" : "−1", e.x, e.y - ease * 40 - size / 2 - 4);
         c.restore();
     }
     mole2PanelDraw(g);
@@ -335,7 +344,7 @@ function mole2PanelDraw(g) {
         x = 14,
         y = 62,
         w = W - 28,
-        h = 66,
+        h = 100,
         icon = cells.kret[mole2Seq(1).slice(-1)[0] - 1];
     c.save();
     c.shadowColor = "rgba(0,0,0,0.2)";
@@ -349,11 +358,19 @@ function mole2PanelDraw(g) {
     c.fill();
     c.stroke();
     c.restore();
+    // licznik: "Krety: 3 / 10"
+    c.textAlign = "left";
+    c.fillStyle = "#59485d";
+    c.font = "800 15px system-ui, sans-serif";
+    c.fillText("Złapane krety", x + 16, y + 26);
+    c.textAlign = "right";
+    c.font = "900 28px system-ui, sans-serif";
+    c.fillText(g.caught + " / " + g.need, x + w - 16, y + 30);
     const slot = 28,
         gap = (w - 28 - g.need * slot) / (g.need - 1);
     for (let i = 0; i < g.need; i++) {
         const sx = x + 14 + i * (slot + gap),
-            sy = y + (h - slot) / 2,
+            sy = y + 50,
             on = i < g.caught;
         c.fillStyle = on ? "#e3f4d3" : "#ece6d8";
         c.strokeStyle = on ? "#6f9a52" : "#cfc6b0";
