@@ -12,12 +12,13 @@ let hedgeGame = null; // { need, caught, collected:[], items:[], effects:[], hx,
 const hctx = $(".hedgeCanvas").getContext("2d"),
     hedgeCanvas = $(".hedgeCanvas"),
     HEDGE_NEED = 10,
-    HEDGE_SIZE = 112, // rozmiar rysowanego jeżyka
+    HEDGE_SIZE = 140, // rozmiar rysowanego jeżyka
     HEDGE_Y = H - 118, // środek jeżyka
     HEDGE_SPEED = 560, // px/s — jak szybko jeżyk biegnie za palcem
-    HEDGE_ITEM = 64,
-    HEDGE_BAD_STREAK_MAX = 2,
-    HEDGE_PAIR_CHANCE = 0.3;
+    HEDGE_ITEM = 78,
+    HEDGE_BAD_STREAK_MAX = 3,
+    HEDGE_PAIR_CHANCE = 0.42,
+    HEDGE_GOOD_CHANCE = 0.48; // mniej więcej pół na pół — trzeba uważać
 
 // ── Mordka jeżyka wystająca z rogu Łąki (wejście do mini-gry) ────
 // Rysowana w drugim, prawym dolnym rogu sceny pod skosem — reszta jeżyka
@@ -212,11 +213,11 @@ function hedgeWinDraw() {
 
 // ── Przebieg gry ─────────────────────────────────────────────────
 function hedgeSpeedScale(g) {
-    return 1 + 0.9 * (g.caught / g.need);
+    return 1 + 1.2 * (g.caught / g.need);
 }
 
 function hedgePickKind(g, forceGood = false) {
-    const good = forceGood || g.badStreak >= HEDGE_BAD_STREAK_MAX || Math.random() < 0.58;
+    const good = forceGood || g.badStreak >= HEDGE_BAD_STREAK_MAX || Math.random() < HEDGE_GOOD_CHANCE;
     g.badStreak = good ? 0 : g.badStreak + 1;
     return good ? 4 + Math.floor(Math.random() * 4) : Math.floor(Math.random() * 4);
 }
@@ -228,7 +229,7 @@ function hedgeNewItem(x, vy, idx) {
 function hedgeSpawn() {
     const g = hedgeGame,
         sc = hedgeSpeedScale(g),
-        baseVy = (120 + Math.random() * 80) * sc,
+        baseVy = (150 + Math.random() * 90) * sc,
         margin = HEDGE_ITEM / 2 + 14;
     g.spawned++;
     if (g.spawned > 2 && Math.random() < HEDGE_PAIR_CHANCE) {
@@ -242,7 +243,7 @@ function hedgeSpawn() {
         const idx = hedgePickKind(g, g.spawned === 1);
         g.items.push(hedgeNewItem(margin + Math.random() * (W - 2 * margin), baseVy, idx));
     }
-    g.nextSpawn = clock + (900 + Math.random() * 700) / Math.sqrt(sc);
+    g.nextSpawn = clock + (750 + Math.random() * 600) / Math.sqrt(sc);
 }
 
 function hedgeGameUpdate(dt) {
@@ -290,6 +291,10 @@ function hedgeCatch(it) {
     }
 }
 
+function cellsLast(n) {
+    return n === undefined ? null : cells.hedgehogGame[n];
+}
+
 function hedgeGameDraw() {
     const g = hedgeGame;
     if (!g) return;
@@ -328,11 +333,10 @@ function hedgeGameDraw() {
     if (g.facing < 0) c.scale(-1, 1);
     c.drawImage(cell, -HEDGE_SIZE / 2, -HEDGE_SIZE / 2, HEDGE_SIZE, HEDGE_SIZE);
     c.restore();
-    // Złapane owoce "na kolcach" (do 3 ostatnich)
-    g.collected.slice(-3).forEach((n, i) => {
-        const fc = cells.hedgehogGame[n];
-        if (fc) c.drawImage(fc, g.hx - 30 + i * 22 - 11, HEDGE_Y - HEDGE_SIZE * 0.5 - 12 + (i % 2) * 6, 30, 30);
-    });
+    // Ostatnio złapany owoc "na kolcach" (tylko jeden).
+    const last = g.collected[g.collected.length - 1],
+        lc = cellsLast(last);
+    if (lc) c.drawImage(lc, g.hx - 22, HEDGE_Y - HEDGE_SIZE * 0.5 - 8, 44, 44);
     // Efekty +/- (gwiazdka / zły znaczek jak w bańkach)
     for (const e of g.effects) {
         const im = images[e.good ? "bubbleStar" : "bubbleWrong"];
