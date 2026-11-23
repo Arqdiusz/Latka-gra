@@ -47,16 +47,36 @@ body {
     text-align: center;
 }
 
-.stat img {
-    display: block;
+.statRing {
+    position: relative;
+    width: 64px;
+    height: 64px;
     margin: auto;
-    width: 36px;
-    height: 36px;
-    padding: 10px;
-    background: var(--c);
     border: 2px solid #5c4b47;
     border-radius: 50%;
-    box-sizing: content-box;
+    overflow: hidden;
+    box-sizing: border-box;
+    /* pusta część: jasny odcień koloru potrzeby */
+    background: color-mix(in srgb, var(--tint, var(--c)) 18%, #fffaf4);
+    transition: background-color 0.5s ease;
+}
+
+.statFill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 50%;
+    background: var(--c);
+    transition: height 0.4s ease, background-color 0.5s ease;
+}
+
+.statRing img {
+    position: relative;
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: 10px;
     object-fit: contain;
     image-rendering: pixelated;
 }

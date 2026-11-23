@@ -570,6 +570,12 @@ function heart() {
     return Object.values(stats).reduce((a, b) => a + b, 0) / 5;
 }
 
+// Wyraźniejsze kolory wypełnienia kółek potrzeb (czystość — miętowa, żeby
+// nie myliła się z żółtym ostrzeżeniem)
+const STAT_FILL = { food: "#ea6a66", water: "#3c9fda", fun: "#b9cf22", sleep: "#9a7bef", clean: "#4fc89c" };
+const STAT_WARN = "#f0c535", // ≤ 40%
+    STAT_CRIT = "#e84b4b"; // ≤ 10%
+
 function statusBuild() {
     const statsRow = document.createElement("div");
     statsRow.className = "status-stats";
@@ -579,15 +585,18 @@ function statusBuild() {
         const el = document.createElement("div");
         el.className = "stat";
         el.dataset.status = key;
-        el.style.setProperty("--c", items.find((i) => i.id === key)?.color || "#c7b0da");
+        el.style.setProperty("--c", STAT_FILL[key]);
+        // kółko = "naczynie": tło wypełnia się od dołu wg stanu potrzeby
+        const ring = document.createElement("div");
+        ring.className = "statRing";
+        const fill = document.createElement("i");
+        fill.className = "statFill";
         const im = new Image();
         im.src = icons[key];
         im.alt = labels[key];
-        im.width = im.height = 36;
-        const bar = document.createElement("div");
-        bar.className = "bar";
-        bar.innerHTML = "<i></i>";
-        el.append(im, bar);
+        im.width = im.height = 40;
+        ring.append(fill, im);
+        el.append(ring);
         statsRow.append(el);
     }
     $(".status").append(statsRow);
@@ -604,9 +613,11 @@ function statusUpdate() {
     document.querySelectorAll(".stat[data-status]").forEach((el) => {
         const v = stats[el.dataset.status];
         if (v === undefined) return;
-        const fill = el.querySelector("i");
-        fill.style.width = v + "%";
-        fill.style.background = v <= 10 ? "#e84b4b" : v <= 40 ? "#f0c535" : "var(--c)";
+        const fill = el.querySelector(".statFill");
+        fill.style.height = clamp(v, 0, 100) + "%";
+        const col = v <= SAD_THRESHOLD ? STAT_CRIT : v <= 40 ? STAT_WARN : STAT_FILL[el.dataset.status];
+        fill.style.background = col;
+        el.style.setProperty("--tint", col);
         el.setAttribute("aria-label", el.querySelector("img").alt + ": " + Math.round(v) + "%");
     });
 
