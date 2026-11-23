@@ -150,7 +150,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Bieg do wybranego pokoju (menu, autonomiczny): 320–340 px/s do sąsiedniego pokoju, a przy dwóch i więcej pokojach zawsze jedna prędkość 520 px/s. Strzałki i przesunięcie palcem też szybsze. Nogi pieska dopasowują się same (krok liczony z przebytej drogi).
 
 ## 15. Stłuczone naczynie (Aport)
-- Mocny rzut w PRAWO (próg 3 i 4 z `BALL_TIERS`) ma 20% szansy, że piłka poleci 1 pokój dalej niż zwykle (40% z tego: 2 pokoje dalej). Jedno naczynie naraz — dopóki leży, nie ma kolejnego.
-- Brzęk (`sfx("glass")`) słychać w chwili pierwszego kontaktu piłki z ziemią w pokoju lądowania — zanim piesek tam dobiegnie. Skorupy (losowe z 4, `animacje/naczynia.png`, 4×40 px) pojawiają się za piłką, gdy odegrany lot dotknie ziemi.
-- `dishMess = {room, x, idx, shown}` zapisuje się w `save()` (tylko gdy `shown`). Sprzątanie: dotyk skorup w tym pokoju albo ukryty przycisk `.dishAccess` (`cleanDish`, +2 czystości).
-- `window.dishForce = N` wymusza przerzut o N pokoi (do testów).
+- Mocny rzut w PRAWO (próg 3 i 4 z `BALL_TIERS`) ma 20% szansy, że piłka poleci o 1 pokój dalej (40% z tego: próba o 2; gdy nie ma toru → 1 pokój). Jedno naczynie naraz.
+- Naczynie rozbija się w LEWEJ połowie pokoju lądowania (x 0,12–0,38), piłka dotacza się ZA nim (x ≥ 0,62). Brzęk `sfx("glass")` w chwili pierwszego kontaktu z ziemią, przed przybiegnięciem pieska. Skorupy: losowe z 4 (`animacje/naczynia.png`, 4×40 px), rysowane 109 px, podstawą 26 px poniżej linii pieska/piłki.
+- Gdy piesek wbiega do tego pokoju: staje na x 0,46, siada tyłem (a02 „28. Smutek — obrażony tyłem”), w dymku pulsują skorupy (`say("dish")`), etap `dish-sad`. Dopiero po posprzątaniu (dotyk skorup lub ukryty `.dishAccess`) wstaje, biegnie do piłki, podnosi ją i wraca (`dishResume`).
+- `dishMess = {room, x, idx, shown}` zapisuje się w `save()` (tylko gdy `shown`). Sprzątanie +2 czystości.
+- `window.dishForce = N` wymusza próbę przerzutu o N pokoi (testy).

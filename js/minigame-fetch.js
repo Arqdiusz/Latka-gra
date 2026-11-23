@@ -512,7 +512,7 @@ function ballLaunch(fvx, fvh) {
         // dobry tor: pierwszy kontakt z ziemią już w sąsiednim pokoju (piłka
         // wylatuje z kadru w powietrzu, potem ląduje, odbija się i toczy) i
         // bez "świecy" pod niebo (szczyt łuku najwyżej BALL_MAX_APEX)
-        const good = (q) => (q.touchX - edgeX) * dir > bw / 2 && Math.max(...q.map((z) => z.hb)) <= BALL_MAX_APEX;
+        const good = (q) => (q.touchX - edgeX) * dir > bw / 2 && (!extra || (q.touchX / W - (nextIdx + extra) >= 0.12 && q.touchX / W - (nextIdx + extra) <= 0.38)) && Math.max(...q.map((z) => z.hb)) <= BALL_MAX_APEX;
         const deg0 = clamp((Math.atan2(fvh, Math.abs(fvx)) * 180) / Math.PI, 8, tier.maxDeg);
         let p = null,
             deg = deg0;
@@ -525,7 +525,7 @@ function ballLaunch(fvx, fvh) {
             search: for (const dd of deltas) {
                 deg = deg0 + dd;
                 if (deg < 6 || deg > 82) continue;
-                for (let d = extra ? 0.3 : d0; d <= 0.8 + 1e-9; d += 0.07) {
+                for (let d = extra ? 0.62 : d0; d <= (extra ? 0.86 : 0.8) + 1e-9; d += extra ? 0.04 : 0.07) {
                     p = solve(deg, d);
                     if (good(p)) {
                         found = true;
@@ -533,17 +533,17 @@ function ballLaunch(fvx, fvh) {
                     }
                 }
             }
-            // nie ma dobrego toru na tak daleki rzut → zwykły rzut do sąsiedniego pokoju
+            // nie ma dobrego toru na tak daleki rzut → bliżej, a w końcu zwykły rzut
             if (found || !extra) break;
-            extra = 0;
+            extra--; // spróbuj bliżej (2 pokoje → 1 → zwykły rzut)
         }
         path = p;
         restIdx = nextIdx + extra;
         if (extra) {
-            // naczynie za piłką (piesek nadbiega z lewej, więc piłka leży przed nim)
-            const endX = path[path.length - 1].X / W - restIdx,
-                touchT = path.find((q, i) => i > 0 && (q.X / W) >= restIdx && q.hb === 0)?.t ?? path[path.length - 1].t;
-            dishMess = { room: order[restIdx], x: clamp(endX + 0.1, 0.12, 0.92), idx: Math.floor(Math.random() * 4), shown: false, touchT, armed: false };
+            // naczynie rozbija się w lewej połowie pokoju, piłka dotoczy się ZA nim
+            const touchT = path.find((q, i) => i > 0 && q.hb === 0)?.t ?? path[path.length - 1].t;
+            dishMess = { room: order[restIdx], x: clamp(path.touchX / W - restIdx, 0.12, 0.4), idx: Math.floor(Math.random() * 4), shown: false, touchT, armed: false };
+            dishBubbleIdx = dishMess.idx;
             setTimeout(() => dishMess && !dishMess.shown && fetchGame && sfx("glass"), touchT);
         }
         tExit = 0;
@@ -693,7 +693,8 @@ function fetchChaseTo(land, opts = {}) {
     const homeIdx = order.indexOf(room),
         landIdx = order.indexOf(land.room),
         fromDir = landIdx !== homeIdx ? (landIdx > homeIdx ? 1 : -1) : land.x > x ? 1 : -1,
-        approach = clamp(land.x - fromDir * 0.12, 0.06, 0.94),
+        dishHere = !!dishMess && dishMess.room === land.room,
+        approach = dishHere ? 0.46 : clamp(land.x - fromDir * 0.12, 0.06, 0.94), // z naczyniem: siada na środku
         run = moveParts(land.room, approach, { label: "ball-chase" }),
         last = run[run.length - 1];
     if (opts.replay) {
@@ -721,7 +722,37 @@ function fetchChaseTo(land, opts = {}) {
     }
     // pies dobiega nie wcześniej, niż piłka się zatrzyma
     if (opts.minTime) last.time = Math.max(last.time, opts.minTime + 120);
+    if (dishHere) {
+        // Piesek siada tyłem, smutny, z dymkiem skorup — i czeka na sprzątanie
+        dishChase = { land, fromDir };
+        return [
+            ...run,
+            {
+                sheet: "a02",
+                anim: 27, // 28. Smutek — obrażony tyłem
+                facing: fromDir < 0,
+                time: 600000,
+                onStart: () => {
+                    stage = "dish-sad";
+                    dishShowNow();
+                    say("dish", 600000);
+                    bubble.pulse = true;
+                    locks();
+                },
+            },
+        ];
+    }
     return [...run, ballPickupPart(fromDir)];
+}
+
+// Skorupy posprzątane — piesek wstaje, biegnie do piłki za nimi i wraca
+let dishChase = null;
+function dishResume() {
+    const c = dishChase;
+    dishChase = null;
+    if (!c || !fetchGame) return;
+    const approach = clamp(c.land.x - 0.12, 0.06, 0.94);
+    startQueue([...moveParts(c.land.room, approach, { label: "ball-chase" }), ballPickupPart(1)]);
 }
 
 // Chwyt piłki — 24. Aport_001_chwyt_pilki (kończy się pozą z piłką w pysku,

@@ -2342,11 +2342,12 @@ $(".moleDirtAccess").onclick = cleanMoleDirt;
 
 // Stłuczone naczynie — leży w świecie jak kupka; dotyk (lub ukryty przycisk
 // dostępności) sprząta. Rysowane tylko, gdy piłka już dotknęła ziemi (shown).
-const DISH_SIZE = 84;
+let dishBubbleIdx = 0; // wygląd skorup w dymku (ustawia aport)
+const DISH_SIZE = 109; // 84 × 1,3
 function dishRect(dRoom = dishMess?.room) {
     const offset = (order.indexOf(dRoom) - order.indexOf(room)) * W + roomOffset,
         w = DISH_SIZE;
-    return { x: clamp(dishMess?.x ?? 0.5, 0.08, 0.92) * W - w / 2 + offset, y: GROUND + 10 - w + 6, w, h: w };
+    return { x: clamp(dishMess?.x ?? 0.5, 0.08, 0.92) * W - w / 2 + offset, y: GROUND + 36 - w, w, h: w }; // podstawa 26 px poniżej linii piłki/pieska
 }
 function dishHit(px, py) {
     if (!dishMess?.shown || dishMess.room !== room) return false;
@@ -2358,13 +2359,15 @@ function updateDishAccess() {
     if (btn) btn.hidden = !(dishMess?.shown && dishMess.room === room);
 }
 function cleanDish() {
-    if (!casual() || !dishMess?.shown || dishMess.room !== room) return;
+    const waiting = stage === "dish-sad"; // piesek siedzi smutny i czeka na sprzątanie
+    if (!(casual() || waiting) || !dishMess?.shown || dishMess.room !== room) return;
     dishMess = null;
     updateMoleDirtAccess();
     sfx("wipe");
     say("star", 1600);
     changeNeeds({ clean: 2 });
     save();
+    if (waiting) dishResume(); // piesek wstaje, łapie piłkę i wraca
 }
 $(".dishAccess").onclick = cleanDish;
 function dishDraw() {
@@ -2588,7 +2591,40 @@ function hedgeFruitDraw() {
     }
 }
 
+// Skorupy w dymku: wycięte do widocznej części (arkusz ma 4 komórki 40×40)
+const dishCrops = {};
+function dishCrop(idx) {
+    if (dishCrops[idx]) return dishCrops[idx];
+    const im = images.dish;
+    if (!im) return null;
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = 40;
+    const c2 = cv.getContext("2d");
+    c2.drawImage(im, idx * 40, 0, 40, 40, 0, 0, 40, 40);
+    const b = alphaBox(cv, 0, 0, 40, 40);
+    if (!b) return null;
+    const out = document.createElement("canvas");
+    out.width = b.x1 - b.x0;
+    out.height = b.y1 - b.y0;
+    out.getContext("2d").drawImage(cv, b.x0, b.y0, out.width, out.height, 0, 0, out.width, out.height);
+    return (dishCrops[idx] = out);
+}
 function iconDraw(c, key, x, y, w, h = w) {
+    if (key === "dish") {
+        const cr = dishCrop(dishBubbleIdx);
+        if (!cr) return;
+        const ratio = cr.width / cr.height;
+        let iw = w,
+            ih = w / ratio;
+        if (ih > h) {
+            ih = h;
+            iw = h * ratio;
+        }
+        c.imageSmoothingEnabled = false;
+        c.drawImage(cr, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih);
+        c.imageSmoothingEnabled = true;
+        return;
+    }
     if (key === "poop") {
         const ratio = images.poop.width / images.poop.height;
         let iw = w,
@@ -2685,7 +2721,7 @@ function iconArtCenter(key) {
     if (artCenterCache[key]) return artCenterCache[key];
     let res = [0.5, 0.5];
     try {
-        if (key === "poop") res = [0.5, 0.5]; // rysowana z dopasowaniem proporcji, wyśrodkowana
+        if (key === "poop" || key === "dish") res = [0.5, 0.5]; // rysowana z dopasowaniem proporcji, wyśrodkowana
         else if (UI.map[key]) {
             const cell = cells.ui[UI.map[key] - 1],
                 b = alphaBox(cell, 0, 0, cell.width, cell.height);
