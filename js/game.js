@@ -1038,7 +1038,7 @@ function route(target, id = null, mode = "menu") {
         dir = to >= from ? 1 : -1,
         facing = dir < 0,
         run = true, // zawsze bieg (anim 02. Bieg/sus), spacer usunięty
-        speed = Math.min(620, (mode === "auto" ? 340 : 320) * (1 + 0.2 * Math.max(0, distance - 1))), // px/s: im dalszy pokój, tym nieco szybszy bieg (bez przesady)
+        speed = distance > 1 ? 520 : mode === "auto" ? 340 : 320, // px/s: jeden pokój spokojnie; więcej niż jeden — zawsze ta sama, szybsza prędkość
         parts = [];
 
     function movement(a, b, onEnd) {

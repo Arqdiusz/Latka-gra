@@ -147,4 +147,4 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## 14. Tempo biegu między pokojami
 
-- Bieg do wybranego pokoju (menu, autonomiczny): 320–340 px/s, a im dalszy pokój, tym szybciej (+20% za każdy kolejny pokój, maks. 620 px/s). Strzałki i przesunięcie palcem też szybsze. Nogi pieska dopasowują się same (krok liczony z przebytej drogi).
+- Bieg do wybranego pokoju (menu, autonomiczny): 320–340 px/s do sąsiedniego pokoju, a przy dwóch i więcej pokojach zawsze jedna prędkość 520 px/s. Strzałki i przesunięcie palcem też szybsze. Nogi pieska dopasowują się same (krok liczony z przebytej drogi).
