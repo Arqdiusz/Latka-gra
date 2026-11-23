@@ -2051,8 +2051,8 @@ body.sadLock .arrow {
 /* Przycisk wyciszenia dźwięków */
 .muteBtn {
     position: absolute;
-    right: 56px;
-    top: 9px;
+    right: 9px;
+    top: 57px; /* pod przyciskiem pełnego ekranu (top 9 + 40 + odstęp 8) */
     z-index: 5;
     border: 2px solid white;
     border-radius: 11px;
