@@ -114,8 +114,8 @@ const MOLE_NEED = 10,
     MOLE_SPAWN_GAP_MAX = 520,
     MOLE_COLS = 3,
     MOLE_ROWS = 4,
-    MOLE_MARGIN_X = 20,
-    MOLE_MARGIN_Y = 18;
+    MOLE_MARGIN_X = 0, // 348/3 = 116 i 464/4 = 116 → komórki są kwadratami 116×116
+    MOLE_MARGIN_Y = 0;
 
 function buildMoleHoles() {
     const usableW = MOLE_W - MOLE_MARGIN_X * 2,
