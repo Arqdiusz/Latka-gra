@@ -72,20 +72,24 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## 4a. Aport (rzucanie piłki)
 - Piłkę trzeba **złapać palcem** (przy łapach pieska), pociągnąć i puścić. Piesek przynosi ją zawsze do punktu startowego.
-- **W pokoju rzutu piłka leci uczciwie:** kierunek i kąt z palca, a prędkość z jednego z 4 progów siły (`BALL_TIERS`, ±5% losowo):
+- **Cały lot to jeden ciągły tor** (grawitacja, odbicia, toczenie po trawie) — w sąsiednim pokoju piłka leci dokładnie z tą samą prędkością co przy wylocie, nic nie jest podmieniane.
+- Gra decyduje tylko o parametrach rzutu:
+  - **kąt** — z palca, przycięty do maks. kąta progu; jeśli trzeba, zmieniony o kilka stopni (najpierw ±4°, potem dalej), żeby piłka pierwszy raz dotknęła ziemi dopiero w sąsiednim pokoju,
+  - **tempo** — z siły (`BALL_TIERS`): mocniejszy rzut odgrywany jest w „szybszym świecie” (grawitacja × s², prędkość × s) — ten sam kształt toru, lot s razy krótszy,
+  - **miejsce zatrzymania** w sąsiednim pokoju — z siły (± trochę losowości); prędkość wyrzutu dobiera bisekcja.
 
-| Prędkość palca | Wyrzut | Maks. kąt | Gdzie stanie w sąsiednim pokoju |
+| Prędkość palca | Tempo s | Maks. kąt | Gdzie stanie w sąsiednim pokoju |
 |---|---|---|---|
 | < 330 px/s | lekki rzut — toczy się kawałek w tym pokoju | — | — |
-| 330–750 | 560 px/s | 55° | ok. 28% pokoju od wejścia |
-| 750–1300 | 760 px/s | 65° | ok. 40% |
-| 1300–2000 | 960 px/s | 75° | ok. 52% |
-| > 2000 | 1180 px/s | 82° | ok. 62% |
+| 330–750 | 1,0 | 60° | ok. 30% pokoju od wejścia |
+| 750–1300 | 1,2 | 70° | ok. 42% |
+| 1300–2000 | 1,42 | 78° | ok. 54% |
+| > 2000 | 1,68 | 80° | ok. 64% |
 
-- Strefa wylotu (8 stref: lewo/prawo × nisko/środek/wysoko, góra-lewo/prawo) wynika z kąta i siły.
-- **W sąsiednim pokoju przejmuje gra** — piłka ZAWSZE w nim ląduje: wpada z tej samej strony (z boku 70–200 px nad ziemią, już opadając; po wylocie górą spada z nieba), dotyka ziemi najwyżej w 80% pokoju, odbija się, toczy chwilę i staje na zaplanowanej głębokości. Prędkość wejścia dobiera bisekcja; nigdy nie jest większa niż przy wylocie (piłka może tylko zwolnić).
-- Piłka nigdy nie leci dalej niż do sąsiedniego pokoju i **nigdy nie odbija się od ściany**; nie staje tuż przy granicy pokoju (margines 14%).
-- Rzut w stronę, gdzie nie ma pokoju (koniec świata): piłka toczy się kawałek w tym samym pokoju (jak lekki rzut).
+- Piłka **zawsze ląduje w sąsiednim pokoju**: wylatuje z kadru w powietrzu, w sąsiednim pokoju ląduje (zawsze z widocznym odbiciem), toczy się chwilę i staje. Nigdy dalej, nigdy nie odbija się od ściany, nie staje przy granicy pokoju (margines 14%). Szczyt łuku najwyżej 640 px.
+- Strefa wylotu (8 stref: lewo/prawo × nisko/środek/wysoko, góra-lewo/prawo) wynika z kąta, siły i miejsca puszczenia.
+- Rzut w stronę, gdzie nie ma pokoju (koniec świata): piłka toczy się kawałek w tym samym pokoju.
+- Test: 300 losowych rzutów (różne miejsca puszczenia, kąty, siły) — 0 błędów.
 - Stałe `BALL_*` w `js/minigame-fetch.js`.
 
 ## 5. Gry
