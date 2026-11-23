@@ -70,6 +70,13 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - czy brudna łapka po kopcu / kupce ma wpływ na nastrój (serce),
 - rzadsze dymki dla „śpiącej" pory dnia.
 
+## 4a. Aport (rzucanie piłki)
+- Piłkę trzeba **złapać palcem** (przy łapach pieska), pociągnąć i puścić. Leci z prędkością ostatnich ~0,1 s ruchu palca (×0,65, maks. 1150 px/s) po prawdziwym rzucie ukośnym: grawitacja, odbicia od ziemi, toczenie, odbicie od ściany na końcach świata (lewa krawędź Łąki, prawa łazienki; ściana „zjada” 70% prędkości).
+- Wylot z ekranu: 8 stref — lewo/prawo × nisko/środek/wysoko oraz góra-lewo/góra-prawo. W pokoju lądowania piłka wpada dokładnie tak, jak wyleciała (ta sama wysokość i prędkość): z boku nisko — wtacza się, wyżej — wpada łukiem i odbija, z góry — spada z nieba.
+- Słaby rzut / samo puszczenie: piłka spada w tym samym pokoju (też liczy się jako rzut).
+- Piłka nie zatrzymuje się tuż przy granicy pokoju (margines 14%) ani dalej niż 2 pokoje (korekta samego końca toczenia).
+- Stałe `BALL_*` w `js/minigame-fetch.js`.
+
 ## 5. Gry
 - Dostęp: pozycja „Gry” w menu kołowym albo puchar w górnym pasku sceny → ekran z kafelkami gier.
 - Łąka to zwykła plansza świata (kret, jeżyk, motylki jak w ogrodzie i na podwórku).

@@ -1414,6 +1414,8 @@ canvas.addEventListener("pointerdown", (e) => {
         mole: gameEntryOk() ? moleTeaserHit(p.x, p.y) : null,
         hedge: gameEntryOk() ? hedgePeekHit(p.x, p.y) : false,
     };
+    // Aport: dotknięcie piłki przy łapach = złapanie jej (dalej ciągnięcie i rzut)
+    if (phase === "ball-ready" && ballGrab(p.x, p.y, e.timeStamp)) gesture.kind = "ball";
     try {
         canvas.setPointerCapture(e.pointerId);
     } catch (_) {}
@@ -1423,10 +1425,14 @@ canvas.addEventListener("pointermove", (e) => {
     if (!g || g.id !== e.pointerId) return;
     const dx = e.clientX - g.sx,
         dy = e.clientY - g.sy;
+    if (g.kind === "ball") {
+        const p = pointerXY(e);
+        ballHoldMove(p.x, p.y, e.timeStamp);
+        return;
+    }
     if (!g.kind) {
         if (phase === "ball-ready") {
-            // W trybie aportu każdy ruch palcem to rzut piłką
-            if (Math.hypot(dx, dy) > 10) g.kind = "throw";
+            // Aport: rzuca się tylko złapaną piłką (patrz pointerdown)
         } else if (Math.abs(dy) > 18 && Math.abs(dy) > Math.abs(dx) * 1.2) {
             g.kind = g.dog && !g.poop && canPet() ? "pet" : "vertical";
             if (g.kind === "pet") startPetting();
@@ -1456,8 +1462,9 @@ function pointerEnd(e, cancel = false) {
     }
     const dx = e.clientX - g.sx,
         dy = e.clientY - g.sy;
-    if (g.kind === "throw") {
-        if (!cancel) ballThrow(dx, dy);
+    if (g.kind === "ball") {
+        if (!cancel) ballHoldMove(pointerXY(e).x, pointerXY(e).y, e.timeStamp);
+        ballRelease(e.timeStamp, cancel);
         return;
     }
     if (g.kind === "swipe") {
