@@ -204,84 +204,132 @@ function dirty(r = room) {
     return poop?.room === r;
 }
 
-// Jeśli jakaś potrzeba spadnie do <=33%, piesek jest w potrzebie — unika
-// wtedy oddalania się od pokoju, w którym można to poprawić (dopóki się
-// nie poprawi). Zwraca id najbardziej palącej potrzeby albo null.
-const CRITICAL_THRESHOLD = 33;
-function criticalNeed() {
+/* ═══════════════════════════════════════════════════════════════
+   SMUTNY PIESEK (potrzeba ≤ SAD_THRESHOLD)
+   Dziecko samo pilnuje potrzeb — piesek o nie nie woła. Dopiero gdy któraś
+   spadnie do 10%, piesek jest smutny: stoi w miejscu, losowo zmienia smutne
+   animacje (a02: 26/27/28 → indeksy 25, 26, 27), nie biega sam po domu, a
+   nad głową ma dymek z potrzebą, w którym PULSUJE ikonka. Zgadza się tylko
+   na to, czego mu brak (SAD_ALLOWS); na resztę kręci głową „NIE” (a02 #20).
+   ═══════════════════════════════════════════════════════════════ */
+const SAD_THRESHOLD = 10;
+const SAD_ANIMS = [25, 26, 27]; // a02: siad i westchnienie, głowa w dół, obrażony tyłem
+const SAD_NO_ANIM = 19; // a02: „NIE” — kręci głową
+// Co pomaga na którą potrzebę (id pozycji menu / "games" = ekran gier)
+const SAD_ALLOWS = { food: ["food"], water: ["water"], sleep: ["sleep"], fun: ["fun", "games"], clean: ["clean", "brush"] };
+let sadLast = -1,
+    sadBoostUntil = 0; // chwilowo mocniejsze pulsowanie (po odmowie)
+
+// Najniższa potrzeba ≤ 10% albo null
+function sadNeed() {
     let worst = null;
     for (const id of ["food", "water", "fun", "sleep", "clean"]) {
-        if (stats[id] <= CRITICAL_THRESHOLD && (worst === null || stats[id] < stats[worst])) worst = id;
+        if (stats[id] <= SAD_THRESHOLD && (worst === null || stats[id] < stats[worst])) worst = id;
     }
     return worst;
 }
 
-function criticalRoom() {
-    const id = criticalNeed();
-    return id ? items.find((i) => i.id === id)?.room ?? null : null;
+// Czy smutek blokuje czynność id (bez efektów ubocznych)
+function sadBlocks(id) {
+    if (sleeping) return false;
+    for (const n of ["food", "water", "fun", "sleep", "clean"]) {
+        if (stats[n] <= SAD_THRESHOLD && SAD_ALLOWS[n].includes(id)) return false;
+    }
+    return !!sadNeed();
 }
 
 const NEED_GENITIVE = { food: "jedzenia", water: "wody", fun: "zabawy", sleep: "snu", clean: "mycia" };
-function blockedNeedToast() {
-    const id = criticalNeed();
+// Odmowa: kręci głową „NIE”, ikonka w dymku mocniej pulsuje, potem znów smutek
+function sadRefuse() {
+    const id = sadNeed();
     if (!id) return;
-    say(id, 3500);
-    toast("Łatka najpierw potrzebuje: " + (NEED_GENITIVE[id] || id) + ".");
+    sadBoostUntil = clock + 1800;
+    toast("Piesek jest smutny — najpierw potrzebuje " + (NEED_GENITIVE[id] || id) + ".");
+    if (!casual() && phase !== "sad") return;
+    queue = [];
+    segment = null;
+    phase = "sad";
+    stage = "sad-no";
+    locks();
+    startQueue([{ ...repeatPart("a02", SAD_NO_ANIM, 2), onEnd: () => sadContinue() }]);
+}
+
+function sadStart() {
+    phase = "sad";
+    stage = "sad";
+    locks();
+    sadContinue();
+}
+
+// Kolejna losowa smutna animacja (inna niż poprzednia), 2 pełne cykle
+function sadContinue() {
+    if (!sadNeed() || sleeping) {
+        idle(16);
+        return;
+    }
+    let i = SAD_ANIMS[Math.floor(Math.random() * SAD_ANIMS.length)];
+    if (i === sadLast) i = SAD_ANIMS[(SAD_ANIMS.indexOf(i) + 1 + Math.floor(Math.random() * (SAD_ANIMS.length - 1))) % SAD_ANIMS.length];
+    sadLast = i;
+    phase = "sad";
+    stage = "sad";
+    startQueue([{ ...repeatPart("a02", i, 2), onEnd: () => sadContinue() }]);
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   REGUŁY DYMKÓW (wersja wyjściowa — do strojenia; opis w REGULY.md)
-   Dymek nad głową ma coś znaczyć, a nie być tłem. Domyślnie go NIE MA.
-   Pojawia się tylko, gdy:
-   1) leży kupka (czyszczenie)                    — co poopEveryMs,
-   2) potrzeba spadła do needAt (≈33%) lub niżej   — co needEveryMs
-      (przy ≤ needUrgentAt częściej: needUrgentEveryMs),
-   3) piesek BIEGNIE do pokoju, w którym czegoś pilnie potrzebuje
-      (dymek z potrzebą towarzyszy mu całą drogę),
-   4) rzadkie "chęci" (wishEveryMs): motylek do złapania, kret/kopiec,
-      piłka (gdy zabawa < wishFunBelow) — tylko gdy nic pilniejszego nie czeka.
+   REGUŁY DYMKÓW (opis w REGULY.md)
+   Potrzeb w dymkach NIE pokazujemy — dziecko samo pilnuje statusów.
+   Dymki są zabawą i informacją:
+   1) smutny piesek (potrzeba ≤ 10%): dymek z potrzebą cały czas, ikonka
+      w nim pulsuje (mocniej po odmowie) — najwyższy priorytet,
+   2) leży kupka (czyszczenie)                    — co poopEveryMs,
+   3) piesek sam biegnie do innego pokoju: ikona pokoju przez całą drogę,
+   4) "chęci" co wishEveryMs (+ losowo): piłka, motylek, kret, serduszko,
+      kąpiel (bańki), uśmiech (piesek), kostka; motylek/kret częściej,
+      gdy akurat są na ekranie.
    Reakcje na dotyk (serce, gwiazdka) to osobna sprawa i zostają jak były.
    ═══════════════════════════════════════════════════════════════ */
 const BUBBLE_RULES = {
     checkEveryMs: 2000,
     showMs: 3500,
     poopEveryMs: 20000,
-    needAt: CRITICAL_THRESHOLD,
-    needEveryMs: 25000,
-    needUrgentAt: 15,
-    needUrgentEveryMs: 12000,
-    wishEveryMs: 60000, // + losowo do wishJitterMs
-    wishJitterMs: 30000,
-    wishFunBelow: 60,
+    wishEveryMs: 22000, // + losowo do wishJitterMs
+    wishJitterMs: 16000,
 };
-const bubbleLast = { poop: -1e9, need: -1e9 };
-let nextWishBubble = 30000;
+const bubbleLast = { poop: -1e9 };
+let nextWishBubble = 15000;
 
 // Ikona pokoju (ta sama co na plakietce pokoju) — dymek w drodze do niego.
 const ROOM_ICON = { yard: "den", garden: "garden", living: "living", kitchen: "kitchen", bathroom: "bathroom", meadow: "mole" };
+const WISH_ICONS = ["fun", "butterfly", "mole", "heart", "bubbles", "bark", "bone"];
+let lastWish = "";
 
 function bubbleWish() {
-    const w = [];
-    if (butterfly?.free && !butterfly.lure && butterfly.plan) w.push("butterfly");
-    if (moleTeaser || moleDirts[room]) w.push("mole");
-    if (stats.fun < BUBBLE_RULES.wishFunBelow) w.push("fun");
-    return w.length ? w[Math.floor(Math.random() * w.length)] : null;
+    const ctx = [];
+    if (butterfly?.free && !butterfly.lure && butterfly.plan) ctx.push("butterfly");
+    if (moleTeaser || moleDirts[room]) ctx.push("mole");
+    const pool = ctx.length && Math.random() < 0.6 ? ctx : WISH_ICONS.filter((w) => w !== lastWish);
+    return (lastWish = pool[Math.floor(Math.random() * pool.length)]);
 }
 
 // Wołane co klatkę; samo pilnuje częstotliwości.
 function bubbleThink() {
-    if (sleeping || gesture || menu.drag) return;
+    if (sleeping) return;
     const R = BUBBLE_RULES,
-        crit = criticalNeed();
-    // (3) w drodze do pilnej potrzeby dymek towarzyszy pieskowi.
+        sad = sadNeed();
+    // (1) smutek: dymek z potrzebą cały czas, z pulsującą ikonką
+    if (sad) {
+        if (!bubble || !bubble.pulse || bubble.icon !== sad || bubble.until < clock + 400) bubble = { icon: sad, until: clock + 1500, type: UI.bubbleType, pulse: true };
+        return;
+    }
+    if (bubble?.pulse) bubble = null; // smutek minął — dymek znika od razu
+    if (gesture || menu.drag) return;
+    // (3) w drodze do innego pokoju: "co mu chodzi po głowie"
     if (phase === "travel" && travelMode === "auto") {
-        // Dymek z celem biegu: pilna potrzeba albo ikona pokoju, do którego
-        // piesek zmierza ("co mu chodzi po głowie").
-        const icon = crit || ROOM_ICON[travelTarget];
+        const icon = ROOM_ICON[travelTarget];
         if (icon && (!bubble || bubble.until < clock + 400)) say(icon, 1200);
         return;
     }
-    if (phase !== "idle" || clock < nextBubble) return;
+    if (!["idle", "roam", "pause", "look"].includes(phase) || clock < nextBubble) return;
     nextBubble = clock + R.checkEveryMs;
     if (bubble && clock < bubble.until) return;
     if (dirty()) {
@@ -291,18 +339,9 @@ function bubbleThink() {
         }
         return;
     }
-    if (crit) {
-        const every = stats[crit] <= R.needUrgentAt ? R.needUrgentEveryMs : R.needEveryMs;
-        if (clock - bubbleLast.need >= every) {
-            bubbleLast.need = clock;
-            say(crit, R.showMs);
-        }
-        return;
-    }
     if (clock >= nextWishBubble) {
-        const w = bubbleWish();
         nextWishBubble = clock + R.wishEveryMs + Math.random() * R.wishJitterMs;
-        if (w) say(w, R.showMs);
+        say(bubbleWish(), R.showMs);
     }
 }
 
@@ -577,6 +616,7 @@ function syncMenu() {
 // Wejście do mini-gry z Łąki (kret, jeżyk) działa też, gdy piesek akurat
 // reaguje na dotyk / robi coś krótkiego — dotyk dziecka ma pierwszeństwo.
 function gameEntryOk() {
+    if (sadBlocks("games")) return false;
     return casual() || (loaded && !sleeping && ["reaction"].includes(phase));
 }
 
@@ -585,7 +625,7 @@ function casual() {
     // tu wymieniony — to zdarzenie, raz uruchomione, musi dobiec końca.
     // Dzięki temu wszystkie wejścia bramkowane przez casual()/interrupt()
     // (strzałki, głaskanie, menu, swipe) są podczas niego zablokowane.
-    return loaded && ["idle", "roam", "pause", "look"].includes(phase);
+    return loaded && ["idle", "roam", "pause", "look", "sad"].includes(phase);
 }
 
 function canPet() {
@@ -741,19 +781,19 @@ function activity(id) {
         if (play && stats.water < 15) {
             idle(16);
             say("water", 3500);
-            toast("Najpierw woda — Łatka jest spragniona.");
+            toast("Najpierw woda — piesek jest spragniony.");
             return;
         }
         if (play && stats.sleep < 15) {
             idle(16);
             say("sleep", 3500);
-            toast("Łatka potrzebuje snu przed zabawą.");
+            toast("Piesek potrzebuje snu przed zabawą.");
             return;
         }
         if ((id === "food" || id === "water") && stats[id] >= 95) {
             idle(16);
             say(id);
-            toast(id === "food" ? "Łatka jest już najedzona." : "Łatka nie potrzebuje więcej wody.");
+            toast(id === "food" ? "Piesek jest już najedzony." : "Piesek nie potrzebuje więcej wody.");
             return;
         }
     }
@@ -935,18 +975,6 @@ function stepRoom(d) {
     if (!casual()) return;
     const n = order.indexOf(room) + d;
     if (n < 0 || n >= order.length) return;
-    const cRoom = criticalRoom();
-    if (cRoom) {
-        const curI = order.indexOf(room),
-            needI = order.indexOf(cRoom);
-        // Jeśli już stoimy w potrzebnym pokoju, albo ten krok oddala nas od
-        // niego — nie idziemy. Blokujemy tylko kierunki "od" potrzeby, nie
-        // samą aktywność w miejscu.
-        if (curI === needI || Math.sign(needI - curI) !== d) {
-            blockedNeedToast();
-            return;
-        }
-    }
     arrowTravel(order[n], d);
 }
 
@@ -1057,6 +1085,7 @@ function action(id) {
     if (id === "games") {
         // Puchar działa zawsze: budzi śpiącego pieska i przerywa autonomiczny bieg.
         if (!loaded || phase === "games-menu") return;
+        if (sadBlocks("games")) return sadRefuse();
         if (sleeping) wake();
         if (!gameEntryOk() && !(phase === "travel" && travelMode === "auto") && !sleeping) return;
         if (!casual()) idle(16);
@@ -1067,9 +1096,8 @@ function action(id) {
     if (!casual()) return;
     const i = items.find((i) => i.id === id);
     if (!i) return;
-    const need = criticalNeed();
-    if (need && id !== need && i.room !== room) {
-        blockedNeedToast();
+    if (sadBlocks(id)) {
+        sadRefuse();
         return;
     }
     if (i.room === room && dirty()) {
@@ -1084,6 +1112,7 @@ function action(id) {
 
 function react() {
     if (!casual()) return;
+    if (sadBlocks("pet")) return sadRefuse();
     interrupt();
     wake();
     phase = "reaction";
@@ -1094,6 +1123,7 @@ function react() {
 
 function startPetting() {
     if (!canPet()) return;
+    if (sadBlocks("pet")) return sadRefuse();
     if (phase !== "petting") {
         interrupt();
         wake();
@@ -1484,11 +1514,7 @@ function autoTrip(target = chooseDestination()) {
         nextTrip = clock + 3000;
         return false;
     }
-    const cRoom = criticalRoom();
-    if (cRoom) {
-        if (cRoom === room) return false; // już tu jest — czeka na aktywność, nie błąka się dalej
-        target = cRoom; // piesek sam zmierza tam, gdzie pilnie go potrzeba
-    }
+    if (sadNeed()) return false; // smutny piesek nigdzie sam nie idzie
     trips++;
     route(target, null, "auto");
     return true;
@@ -2506,18 +2532,103 @@ function bubbleDraw(dt) {
         iconDraw(ctx, type, 0, 0, size);
     } else iconDraw(ctx, type, bx, by, size);
     ctx.restore();
-    const center = P.bubbleCenters[type] || [0.5, 0.4],
-        symbol = Math.min(UI.bubbleSymbolSize, size * 0.58);
+    // Środek "brzuszka" dymku (bez ogonka) — z grafiki, patrz bubbleBodyCenter()
+    const center = bubbleBodyCenter(type),
+        base = Math.min(UI.bubbleSymbolSize, size * 0.58),
+        // smutek: ikonka (nie dymek) pulsuje; po odmowie mocniej i szybciej
+        boost = clock < sadBoostUntil,
+        pulse = bubble.pulse ? 1 + (boost ? 0.22 : 0.13) * (0.5 + 0.5 * Math.sin((clock / (boost ? 150 : 260)) * Math.PI)) : 1,
+        symbol = base * pulse,
+        art = iconArtCenter(bubble.icon),
+        cx = bx + (left ? 1 - center[0] : center[0]) * size,
+        cy = by + center[1] * size;
     ctx.save();
     ctx.globalAlpha = edgeAlpha;
-    iconDraw(
-        ctx,
-        bubble.icon,
-        bx + (left ? 1 - center[0] : center[0]) * size - symbol / 2,
-        by + center[1] * size - symbol / 2 - 1,
-        symbol
-    );
+    // rysunek ikonki ustawiony tak, by środek jej WIDOCZNEJ części trafił w środek dymku
+    iconDraw(ctx, bubble.icon, cx - art[0] * symbol, cy - art[1] * symbol, symbol);
     ctx.restore();
+}
+
+// Środek widocznej części grafiki (ułamki 0..1 pola) — ikonki nie są
+// narysowane idealnie na środku swoich pól, więc liczymy to z kanału alfa.
+const artCenterCache = {};
+function alphaBox(img, sx, sy, sw, sh) {
+    const c = document.createElement("canvas");
+    c.width = sw;
+    c.height = sh;
+    const g = c.getContext("2d", { willReadFrequently: true });
+    g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    const d = g.getImageData(0, 0, sw, sh).data;
+    let x0 = sw,
+        y0 = sh,
+        x1 = -1,
+        y1 = -1;
+    for (let y = 0; y < sh; y++)
+        for (let x = 0; x < sw; x++)
+            if (d[(y * sw + x) * 4 + 3] > 40) {
+                if (x < x0) x0 = x;
+                if (x > x1) x1 = x;
+                if (y < y0) y0 = y;
+                if (y > y1) y1 = y;
+            }
+    return x1 < 0 ? null : { x0, y0, x1: x1 + 1, y1: y1 + 1, w: sw, h: sh, data: d };
+}
+function iconArtCenter(key) {
+    if (artCenterCache[key]) return artCenterCache[key];
+    let res = [0.5, 0.5];
+    try {
+        if (key === "poop") res = [0.5, 0.5]; // rysowana z dopasowaniem proporcji, wyśrodkowana
+        else if (UI.map[key]) {
+            const cell = cells.ui[UI.map[key] - 1],
+                b = alphaBox(cell, 0, 0, cell.width, cell.height);
+            if (b) res = [(b.x0 + b.x1) / 2 / b.w, (b.y0 + b.y1) / 2 / b.h];
+        }
+    } catch (_) {}
+    return (artCenterCache[key] = res);
+}
+// Dymek "myśli" ma pod spodem ogonek z kółeczek — środek liczymy tylko z
+// największego, zwartego "brzuszka": wiersze, w których dymek jest szeroki.
+function bubbleBodyCenter(type) {
+    const k = "bubble:" + type;
+    if (artCenterCache[k]) return artCenterCache[k];
+    let res = P.bubbleCenters?.[type] || [0.5, 0.4];
+    try {
+        const cell = cells.ui[UI.map[type] - 1],
+            b = alphaBox(cell, 0, 0, cell.width, cell.height);
+        if (b) {
+            const rows = [];
+            for (let y = 0; y < b.h; y++) {
+                let a = -1,
+                    z = -1;
+                for (let x = 0; x < b.w; x++)
+                    if (b.data[(y * b.w + x) * 4 + 3] > 40) {
+                        if (a < 0) a = x;
+                        z = x;
+                    }
+                rows.push(a < 0 ? 0 : z - a + 1);
+            }
+            const maxW = Math.max(...rows),
+                body = rows.map((w, y) => (w >= maxW * 0.35 ? y : -1)).filter((y) => y >= 0);
+            // brzuszek = najdłuższy ciągły pas szerokich wierszy
+            let best = [body[0], body[0]],
+                cur = [body[0], body[0]];
+            for (let i = 1; i < body.length; i++) {
+                if (body[i] === body[i - 1] + 1) cur[1] = body[i];
+                else cur = [body[i], body[i]];
+                if (cur[1] - cur[0] > best[1] - best[0]) best = [...cur];
+            }
+            let xa = b.w,
+                xz = -1;
+            for (let y = best[0]; y <= best[1]; y++)
+                for (let x = 0; x < b.w; x++)
+                    if (b.data[(y * b.w + x) * 4 + 3] > 40) {
+                        if (x < xa) xa = x;
+                        if (x > xz) xz = x;
+                    }
+            res = [(xa + xz + 1) / 2 / b.w, (best[0] + best[1] + 1) / 2 / b.h];
+        }
+    } catch (_) {}
+    return (artCenterCache[k] = res);
 }
 
 function draw(dt) {
@@ -2608,7 +2719,8 @@ function loopFrame(t) {
         } else if (phase === "petting") {
             if (clock >= petFinishAt || (!gesture && clock - petLast > 3000)) endPetting();
         } else if (phase === "idle" && !sleeping && !gesture && !menu.drag) {
-            if (!poop && poopUrge()) spawnPoop();
+            if (sadNeed()) sadStart();
+            else if (!poop && poopUrge()) spawnPoop();
             else if (clock >= nextTrip) autoTrip();
             else if (clock >= idleUntil) autonomous();
         }

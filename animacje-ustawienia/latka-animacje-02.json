@@ -312,6 +312,30 @@
       "ms": 500,
       "repeat": true,
       "_previewMs": 500
+    },
+    {
+      "name": "26. Smutek — siad i westchnienie",
+      "intro": "",
+      "seq": "3,3,4,4,10,10,9,9,9,10,4,4",
+      "outro": "",
+      "ms": 480,
+      "repeat": true
+    },
+    {
+      "name": "27. Smutek — głowa w dół",
+      "intro": "",
+      "seq": "6,6,6,12,12,11,11,11,12,6",
+      "outro": "",
+      "ms": 560,
+      "repeat": true
+    },
+    {
+      "name": "28. Smutek — obrażony tyłem",
+      "intro": "",
+      "seq": "17,17,17,17,18,17,17,17,23,24,24,23,17",
+      "outro": "",
+      "ms": 480,
+      "repeat": true
     }
   ]
 }
