@@ -946,7 +946,7 @@ function arrowTravel(r, dir) {
             facing,
             to: edge,
             motion: "run",
-            time: Math.max(200, ((Math.abs(edge - x) * W) / 560) * 1000),
+            time: Math.max(240, ((Math.abs(edge - x) * W) / 430) * 1000),
             onStart: () => (stage = "run"),
         },
         variant === "roll"
@@ -955,7 +955,7 @@ function arrowTravel(r, dir) {
                   anim: 0,
                   tempo: 155,
                   facing,
-                  time: reduced ? 160 : 430,
+                  time: reduced ? 160 : 520,
                   onStart: () => (stage = "jump"),
                   update: (p) => {
                       if (p >= 0.5 && !changed) {
@@ -976,7 +976,7 @@ function arrowTravel(r, dir) {
                   anim: 1,
                   tempo: 180,
                   facing,
-                  time: reduced ? 160 : 430,
+                  time: reduced ? 160 : 520,
                   onStart: () => (stage = "run"),
                   update: (p) => {
                       if (p >= 0.5 && !changed) {
@@ -998,7 +998,7 @@ function arrowTravel(r, dir) {
             from: land,
             to: 0.5,
             motion: variant === "roll" ? null : "run",
-            time: variant === "roll" ? 620 : ((Math.abs(0.5 - land) * W) / 420) * 1000,
+            time: variant === "roll" ? 750 : ((Math.abs(0.5 - land) * W) / 300) * 1000,
             onStart: () => (stage = "arrival"),
         },
     ];
@@ -1038,7 +1038,7 @@ function route(target, id = null, mode = "menu") {
         dir = to >= from ? 1 : -1,
         facing = dir < 0,
         run = true, // zawsze bieg (anim 02. Bieg/sus), spacer usunięty
-        speed = Math.min(1100, (mode === "auto" ? 560 : 520) * (1 + 0.45 * Math.max(0, distance - 1))), // px/s: im dalszy pokój, tym szybszy bieg
+        speed = Math.min(620, (mode === "auto" ? 340 : 320) * (1 + 0.2 * Math.max(0, distance - 1))), // px/s: im dalszy pokój, tym nieco szybszy bieg (bez przesady)
         parts = [];
 
     function movement(a, b, onEnd) {
@@ -1100,7 +1100,7 @@ function route(target, id = null, mode = "menu") {
                 facing,
                 from: origin,
                 to: 0.5,
-                time: 600,
+                time: 750,
                 onStart: () => (stage = "route-roll"),
             });
         else parts.push(movement(origin, 0.5));
@@ -1401,7 +1401,7 @@ function settleSwipe(dir, commit) {
     travelMode = "swipe";
     stage = valid ? "swipe-slide" : "swipe-cancel";
     locks();
-    const time = reduced ? 180 : clamp((Math.abs(end - origin) / W) * 640 + 120, 200, 760);
+    const time = reduced ? 180 : clamp((Math.abs(end - origin) / W) * 820 + 150, 240, 950);
     if (valid) {
         wake();
         left = dir < 0;
