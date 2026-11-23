@@ -21,8 +21,9 @@ Zasada: **potrzeb w dymkach nie pokazujemy** — dziecko samo pilnuje statusów 
 ### Smutny piesek (≤ 10%)
 - Stoi w miejscu i losowo zmienia smutne animacje (a02: „26. Smutek — siad i westchnienie”, „27. Smutek — głowa w dół”, „28. Smutek — obrażony tyłem”), po 2 cykle każda.
 - Nie biega sam po domu i nie robi kupki.
-- Zgadza się tylko na to, czego mu brak: jedzenie / woda / sen; przy nudzie aport i gry; przy brudzie kąpiel i szczotkowanie. Na resztę (inne czynności, gry, głaskanie, dotknięcie) kręci głową „NIE” (a02 #20), ikonka w dymku mocniej pulsuje, a na dole pojawia się podpowiedź.
+- Zgadza się tylko na to, czego mu brak: jedzenie / woda / sen; przy nudzie aport i gry; przy brudzie kąpiel i szczotkowanie. Na resztę (inne czynności, gry, głaskanie, dotknięcie) kręci głową „NIE” (a02 #20), a ikonka w dymku mocniej pulsuje. **Bez komunikatów tekstowych** (dzieci jeszcze nie czytają).
 - Strzałkami i menu można go dalej prowadzić do innych pokoi.
+- Powyżej 10% nic nie jest blokowane (usunięte dawne blokady gier przy wodzie/śnie < 15% z tekstem na dole). Najedzony / napojony (≥ 95%) — piesek kręci głową „NIE”, bez tekstu.
 
 ### Samodzielne wycieczki pieska
 - W drodze piesek ma dymek z celem: ikona pokoju.

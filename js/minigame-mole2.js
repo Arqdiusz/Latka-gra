@@ -34,17 +34,9 @@ function mole2Seq(i) {
 // ── Pop-up z instrukcją ──────────────────────────────────────────
 let mole2IntroResume = null;
 function mole2TryStart() {
+    if (sadBlocks("games")) return sadRefuse(); // smutny piesek nie chce się bawić
     if (!gameEntryOk()) return;
-    if (stats.water < 15) {
-        say("water", 3500);
-        toast("Najpierw woda — pies jest spragniony.");
-        return;
-    }
-    if (stats.sleep < 15) {
-        say("sleep", 3500);
-        toast("Pies potrzebuje snu przed zabawą.");
-        return;
-    }
+    // potrzeby pilnuje smutek (≤10%) — gameEntryOk() / sadBlocks("games")
     mole2IntroResume = mole2Start;
     $("#mole2Popup .moleIntroIcon").src = icons.mole;
     $("#mole2Popup").hidden = false;

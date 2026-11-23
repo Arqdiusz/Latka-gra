@@ -61,17 +61,9 @@ function pairsShuffle(a) {
 
 // ── Tutorial ─────────────────────────────────────────────────────
 function pairsTryStart() {
+    if (sadBlocks("games")) return sadRefuse(); // smutny piesek nie chce się bawić
     if (!gameEntryOk()) return;
-    if (stats.water < 15) {
-        say("water", 3500);
-        toast("Najpierw woda — pies jest spragniony.");
-        return;
-    }
-    if (stats.sleep < 15) {
-        say("sleep", 3500);
-        toast("Pies potrzebuje snu przed zabawą.");
-        return;
-    }
+    // potrzeby pilnuje smutek (≤10%) — gameEntryOk() / sadBlocks("games")
     const pool = pairsBuildPool(),
         apple = pool.find((p) => p.id === "food-5") || pool[0];
     $("#pairsPopup .moleIntroIcon").src = icons.memory;

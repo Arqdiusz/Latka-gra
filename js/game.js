@@ -243,8 +243,7 @@ const NEED_GENITIVE = { food: "jedzenia", water: "wody", fun: "zabawy", sleep: "
 function sadRefuse() {
     const id = sadNeed();
     if (!id) return;
-    sadBoostUntil = clock + 1800;
-    toast("Piesek jest smutny — najpierw potrzebuje " + (NEED_GENITIVE[id] || id) + ".");
+    sadBoostUntil = clock + 1800; // bez tekstu — mówi o tym pulsujący dymek i „NIE”
     if (!casual() && phase !== "sad") return;
     queue = [];
     segment = null;
@@ -408,7 +407,7 @@ function updateNeeds(seconds) {
         stats.sleep = clamp(stats.sleep + 12 * m, 0, 100);
         if (stats.sleep >= 100) {
             wake();
-            toast("Łatka się wyspała!");
+            toast("Piesek się wyspał!");
         }
     }
     if (poop) stats.clean = clamp(stats.clean - 0.8 * m, 0, 100);
@@ -777,23 +776,13 @@ function repeatPart(s, i, times = 1) {
 
 function activity(id) {
     if (!dirty()) {
-        const play = id === "fun" || id === "den";
-        if (play && stats.water < 15) {
-            idle(16);
-            say("water", 3500);
-            toast("Najpierw woda — piesek jest spragniony.");
-            return;
-        }
-        if (play && stats.sleep < 15) {
-            idle(16);
-            say("sleep", 3500);
-            toast("Piesek potrzebuje snu przed zabawą.");
-            return;
-        }
+        // Najedzony / napojony: bez tekstu — piesek kręci głową „NIE”.
+        // (Potrzeb pilnuje smutek przy ≤10%, patrz sadBlocks().)
         if ((id === "food" || id === "water") && stats[id] >= 95) {
             idle(16);
-            say(id);
-            toast(id === "food" ? "Piesek jest już najedzony." : "Piesek nie potrzebuje więcej wody.");
+            phase = "reaction";
+            locks();
+            startQueue([repeatPart("a02", SAD_NO_ANIM, 1)]);
             return;
         }
     }

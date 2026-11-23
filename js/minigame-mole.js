@@ -346,22 +346,14 @@ function moleReadySegment() {
 // z instrukcją — tak jak przy aporcie te same sprawdzenia robi activity()
 // zanim w ogóle pokaże ballIntroShow().
 function moleTryStart() {
+    if (sadBlocks("games")) return sadRefuse(); // smutny piesek nie chce się bawić
     if (!gameEntryOk()) return;
     if (dirty()) {
         say("poop", 4500);
         toast("Najpierw posprzątaj kupkę w tym pomieszczeniu.");
         return;
     }
-    if (stats.water < 15) {
-        say("water", 3500);
-        toast("Najpierw woda — Łatka jest spragniona.");
-        return;
-    }
-    if (stats.sleep < 15) {
-        say("sleep", 3500);
-        toast("Łatka potrzebuje snu przed zabawą.");
-        return;
-    }
+    // potrzeby pilnuje smutek (≤10%) — gameEntryOk() / sadBlocks("games")
     moleIntroShow(moleStart);
 }
 

@@ -59,17 +59,9 @@ function memoRow(c, colors, x0, y, size, gap, t) {
 // ── Tutorial ─────────────────────────────────────────────────────
 let memoIntroResume = null;
 function memoTryStart() {
+    if (sadBlocks("games")) return sadRefuse(); // smutny piesek nie chce się bawić
     if (!gameEntryOk()) return;
-    if (stats.water < 15) {
-        say("water", 3500);
-        toast("Najpierw woda — pies jest spragniony.");
-        return;
-    }
-    if (stats.sleep < 15) {
-        say("sleep", 3500);
-        toast("Pies potrzebuje snu przed zabawą.");
-        return;
-    }
+    // potrzeby pilnuje smutek (≤10%) — gameEntryOk() / sadBlocks("games")
     hedgeBg(); // wczytaj tło Łąki z wyprzedzeniem
     memoIntroResume = memoShowLevels;
     if (cells.motyle[0]) $("#memoPopup .moleIntroIcon").src = cells.motyle[0].toDataURL("image/png");
