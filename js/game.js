@@ -210,7 +210,9 @@ function dirty(r = room) {
    spadnie do 10%, piesek jest smutny: stoi w miejscu, losowo zmienia smutne
    animacje (a02: 26/27/28 → indeksy 25, 26, 27), nie biega sam po domu, a
    nad głową ma dymek z potrzebą, w którym PULSUJE ikonka. Zgadza się tylko
-   na to, czego mu brak (SAD_ALLOWS); na resztę kręci głową „NIE” (a02 #20).
+   na to, czego mu brak (SAD_ALLOWS); na resztę reaguje smutkiem —
+   najczęściej odwraca się tyłem (sadRefuse). „NIE” (a02 #20) zostaje tylko
+   dla pełnych potrzeb (fullRefuse).
    ═══════════════════════════════════════════════════════════════ */
 const SAD_THRESHOLD = 10;
 const SAD_ANIMS = [25, 26, 27]; // a02: siad i westchnienie, głowa w dół, obrażony tyłem
@@ -243,14 +245,21 @@ const NEED_GENITIVE = { food: "jedzenia", water: "wody", fun: "zabawy", sleep: "
 function sadRefuse() {
     const id = sadNeed();
     if (!id) return;
-    sadBoostUntil = clock + 1800; // bez tekstu — mówi o tym pulsujący dymek i „NIE”
+    sadBoostUntil = clock + 1800; // bez tekstu — mówi o tym pulsujący dymek
     if (!casual() && phase !== "sad") return;
+    // Odmowa smutnego pieska to NIE kręcenie głową, tylko smutek — najczęściej
+    // odwraca się tyłem (obrażony), czasem wzdycha albo spuszcza głowę.
+    const r = Math.random(),
+        anim = r < 0.6 ? SAD_ANIMS[2] : r < 0.8 ? SAD_ANIMS[0] : SAD_ANIMS[1];
+    // już się obraził tyłem — nie zaczynamy od nowa, tylko mocniej pulsuje dymek
+    if (stage === "sad-refuse" && anim === sadLast) return;
+    sadLast = anim;
     queue = [];
     segment = null;
     phase = "sad";
-    stage = "sad-no";
+    stage = "sad-refuse";
     locks();
-    startQueue([{ ...repeatPart("a02", SAD_NO_ANIM, 2), onEnd: () => sadContinue() }]);
+    startQueue([{ ...repeatPart("a02", anim, 1), onEnd: () => sadContinue() }]);
 }
 
 function sadStart() {
@@ -440,8 +449,19 @@ function sayPulse(icon, ms = 3000, strong = true) {
 }
 
 // Odmowa z konkretnego powodu (np. kupka): kręci głową „NIE” + pulsująca ikonka
+// (bez kręcenia głową — „NIE” jest tylko przy pełnych potrzebach, fullRefuse)
 function refuseWith(icon) {
     if (sadNeed()) return sadRefuse();
+    sayPulse(icon, 3200, true);
+}
+
+// Pełna potrzeba (≥ FULL_AT): piesek kręci głową „NIE”. Nie dotyczy zabawy —
+// w gry, aport i motylki można się bawić zawsze.
+const FULL_AT = 95;
+const FULL_NEED = { food: "food", water: "water", sleep: "sleep", clean: "clean", brush: "clean" };
+function fullRefuse(id) {
+    const need = FULL_NEED[id];
+    if (!need || stats[need] < FULL_AT || sadNeed()) return false;
     if (casual()) {
         idle(16);
         phase = "reaction";
@@ -449,7 +469,7 @@ function refuseWith(icon) {
         locks();
         startQueue([repeatPart("a02", SAD_NO_ANIM, 2)]);
     }
-    sayPulse(icon, 3200, true);
+    return true;
 }
 
 function resize() {
@@ -809,11 +829,9 @@ function activity(id) {
     if (!dirty()) {
         // Najedzony / napojony: bez tekstu — piesek kręci głową „NIE”.
         // (Potrzeb pilnuje smutek przy ≤10%, patrz sadBlocks().)
-        if ((id === "food" || id === "water") && stats[id] >= 95) {
+        if (FULL_NEED[id] && stats[FULL_NEED[id]] >= FULL_AT) {
             idle(16);
-            phase = "reaction";
-            locks();
-            startQueue([repeatPart("a02", SAD_NO_ANIM, 1)]);
+            fullRefuse(id);
             return;
         }
     }
@@ -1123,6 +1141,7 @@ function action(id) {
         sadRefuse();
         return;
     }
+    if (fullRefuse(id)) return; // najedzony / napojony / wyspany / czysty — „NIE”
     if (i.room === room && dirty()) {
         interrupt();
         blockRoomActivity(id);
