@@ -216,7 +216,7 @@ const SAD_THRESHOLD = 10;
 const SAD_ANIMS = [25, 26, 27]; // a02: siad i westchnienie, głowa w dół, obrażony tyłem
 const SAD_NO_ANIM = 19; // a02: „NIE” — kręci głową
 // Co pomaga na którą potrzebę (id pozycji menu / "games" = ekran gier)
-const SAD_ALLOWS = { food: ["food"], water: ["water"], sleep: ["sleep"], fun: ["fun", "games"], clean: ["clean", "brush"] };
+const SAD_ALLOWS = { food: ["food"], water: ["water"], sleep: ["sleep"], fun: ["fun", "games", "butterfly"], clean: ["clean", "brush"] };
 let sadLast = -1,
     sadBoostUntil = 0; // chwilowo mocniejsze pulsowanie (po odmowie)
 
@@ -317,10 +317,10 @@ function bubbleThink() {
         sad = sadNeed();
     // (1) smutek: dymek z potrzebą cały czas, z pulsującą ikonką
     if (sad) {
-        if (!bubble || !bubble.pulse || bubble.icon !== sad || bubble.until < clock + 400) bubble = { icon: sad, until: clock + 1500, type: UI.bubbleType, pulse: true };
+        if (!bubble || !bubble.sad || bubble.icon !== sad || bubble.until < clock + 400) bubble = { icon: sad, until: clock + 1500, type: UI.bubbleType, pulse: true, sad: true };
         return;
     }
-    if (bubble?.pulse) bubble = null; // smutek minął — dymek znika od razu
+    if (bubble?.sad) bubble = null; // smutek minął — dymek znika od razu
     if (gesture || menu.drag) return;
     // (3) w drodze do innego pokoju: "co mu chodzi po głowie"
     if (phase === "travel" && travelMode === "auto") {
@@ -407,7 +407,7 @@ function updateNeeds(seconds) {
         stats.sleep = clamp(stats.sleep + 12 * m, 0, 100);
         if (stats.sleep >= 100) {
             wake();
-            toast("Piesek się wyspał!");
+            say("heart", 2200);
         }
     }
     if (poop) stats.clean = clamp(stats.clean - 0.8 * m, 0, 100);
@@ -426,11 +426,30 @@ function save() {
     saveNeeds();
 }
 
+// Teksty na dole ekranu są wyłączone — gra mówi do dziecka dymkami
+// (sayPulse). Funkcja zostaje, żeby stare wywołania nic nie psuły.
 function toast(s) {
-    $(".toast").textContent = s;
-    $(".toast").hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => ($(".toast").hidden = true), 4000);
+    console.info("[toast wyłączony]", s);
+}
+
+// Dymek z PULSUJĄCĄ ikonką — "nie mogę / potrzebuję". strong = mocniej
+// i szybciej (po odmowie). Dymek smutku (sad) ma pierwszeństwo.
+function sayPulse(icon, ms = 3000, strong = true) {
+    bubble = { icon, until: clock + ms, type: UI.bubbleType, pulse: true };
+    if (strong) sadBoostUntil = clock + Math.min(ms, 1800);
+}
+
+// Odmowa z konkretnego powodu (np. kupka): kręci głową „NIE” + pulsująca ikonka
+function refuseWith(icon) {
+    if (sadNeed()) return sadRefuse();
+    if (casual()) {
+        idle(16);
+        phase = "reaction";
+        stage = "refuse";
+        locks();
+        startQueue([repeatPart("a02", SAD_NO_ANIM, 2)]);
+    }
+    sayPulse(icon, 3200, true);
 }
 
 function resize() {
@@ -741,8 +760,7 @@ function blockRoomActivity(id) {
     if (!dirty()) return false;
     idle(16);
     blockedActivity = id;
-    say("poop", 4500);
-    toast("Najpierw posprzątaj kupkę w tym pomieszczeniu.");
+    refuseWith("poop"); // „NIE” + pulsująca kupka w dymku
     return true;
 }
 
@@ -1254,7 +1272,6 @@ function cleanPoop() {
     updatePoopAccess();
     say("star");
     save();
-    toast("Posprzątane — można znów wybrać czynność.");
 }
 
 // Kupka z logiki, nie z losu (patrz REGULY.md): przejedzony piesek (jedzenie
@@ -1738,7 +1755,16 @@ const CATCH_ZONE = { 1: [0.2, 0.62], "-1": [0.38, 0.8] };
 // motylek był w miejscu znacznika pościgu. Dopiero wtedy rusza animacja.
 function butterflyCatch() {
     const b = butterfly;
-    if (!b?.free || b.lure || !casual() || sleeping || dirty()) return false;
+    if (!b?.free || b.lure || !casual() || sleeping) return false;
+    // smutny piesek (potrzeba ≤10%) nie goni motylka: „NIE” + pulsująca potrzeba
+    if (sadBlocks("butterfly")) {
+        sadRefuse();
+        return false;
+    }
+    if (dirty()) {
+        refuseWith("poop");
+        return false;
+    }
     const pl = butterflyPlan();
     if (!pl) return false;
     interrupt();
@@ -2262,7 +2288,6 @@ function cleanMoleDirt() {
     // Dopiero teraz zaczyna się odliczanie do kolejnego kreta.
     nextMoleSpawn = clock + 7500 + Math.random() * 15000;
     save();
-    toast("Piach posprzątany.");
 }
 $(".moleDirtAccess").onclick = cleanMoleDirt;
 
@@ -2999,15 +3024,15 @@ $(".full").onclick = async () => {
         const el = document.documentElement;
         if (el.requestFullscreen) await el.requestFullscreen();
         else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-        else return toast("Pełny ekran jest niedostępny w tej przeglądarce.");
+        else return; // pełny ekran niedostępny — po cichu
         try {
             if (screen.orientation?.lock) await screen.orientation.lock("portrait");
             else throw Error();
         } catch (e) {
-            toast("Brak automatycznej blokady obrotu — trzymaj urządzenie pionowo.");
+            /* brak blokady obrotu — trudno, gra i tak ma ekran „obróć telefon” */
         }
     } catch (e) {
-        toast("Przeglądarka nie pozwoliła uruchomić pełnego ekranu.");
+        /* przeglądarka nie pozwoliła na pełny ekran — po cichu */
     }
 };
 window.addEventListener("pagehide", save);

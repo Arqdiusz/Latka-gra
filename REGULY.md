@@ -15,6 +15,9 @@ Zasada: **potrzeb w dymkach nie pokazujemy** — dziecko samo pilnuje statusów 
 | 4 | „Chęci” | piłka, motylek, kret, serduszko, bańki (kąpiel), uśmiechnięty piesek, kostka; motylek / kret częściej, gdy są na ekranie | co 22–38 s |
 
 - Priorytet: smutek > kupka > chęć. Jeden dymek naraz.
+- **Żadnych tekstów na dole ekranu** — wszystko mówią dymki. Odmowa z powodu kupki (czynność w zabrudzonym pokoju, gry, motylek): piesek kręci głową „NIE”, w dymku pulsuje kupka.
+- Smutny piesek nie goni motylka (chyba że brakuje mu zabawy): „NIE” + pulsująca potrzeba w dymku.
+- Aport: po wejściu w zabawę i po dłuższym czekaniu dymek z pulsującą piłką („rzuć mi!”).
 - Ikonka jest centrowana w „brzuszku” dymku (bez ogonka), liczonym z grafiki, a nie na środku pola grafiki.
 - Serce / gwiazdka (głaskanie, sprzątanie) to reakcje na dotyk, nie podlegają tym regułom.
 

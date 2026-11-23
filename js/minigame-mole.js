@@ -348,11 +348,7 @@ function moleReadySegment() {
 function moleTryStart() {
     if (sadBlocks("games")) return sadRefuse(); // smutny piesek nie chce się bawić
     if (!gameEntryOk()) return;
-    if (dirty()) {
-        say("poop", 4500);
-        toast("Najpierw posprzątaj kupkę w tym pomieszczeniu.");
-        return;
-    }
+    if (dirty()) return refuseWith("poop"); // „NIE” + pulsująca kupka
     // potrzeby pilnuje smutek (≤10%) — gameEntryOk() / sadBlocks("games")
     moleIntroShow(moleStart);
 }

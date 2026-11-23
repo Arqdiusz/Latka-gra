@@ -152,8 +152,7 @@ function fetchStart() {
         spin: 0,
         carried: false,
     };
-    say("fun", 2600);
-    toast("Złap piłkę palcem i rzuć ją pieskowi!");
+    sayPulse("fun", 2600, false); // „rzuć mi piłkę!”
     startQueue([ballReadySegment()]);
 }
 
@@ -181,8 +180,7 @@ function ballReadySegment() {
             if (outOfThrows) restartRing(p * 100);
             if (fetchGame && !fetchGame.hinted && p * waitTime > BALL_HINT_AFTER) {
                 fetchGame.hinted = true;
-                say("fun", 2600);
-                toast("Złap piłkę i rzuć — piesek czeka!");
+                sayPulse("fun", 2600, false);
             }
         },
         onEnd: () => fetchFinish(!!fetchGame && fetchGame.throws > 0),
