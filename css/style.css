@@ -2061,3 +2061,29 @@ body.locked .gamesAccess {
     top: calc(8% + 70px);
     bottom: 8%;
 }
+
+/* Potrzeba na czerwono (≤10%): ikona w kółku pulsuje */
+.stat.crit .statRing img {
+    animation: statPulse 0.9s ease-in-out infinite;
+}
+
+@keyframes statPulse {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stat.crit .statRing img {
+        animation-duration: 1.8s;
+    }
+}
+
+/* Smutny piesek nie chodzi strzałkami — strzałki przygaszone */
+body.sadLock .arrow {
+    opacity: 0.35;
+}

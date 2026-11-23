@@ -609,6 +609,7 @@ function statusBuild() {
 }
 
 function statusUpdate() {
+    document.body.classList.toggle("sadLock", !!sadNeed() && !sleeping);
     // 5 potrzeb z dynamicznym kolorem paska
     document.querySelectorAll(".stat[data-status]").forEach((el) => {
         const v = stats[el.dataset.status];
@@ -618,6 +619,7 @@ function statusUpdate() {
         const col = v <= SAD_THRESHOLD ? STAT_CRIT : v <= 40 ? STAT_WARN : STAT_FILL[el.dataset.status];
         fill.style.background = col;
         el.style.setProperty("--tint", col);
+        el.classList.toggle("crit", v <= SAD_THRESHOLD); // czerwony → ikona pulsuje
         el.setAttribute("aria-label", el.querySelector("img").alt + ": " + Math.round(v) + "%");
     });
 
@@ -991,6 +993,9 @@ function arrowTravel(r, dir) {
 
 function stepRoom(d) {
     if (!casual()) return;
+    // smutny piesek (potrzeba ≤10%) nie chodzi strzałkami/przesunięciem —
+    // ruszy się dopiero po wybraniu w menu tego, czego mu brak
+    if (sadNeed() && !sleeping) return sadRefuse();
     const n = order.indexOf(room) + d;
     if (n < 0 || n >= order.length) return;
     arrowTravel(order[n], d);
