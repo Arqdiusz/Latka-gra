@@ -77,7 +77,7 @@ function memoTryStart() {
     };
     drawTut($(".memoTutShow"), (c) => {
         memoRow(c, [0, 2, 4], 14, 4, 46, 12, 0);
-        c.font = "800 15px system-ui, sans-serif";
+        c.font = "800 15px 'Baloo 2', Nunito, system-ui, sans-serif";
         c.textAlign = "center";
         c.fillStyle = "#59485d";
         [0, 1, 2].forEach((i) => c.fillText(String(i + 1), 14 + i * 58 + 23, 66));
@@ -467,7 +467,7 @@ function memoShowDraw(g) {
     memoPanel(c, px, py, pw, ph);
     c.textAlign = "center";
     c.fillStyle = "#59485d";
-    c.font = "800 26px system-ui, sans-serif";
+    c.font = "800 26px 'Baloo 2', Nunito, system-ui, sans-serif";
     c.fillText("Zapamiętaj kolejność!", W / 2, py + 46);
     const x0 = (W - rowW) / 2,
         y0 = py + 92;
@@ -475,7 +475,7 @@ function memoShowDraw(g) {
         const cell = memoCell(col, t),
             bob = Math.sin(t / 240 + i) * 3;
         if (cell) c.drawImage(cell, x0 + i * (size + gap) - size * 0.25, y0 + bob - size * 0.25, size * 1.5, size * 1.5);
-        c.font = "800 22px system-ui, sans-serif";
+        c.font = "800 22px 'Baloo 2', Nunito, system-ui, sans-serif";
         c.fillStyle = "#59485d";
         c.fillText(String(i + 1), x0 + i * (size + gap) + size / 2, y0 + size + 40);
     });
@@ -506,9 +506,9 @@ function memoBetweenDraw(g) {
     memoPanel(c, px, py, pw, ph);
     c.textAlign = "center";
     c.fillStyle = "#59485d";
-    c.font = "800 30px system-ui, sans-serif";
+    c.font = "800 30px 'Baloo 2', Nunito, system-ui, sans-serif";
     c.fillText("Brawo!", W / 2, py + 62);
-    c.font = "700 20px system-ui, sans-serif";
+    c.font = "700 20px 'Baloo 2', Nunito, system-ui, sans-serif";
     c.fillText("Runda " + (g.round + 1) + " z " + MEMO_ROUNDS, W / 2, py + 102);
     const im = images.bubbleStar;
     if (im) c.drawImage(im, W / 2 - 22, py - 26, 44, 44);
@@ -572,7 +572,7 @@ function memoPlayDraw(g) {
             if (cell) c.drawImage(cell, sx - 11, sy - 11, slot + 22, slot + 22);
         } else {
             c.fillStyle = "#b9b09a";
-            c.font = "800 22px system-ui, sans-serif";
+            c.font = "800 22px 'Baloo 2', Nunito, system-ui, sans-serif";
             c.textAlign = "center";
             c.fillText("?", sx + slot / 2, sy + slot / 2 + 8);
         }

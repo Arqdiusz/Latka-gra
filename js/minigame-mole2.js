@@ -322,7 +322,7 @@ function mole2GameDraw() {
         c.save();
         c.globalAlpha = 1 - t * t;
         c.drawImage(im, e.x - size / 2, e.y - ease * 40 - size / 2, size, size);
-        c.font = "900 34px system-ui, sans-serif";
+        c.font = "900 34px 'Baloo 2', Nunito, system-ui, sans-serif";
         c.textAlign = "center";
         c.lineJoin = "round";
         c.lineWidth = 6;
@@ -357,10 +357,10 @@ function mole2PanelDraw(g) {
     // licznik: "Krety: 3 / 10"
     c.textAlign = "left";
     c.fillStyle = "#59485d";
-    c.font = "800 15px system-ui, sans-serif";
+    c.font = "800 15px 'Baloo 2', Nunito, system-ui, sans-serif";
     c.fillText("Złapane krety", x + 16, y + 26);
     c.textAlign = "right";
-    c.font = "900 28px system-ui, sans-serif";
+    c.font = "900 28px 'Baloo 2', Nunito, system-ui, sans-serif";
     c.fillText(g.caught + " / " + g.need, x + w - 16, y + 30);
     const slot = 28,
         gap = (w - 28 - g.need * slot) / (g.need - 1);

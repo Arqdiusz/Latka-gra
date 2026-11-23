@@ -265,7 +265,7 @@ function moleGameDraw() {
         mctx.globalAlpha = alpha;
         mctx.translate(e.x, e.y + dy);
         mctx.scale(scale, scale);
-        mctx.font = "900 32px system-ui, sans-serif";
+        mctx.font = "900 32px 'Baloo 2', Nunito, system-ui, sans-serif";
         mctx.textAlign = "center";
         mctx.textBaseline = "middle";
         mctx.lineJoin = "round";

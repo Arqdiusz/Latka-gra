@@ -2207,3 +2207,34 @@ body.sadLock .arrow {
     box-shadow: none;
     border-radius: 0;
 }
+
+/* ═══ Czcionki gry ═══════════════════════════════════════════════════
+   Baloo 2 — tytuły, przyciski, liczniki; Quicksand — opisy i dymki.
+   Canvas (js/*) używa tych samych nazw (GAME_FONT_HEAD). */
+:root {
+    --font-head: "Baloo 2", "Nunito", system-ui, sans-serif;
+    --font-body: "Quicksand", "Nunito", system-ui, sans-serif;
+}
+body {
+    font-family: var(--font-body);
+}
+button,
+button[class],
+h1,
+h2,
+h3,
+.moleTitle strong,
+.hedgeTitle,
+.mole2Title,
+.memoTitle,
+.pairsTitle,
+.pairsCount,
+.moleCount,
+.moleMsg,
+.bubbleTitle,
+.loadTitle,
+.memoStars,
+.gamesTile span,
+.gamesHeader h2 {
+    font-family: var(--font-head);
+}

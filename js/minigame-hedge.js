@@ -393,7 +393,7 @@ function hedgeGameDraw() {
         c.drawImage(im, -size / 2, -size / 2, size, size);
         c.rotate(-e.rot);
         c.scale(e.flip, 1);
-        c.font = "900 34px system-ui, sans-serif";
+        c.font = "900 34px 'Baloo 2', Nunito, system-ui, sans-serif";
         c.textAlign = "center";
         c.lineWidth = 6;
         c.strokeStyle = "#fff";
