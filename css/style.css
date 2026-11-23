@@ -2349,3 +2349,89 @@ h3,
     font-weight: 700;
     color: #8b7a90;
 }
+
+/* Znajdź pary: pasek wyników pod tytułem (czas, próby, pary) i rekordy */
+.pairsFull {
+    background-image: url("../tla/001-gry.png");
+}
+.pairsHud {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 58px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    z-index: 2;
+}
+.pairsPill {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 34px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border-radius: 17px;
+    background: #fffdf3;
+    border: 3px solid white;
+    box-shadow: 0 3px 6px #0002;
+    font-size: 14px;
+    font-weight: 700;
+    color: #8b7a90;
+    white-space: nowrap;
+}
+.pairsPill b {
+    font-size: 18px;
+    font-weight: 800;
+    color: #59485d;
+    font-variant-numeric: tabular-nums;
+}
+.pairsHud .pairsCount {
+    position: static;
+    height: 34px;
+    min-width: 0;
+    padding: 0 8px;
+    font-size: 14px;
+    display: flex;
+}
+.pairsBoard {
+    top: 104px;
+}
+.pairsTileStats {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    gap: 1px 18px;
+    margin-top: 4px;
+    align-items: baseline;
+    justify-items: center;
+}
+.pairsTileStats i {
+    font-style: normal;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #8b7a90;
+    justify-self: start;
+}
+.pairsTileStats i:nth-child(2),
+.pairsTileStats i:nth-child(3) {
+    justify-self: center;
+}
+.pairsTileStats b {
+    font-size: 18px;
+    color: #59485d;
+    font-variant-numeric: tabular-nums;
+}
+.pairsTileStats b.rec {
+    color: #d8861a;
+}
+.pairsSticker {
+    font-size: 15px;
+    right: -26px;
+}
+.memoStats .pairsRes {
+    font-size: 20px;
+}

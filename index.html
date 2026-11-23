@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.151</title>
+        <title>Łatka v0.8.152</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
-        <link rel="stylesheet" href="css/style.css?v=170" />
+        <link rel="stylesheet" href="css/style.css?v=171" />
     </head>
 
     <body>
@@ -60,8 +60,12 @@
             </div>
             <div class="pairsFull" hidden>
                 <div class="pairsTitle">Znajdź pary!</div>
-                <div class="pairsCount" aria-label="Znalezione pary">0 / 0</div>
                 <button class="pairsClose" aria-label="Zakończ zabawę w pary">✕</button>
+                <div class="pairsHud">
+                    <div class="pairsPill pairsTime" aria-label="Czas">Czas <b>0,0 s</b></div>
+                    <div class="pairsPill pairsTries" aria-label="Próby">Próby <b>0</b></div>
+                    <div class="pairsPill pairsCount" aria-label="Znalezione pary">Pary <b>0 / 0</b></div>
+                </div>
                 <div class="pairsBoard"></div>
             </div>
             <div class="pairsLevels" hidden>
@@ -213,9 +217,11 @@
                         <div class="moleWinCheck" aria-hidden="true">
                             <svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
                         </div>
+                        <div class="memoSticker pairsSticker" hidden></div>
                     </div>
                     <h2>Brawo!</h2>
                     <p>Znalazłaś wszystkie pary!</p>
+                    <div class="memoStats"><b class="pairsRes"></b><span class="pairsRec"></span><span class="pairsPrev"></span></div>
                     <button class="winAgain btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
                     <button class="memoNext moleWinOk btnBlue">Wybierz poziom</button>
                     <button class="moleWinOk memoExit btnRed">Powrót</button>
@@ -338,7 +344,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=170"></script>
+            <script src="js/loader.js?v=171"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -346,7 +352,7 @@
                     document.fonts.load("700 16px Quicksand");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=170"></script>
+            <script src="js/audio.js?v=171"></script>
         </main>
         <div class="rotate"><span>📱 ↻</span>Obróć urządzenie do pionu.<small>Gra jest wstrzymana.</small></div>
         <div class="toast" hidden role="status"></div>
@@ -367,16 +373,16 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=170"></script>
-        <script defer src="js/game.js?v=170"></script>
-        <script defer src="js/minigame-fetch.js?v=170"></script>
-        <script defer src="js/minigame-bubbles.js?v=170"></script>
-        <script defer src="js/minigame-mole.js?v=170"></script>
-        <script defer src="js/minigame-hedge.js?v=170"></script>
-        <script defer src="js/minigame-mole2.js?v=170"></script>
-        <script defer src="js/minigame-memory.js?v=170"></script>
-        <script defer src="js/minigame-pairs.js?v=170"></script>
-        <script defer src="js/games-menu.js?v=170"></script>
-        <script defer src="js/popup-guard.js?v=170"></script>
+        <script defer src="js/arc-carousel.js?v=171"></script>
+        <script defer src="js/game.js?v=171"></script>
+        <script defer src="js/minigame-fetch.js?v=171"></script>
+        <script defer src="js/minigame-bubbles.js?v=171"></script>
+        <script defer src="js/minigame-mole.js?v=171"></script>
+        <script defer src="js/minigame-hedge.js?v=171"></script>
+        <script defer src="js/minigame-mole2.js?v=171"></script>
+        <script defer src="js/minigame-memory.js?v=171"></script>
+        <script defer src="js/minigame-pairs.js?v=171"></script>
+        <script defer src="js/games-menu.js?v=171"></script>
+        <script defer src="js/popup-guard.js?v=171"></script>
     </body>
 </html>

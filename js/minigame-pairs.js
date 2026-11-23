@@ -43,6 +43,26 @@ function pairsDone() {
         return [];
     }
 }
+// Rekordy (osobno dla każdego poziomu): najkrótszy czas i najmniej prób.
+// „Próba” = jedno odkrycie dwóch kart. Idealnie: tyle prób, ile par.
+// Zapis: { bestT, lastT, bestN, lastN } — każde to { poziom: wartość }.
+const PAIRS_RECORDS = "pairsRecords";
+function pairsRecords() {
+    try {
+        const r = JSON.parse(localStorage.getItem(PAIRS_RECORDS) || "{}");
+        return { bestT: r.bestT || {}, lastT: r.lastT || {}, bestN: r.bestN || {}, lastN: r.lastN || {} };
+    } catch (_) {
+        return { bestT: {}, lastT: {}, bestN: {}, lastN: {} };
+    }
+}
+function pairsFmt(ms) {
+    const s = ms / 1000;
+    if (s < 60) return s.toFixed(1).replace(".", ",") + " s";
+    const m = Math.floor(s / 60);
+    return m + ":" + (s - m * 60).toFixed(1).replace(".", ",").padStart(4, "0");
+}
+const pairsTriesTxt = (n) => n + (n === 1 ? " próba" : n >= 2 && n <= 4 ? " próby" : " prób");
+
 function pairsMarkDone(level) {
     try {
         const d = pairsDone();
@@ -100,10 +120,16 @@ function pairsShowLevels() {
     box.innerHTML = "";
     PAIRS_LEVELS.forEach((lv, i) => {
         const n = Math.floor((lv.cols * lv.rows) / 2),
-            b = document.createElement("button");
+            b = document.createElement("button"),
+            R = pairsRecords(),
+            has = R.bestT[i] !== undefined,
+            stats = has
+                ? '<span class="pairsTileStats"><i></i><i>Czas</i><i>Próby</i><i>Rekord</i><b class="rec">' + pairsFmt(R.bestT[i]) + '</b><b class="rec">' + R.bestN[i] +
+                  "</b><i>Ostatnio</i><b>" + pairsFmt(R.lastT[i]) + "</b><b>" + R.lastN[i] + "</b></span>"
+                : '<span class="memoTileStats memoTileNew">Jeszcze bez wyniku</span>';
         b.className = "memoTile";
         b.innerHTML =
-            '<span class="memoStars">' + "★".repeat(i + 1) + '</span><span class="memoTileTxt">' + lv.rows + " × " + lv.cols + " · " + n + (n < 5 ? " pary" : " par") + "</span>" +
+            '<span class="memoStars">' + "★".repeat(i + 1) + '</span><span class="memoTileTxt">' + lv.rows + " × " + lv.cols + " · " + n + (n < 5 ? " pary" : " par") + "</span>" + stats +
             (done.includes(i) ? '<img class="memoTileCup" alt="Ukończony" src="' + icons.cup + '" />' : "");
         b.onclick = () => {
             if (Date.now() - pairsLevelsShownAt < 700) return; // "przelot" kliknięcia z poprzedniego ekranu
@@ -138,7 +164,7 @@ function pairsStart(level) {
         deck = pairsShuffle([...faces, ...faces].map((f) => ({ ...f })));
     // 3×3: piesek-jokier na środku (zawsze odkryty)
     if (lv.joker) deck.splice(Math.floor(total / 2), 0, { id: "joker", src: cells.a01[28]?.toDataURL("image/png") || icons.bark, joker: true });
-    pairsGame = { level, lv, deck, open: [], found: 0, need: n, timer: 0, over: false };
+    pairsGame = { level, lv, deck, open: [], found: 0, need: n, timer: 0, over: false, tries: 0, t0: 0, ms: 0, tick: 0 };
     const board = $(".pairsBoard");
     board.innerHTML = "";
     deck.forEach((card, i) => {
@@ -190,7 +216,20 @@ window.addEventListener("resize", pairsLayout);
 
 function pairsCountUpdate() {
     const g = pairsGame;
-    if (g) $(".pairsCount").textContent = g.found + " / " + g.need;
+    if (!g) return;
+    $(".pairsCount b").textContent = g.found + " / " + g.need;
+    $(".pairsTries b").textContent = g.tries;
+    $(".pairsTime b").textContent = pairsFmt(g.ms);
+}
+// Czas liczony od pierwszego odkrycia karty do znalezienia ostatniej pary.
+function pairsTimerStart(g) {
+    g.t0 = performance.now();
+    clearInterval(g.tick);
+    g.tick = setInterval(() => {
+        if (pairsGame !== g || g.over) return clearInterval(g.tick);
+        g.ms = performance.now() - g.t0;
+        $(".pairsTime b").textContent = pairsFmt(g.ms);
+    }, 100);
 }
 
 function pairsFlip(i) {
@@ -202,8 +241,11 @@ function pairsFlip(i) {
     if (g.open.length === 2) pairsHideOpen();
     c.el.classList.add("up");
     sfx("flip");
+    if (!g.t0) pairsTimerStart(g);
     g.open.push(c);
     if (g.open.length < 2) return;
+    g.tries++; // dwie karty odkryte = jedna próba
+    pairsCountUpdate();
     const [a, b] = g.open;
     if (a.id === b.id) {
         a.found = b.found = true;
@@ -217,6 +259,9 @@ function pairsFlip(i) {
         pairsCountUpdate();
         if (g.found >= g.need) {
             g.over = true;
+            g.ms = performance.now() - g.t0;
+            clearInterval(g.tick);
+            pairsCountUpdate();
             setTimeout(pairsWinShow, 700);
         }
     } else {
@@ -251,7 +296,10 @@ $(".pairsClose").onclick = () => {
 
 function pairsFinish(rewarded) {
     const got = rewarded && pairsGame;
-    if (pairsGame) clearTimeout(pairsGame.timer);
+    if (pairsGame) {
+        clearTimeout(pairsGame.timer);
+        clearInterval(pairsGame.tick);
+    }
     pairsGame = null;
     $(".pairsFull").hidden = true;
     const grace = clock + 4000 + Math.random() * 2500;
@@ -273,6 +321,28 @@ function pairsWinShow() {
     if (!g) return;
     pairsLastLevel = g.level;
     pairsMarkDone(g.level);
+    const R = pairsRecords(),
+        L = g.level,
+        time = Math.round(g.ms),
+        prevT = R.bestT[L],
+        prevN = R.bestN[L],
+        lastT = R.lastT[L],
+        lastN = R.lastN[L],
+        recT = prevT !== undefined && time < prevT,
+        recN = prevN !== undefined && g.tries < prevN;
+    if (prevT === undefined || time < prevT) R.bestT[L] = time;
+    if (prevN === undefined || g.tries < prevN) R.bestN[L] = g.tries;
+    R.lastT[L] = time;
+    R.lastN[L] = g.tries;
+    try {
+        localStorage.setItem(PAIRS_RECORDS, JSON.stringify(R));
+    } catch (_) {}
+    $("#pairsWinPopup .pairsRes").textContent = pairsFmt(time) + " · " + pairsTriesTxt(g.tries);
+    $("#pairsWinPopup .pairsRec").textContent = "Rekord: " + pairsFmt(R.bestT[L]) + " · " + pairsTriesTxt(R.bestN[L]);
+    $("#pairsWinPopup .pairsPrev").textContent = lastT !== undefined ? "Poprzednio: " + pairsFmt(lastT) + " · " + pairsTriesTxt(lastN) : "";
+    const st = $("#pairsWinPopup .pairsSticker");
+    st.hidden = !(recT || recN);
+    st.innerHTML = recT && recN ? "NOWE<br />REKORDY!" : recT ? "REKORD<br />CZASU!" : "REKORD<br />PRÓB!";
     $("#pairsWinPopup .memoWinImg").src = icons.cup;
     moleWinSpawnConfetti("#pairsWinPopup .moleWinConfetti");
     startQueue([{ sheet: "a01", anim: 13, time: 600000 }]);

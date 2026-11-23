@@ -137,3 +137,10 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 - `js/popup-guard.js`: przez 700 ms od pokazania karty (start, wygrana, przegrana, wybór poziomu/gry) klik w jej przyciskach jest ignorowany. Powód: dotyk, który otworzył kartę (np. ostatni motylek), kończył się kliknięciem w przycisk pod palcem i od razu startował nową grę.
 - Działa dla wszystkich kart z klasami `.molePopup`, `.moleWinPopup`, `.memoLevels`, `.pairsLevels`, `.gamesFull`. Nowa karta w tych klasach jest chroniona automatycznie.
+
+## 13. Znajdź pary — czas i próby
+
+- Pasek pod tytułem: **Czas** (od pierwszego odkrycia karty do ostatniej pary), **Próby** (jedno odkrycie dwóch kart = 1 próba; idealnie tyle prób, ile par), **Pary** (znalezione / wszystkie).
+- Dwa osobne rekordy na poziom: najkrótszy czas i najmniej prób, plus ostatni wynik (`localStorage`: `pairsRecords`).
+- Karta wygranej: wynik, „Rekord”, „Poprzednio”. Naklejka: „REKORD CZASU!”, „REKORD PRÓB!” albo „NOWE REKORDY!” — tylko gdy poprzedni rekord istniał i został pobity.
+- Wybór poziomu: tabelka Rekord/Ostatnio × Czas/Próby.
