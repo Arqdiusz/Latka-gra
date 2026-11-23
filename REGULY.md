@@ -148,3 +148,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 ## 14. Tempo biegu między pokojami
 
 - Bieg do wybranego pokoju (menu, autonomiczny): 320–340 px/s do sąsiedniego pokoju, a przy dwóch i więcej pokojach zawsze jedna prędkość 520 px/s. Strzałki i przesunięcie palcem też szybsze. Nogi pieska dopasowują się same (krok liczony z przebytej drogi).
+
+## 15. Stłuczone naczynie (Aport)
+- Mocny rzut w PRAWO (próg 3 i 4 z `BALL_TIERS`) ma 20% szansy, że piłka poleci 1 pokój dalej niż zwykle (40% z tego: 2 pokoje dalej). Jedno naczynie naraz — dopóki leży, nie ma kolejnego.
+- Brzęk (`sfx("glass")`) słychać w chwili pierwszego kontaktu piłki z ziemią w pokoju lądowania — zanim piesek tam dobiegnie. Skorupy (losowe z 4, `animacje/naczynia.png`, 4×40 px) pojawiają się za piłką, gdy odegrany lot dotknie ziemi.
+- `dishMess = {room, x, idx, shown}` zapisuje się w `save()` (tylko gdy `shown`). Sprzątanie: dotyk skorup w tym pokoju albo ukryty przycisk `.dishAccess` (`cleanDish`, +2 czystości).
+- `window.dishForce = N` wymusza przerzut o N pokoi (do testów).

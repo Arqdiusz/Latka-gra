@@ -135,6 +135,14 @@
         start: [500, () => melody([[N.C5, 0, 0.1], [N.G5, 0.09, 0.22]], { type: "triangle", vol: 0.2 })],
         // smutne westchnienie pieska — wolne zejście
         sad: [1500, () => tone(ctx.currentTime, 380, 0.7, { type: "sine", vol: 0.14, slideTo: 200, attack: 0.1 })],
+        // tłuczone szkło — jasny brzdęk + szum odłamków (głośniejszy, bo to "wydarzenie")
+        glass: [400, () => {
+            const t = ctx.currentTime;
+            noise(t, 0.35, { vol: 0.22, freq: 5200 });
+            for (const [f, o] of [[2637, 0], [3136, 0.02], [2093, 0.05], [3951, 0.09], [3322, 0.15]])
+                tone(t + o, f, 0.18, { type: "triangle", vol: 0.12, slideTo: f * 0.93 });
+            noise(t + 0.18, 0.2, { vol: 0.1, freq: 6500 });
+        }],
         // kupka / sprzątanie — "szur"
         wipe: [150, () => noise(ctx.currentTime, 0.2, { vol: 0.1, freq: 2500 })],
     };

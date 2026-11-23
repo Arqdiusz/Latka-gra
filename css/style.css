@@ -1035,7 +1035,8 @@ body {
 
 .petAccess,
 .poopAccess,
-.moleDirtAccess {
+.moleDirtAccess,
+.dishAccess {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -1045,7 +1046,8 @@ body {
 
 .petAccess:focus-visible,
 .poopAccess:focus-visible,
-.moleDirtAccess:focus-visible {
+.moleDirtAccess:focus-visible,
+.dishAccess:focus-visible {
     clip-path: none;
     width: auto;
     height: auto;

@@ -146,6 +146,9 @@ let loaded = false,
     // mapki ({ pokój: {x, y} }): dopóki leży w danym pokoju, nowy kret nie
     // wychodzi w TYM pokoju — pozostałe mapy nie są blokowane.
     moleDirts = {},
+    // Stłuczone naczynie po zbyt mocnym rzucie w aporcie (patrz minigame-fetch.js):
+    // { room, x (0..1), idx (0..3), shown } — leży, aż dziecko je posprzątane.
+    dishMess = null,
     // Motylek nakładany na klatki a02 oznaczone zielonym znacznikiem
     // (#00ff43) podczas pogoni/łapania w butterflyEvent() — patrz
     // catchMarker (wykrywane w boot()) i catchMarkerPos().
@@ -185,6 +188,7 @@ try {
         if (s.moleDirts) {
             for (const [r, d] of Object.entries(s.moleDirts)) if (GARDEN_ROOMS.includes(r) && d) moleDirts[r] = d;
         } else if (s.moleDirt && GARDEN_ROOMS.includes(s.moleDirt.room)) moleDirts[s.moleDirt.room] = s.moleDirt; // stary zapis
+        dishMess = s.dishMess && order.includes(s.dishMess.room) ? { ...s.dishMess, shown: true } : null;
         if (sleeping) room = "living";
         if (poop?.room === room) sleeping = false;
     }
@@ -432,7 +436,7 @@ function updateNeeds(seconds) {
 function save() {
     if (!loaded) return;
     try {
-        localStorage.setItem(KEY, JSON.stringify({ room, sleeping, left, poop, moleDirts }));
+        localStorage.setItem(KEY, JSON.stringify({ room, sleeping, left, poop, moleDirts, dishMess: dishMess?.shown ? dishMess : null }));
     } catch (e) {}
     saveNeeds();
 }
@@ -1453,6 +1457,7 @@ canvas.addEventListener("pointerdown", (e) => {
         dog: petHit(p.x, p.y),
         poop: poopHit(p.x, p.y),
         moleDirt: moleDirtHit(p.x, p.y),
+        dish: dishHit(p.x, p.y),
         catchFly: casual() ? butterflyHit(p.x, p.y) : false,
         butterfly: phase !== "butterfly" ? ambientHit(p.x, p.y) : null,
         hog: casual() ? hedgehogHit(p.x, p.y) : null,
@@ -1533,6 +1538,7 @@ function pointerEnd(e, cancel = false) {
         else if (g.hedge && hedgePeekHit(p.x, p.y)) hedgePeekTap();
         else if (g.poop && poopHit(p.x, p.y)) cleanPoop();
         else if (g.moleDirt && moleDirtHit(p.x, p.y)) cleanMoleDirt();
+        else if (g.dish && dishHit(p.x, p.y)) cleanDish();
         else if (g.catchFly && butterflyHit(p.x, p.y)) butterflyCatch();
         else if (g.dog && petHit(p.x, p.y)) react();
         else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientFlee(g.butterfly);
@@ -2319,6 +2325,7 @@ function moleDirtHit(px, py) {
 function updateMoleDirtAccess() {
     const btn = $(".moleDirtAccess");
     if (btn) btn.hidden = !moleDirts[room];
+    updateDishAccess();
 }
 
 function cleanMoleDirt() {
@@ -2332,6 +2339,42 @@ function cleanMoleDirt() {
     save();
 }
 $(".moleDirtAccess").onclick = cleanMoleDirt;
+
+// Stłuczone naczynie — leży w świecie jak kupka; dotyk (lub ukryty przycisk
+// dostępności) sprząta. Rysowane tylko, gdy piłka już dotknęła ziemi (shown).
+const DISH_SIZE = 84;
+function dishRect(dRoom = dishMess?.room) {
+    const offset = (order.indexOf(dRoom) - order.indexOf(room)) * W + roomOffset,
+        w = DISH_SIZE;
+    return { x: clamp(dishMess?.x ?? 0.5, 0.08, 0.92) * W - w / 2 + offset, y: GROUND + 10 - w + 6, w, h: w };
+}
+function dishHit(px, py) {
+    if (!dishMess?.shown || dishMess.room !== room) return false;
+    const r = dishRect();
+    return px > r.x - 10 && px < r.x + r.w + 10 && py > r.y - 10 && py < r.y + r.h + 10;
+}
+function updateDishAccess() {
+    const btn = $(".dishAccess");
+    if (btn) btn.hidden = !(dishMess?.shown && dishMess.room === room);
+}
+function cleanDish() {
+    if (!casual() || !dishMess?.shown || dishMess.room !== room) return;
+    dishMess = null;
+    updateMoleDirtAccess();
+    sfx("wipe");
+    say("star", 1600);
+    changeNeeds({ clean: 2 });
+    save();
+}
+$(".dishAccess").onclick = cleanDish;
+function dishDraw() {
+    const im = images.dish;
+    if (!im || !dishMess?.shown || Math.abs(order.indexOf(dishMess.room) - order.indexOf(room)) > 1) return;
+    const r = dishRect();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(im, dishMess.idx * 40, 0, 40, 40, r.x, r.y, r.w, r.h);
+    ctx.imageSmoothingEnabled = true;
+}
 
 function moleDirtDraw() {
     if (!cells.kret.length) return;
@@ -2734,6 +2777,7 @@ function draw(dt) {
             ctx.restore();
         }
     }
+    dishDraw(); // skorupy za piłką (piłka leży przed nimi)
     ballDraw();
     moleDirtDraw();
     bubbleDraw(dt);
@@ -2904,6 +2948,7 @@ async function boot() {
     CFG.hedgehogGame = hedgehogGameAnim;
     UI = CFG.ui;
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
+    images.dish = await loadImage("animacje/naczynia.png");
     // Stary dwuklatkowy motyl-1.png/motyl-2.png (P.assets.butterflies) nie
     // jest już używany — cały butterflyEvent() lata teraz jedną, spójną
     // grafiką z motyle-new.png (patrz eventButterflyCell()).

@@ -193,7 +193,17 @@ function ballReadySegment() {
 }
 
 // Zabawa skończona — popup z animacją piłki, potem zwykłe idle
+// Naczynie na pewno już leży (pies podniósł piłkę / koniec zabawy) — pokaż je i zapisz
+function dishShowNow() {
+    if (dishMess && !dishMess.shown) {
+        dishMess.shown = true;
+        updateDishAccess();
+        save();
+    }
+}
+
 function fetchFinish(rewarded) {
+    dishShowNow();
     const got = rewarded && fetchGame && fetchGame.throws > 0;
     fetchGame = null;
     ball = null;
@@ -477,8 +487,16 @@ function ballLaunch(fvx, fvh) {
             edgeX = dir > 0 ? nextIdx * W : (nextIdx + 1) * W, // granica z sąsiednim pokojem
             { w: bw } = ballSize();
         // prędkość wyrzutu dla kąta: bisekcja → piłka staje na głębokości d
+        // Zbyt mocny rzut w prawo: czasem 1–2 pokoje za daleko → stłuczone naczynie
+        // (window.dishForce — wymuszenie do testów: liczba dodatkowych pokoi)
+        let extra = 0;
+        if (dir > 0 && BALL_TIERS.indexOf(tier) >= 2 && !dishMess) {
+            const max = order.length - 1 - nextIdx;
+            if (window.dishForce) extra = Math.min(window.dishForce, max);
+            else if (Math.random() < 0.2) extra = Math.min(1 + (Math.random() < 0.4 ? 1 : 0), max);
+        }
         const solve = (deg, d) => {
-            const targetX = (nextIdx + (dir > 0 ? d : 1 - d)) * W,
+            const targetX = (nextIdx + extra + (dir > 0 ? d : 1 - d)) * W,
                 c = Math.cos((deg * Math.PI) / 180),
                 sn = Math.sin((deg * Math.PI) / 180);
             let lo = 50,
@@ -502,16 +520,32 @@ function ballLaunch(fvx, fvh) {
         // coraz dalsze (±4°, ±8°…); przy każdym kącie można też przesunąć
         // miejsce zatrzymania głębiej w sąsiednim pokoju
         const deltas = [0, 4, -4, 8, -8, 12, -12, 16, 20, 24, 28, 32];
-        search: for (const dd of deltas) {
-            deg = deg0 + dd;
-            if (deg < 6 || deg > 82) continue;
-            for (let d = d0; d <= 0.8 + 1e-9; d += 0.07) {
-                p = solve(deg, d);
-                if (good(p)) break search;
+        let found = false;
+        for (;;) {
+            search: for (const dd of deltas) {
+                deg = deg0 + dd;
+                if (deg < 6 || deg > 82) continue;
+                for (let d = extra ? 0.3 : d0; d <= 0.8 + 1e-9; d += 0.07) {
+                    p = solve(deg, d);
+                    if (good(p)) {
+                        found = true;
+                        break search;
+                    }
+                }
             }
+            // nie ma dobrego toru na tak daleki rzut → zwykły rzut do sąsiedniego pokoju
+            if (found || !extra) break;
+            extra = 0;
         }
         path = p;
-        restIdx = nextIdx;
+        restIdx = nextIdx + extra;
+        if (extra) {
+            // naczynie za piłką (piesek nadbiega z lewej, więc piłka leży przed nim)
+            const endX = path[path.length - 1].X / W - restIdx,
+                touchT = path.find((q, i) => i > 0 && (q.X / W) >= restIdx && q.hb === 0)?.t ?? path[path.length - 1].t;
+            dishMess = { room: order[restIdx], x: clamp(endX + 0.1, 0.12, 0.92), idx: Math.floor(Math.random() * 4), shown: false, touchT, armed: false };
+            setTimeout(() => dishMess && !dishMess.shown && fetchGame && sfx("glass"), touchT);
+        }
         tExit = 0;
         for (const q of path) if (ballVisibleIn(q, homeIdx)) tExit = q.t;
         fetchGame.zone = ballExitZone(path, homeIdx);
@@ -598,6 +632,12 @@ function ballFlightUpdate() {
     // odgrywany jeszcze raz od wejścia w kadr (replay), gdy dobiegnie pies.
     // Kasuje go dopiero podniesienie piłki (ballPickupPart).
     if (clock - f.t0 >= f.tRest) ball.y = 0;
+    // skorupy pojawiają się w chwili, gdy (odegrana w pokoju lądowania) piłka dotknie ziemi
+    if (dishMess && dishMess.armed && !dishMess.shown && clock - f.t0 >= dishMess.touchT) {
+        dishMess.shown = true;
+        updateDishAccess();
+        save();
+    }
 }
 
 // Zgodność ze starym API (panel testowy): rzut "machnięciem" dx, dy
@@ -669,6 +709,7 @@ function fetchChaseTo(land, opts = {}) {
             onStart: () => {
                 stage = "ball-land";
                 dogHidden = true;
+                if (dishMess) dishMess.armed = true;
                 if (ballFlight) ballFlight.t0 = clock - tEnter; // tor od wejścia w kadr
             },
         });
@@ -694,6 +735,7 @@ function ballPickupPart(fromDir) {
         onStart: () => {
             stage = "ball-pickup";
             ballFlight = null;
+            dishShowNow();
             say("heart", 1800);
         },
         onEnd: () => {
