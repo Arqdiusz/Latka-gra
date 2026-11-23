@@ -71,10 +71,14 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - rzadsze dymki dla „śpiącej" pory dnia.
 
 ## 4a. Aport (rzucanie piłki)
-- Piłkę trzeba **złapać palcem** (przy łapach pieska), pociągnąć i puścić. Leci z prędkością ostatnich ~0,1 s ruchu palca (×0,65, maks. 1150 px/s) po prawdziwym rzucie ukośnym: grawitacja, odbicia od ziemi, toczenie, odbicie od ściany na końcach świata (lewa krawędź Łąki, prawa łazienki; ściana „zjada” 70% prędkości).
-- Wylot z ekranu: 8 stref — lewo/prawo × nisko/środek/wysoko oraz góra-lewo/góra-prawo. W pokoju lądowania piłka wpada dokładnie tak, jak wyleciała (ta sama wysokość i prędkość): z boku nisko — wtacza się, wyżej — wpada łukiem i odbija, z góry — spada z nieba.
-- Słaby rzut / samo puszczenie: piłka spada w tym samym pokoju (też liczy się jako rzut).
-- Piłka nie zatrzymuje się tuż przy granicy pokoju (margines 14%) ani dalej niż 2 pokoje (korekta samego końca toczenia).
+- Piłkę trzeba **złapać palcem** (przy łapach pieska), pociągnąć i puścić. Piesek przynosi ją zawsze do punktu startowego.
+- **Gra decyduje, jak leci piłka** — z ruchu palca bierzemy tylko kierunek (lewo/prawo), kąt i trochę siły:
+  - kąt → strefa wylotu: < 12° nisko (piłka wtacza się do sąsiedniego pokoju), 12–35° środek, 35–62° wysoko, > 62° góra (piłka znika u góry i spada z nieba w sąsiednim pokoju),
+  - siła (330–1800 px/s palca, mocniej nic nie zmienia) → jak głęboko w sąsiednim pokoju piłka stanie (26–64% pokoju ± trochę losowości).
+- Piłka **zawsze ląduje w sąsiednim pokoju** w stronę rzutu (nigdy dalej). Tor to prawdziwy rzut (grawitacja, odbicia, toczenie) — dobieramy tylko prędkość początkową, więc lot wygląda naturalnie.
+- **Lekki rzut / samo puszczenie** (palec wolniej niż 330 px/s): piłka toczy się kawałek (14–22% pokoju) w tym samym pokoju.
+- Rzut w stronę, gdzie nie ma pokoju (koniec świata): piłka toczy się w tym samym pokoju.
+- Piłka nie staje tuż przy granicy pokoju (margines 14%).
 - Stałe `BALL_*` w `js/minigame-fetch.js`.
 
 ## 5. Gry
