@@ -28,6 +28,24 @@ const memoCanvas = $(".memoCanvas"),
     MEMO_ROUNDS = 3, // rund w jednej grze (na wybranym poziomie), każda z nowym wzorem
     MEMO_BETWEEN_MS = 1300; // pauza "Brawo!" między rundami
 
+// Czasy: tylko faza „klikaj” (bez pokazywania wzoru i pauz), suma 3 rund.
+// Zapis: { best: {poziom: ms}, last: {poziom: ms} } w localStorage.
+const MEMO_TIMES = "memoTimes";
+function memoTimes() {
+    try {
+        const t = JSON.parse(localStorage.getItem(MEMO_TIMES) || "{}");
+        return { best: t.best || {}, last: t.last || {} };
+    } catch (_) {
+        return { best: {}, last: {} };
+    }
+}
+function memoFmt(ms) {
+    const s = ms / 1000;
+    if (s < 60) return s.toFixed(1).replace(".", ",") + " s";
+    const m = Math.floor(s / 60);
+    return m + ":" + (s - m * 60).toFixed(1).replace(".", ",").padStart(4, "0");
+}
+
 let memoLevelsShownAt = 0; // dotyk, który otworzył ekran poziomów, nie może wybrać kafelka
 
 function memoDone() {
@@ -158,7 +176,7 @@ function memoNewSeq(lv) {
     return seq;
 }
 function memoTitleSet(g) {
-    $(".memoTitle").textContent = "Runda " + g.round + "/" + MEMO_ROUNDS + (g.state === "play" ? " · Klikaj!" : " · Zapamiętaj!");
+    $(".memoTitle").textContent = "Runda " + g.round + "/" + MEMO_ROUNDS; // krótko — obok jest licznik czasu
 }
 
 // Koniec rundy (nie ostatniej): chwila "Brawo!", potem nowy wzór i znów 3 szanse.
@@ -171,7 +189,8 @@ function memoRoundDone(g) {
 
 function memoStart(level) {
     const lv = MEMO_LEVELS[level];
-    memoGame = { level, lv, seq: memoNewSeq(lv), round: 1, step: 0, lives: MEMO_LIVES, state: "show", t0: clock, flies: [], effects: [], over: false, last: clock };
+    $(".memoTimer").textContent = memoFmt(0);
+    memoGame = { level, lv, seq: memoNewSeq(lv), round: 1, playMs: 0, step: 0, lives: MEMO_LIVES, state: "show", t0: clock, flies: [], effects: [], over: false, last: clock };
     memoTitleSet(memoGame);
     say("fun", 1500);
     startQueue([
@@ -229,6 +248,20 @@ function memoWinShow() {
     g.over = true;
     g.flies.length = 0;
     memoMarkDone(g.level);
+    const tm = memoTimes(),
+        prevBest = tm.best[g.level],
+        prevLast = tm.last[g.level],
+        time = Math.round(g.playMs),
+        isRecord = prevBest !== undefined && time < prevBest;
+    if (prevBest === undefined || time < prevBest) tm.best[g.level] = time;
+    tm.last[g.level] = time;
+    try {
+        localStorage.setItem(MEMO_TIMES, JSON.stringify(tm));
+    } catch (_) {}
+    $("#memoWinPopup .memoTime").textContent = "Twój czas: " + memoFmt(time);
+    $("#memoWinPopup .memoRecord").textContent =
+        "Rekord: " + memoFmt(tm.best[g.level]) + (prevLast !== undefined ? " · Poprzednio: " + memoFmt(prevLast) : "");
+    $("#memoWinPopup .memoSticker").hidden = !isRecord;
     $("#memoWinPopup .memoWinImg").src = icons.cup;
     moleWinSpawnConfetti("#memoWinPopup .moleWinConfetti");
     startQueue([{ sheet: "a01", anim: 13, time: 600000 }]);
@@ -248,10 +281,9 @@ $("#memoWinPopup .memoExit").onclick = () => {
     $("#memoWinPopup").hidden = true;
     memoFinish(true);
 };
-$("#memoWinPopup .memoNext").onclick = () => {
-    // "Wybierz poziom": nagroda za wygraną i powrót do ekranu poziomów
-    $("#memoWinPopup").hidden = true;
-    memoFinish(true);
+// Powrót do ekranu wyboru poziomów (po wygranej i po przegranej)
+function memoToLevels(rewarded) {
+    memoFinish(rewarded);
     startQueue([
         {
             sheet: "a01",
@@ -265,6 +297,15 @@ $("#memoWinPopup .memoNext").onclick = () => {
         },
     ]);
     memoShowLevels();
+}
+$("#memoWinPopup .memoNext").onclick = () => {
+    // "Wybierz poziom": nagroda za wygraną i powrót do ekranu poziomów
+    $("#memoWinPopup").hidden = true;
+    memoToLevels(true);
+};
+$("#memoLosePopup .memoPick").onclick = () => {
+    $("#memoLosePopup").hidden = true;
+    memoToLevels(false);
 };
 $("#memoWinPopup .winAgain").onclick = () => {
     $("#memoWinPopup").hidden = true;
@@ -333,6 +374,10 @@ function memoGameUpdate() {
     const dt = Math.min(60, clock - g.last);
     g.last = clock;
     if (g.over) return;
+    if (g.state === "play") {
+        g.playMs += dt;
+        $(".memoTimer").textContent = memoFmt(g.playMs);
+    }
     if (g.state === "show" && clock - g.t0 >= MEMO_SHOW_MS) {
         g.state = "play";
         g.t0 = clock;
