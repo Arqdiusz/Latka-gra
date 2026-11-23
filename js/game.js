@@ -33,48 +33,49 @@ const
 // Mapy plenerowe ("ogrodowe") — tylko na nich występują kopce kreta, jeżyk i
 // motylki-tło.
 const GARDEN_ROOMS = ["meadow", "garden", "yard"];
+// Kolory menu = kolory statusów (STAT_FILL) rozjaśnione o 20% (mieszanie z bielą).
 const items = [
     {
         id: "food",
         icon: "food",
         label: "Nakarm",
         room: "kitchen",
-        color: "#ec8d8c",
+        color: "#ee8885",
     },
     {
         id: "water",
         icon: "water",
         label: "Napój",
         room: "kitchen",
-        color: "#73bcde",
+        color: "#63b2e1",
     },
     {
         id: "fun",
         icon: "fun",
         label: "Zabawa",
         room: "garden",
-        color: "#d2e146",
+        color: "#c7d94e",
     },
     {
         id: "sleep",
         icon: "sleep",
         label: "Sen",
         room: "living",
-        color: "#c3adfb",
+        color: "#ae95f2",
     },
     {
         id: "clean",
         icon: "clean",
         label: "Mycie",
         room: "bathroom",
-        color: "#fde598",
+        color: "#72d3b0",
     },
     {
         id: "brush",
         icon: "brush",
         label: "Szczotkowanie",
         room: "living",
-        color: "#ffdfb5",
+        color: "#72d3b0",
     },
     {
         // Wybór mini-gier (js/games-menu.js) — bez pokoju, piesek nigdzie nie idzie.
