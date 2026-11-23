@@ -83,9 +83,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 | > 2000 | 1180 px/s | 82° | ok. 62% |
 
 - Strefa wylotu (8 stref: lewo/prawo × nisko/środek/wysoko, góra-lewo/prawo) wynika z kąta i siły.
-- **W sąsiednim pokoju przejmuje gra:** piłka wpada jako przedłużenie lotu (ta sama wysokość i pion; po wylocie górą — spada z nieba), ale prędkość pozioma może być zmniejszona do min. 50% (`BALL_SLOWDOWN_MIN`), żeby piłka zawsze stanęła w tym pokoju. Gdy to nie wystarcza, mocniej hamuje samo toczenie.
-- Piłka nigdy nie leci dalej niż do sąsiedniego pokoju; nie staje tuż przy granicy pokoju (margines 14%).
-- Rzut w stronę, gdzie nie ma pokoju (koniec świata): odbicie od ściany, piłka zostaje w tym pokoju.
+- **W sąsiednim pokoju przejmuje gra** — piłka ZAWSZE w nim ląduje: wpada z tej samej strony (z boku 70–200 px nad ziemią, już opadając; po wylocie górą spada z nieba), dotyka ziemi najwyżej w 80% pokoju, odbija się, toczy chwilę i staje na zaplanowanej głębokości. Prędkość wejścia dobiera bisekcja; nigdy nie jest większa niż przy wylocie (piłka może tylko zwolnić).
+- Piłka nigdy nie leci dalej niż do sąsiedniego pokoju i **nigdy nie odbija się od ściany**; nie staje tuż przy granicy pokoju (margines 14%).
+- Rzut w stronę, gdzie nie ma pokoju (koniec świata): piłka toczy się kawałek w tym samym pokoju (jak lekki rzut).
 - Stałe `BALL_*` w `js/minigame-fetch.js`.
 
 ## 5. Gry

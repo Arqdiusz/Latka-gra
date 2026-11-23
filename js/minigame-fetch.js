@@ -400,10 +400,11 @@ function ballVisibleIn(s, ri) {
 // z jednego z 4 progów siły (BALL_TIERS) — mocniejszy rzut naprawdę leci
 // szybciej i wyżej, a strefa wylotu (8 stref) wynika z kąta i siły.
 // Gdy piłka zniknie z kadru, przejmuje gra: w sąsiednim pokoju piłka wpada
-// jako przedłużenie lotu (ta sama wysokość i kierunek; z góry — spada z
-// nieba), ale może być lekko SPOWOLNIONA (min. BALL_SLOWDOWN_MIN prędkości
-// poziomej), żeby zawsze stanęła w tym pokoju, tym głębiej, im mocniej
-// rzucono. Kadru nie widać naraz, więc to "oszustwo" jest niewidoczne.
+// z tej samej strony (z boku 70–200 px nad ziemią, już opadając; po
+// wylocie górą — spada z nieba), z prędkością dobraną tak, żeby ZAWSZE
+// wylądowała w tym pokoju: dotknęła ziemi, odbiła się, potoczyła i stanęła
+// tym głębiej, im mocniej rzucono. Nigdy nie leci dalej i nie odbija się od
+// ściany. Obu kadrów nie widać naraz, więc to "oszustwo" jest niewidoczne.
 const BALL_LIGHT_SPEED = 330; // palec wolniej [px/s] — lekki rzut: piłka toczy się kawałek w tym pokoju
 const BALL_TIERS = [
     // od prędkości palca → prędkość wyrzutu [px/s], maks. kąt, jak głęboko stanie w sąsiednim pokoju
@@ -412,7 +413,6 @@ const BALL_TIERS = [
     { from: 1300, v: 960, maxDeg: 75, depth: 0.52 },
     { from: 2000, v: 1180, maxDeg: 82, depth: 0.62 },
 ];
-const BALL_SLOWDOWN_MIN = 0.5;
 
 // Prędkość pozioma (przy danej pionowej), dla której piłka stanie w X —
 // bisekcja na symulacji; ściana na końcu świata = "za daleko".
@@ -469,62 +469,64 @@ function ballLaunch(fvx, fvh) {
             V *= 1.08;
         }
         if (iEx > 0 && hasNext) {
+            // W sąsiednim pokoju budujemy wejście tak, żeby piłka NA PEWNO
+            // wylądowała w nim: dotknęła ziemi, odbiła się i potoczyła, i
+            // stanęła na głębokości `depth`. Nie ma tu ścian ani kolejnych
+            // pokoi — pierwszy kontakt z ziemią najwyżej w 80% pokoju.
             const ex = pathA[iEx],
                 top = ballVisibleIn({ ...ex, hb: 0 }, homeIdx), // poziomo jeszcze w kadrze → wyleciała górą
-                apex = ex.vh > 0 ? ex.hb + (ex.vh * ex.vh) / (2 * BALL_G) : ex.hb,
-                depth = clamp(tier.depth + rnd(-0.05, 0.05), 0.2, 0.8),
+                depth = clamp(tier.depth + rnd(-0.05, 0.05), 0.24, 1 - BALL_EDGE_MARGIN - 0.04),
                 local = (d) => (dir > 0 ? d : 1 - d),
+                // wejście: z boku na wysokości wylotu (najwyżej 200 px, już
+                // opadając), z góry — spada z nieba trochę za krawędzią
+                e = top
+                    ? {
+                          X: (nextIdx + local(clamp(depth - 0.2, 0.08, 0.3))) * W,
+                          hb: BALL_FLOOR() + 6,
+                          vh: -Math.min(420, Math.sqrt(2 * BALL_G * Math.max(0, (ex.vh > 0 ? ex.hb + (ex.vh * ex.vh) / (2 * BALL_G) : ex.hb) - BALL_FLOOR()))),
+                      }
+                    : {
+                          X: dir > 0 ? nextIdx * W - w / 2 : (nextIdx + 1) * W + w / 2,
+                          hb: clamp(ex.hb, 70, 200), // zawsze w powietrzu → wyląduje i się odbije
+                          vh: Math.min(ex.vh, 0) * 0.5,
+                      },
+                tGround = (e.vh + Math.sqrt(e.vh * e.vh + 2 * BALL_G * e.hb)) / BALL_G,
+                // najszybciej tak, by pierwszy kontakt z ziemią był w 80% pokoju
+                vMax = Math.max(60, Math.abs((nextIdx + local(0.8)) * W - e.X) / Math.max(0.15, tGround)),
+                vExit = Math.abs(ex.vx),
                 targetX = (nextIdx + local(depth)) * W,
-                entry = (k) =>
-                    top
-                        ? {
-                              // z nieba: wpada od góry, trochę przed miejscem lądowania
-                              X: (nextIdx + local(clamp(depth - 0.22, 0.06, 0.5))) * W,
-                              hb: BALL_FLOOR() + 6,
-                              vx: ex.vx * k,
-                              vh: -Math.sqrt(2 * BALL_G * Math.max(0, apex - BALL_FLOOR() - 6)),
-                          }
-                        : {
-                              // z boku: ta sama wysokość i pion, poziom ewentualnie wolniej
-                              X: dir > 0 ? nextIdx * W - w / 2 : (nextIdx + 1) * W + w / 2,
-                              hb: ex.hb,
-                              vx: ex.vx * k,
-                              vh: ex.vh,
-                          },
-                simB = (k, decel) => {
-                    const e = entry(k);
-                    return ballSimulate(e.X, e.hb, e.vx, e.vh, decel);
-                },
-                endOf = (p) => p[p.length - 1].X;
-            // spowolnienie k: bisekcja, żeby piłka stanęła na głębokości depth
-            let lo = BALL_SLOWDOWN_MIN,
-                hi = 1;
-            if ((endOf(simB(1)) - targetX) * dir <= 0) lo = hi = 1; // i tak nie doleci dalej — bez spowalniania
-            for (let i = 0; i < 22 && hi - lo > 0.002; i++) {
-                const mid = (lo + hi) / 2,
-                    p = simB(mid);
-                if (!p.hitWall && (endOf(p) - targetX) * dir < 0) lo = mid;
+                restOf = (v, decel) => {
+                    const p = ballSimulate(e.X, e.hb, dir * v, e.vh, decel);
+                    return { p, x: p[p.length - 1].X };
+                };
+            // prędkość pozioma na wejściu: bisekcja → piłka staje w targetX;
+            // nigdy szybciej niż przy wylocie (piłka może tylko zwolnić)
+            let lo = 30,
+                hi = Math.min(vMax, Math.max(vExit, 60));
+            for (let i = 0; i < 24; i++) {
+                const mid = (lo + hi) / 2;
+                if ((restOf(mid).x - targetX) * dir < 0) lo = mid;
                 else hi = mid;
             }
-            slow = lo;
-            let pathB = simB(slow),
-                decel = BALL_ROLL_DECEL;
-            // nawet przy maks. spowolnieniu za daleko → szybciej hamuje toczenie
+            slow = vExit ? lo / vExit : 1;
+            let decel = BALL_ROLL_DECEL,
+                b = restOf(lo, decel);
+            // ostatnia deska ratunku: dłuższe toczenie niż pokój → mocniej hamuje trawa
             for (let i = 0; i < 10; i++) {
-                const e = endOf(pathB) / W - nextIdx;
-                if (!pathB.hitWall && e >= BALL_EDGE_MARGIN && e <= 1 - BALL_EDGE_MARGIN) break;
+                const loc = b.x / W - nextIdx;
+                if (!b.p.hitWall && loc >= BALL_EDGE_MARGIN && loc <= 1 - BALL_EDGE_MARGIN) break;
                 decel *= 1.5;
-                pathB = simB(slow, decel);
+                b = restOf(lo, decel);
             }
+            const pathB = b.p;
             tExit = ex.t;
             const dt0 = ex.t + 1000 / 120;
             path = pathA.slice(0, iEx + 1).concat(pathB.map((q) => ({ ...q, t: q.t + dt0 })));
             restIdx = nextIdx;
             fetchGame.zone = ballExitZone(pathA, homeIdx);
-        } else if (iEx > 0) {
-            // koniec świata — odbicie od ściany, piłka zostaje w tym pokoju
-            path = pathA;
         }
+        // koniec świata (brak pokoju w tę stronę): bez odbijania od ściany —
+        // piłka toczy się kawałek w tym pokoju, jak przy lekkim rzucie
     }
     if (!path) {
         // Lekki rzut / samo puszczenie: piłka toczy się kawałek w TYM pokoju
