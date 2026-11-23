@@ -967,46 +967,6 @@ body {
     image-rendering: pixelated;
 }
 
-.ballPopup {
-    position: absolute;
-    inset: 0;
-    background: #3b2e3c38;
-    z-index: 25;
-    display: grid;
-    place-items: center;
-    padding: 20px;
-}
-
-.ballPopup[hidden] {
-    display: none;
-}
-
-.ballCard {
-    width: 260px;
-    max-width: 100%;
-    background: #fff8ea;
-    border: 5px solid white;
-    border-radius: 30px;
-    box-shadow: 0 6px #0002;
-    text-align: center;
-    padding: 18px 18px 20px;
-}
-
-.ballIcon {
-    display: block;
-    width: 56px;
-    height: 56px;
-    margin: 0 auto 10px;
-    image-rendering: pixelated;
-}
-
-.ballCard p {
-    margin: 0 0 16px;
-    font-size: 15px;
-    line-height: 1.4;
-    color: #59485d;
-}
-
 .ballOk {
     border: none;
     border-radius: 14px;
@@ -2108,4 +2068,98 @@ body.sadLock .arrow {
     display: block;
     background: #fff9e9;
     border-color: #e6d9bd;
+}
+
+/* ═══ Wspólny wygląd przycisków we wszystkich mini-grach ═══════════════
+   Kolor = znaczenie:  zielony — zagraj / zaczynamy,  niebieski — wybierz
+   poziom,  czerwony — powrót / anuluj / zamknij (✕). Ten sam rozmiar,
+   ikona z lewej, „wciskany” cień. */
+.btnGreen { --b: #58b04a; --bh: #4a9d3d; --sh: #3b7f30; }
+.btnBlue  { --b: #3d8fd6; --bh: #3180c5; --sh: #266aa8; }
+.btnRed   { --b: #d9534f; --bh: #c9433f; --sh: #a93a36; }
+
+.moleCard > button,
+.moleWinCard > button.winAgain,
+.moleWinCard > button.moleWinOk,
+.ballCard > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 64px;
+    margin: 0;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 20px;
+    font: inherit;
+    font-weight: 700;
+    font-size: 21px;
+    color: white;
+    background: var(--b);
+    box-shadow: 0 5px 0 var(--sh);
+    cursor: pointer;
+    transition: transform 0.06s, box-shadow 0.06s;
+}
+.moleCard > button + button,
+.moleWinCard > button + button {
+    margin-top: 16px;
+}
+.moleCard > button:hover,
+.moleWinCard > button.winAgain:hover,
+.moleWinCard > button.moleWinOk:hover {
+    background: var(--bh);
+}
+.moleCard > button:active,
+.moleWinCard > button.winAgain:active,
+.moleWinCard > button.moleWinOk:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 var(--sh);
+}
+/* przycisk pod tekstem (karta końcowa): trochę oddechu */
+.moleWinCard > p + button {
+    margin-top: 6px;
+}
+
+/* ikony: ▶ (zielony start), ↻ (zielony „jeszcze raz” — inline svg), ‹ (czerwony powrót), ▦ (niebieski wybór) */
+.moleWinCard > button.winAgain svg {
+    width: 28px;
+    height: 28px;
+}
+.moleWinOk.btnRed::before,
+.moleCancel.btnRed::before {
+    content: "";
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15 4l-8 8 8 8' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15 4l-8 8 8 8' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.moleWinOk.btnBlue::before {
+    content: "";
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h6.5v6.5H4zM13.5 4H20v6.5h-6.5zM4 13.5h6.5V20H4zM13.5 13.5H20V20h-6.5z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h6.5v6.5H4zM13.5 4H20v6.5h-6.5zM4 13.5h6.5V20H4zM13.5 13.5H20V20h-6.5z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+/* ▶ zielony start: ::before istnieje już dla .moleOk/.ballOk (kolor currentColor = biały) */
+
+/* Czerwony ✕ „zamknij” — jedna wielkość i miejsce w każdej grze (prawy górny róg) */
+.moleBack {
+    width: 42px;
+    height: 42px;
+    margin-left: auto;
+    border: 3px solid white;
+    background: #d9534f;
+    font-size: 17px;
+    box-shadow: 0 3px 6px #0003;
+}
+.moleBack:active {
+    background: #c9433f;
+}
+.moleWinCard > button.moleWinOk {
+    margin-top: 16px;
 }

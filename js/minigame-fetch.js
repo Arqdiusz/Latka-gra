@@ -124,6 +124,11 @@ function ballIntroShow(onOk) {
         },
     ]);
 }
+$(".ballCancel").onclick = () => {
+    $(".ballPopup").hidden = true;
+    ballIntroResume = null;
+    idle(16);
+};
 $(".ballOk").onclick = () => {
     $(".ballPopup").hidden = true;
     const resume = ballIntroResume;
@@ -197,17 +202,24 @@ function fetchFinish(rewarded) {
         phase = "activity";
         pending = "fun";
         locks();
-        // Popup natychmiast po przynesieniu piłki — bez zbędnych animacji przed nim.
-        $(".popup").hidden = false;
-        $(".reward").src = icons.fun;
-        startQueue([
-            {
-                sheet: "a02", anim: 8, time: 1800,                          // piłka zachęta w popupie
-                onEnd: () => ($(".popup").hidden = true),
-            },
-        ]);
+        // Ekran końcowy jak w innych grach: puchar, konfetti, „Zagraj ponownie” / „Powrót”.
+        phase = "ball-end";
+        stage = "ball-end";
+        pending = null;
+        $("#ballWinPopup .ballWinImg").src = icons.cup;
+        moleWinSpawnConfetti("#ballWinPopup .moleWinConfetti");
+        $("#ballWinPopup").hidden = false;
+        startQueue([{ sheet: "a01", anim: 13, time: 600000, onEnd: () => ($("#ballWinPopup").hidden = true) }]);
     } else idle(16);
 }
+$("#ballWinPopup .ballExit").onclick = () => {
+    $("#ballWinPopup").hidden = true;
+    idle(16);
+};
+$("#ballWinPopup .ballAgain").onclick = () => {
+    $("#ballWinPopup").hidden = true;
+    fetchStart();
+};
 
 // ── Rzut: piłka to obiekt do złapania ─────────────────────────
 // Dziecko dotyka piłki przy łapach pieska, ciągnie ją palcem i puszcza.

@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.139</title>
-        <link rel="stylesheet" href="css/style.css?v=158" />
+        <title>Łatka v0.8.141</title>
+        <link rel="stylesheet" href="css/style.css?v=160" />
     </head>
 
     <body>
@@ -86,8 +86,8 @@
             </div>
             <div class="moleFull" hidden>
                 <div class="moleHeader">
-                    <button class="moleBack" aria-label="Zakończ zabawę w kreta">‹</button>
                     <div class="moleTitle"><strong>Kretowisko</strong><span>Zabawa z pieskiem</span></div>
+                    <button class="moleBack" aria-label="Zakończ zabawę w kreta">✕</button>
                 </div>
                 <div class="moleProgressCard">
                     <div class="moleCount"><span class="moleCountNow">0</span> / <span class="moleCountNeed">10</span></div>
@@ -111,8 +111,8 @@
                     </div>
                     <h2>Brawo!</h2>
                     <p>Złapałaś wszystkie krety!</p>
-                    <button class="moleWinOk">Powrót</button>
-                    <button class="winAgain moleWinAgain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="winAgain moleWinAgain btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="moleWinOk btnRed">Powrót</button>
                 </div>
             </div>
             <div class="moleWinPopup bubbleWinPopup" hidden>
@@ -126,8 +126,8 @@
                     </div>
                     <h2>Brawo!</h2>
                     <p>Jamniczek jest czyściutki!</p>
-                    <button class="bubbleWinOk moleWinOk">Powrót</button>
-                    <button class="winAgain bubbleWinAgain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="winAgain bubbleWinAgain btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="bubbleWinOk moleWinOk btnRed">Powrót</button>
                 </div>
             </div>
             <div class="molePopup hedgePopup" hidden>
@@ -147,8 +147,8 @@
                         </div>
                     </div>
                     <p>Przesuwaj palcem w bok, żeby jeżyk biegał. Zbierz 10 owoców!</p>
-                    <button class="hedgeOk moleOk">Zaczynamy!</button>
-                    <button class="hedgeCancel moleCancel">Wróć do pieska</button>
+                    <button class="hedgeOk moleOk btnGreen">Zaczynamy!</button>
+                    <button class="hedgeCancel moleCancel btnRed">Wróć do pieska</button>
                 </div>
             </div>
             <div class="moleWinPopup hedgeWinPopup" hidden>
@@ -162,8 +162,8 @@
                     </div>
                     <h2>Brawo!</h2>
                     <p>Jeżyk ma pełny brzuszek owoców!</p>
-                    <button class="hedgeWinOk moleWinOk">Powrót</button>
-                    <button class="winAgain hedgeWinAgain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="winAgain hedgeWinAgain btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="hedgeWinOk moleWinOk btnRed">Powrót</button>
                 </div>
             </div>
             <div class="molePopup" id="mole2Popup" hidden>
@@ -171,8 +171,8 @@
                     <img class="moleIntroIcon" alt="" />
                     <h2>Krety na łące!</h2>
                     <p>Na trawie wyrastają kopce. Stuknij kreta, gdy wyjdzie cały! Tracisz punkt za puste kopce i za kreta, który nie wyszedł cały. Zbierz 10.</p>
-                    <button class="moleOk">Zaczynamy!</button>
-                    <button class="moleCancel">Wróć do pieska</button>
+                    <button class="moleOk btnGreen">Zaczynamy!</button>
+                    <button class="moleCancel btnRed">Wróć do pieska</button>
                 </div>
             </div>
             <div class="moleWinPopup" id="mole2WinPopup" hidden>
@@ -186,8 +186,8 @@
                     </div>
                     <h2>Brawo!</h2>
                     <p>Złapałaś wszystkie krety na łące!</p>
-                    <button class="moleWinOk">Powrót</button>
-                    <button class="winAgain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="winAgain btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="moleWinOk btnRed">Powrót</button>
                 </div>
             </div>
             <div class="molePopup" id="pairsPopup" hidden>
@@ -196,8 +196,8 @@
                     <h2>Znajdź pary!</h2>
                     <div class="pairsTutCards" aria-hidden="true"></div>
                     <p>Odkrywaj po dwie karty. Gdy obrazki są takie same — para zostaje!</p>
-                    <button class="moleOk">Zaczynamy!</button>
-                    <button class="moleCancel">Wróć do pieska</button>
+                    <button class="moleOk btnGreen">Zaczynamy!</button>
+                    <button class="moleCancel btnRed">Wróć do pieska</button>
                 </div>
             </div>
             <div class="moleWinPopup" id="pairsWinPopup" hidden>
@@ -211,9 +211,9 @@
                     </div>
                     <h2>Brawo!</h2>
                     <p>Znalazłaś wszystkie pary!</p>
-                    <button class="memoNext moleWinOk">Wybierz poziom</button>
-                    <button class="winAgain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
-                    <button class="moleWinOk memoExit">Powrót</button>
+                    <button class="winAgain btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="memoNext moleWinOk btnBlue">Wybierz poziom</button>
+                    <button class="moleWinOk memoExit btnRed">Powrót</button>
                 </div>
             </div>
             <div class="molePopup" id="memoPopup" hidden>
@@ -231,8 +231,8 @@
                         </div>
                     </div>
                     <p>Masz 3 serduszka na pomyłki. Każdy poziom ma więcej motylków!</p>
-                    <button class="moleOk">Zaczynamy!</button>
-                    <button class="moleCancel">Wróć do pieska</button>
+                    <button class="moleOk btnGreen">Zaczynamy!</button>
+                    <button class="moleCancel btnRed">Wróć do pieska</button>
                 </div>
             </div>
             <div class="moleWinPopup" id="memoWinPopup" hidden>
@@ -246,9 +246,9 @@
                     </div>
                     <h2>Brawo!</h2>
                     <p>Zapamiętałaś wszystkie motylki!</p>
-                    <button class="memoNext moleWinOk">Wybierz poziom</button>
-                    <button class="winAgain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
-                    <button class="moleWinOk memoExit">Powrót</button>
+                    <button class="winAgain btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="memoNext moleWinOk btnBlue">Wybierz poziom</button>
+                    <button class="moleWinOk memoExit btnRed">Powrót</button>
                 </div>
             </div>
             <div class="moleWinPopup" id="memoLosePopup" hidden>
@@ -256,8 +256,8 @@
                     <canvas class="memoLosePic" width="260" height="110"></canvas>
                     <h2>Prawie się udało!</h2>
                     <p>Spróbujmy jeszcze raz — motylki czekają.</p>
-                    <button class="winAgain memoTry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Jeszcze raz</button>
-                    <button class="moleWinOk memoExit">Wróć do pieska</button>
+                    <button class="winAgain memoTry btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Jeszcze raz</button>
+                    <button class="moleWinOk memoExit btnRed">Wróć do pieska</button>
                 </div>
             </div>
             <div class="molePopup" id="molePopup" hidden>
@@ -265,8 +265,8 @@
                     <img class="moleIntroIcon" alt="" />
                     <h2>Znajdź 10 kretów!</h2>
                     <p>Dotykaj palcem kretów, które wyskakują z kopczyków — im szybciej, tym lepiej!</p>
-                    <button class="moleOk">Zaczynamy!</button>
-                    <button class="moleCancel">Wróć do pieska</button>
+                    <button class="moleOk btnGreen">Zaczynamy!</button>
+                    <button class="moleCancel btnRed">Wróć do pieska</button>
                 </div>
             </div>
             <div class="molePopup bubblePopup" hidden>
@@ -285,18 +285,35 @@
                             <span>Tych nie ruszaj,<br />bo tracisz punkt</span>
                         </div>
                     </div>
-                    <button class="bubbleOk moleOk">Zaczynamy!</button>
-                    <button class="bubbleCancel moleCancel">Wróć do pieska</button>
+                    <button class="bubbleOk moleOk btnGreen">Zaczynamy!</button>
+                    <button class="bubbleCancel moleCancel btnRed">Wróć do pieska</button>
                 </div>
             </div>
             <div class="popup" hidden>
                 <div class="card"><canvas width="300" height="300"></canvas><img class="reward" alt="Nagroda" /></div>
             </div>
-            <div class="ballPopup" hidden>
-                <div class="ballCard">
-                    <img class="ballIcon" alt="" />
+            <div class="molePopup ballPopup" hidden>
+                <div class="moleCard">
+                    <img class="ballIcon moleIntroIcon" alt="" />
+                    <h2>Aport!</h2>
                     <p>Złap piłkę przy piesku, pociągnij palcem i puść. Poleci tam, gdzie ją rzucisz, a piesek po nią pobiegnie!</p>
-                    <button class="ballOk">OK, zaczynamy!</button>
+                    <button class="ballOk moleOk btnGreen">Zaczynamy!</button>
+                    <button class="ballCancel moleCancel btnRed">Wróć do pieska</button>
+                </div>
+            </div>
+            <div class="moleWinPopup" id="ballWinPopup" hidden>
+                <div class="moleWinCard">
+                    <div class="moleWinConfetti"></div>
+                    <div class="moleWinTrophyWrap">
+                        <img class="moleWinTrophy ballWinImg" alt="Puchar" />
+                        <div class="moleWinCheck" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </div>
+                    </div>
+                    <h2>Brawo!</h2>
+                    <p>Świetna zabawa z piłką!</p>
+                    <button class="winAgain ballAgain btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Zagraj ponownie</button>
+                    <button class="moleWinOk ballExit btnRed">Powrót</button>
                 </div>
             </div>
             <div class="load">
@@ -313,8 +330,8 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=158"></script>
-            <script src="js/audio.js?v=158"></script>
+            <script src="js/loader.js?v=160"></script>
+            <script src="js/audio.js?v=160"></script>
         </main>
         <div class="rotate"><span>📱 ↻</span>Obróć urządzenie do pionu.<small>Gra jest wstrzymana.</small></div>
         <div class="toast" hidden role="status"></div>
@@ -335,15 +352,15 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=158"></script>
-        <script defer src="js/game.js?v=158"></script>
-        <script defer src="js/minigame-fetch.js?v=158"></script>
-        <script defer src="js/minigame-bubbles.js?v=158"></script>
-        <script defer src="js/minigame-mole.js?v=158"></script>
-        <script defer src="js/minigame-hedge.js?v=158"></script>
-        <script defer src="js/minigame-mole2.js?v=158"></script>
-        <script defer src="js/minigame-memory.js?v=158"></script>
-        <script defer src="js/minigame-pairs.js?v=158"></script>
-        <script defer src="js/games-menu.js?v=158"></script>
+        <script defer src="js/arc-carousel.js?v=160"></script>
+        <script defer src="js/game.js?v=160"></script>
+        <script defer src="js/minigame-fetch.js?v=160"></script>
+        <script defer src="js/minigame-bubbles.js?v=160"></script>
+        <script defer src="js/minigame-mole.js?v=160"></script>
+        <script defer src="js/minigame-hedge.js?v=160"></script>
+        <script defer src="js/minigame-mole2.js?v=160"></script>
+        <script defer src="js/minigame-memory.js?v=160"></script>
+        <script defer src="js/minigame-pairs.js?v=160"></script>
+        <script defer src="js/games-menu.js?v=160"></script>
     </body>
 </html>
