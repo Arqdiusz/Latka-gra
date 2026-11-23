@@ -144,3 +144,7 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Dwa osobne rekordy na poziom: najkrótszy czas i najmniej prób, plus ostatni wynik (`localStorage`: `pairsRecords`).
 - Karta wygranej: wynik, „Rekord”, „Poprzednio”. Naklejka: „REKORD CZASU!”, „REKORD PRÓB!” albo „NOWE REKORDY!” — tylko gdy poprzedni rekord istniał i został pobity.
 - Wybór poziomu: tabelka Rekord/Ostatnio × Czas/Próby.
+
+## 14. Tempo biegu między pokojami
+
+- Bieg do wybranego pokoju (menu, autonomiczny): 520–560 px/s, a im dalszy pokój, tym szybciej (+45% za każdy kolejny pokój, maks. 1100 px/s). Strzałki i przesunięcie palcem też szybsze. Nogi pieska dopasowują się same (krok liczony z przebytej drogi).
