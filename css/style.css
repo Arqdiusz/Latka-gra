@@ -2163,3 +2163,47 @@ body.sadLock .arrow {
 .moleWinCard > button.moleWinOk {
     margin-top: 16px;
 }
+
+/* ═══ Kretowisko w stylu pozostałych gier: ta sama Łąka w tle, tytuł z
+   zielonym cieniem po lewej, czerwony ✕ po prawej, biały panel postępu ═══ */
+.moleFull {
+    background: #a6d45c url("../tla/001-gry.png") top center / 100% auto no-repeat;
+    image-rendering: pixelated;
+}
+.moleHeader {
+    background: none;
+    padding: 10px 14px 0 18px;
+    min-height: 52px;
+    gap: 0;
+}
+.moleTitle strong {
+    font-size: 22px;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 0 #3c7a2a, 0 0 8px #3c7a2aaa;
+}
+.moleTitle span {
+    display: none;
+}
+.moleProgressCard {
+    margin: 10px 14px 0;
+    border: 4px solid white;
+    border-radius: 20px;
+    box-shadow: 0 3px 8px #0003;
+}
+.moleCount {
+    color: #59485d;
+    font-weight: 800;
+}
+.moleMsg {
+    margin: 12px 16px 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 0 #3c7a2a, 0 0 8px #3c7a2aaa;
+}
+.moleBoard {
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+}
