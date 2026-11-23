@@ -72,13 +72,20 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## 4a. Aport (rzucanie piłki)
 - Piłkę trzeba **złapać palcem** (przy łapach pieska), pociągnąć i puścić. Piesek przynosi ją zawsze do punktu startowego.
-- **Gra decyduje, jak leci piłka** — z ruchu palca bierzemy tylko kierunek (lewo/prawo), kąt i trochę siły:
-  - kąt → strefa wylotu: < 12° nisko (piłka wtacza się do sąsiedniego pokoju), 12–35° środek, 35–62° wysoko, > 62° góra (piłka znika u góry i spada z nieba w sąsiednim pokoju),
-  - siła (330–1800 px/s palca, mocniej nic nie zmienia) → jak głęboko w sąsiednim pokoju piłka stanie (26–64% pokoju ± trochę losowości).
-- Piłka **zawsze ląduje w sąsiednim pokoju** w stronę rzutu (nigdy dalej). Tor to prawdziwy rzut (grawitacja, odbicia, toczenie) — dobieramy tylko prędkość początkową, więc lot wygląda naturalnie.
-- **Lekki rzut / samo puszczenie** (palec wolniej niż 330 px/s): piłka toczy się kawałek (14–22% pokoju) w tym samym pokoju.
-- Rzut w stronę, gdzie nie ma pokoju (koniec świata): piłka toczy się w tym samym pokoju.
-- Piłka nie staje tuż przy granicy pokoju (margines 14%).
+- **W pokoju rzutu piłka leci uczciwie:** kierunek i kąt z palca, a prędkość z jednego z 4 progów siły (`BALL_TIERS`, ±5% losowo):
+
+| Prędkość palca | Wyrzut | Maks. kąt | Gdzie stanie w sąsiednim pokoju |
+|---|---|---|---|
+| < 330 px/s | lekki rzut — toczy się kawałek w tym pokoju | — | — |
+| 330–750 | 560 px/s | 55° | ok. 28% pokoju od wejścia |
+| 750–1300 | 760 px/s | 65° | ok. 40% |
+| 1300–2000 | 960 px/s | 75° | ok. 52% |
+| > 2000 | 1180 px/s | 82° | ok. 62% |
+
+- Strefa wylotu (8 stref: lewo/prawo × nisko/środek/wysoko, góra-lewo/prawo) wynika z kąta i siły.
+- **W sąsiednim pokoju przejmuje gra:** piłka wpada jako przedłużenie lotu (ta sama wysokość i pion; po wylocie górą — spada z nieba), ale prędkość pozioma może być zmniejszona do min. 50% (`BALL_SLOWDOWN_MIN`), żeby piłka zawsze stanęła w tym pokoju. Gdy to nie wystarcza, mocniej hamuje samo toczenie.
+- Piłka nigdy nie leci dalej niż do sąsiedniego pokoju; nie staje tuż przy granicy pokoju (margines 14%).
+- Rzut w stronę, gdzie nie ma pokoju (koniec świata): odbicie od ściany, piłka zostaje w tym pokoju.
 - Stałe `BALL_*` w `js/minigame-fetch.js`.
 
 ## 5. Gry

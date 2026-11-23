@@ -331,7 +331,7 @@ function ballSimulate(X, hb, vx, vh, rollDecel = BALL_ROLL_DECEL) {
         rolling = false,
         groundHits = 0;
     for (let i = 0; i < 120 * 9; i++) {
-        path.push({ t: t * 1000, X, hb, vx, rolling });
+        path.push({ t: t * 1000, X, hb, vx, vh, rolling });
         if (rolling) {
             const sgn = Math.sign(vx);
             vx -= sgn * rollDecel * dt;
@@ -360,7 +360,7 @@ function ballSimulate(X, hb, vx, vh, rollDecel = BALL_ROLL_DECEL) {
         if (rolling && Math.abs(vx) < 4) break;
         t += dt;
     }
-    path.push({ t: t * 1000, X, hb: 0, vx: 0, rolling: true });
+    path.push({ t: t * 1000, X, hb: 0, vx: 0, vh: 0, rolling: true });
     return path;
 }
 
@@ -395,41 +395,44 @@ function ballVisibleIn(s, ri) {
     return lx > -w / 2 && lx < W + w / 2 && cy > -h / 2;
 }
 
-// ── Celowanie: gra decyduje, jak leci piłka ───────────────────
-// Z ruchu palca bierzemy tylko KIERUNEK (lewo/prawo), KĄT (→ strefa
-// wylotu) i trochę SIŁY (→ jak daleko w sąsiednim pokoju piłka stanie).
-// Sam tor liczymy tak, żeby piłka ZAWSZE trafiła do sąsiedniego pokoju
-// w ładne miejsce — nawet przy najmocniejszym machnięciu na świecie.
-// Tor jest dalej prawdziwym rzutem (ta sama fizyka), tylko z dobraną
-// prędkością początkową, więc nic nie "skacze".
-const BALL_LIGHT_SPEED = 330, // palec wolniej niż to [px/s] — lekki rzut: piłka toczy się trochę w tym pokoju
-    BALL_STRONG_SPEED = 1800; // od tej prędkości palca — "najmocniej" (dalej nic się nie zmienia)
-// Wysokość szczytu łuku (dół piłki nad ziemią, px) dla stref wylotu
-const BALL_APEX = { nisko: [10, 40], "środek": [190, 250], wysoko: [300, 360], "góra": [520, 600] };
+// ── Celowanie: rzut "po prawdziwemu", lądowanie pod kontrolą gry ──
+// W POKOJU RZUTU piłka leci uczciwie: kierunek i kąt z palca, prędkość
+// z jednego z 4 progów siły (BALL_TIERS) — mocniejszy rzut naprawdę leci
+// szybciej i wyżej, a strefa wylotu (8 stref) wynika z kąta i siły.
+// Gdy piłka zniknie z kadru, przejmuje gra: w sąsiednim pokoju piłka wpada
+// jako przedłużenie lotu (ta sama wysokość i kierunek; z góry — spada z
+// nieba), ale może być lekko SPOWOLNIONA (min. BALL_SLOWDOWN_MIN prędkości
+// poziomej), żeby zawsze stanęła w tym pokoju, tym głębiej, im mocniej
+// rzucono. Kadru nie widać naraz, więc to "oszustwo" jest niewidoczne.
+const BALL_LIGHT_SPEED = 330; // palec wolniej [px/s] — lekki rzut: piłka toczy się kawałek w tym pokoju
+const BALL_TIERS = [
+    // od prędkości palca → prędkość wyrzutu [px/s], maks. kąt, jak głęboko stanie w sąsiednim pokoju
+    { from: 330, v: 560, maxDeg: 55, depth: 0.28 },
+    { from: 750, v: 760, maxDeg: 65, depth: 0.4 },
+    { from: 1300, v: 960, maxDeg: 75, depth: 0.52 },
+    { from: 2000, v: 1180, maxDeg: 82, depth: 0.62 },
+];
+const BALL_SLOWDOWN_MIN = 0.5;
 
-function ballZoneFromAngle(fvx, fvh) {
-    const deg = (Math.atan2(fvh, Math.abs(fvx)) * 180) / Math.PI; // 0 = poziomo, 90 = pionowo w górę
-    if (deg < 12) return "nisko";
-    if (deg < 35) return "środek";
-    if (deg < 62) return "wysoko";
-    return "góra";
-}
-
-// Prędkość pozioma (przy danej pionowej), dla której piłka trafi w X:
-// mode "rest" — tam się zatrzyma, "touch" — tam pierwszy raz dotknie ziemi.
-// Bisekcja na symulacji; uderzenie w ścianę na końcu świata = "za daleko".
-function ballSolveVx(X0, hb0, vh, targetX, mode = "rest") {
+// Prędkość pozioma (przy danej pionowej), dla której piłka stanie w X —
+// bisekcja na symulacji; ściana na końcu świata = "za daleko".
+function ballSolveVx(X0, hb0, vh, targetX) {
     const dir = Math.sign(targetX - X0) || 1;
     let lo = 0,
         hi = 2600;
     for (let i = 0; i < 26; i++) {
         const mid = (lo + hi) / 2,
-            p = ballSimulate(X0, hb0, dir * mid, vh),
-            gotX = mode === "touch" ? p.touchX ?? p[p.length - 1].X : p[p.length - 1].X;
-        if (!p.hitWall && (gotX - targetX) * dir < 0) lo = mid;
+            p = ballSimulate(X0, hb0, dir * mid, vh);
+        if (!p.hitWall && (p[p.length - 1].X - targetX) * dir < 0) lo = mid;
         else hi = mid;
     }
     return dir * lo;
+}
+
+// Indeks próbki, w której piłka znika z kadru pokoju ri (bok albo góra)
+function ballExitIndex(path, ri) {
+    for (let i = 1; i < path.length; i++) if (!ballVisibleIn(path[i], ri)) return i;
+    return -1;
 }
 
 function ballLaunch(fvx, fvh) {
@@ -438,92 +441,129 @@ function ballLaunch(fvx, fvh) {
         X0 = homeIdx * W + ball.x * W,
         hb0 = -ball.y,
         speed = Math.hypot(fvx, fvh),
-        rnd = (a, b) => a + Math.random() * (b - a);
-    // kierunek: z palca; rzut prosto w górę / bez ruchu — tam, gdzie patrzy piesek
-    let dir = Math.abs(fvx) > 40 ? Math.sign(fvx) : left ? -1 : 1;
-    let vx, vh, aim;
-    const nextIdx = homeIdx + dir,
-        light = speed < BALL_LIGHT_SPEED;
-    if (light || nextIdx < 0 || nextIdx >= order.length) {
-        // Lekki rzut (albo ściana — brak pokoju w tę stronę): piłka toczy
-        // się kawałek w TYM pokoju.
+        rnd = (a, b) => a + Math.random() * (b - a),
+        { w } = ballSize();
+    // kierunek z palca; rzut prosto w górę / bez ruchu — tam, gdzie patrzy piesek
+    const dir = Math.abs(fvx) > 40 ? Math.sign(fvx) : left ? -1 : 1,
+        nextIdx = homeIdx + dir,
+        hasNext = nextIdx >= 0 && nextIdx < order.length;
+    let path = null,
+        restIdx = homeIdx,
+        tExit = null,
+        tier = null,
+        slow = 1;
+
+    if (speed >= BALL_LIGHT_SPEED) {
+        tier = BALL_TIERS.filter((t) => speed >= t.from).pop();
+        let V = tier.v * rnd(0.95, 1.05),
+            deg = clamp((Math.atan2(fvh, Math.abs(fvx)) * 180) / Math.PI, 3, tier.maxDeg),
+            pathA = null,
+            iEx = -1;
+        // musi wylecieć z kadru — w razie potrzeby trochę płaściej i mocniej
+        for (let k = 0; k < 12; k++) {
+            const rad = (deg * Math.PI) / 180;
+            pathA = ballSimulate(X0, hb0, dir * V * Math.cos(rad), V * Math.sin(rad));
+            iEx = ballExitIndex(pathA, homeIdx);
+            if (iEx > 0 && (hasNext || pathA.hitWall)) break;
+            deg = Math.max(4, deg - 6);
+            V *= 1.08;
+        }
+        if (iEx > 0 && hasNext) {
+            const ex = pathA[iEx],
+                top = ballVisibleIn({ ...ex, hb: 0 }, homeIdx), // poziomo jeszcze w kadrze → wyleciała górą
+                apex = ex.vh > 0 ? ex.hb + (ex.vh * ex.vh) / (2 * BALL_G) : ex.hb,
+                depth = clamp(tier.depth + rnd(-0.05, 0.05), 0.2, 0.8),
+                local = (d) => (dir > 0 ? d : 1 - d),
+                targetX = (nextIdx + local(depth)) * W,
+                entry = (k) =>
+                    top
+                        ? {
+                              // z nieba: wpada od góry, trochę przed miejscem lądowania
+                              X: (nextIdx + local(clamp(depth - 0.22, 0.06, 0.5))) * W,
+                              hb: BALL_FLOOR() + 6,
+                              vx: ex.vx * k,
+                              vh: -Math.sqrt(2 * BALL_G * Math.max(0, apex - BALL_FLOOR() - 6)),
+                          }
+                        : {
+                              // z boku: ta sama wysokość i pion, poziom ewentualnie wolniej
+                              X: dir > 0 ? nextIdx * W - w / 2 : (nextIdx + 1) * W + w / 2,
+                              hb: ex.hb,
+                              vx: ex.vx * k,
+                              vh: ex.vh,
+                          },
+                simB = (k, decel) => {
+                    const e = entry(k);
+                    return ballSimulate(e.X, e.hb, e.vx, e.vh, decel);
+                },
+                endOf = (p) => p[p.length - 1].X;
+            // spowolnienie k: bisekcja, żeby piłka stanęła na głębokości depth
+            let lo = BALL_SLOWDOWN_MIN,
+                hi = 1;
+            if ((endOf(simB(1)) - targetX) * dir <= 0) lo = hi = 1; // i tak nie doleci dalej — bez spowalniania
+            for (let i = 0; i < 22 && hi - lo > 0.002; i++) {
+                const mid = (lo + hi) / 2,
+                    p = simB(mid);
+                if (!p.hitWall && (endOf(p) - targetX) * dir < 0) lo = mid;
+                else hi = mid;
+            }
+            slow = lo;
+            let pathB = simB(slow),
+                decel = BALL_ROLL_DECEL;
+            // nawet przy maks. spowolnieniu za daleko → szybciej hamuje toczenie
+            for (let i = 0; i < 10; i++) {
+                const e = endOf(pathB) / W - nextIdx;
+                if (!pathB.hitWall && e >= BALL_EDGE_MARGIN && e <= 1 - BALL_EDGE_MARGIN) break;
+                decel *= 1.5;
+                pathB = simB(slow, decel);
+            }
+            tExit = ex.t;
+            const dt0 = ex.t + 1000 / 120;
+            path = pathA.slice(0, iEx + 1).concat(pathB.map((q) => ({ ...q, t: q.t + dt0 })));
+            restIdx = nextIdx;
+            fetchGame.zone = ballExitZone(pathA, homeIdx);
+        } else if (iEx > 0) {
+            // koniec świata — odbicie od ściany, piłka zostaje w tym pokoju
+            path = pathA;
+        }
+    }
+    if (!path) {
+        // Lekki rzut / samo puszczenie: piłka toczy się kawałek w TYM pokoju
         let local = ball.x + dir * rnd(0.14, 0.22);
         if (local < BALL_EDGE_MARGIN || local > 1 - BALL_EDGE_MARGIN) local = ball.x - dir * rnd(0.14, 0.22);
         local = clamp(local, BALL_EDGE_MARGIN, 1 - BALL_EDGE_MARGIN);
-        vh = light ? Math.max(0, Math.min(fvh * 0.3, 120)) : Math.sqrt(2 * BALL_G * rnd(60, 140));
-        vx = ballSolveVx(X0, hb0, vh, (homeIdx + local) * W);
-        aim = { zone: null, room: room };
-    } else {
-        // Zwykły rzut: sąsiedni pokój. Strefa z kąta palca, miejsce
-        // lądowania z siły (przycięte), plus odrobina losowości.
-        const zone = ballZoneFromAngle(fvx, fvh),
-            [a0, a1] = BALL_APEX[zone],
-            apex = Math.max(hb0 + 8, rnd(a0, a1)),
-            power = clamp((speed - BALL_LIGHT_SPEED) / (BALL_STRONG_SPEED - BALL_LIGHT_SPEED), 0, 1),
-            // odległość od krawędzi wejścia w sąsiednim pokoju (ułamek pokoju)
-            depth = clamp(0.26 + power * 0.38 + rnd(-0.07, 0.07), 0.22, 1 - BALL_EDGE_MARGIN - 0.02),
-            local = (d) => (dir > 0 ? d : 1 - d),
-            inRoom = (p) => {
-                const e = p[p.length - 1].X / W - nextIdx;
-                return !p.hitWall && e >= BALL_EDGE_MARGIN && e <= 1 - BALL_EDGE_MARGIN;
-            };
-        vh = Math.sqrt(2 * BALL_G * Math.max(0, apex - hb0));
-        if (zone === "nisko") {
-            // płaski rzut: piłka szybko dotyka ziemi i WTACZA się do sąsiedniego pokoju
-            vx = ballSolveVx(X0, hb0, vh, (nextIdx + local(depth)) * W, "rest");
-        } else {
-            // łuk: pierwszy kontakt z ziemią już w sąsiednim pokoju (piłka
-            // wylatuje z kadru w powietrzu, na wysokości strefy), a odbicia
-            // i toczenie mają się zmieścić w tym pokoju — w razie potrzeby
-            // celujemy bliżej krawędzi wejścia
-            let d1 = clamp(depth - 0.12, 0.08, 0.6);
-            for (;;) {
-                vx = ballSolveVx(X0, hb0, vh, (nextIdx + local(d1)) * W, "touch");
-                if (inRoom(ballSimulate(X0, hb0, vx, vh)) || d1 <= 0.04) break;
-                d1 -= 0.04;
-            }
-        }
-        aim = { zone, room: order[nextIdx] };
+        const vh = Math.max(0, Math.min(fvh * 0.3, 120)),
+            vx = ballSolveVx(X0, hb0, vh, (homeIdx + local) * W);
+        path = ballSimulate(X0, hb0, vx, vh);
+        fetchGame.zone = null;
     }
-    let path = ballSimulate(X0, hb0, vx, vh),
-        restIdx = clamp(Math.floor(path[path.length - 1].X / W), 0, order.length - 1);
-    // Zabezpieczenie: gdyby i tak potoczyła się za daleko — mocniej hamuje
-    // samo końcowe toczenie (niewidoczne: piłka po prostu szybciej staje).
-    for (let k = 0, decel = BALL_ROLL_DECEL; k < 10 && order[restIdx] !== aim.room; k++) {
-        decel *= 1.5;
-        path = ballSimulate(X0, hb0, vx, vh, decel);
-        restIdx = clamp(Math.floor(path[path.length - 1].X / W), 0, order.length - 1);
-    }
+    if (restIdx === homeIdx) restIdx = clamp(Math.floor(path[path.length - 1].X / W), 0, order.length - 1);
     let end = path[path.length - 1];
     // Nadal przy granicy (np. spadła prosto na nią) — dosuń ostatnie toczenie
     {
-        const ri = clamp(Math.floor(end.X / W), 0, order.length - 1),
+        const ri = restIdx,
             local = clamp(end.X / W - ri, BALL_EDGE_MARGIN, 1 - BALL_EDGE_MARGIN),
             target = (ri + local) * W,
             shift = target - end.X;
         if (Math.abs(shift) > 0.5) {
             const n = Math.min(path.length, 60); // ostatnie ~0,5 s
             for (let i = 0; i < n; i++) {
-                const s = path[path.length - n + i];
-                path[path.length - n + i] = { ...s, X: s.X + (shift * (i + 1)) / n };
+                const q = path[path.length - n + i];
+                path[path.length - n + i] = { ...q, X: q.X + (shift * (i + 1)) / n };
             }
         }
-        restIdx = ri;
         end = path[path.length - 1];
     }
-    const zone = ballExitZone(path, homeIdx),
-        tRest = end.t,
-        firstGround = path.find((s, i) => i > 0 && s.hb === 0)?.t ?? 0;
+    const tRest = end.t,
+        firstGround = path.find((q, i) => i > 0 && q.hb === 0)?.t ?? 0;
     fetchGame.throws++;
-    fetchGame.zone = zone;
-    fetchGame.aim = aim;
+    fetchGame.tier = tier ? BALL_TIERS.indexOf(tier) + 1 : 0;
+    fetchGame.slow = +slow.toFixed(2);
     fetchGame.restRoom = order[restIdx];
     ballFlight = { path, t0: clock, tRest };
     phase = "ball-fly";
     stage = "ball-fly";
     // piesek odprowadza piłkę wzrokiem w stronę, w którą poleciała
-    const lookDir = Math.sign(vx) || dir;
-    left = lookDir < 0;
+    left = dir < 0;
     bubble = null;
     locks();
 
@@ -533,17 +573,14 @@ function ballLaunch(fvx, fvh) {
         // Ten sam pokój: pies odprowadza piłkę wzrokiem do pierwszego
         // kontaktu z ziemią, potem biegnie, a piłka dalej się toczy.
         const look = clamp(firstGround, 250, 2200);
-        parts.push({ sheet: "a01", anim: 15, facing: lookDir < 0, time: look, onStart: () => (stage = "ball-fly") });
+        parts.push({ sheet: "a01", anim: 15, facing: dir < 0, time: look, onStart: () => (stage = "ball-fly") });
         parts.push(...fetchChaseTo(land, { minTime: Math.max(0, tRest - look) }));
     } else {
         // Inny pokój: patrzy, aż piłka zniknie z kadru…
-        let tLeave = 0;
-        for (const s of path) if (ballVisibleIn(s, homeIdx)) tLeave = s.t;
-        parts.push({ sheet: "a01", anim: 15, facing: lookDir < 0, time: clamp(tLeave + 150, 300, 2500), onStart: () => (stage = "ball-fly") });
-        // …a w pokoju lądowania piłka "wpada" od momentu, w którym pojawia
-        // się w tamtym kadrze — dokładnie jej dalszy tor.
-        const tEnter = path.find((s) => ballVisibleIn(s, restIdx))?.t ?? 0,
-            touch = path.find((s) => s.t > tEnter && s.hb === 0)?.t ?? tEnter,
+        parts.push({ sheet: "a01", anim: 15, facing: dir < 0, time: clamp(tExit + 150, 300, 2500), onStart: () => (stage = "ball-fly") });
+        // …a w pokoju lądowania piłka wpada jako dalszy ciąg lotu
+        const tEnter = path.find((q) => q.t > tExit && ballVisibleIn(q, restIdx))?.t ?? tExit,
+            touch = path.find((q) => q.t > tEnter && q.hb === 0)?.t ?? tEnter,
             wait = clamp(touch - tEnter + 260, 250, Math.max(250, tRest - tEnter));
         parts.push(...fetchChaseTo(land, { replay: { tEnter, wait }, minTime: Math.max(0, tRest - tEnter - wait) }));
     }
