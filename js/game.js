@@ -1217,6 +1217,7 @@ function geometry() {
             ((BASE * o.scale) / 100) *
             (sheet === "a01" && anim === 1 ? 1.04 : 1) *
             (sheet === "a01" && anim === 10 ? 1.05 : 1) *
+            (sheet === "a01" && (anim === 5 || anim === 2) ? 1.1 : 1) * // jedzenie i picie: piesek o 10% większy
             0.7,
         w: cells[sheet][f - 1].width,
         h: cells[sheet][f - 1].height,
