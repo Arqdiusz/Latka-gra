@@ -139,10 +139,14 @@ function memoShowLevels() {
         done = memoDone();
     box.innerHTML = "";
     MEMO_LEVELS.forEach((lv, i) => {
-        const b = document.createElement("button");
+        const b = document.createElement("button"),
+            tm = memoTimes(),
+            rec = tm.best[i] !== undefined ? '<span class="memoTileStat"><i>Rekord</i><b>' + memoFmt(tm.best[i]) + "</b></span>" : "",
+            last = tm.last[i] !== undefined ? '<span class="memoTileStat"><i>Ostatnio</i><b>' + memoFmt(tm.last[i]) + "</b></span>" : "";
         b.className = "memoTile";
         b.innerHTML =
             '<span class="memoStars">' + "★".repeat(i + 1) + '</span><span class="memoTileTxt">' + lv.n + " motylki</span>" +
+            (rec || last ? '<span class="memoTileStats">' + rec + last + "</span>" : '<span class="memoTileStats memoTileNew">Jeszcze bez wyniku</span>') +
             (done.includes(i) ? '<img class="memoTileCup" alt="Ukończony" src="' + icons.cup + '" />' : "");
         b.onclick = () => {
             if (Date.now() - memoLevelsShownAt < 700) return; // "przelot" kliknięcia z poprzedniego ekranu

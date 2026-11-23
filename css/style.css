@@ -2313,3 +2313,39 @@ h3,
 @media (prefers-reduced-motion: reduce) {
     .memoSticker { animation: none; }
 }
+
+/* Kafelek poziomu w Pamięci motylków: rekord i ostatni wynik */
+.memoTileStats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px 14px;
+    margin-top: 2px;
+}
+.memoTileStat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.15;
+}
+.memoTileStat i {
+    font-style: normal;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #8b7a90;
+}
+.memoTileStat b {
+    font-size: 19px;
+    color: #59485d;
+    font-variant-numeric: tabular-nums;
+}
+.memoTileStat:first-child b {
+    color: #d8861a; /* rekord wyróżniony */
+}
+.memoTileNew {
+    font-size: 14px;
+    font-weight: 700;
+    color: #8b7a90;
+}
