@@ -344,7 +344,8 @@ function memoSpawnFlies(g) {
     g.flies.length = 0;
     const total = CFG.motyle.presets.length;
     for (let col = 0; col < total; col++) {
-        for (let k = 0; k < g.lv.copies; k++) {
+        const copies = Math.max(g.lv.copies, g.seq.filter((c) => c === col).length); // zawsze starczy motylków na wzór
+        for (let k = 0; k < copies; k++) {
             let x = 0,
                 y = 0;
             for (let i = 0; i < 25; i++) {
@@ -401,6 +402,13 @@ function memoGameUpdate() {
                 if (clock - f.gone > 400) g.flies.splice(i, 1);
                 continue;
             }
+            if (f.leaving) {
+                // odlot: prosto, szybko, bez odbijania od brzegów łąki
+                f.x += Math.cos(f.heading) * 640 * (dt / 1000);
+                f.y += Math.sin(f.heading) * 640 * (dt / 1000);
+                if (f.x < -70 || f.x > W + 70 || f.y < -70 || f.y > H + 70 || clock - f.leaving > 2500) g.flies.splice(i, 1);
+                continue;
+            }
             // leniwe, płynne skręcanie
             // prędkość kątowa [rad/s] błądzi losowo → płynne, leniwe zakręty
             f.turn = clamp(f.turn + (Math.random() - 0.5) * 4 * (dt / 1000), -1.4, 1.4);
@@ -425,7 +433,7 @@ function memoHit(px, py) {
     let best = null,
         bd = 1e9;
     for (const f of g.flies) {
-        if (f.gone || clock < f.born) continue;
+        if (f.gone || f.leaving || clock < f.born) continue;
         const d = Math.hypot(px - f.x, py - f.y);
         if (d <= MEMO_HIT_R && d < bd) {
             best = f;
@@ -437,6 +445,9 @@ function memoHit(px, py) {
         // dobry — motylek zostaje w grze (klony i ten sam kolor mogą wrócić we wzorze)
         g.effects.push({ x: best.x, y: best.y - 30, born: clock, good: true });
         sfx("step", g.step);
+        // trafiony motylek szybko odlatuje z planszy — ten sam nie da się kliknąć drugi raz
+        best.leaving = clock;
+        best.heading = Math.atan2(best.y - MEMO_ZONE.y0 - (MEMO_ZONE.y1 - MEMO_ZONE.y0) / 2, best.x - W / 2) + (Math.random() - 0.5) * 0.6;
         g.step++;
         if (g.step >= g.seq.length) g.round >= MEMO_ROUNDS ? memoWinShow() : memoRoundDone(g);
     } else {
