@@ -1641,7 +1641,8 @@ let wlWasBusy = false,
 function wildlifeBusy(who) {
     // motylek do złapania i motylek-tło (5 kolorów to tylko losowy kolor) to jedna "grupa"
     if (who === "butterfly" || who === "ambient") who = "butterflies";
-    if (moleTeaser || hedgehog || butterfly || ambient.length) {
+    // zgubiony przez jeżyka owoc też "zajmuje scenę" — póki leży, nikt nowy nie wychodzi (np. kret na owoc)
+    if (moleTeaser || hedgehog || hedgeFruit || butterfly || ambient.length) {
         wlWasBusy = true;
         return true;
     }
