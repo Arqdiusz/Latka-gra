@@ -254,6 +254,7 @@ function sadRefuse() {
     // już się obraził tyłem — nie zaczynamy od nowa, tylko mocniej pulsuje dymek
     if (stage === "sad-refuse" && anim === sadLast) return;
     sadLast = anim;
+    sfx("sad");
     queue = [];
     segment = null;
     phase = "sad";
@@ -728,6 +729,7 @@ function wake() {
 }
 
 function say(icon, time = 2600, type = UI.bubbleType) {
+    if (!bubble || bubble.icon !== icon) sfx(bubble?.sad ? "need" : "bubble");
     bubble = {
         icon,
         until: clock + time,
@@ -1298,6 +1300,7 @@ function poopHit(px, py) {
 
 function cleanPoop() {
     if (!casual() || !dirty()) return;
+    sfx("wipe");
     interrupt();
     wake();
     poop = null;
@@ -1847,6 +1850,7 @@ function butterflyCatch() {
             time: duration("a02", 14) * 2,
             onStart: () => {
                 stage = "butterfly-chase";
+                sfx("good");
                 if (butterfly) {
                     butterfly.visible = false;
                     if (butterfly.lure) butterfly.lure.done = true;
@@ -2408,6 +2412,7 @@ function hedgehogScare(h) {
         hedgeFruit = { x: h.x - h.dir * 10, y: HEDGEHOG_LINE_Y - 6, idx: h.fruit, born: clock };
         h.fruit = -1;
     }
+    sfx("scare");
     h.state = "fleeing";
     h.dir = h.x < W / 2 ? -1 : 1;
     h.pauseUntil = 0;
@@ -2421,6 +2426,7 @@ function hedgeFruitHit(px, py) {
 
 function hedgeFruitCollect(f) {
     hedgeFruit = null;
+    sfx("good");
     // lekki "pyk" w miejscu owocu — na razie bez nagrody w statusach
     fruitPops.push({ x: f.x, y: f.y - 40, born: clock });
 }

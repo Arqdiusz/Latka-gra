@@ -181,6 +181,7 @@ function bubbleGameHit(px, py) {
             rot: (rotDeg * Math.PI) / 180,
             flip: Math.random() < 0.5 ? -1 : 1,
         });
+        sfx(b.good ? "pop" : "minus");
         if (b.good) {
             g.caught++;
             updateBubbleUi();
@@ -298,6 +299,7 @@ function bubbleWinShow() {
     const g = bubbleGame;
     if (!g || g.won) return;
     g.won = true;
+    sfx("win");
     g.bubbles.length = 0;
     phase = "bubble-win";
     stage = "bubble-win";

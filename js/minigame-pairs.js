@@ -198,6 +198,7 @@ function pairsFlip(i) {
     // dwie niepasujące jeszcze widać — następne dotknięcie od razu je zakrywa
     if (g.open.length === 2) pairsHideOpen();
     c.el.classList.add("up");
+    sfx("flip");
     g.open.push(c);
     if (g.open.length < 2) return;
     const [a, b] = g.open;
@@ -205,6 +206,7 @@ function pairsFlip(i) {
         a.found = b.found = true;
         g.open = [];
         g.found++;
+        sfx("pair");
         for (const x of [a, b]) {
             x.el.classList.add("found");
             pairsStar(x.el);
@@ -216,6 +218,7 @@ function pairsFlip(i) {
         }
     } else {
         clearTimeout(g.timer);
+        setTimeout(() => pairsGame === g && sfx("miss"), 250);
         g.timer = setTimeout(() => pairsGame === g && pairsHideOpen(), PAIRS_FLIP_BACK_MS);
     }
 }

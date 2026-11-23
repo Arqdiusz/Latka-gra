@@ -304,6 +304,7 @@ function moleGameHit(px, py) {
             const value = 1;
             g.caught = Math.min(g.need, g.caught + value);
             g.effects.push({ x: h.x, y: h.y, born: clock, good: true, text: "+" + value });
+            sfx("whack");
             updateMoleUi();
             if (g.caught >= g.need) {
                 g.won = true;
@@ -315,6 +316,7 @@ function moleGameHit(px, py) {
             // −1 tylko za stuknięcie w pusty kopiec (nie ma tam kreta).
             g.caught = Math.max(0, g.caught - 1);
             g.effects.push({ x: h.x, y: h.y, born: clock, good: false, text: "−1" });
+            sfx("minus");
             updateMoleUi();
         }
         // Pozostałe: zmyłka (peek), sam początek wychodzenia, koniec chowania
@@ -401,6 +403,7 @@ moleCanvas.addEventListener("pointercancel", molePointerEnd);
 // konfetti. Zastępuje poprzednie świętowanie rysowane na mctx.
 const MOLE_CONFETTI_COLORS = ["#f6c445", "#6f9a52", "#9674ab", "#e98a71", "#4fb3bf"];
 function moleWinSpawnConfetti(sel = "#moleWinPopup .moleWinConfetti") {
+    sfx("win");
     const box = $(sel);
     if (!box) return;
     box.innerHTML = "";

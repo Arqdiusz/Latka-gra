@@ -2087,3 +2087,25 @@ body.locked .gamesAccess {
 body.sadLock .arrow {
     opacity: 0.35;
 }
+
+/* Przycisk wyciszenia dźwięków */
+.muteBtn {
+    position: absolute;
+    right: 56px;
+    top: 9px;
+    z-index: 5;
+    border: 2px solid white;
+    border-radius: 11px;
+    background: #fff9e9dd;
+    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+.muteBtn.loadMute {
+    position: static;
+    margin: 10px auto 0;
+    display: block;
+    background: #fff9e9;
+    border-color: #e6d9bd;
+}

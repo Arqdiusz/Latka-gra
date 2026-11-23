@@ -540,6 +540,7 @@ function ballLaunch(fvx, fvh) {
     fetchGame.slow = +slow.toFixed(2);
     fetchGame.restRoom = order[restIdx];
     ballFlight = { path, t0: clock, tRest };
+    sfx("throw");
     phase = "ball-fly";
     stage = "ball-fly";
     // piesek odprowadza piłkę wzrokiem w stronę, w którą poleciała
@@ -573,6 +574,9 @@ function ballFlightUpdate() {
     if (!f || !ball || ball.carried) return;
     const s = pathAt(f.path, clock - f.t0),
         pos = worldSplit(s.X / W);
+    // odbicie od ziemi: prędkość pionowa zmienia znak przy ziemi
+    if (f.last && f.last.vh < -40 && s.vh > 0 && s.hb < 8 && clock - f.t0 < f.tRest) sfx("bounce", Math.min(1, -f.last.vh / 700));
+    f.last = s;
     ball.room = pos.room;
     ball.x = pos.x;
     ball.y = -s.hb;

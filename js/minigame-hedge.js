@@ -193,6 +193,7 @@ function hedgeWinShow() {
     const g = hedgeGame;
     if (!g || g.won) return;
     g.won = true;
+    sfx("win");
     g.items.length = 0;
     phase = "hedge-win";
     stage = "hedge-win";
@@ -296,6 +297,7 @@ function hedgeGameUpdate(dt) {
 function hedgeCatch(it) {
     const g = hedgeGame;
     g.effects.push({ x: it.x, y: HEDGE_Y - HEDGE_SIZE * 0.45, born: clock, good: it.good, rot: (Math.random() - 0.5) * 0.8, flip: Math.random() < 0.5 ? -1 : 1 });
+    sfx(it.good ? "good" : "minus");
     if (it.good) {
         g.caught++;
         g.collected.push(it.idx);

@@ -217,6 +217,7 @@ function memoLoseShow() {
     const g = memoGame;
     if (!g || g.over) return;
     g.over = true;
+    sfx("lose");
     g.flies.length = 0;
     startQueue([{ sheet: "a01", anim: 16, time: 600000 }]);
     memoEndOpen("#memoLosePopup", g.level);
@@ -359,10 +360,12 @@ function memoHit(px, py) {
     if (best.color === g.seq[g.step]) {
         // dobry — motylek zostaje w grze (klony i ten sam kolor mogą wrócić we wzorze)
         g.effects.push({ x: best.x, y: best.y - 30, born: clock, good: true });
+        sfx("step", g.step);
         g.step++;
         if (g.step >= g.seq.length) memoWinShow();
     } else {
         g.lives--;
+        sfx("minus");
         g.effects.push({ x: best.x, y: best.y - 30, born: clock, good: false });
         best.flee = clock + 700;
         best.heading = Math.atan2(best.y - py, best.x - px);

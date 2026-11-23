@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.133</title>
-        <link rel="stylesheet" href="css/style.css?v=152" />
+        <title>Łatka v0.8.134</title>
+        <link rel="stylesheet" href="css/style.css?v=153" />
     </head>
 
     <body>
@@ -26,6 +26,7 @@
                     </button>
                 </div>
                 <button class="gamesAccess" aria-label="Gry"><img alt="" /></button><button class="full" aria-label="Pełny ekran">⛶</button
+                ><button class="muteBtn" aria-label="Wycisz dźwięki">🔊</button
                 ><button class="arrow prev" aria-label="Poprzednie pomieszczenie">‹</button
                 ><button class="arrow next" aria-label="Następne pomieszczenie">›</button
                 ><button class="petAccess">Pogłaszcz Łatkę</button
@@ -304,6 +305,7 @@
                     <canvas class="loadDog" width="192" height="192" aria-hidden="true"></canvas>
                     <div class="loadBar" role="progressbar" aria-label="Wczytywanie gry"><i></i></div>
                     <div class="loadMsg">Wczytywanie…</div>
+                    <button class="muteBtn loadMute" aria-label="Wycisz dźwięki">🔊</button>
                     <div class="loadReady" hidden>
                         <p class="loadHint">Najlepiej grać na dużym ekranie.</p>
                         <button class="loadPlay loadFull"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z" fill="currentColor" /></svg>Graj na pełnym ekranie</button>
@@ -311,7 +313,8 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=152"></script>
+            <script src="js/loader.js?v=153"></script>
+            <script src="js/audio.js?v=153"></script>
         </main>
         <div class="rotate"><span>📱 ↻</span>Obróć urządzenie do pionu.<small>Gra jest wstrzymana.</small></div>
         <div class="toast" hidden role="status"></div>
@@ -332,15 +335,15 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=152"></script>
-        <script defer src="js/game.js?v=152"></script>
-        <script defer src="js/minigame-fetch.js?v=152"></script>
-        <script defer src="js/minigame-bubbles.js?v=152"></script>
-        <script defer src="js/minigame-mole.js?v=152"></script>
-        <script defer src="js/minigame-hedge.js?v=152"></script>
-        <script defer src="js/minigame-mole2.js?v=152"></script>
-        <script defer src="js/minigame-memory.js?v=152"></script>
-        <script defer src="js/minigame-pairs.js?v=152"></script>
-        <script defer src="js/games-menu.js?v=152"></script>
+        <script defer src="js/arc-carousel.js?v=153"></script>
+        <script defer src="js/game.js?v=153"></script>
+        <script defer src="js/minigame-fetch.js?v=153"></script>
+        <script defer src="js/minigame-bubbles.js?v=153"></script>
+        <script defer src="js/minigame-mole.js?v=153"></script>
+        <script defer src="js/minigame-hedge.js?v=153"></script>
+        <script defer src="js/minigame-mole2.js?v=153"></script>
+        <script defer src="js/minigame-memory.js?v=153"></script>
+        <script defer src="js/minigame-pairs.js?v=153"></script>
+        <script defer src="js/games-menu.js?v=153"></script>
     </body>
 </html>

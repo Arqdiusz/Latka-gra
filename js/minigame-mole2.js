@@ -265,6 +265,7 @@ function mole2Hit(px, py) {
         m.stateStart = clock;
         g.caught = Math.min(g.need, g.caught + 1);
         g.effects.push({ x: m.x, y: m.y - 40, born: clock, good: true });
+        sfx("whack");
         if (g.caught >= g.need) mole2WinShow();
     } else if (!m.caught && clock - (m.penAt || -1e9) > 350) {
         // pusty kopiec, atrapa (też gasnąca), kopiec po niepewnym krecie albo kret
@@ -273,6 +274,7 @@ function mole2Hit(px, py) {
         m.penAt = clock;
         g.caught = Math.max(0, g.caught - 1);
         g.effects.push({ x: m.x, y: m.y - 40, born: clock, good: false });
+        sfx("minus");
         if (m.decoy) {
             m.state = "vanish";
             m.stateStart = clock;
