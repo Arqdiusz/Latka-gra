@@ -24,7 +24,11 @@ const memoCanvas = $(".memoCanvas"),
         { n: 4, copies: 3, speed: 72 },
         { n: 5, copies: 3, speed: 88 },
     ],
-    MEMO_STORE = "memoLevelsDone";
+    MEMO_STORE = "memoLevelsDone",
+    MEMO_ROUNDS = 3, // rund w jednej grze (na wybranym poziomie), każda z nowym wzorem
+    MEMO_BETWEEN_MS = 1300; // pauza "Brawo!" między rundami
+
+let memoLevelsShownAt = 0; // dotyk, który otworzył ekran poziomów, nie może wybrać kafelka
 
 function memoDone() {
     try {
@@ -123,11 +127,13 @@ function memoShowLevels() {
             '<span class="memoStars">' + "★".repeat(i + 1) + '</span><span class="memoTileTxt">' + lv.n + " motylki</span>" +
             (done.includes(i) ? '<img class="memoTileCup" alt="Ukończony" src="' + icons.cup + '" />' : "");
         b.onclick = () => {
+            if (Date.now() - memoLevelsShownAt < 700) return; // "przelot" kliknięcia z poprzedniego ekranu
             $(".memoLevels").hidden = true;
             memoStart(i);
         };
         box.appendChild(b);
     });
+    memoLevelsShownAt = Date.now();
     $(".memoLevels").hidden = false;
 }
 $(".memoLevelsClose").onclick = () => {
@@ -144,14 +150,29 @@ function memoShuffle(a) {
     return a;
 }
 
-function memoStart(level) {
-    const lv = MEMO_LEVELS[level],
-        total = CFG.motyle.presets.length,
+function memoNewSeq(lv) {
+    const total = CFG.motyle.presets.length,
         seq = Array.from({ length: lv.n }, () => Math.floor(Math.random() * total));
     // wzór z powtórzeniami kolorów, ale nie same takie same
     if (seq.every((c) => c === seq[0])) seq[seq.length - 1] = (seq[0] + 1 + Math.floor(Math.random() * (total - 1))) % total;
-    memoGame = { level, lv, seq, step: 0, lives: MEMO_LIVES, state: "show", t0: clock, flies: [], effects: [], over: false, last: clock };
-    $(".memoTitle").textContent = "Zapamiętaj!";
+    return seq;
+}
+function memoTitleSet(g) {
+    $(".memoTitle").textContent = "Runda " + g.round + "/" + MEMO_ROUNDS + (g.state === "play" ? " · Klikaj!" : " · Zapamiętaj!");
+}
+
+// Koniec rundy (nie ostatniej): chwila "Brawo!", potem nowy wzór i znów 3 szanse.
+function memoRoundDone(g) {
+    sfx("pair");
+    g.state = "between";
+    g.t0 = clock;
+    for (const f of g.flies) if (!f.gone) f.gone = clock;
+}
+
+function memoStart(level) {
+    const lv = MEMO_LEVELS[level];
+    memoGame = { level, lv, seq: memoNewSeq(lv), round: 1, step: 0, lives: MEMO_LIVES, state: "show", t0: clock, flies: [], effects: [], over: false, last: clock };
+    memoTitleSet(memoGame);
     say("fun", 1500);
     startQueue([
         {
@@ -316,9 +337,19 @@ function memoGameUpdate() {
         g.state = "play";
         g.t0 = clock;
         memoSpawnFlies(g);
-        $(".memoTitle").textContent = "Klikaj po kolei!";
+        memoTitleSet(g);
     }
-    if (g.state === "play") {
+    if (g.state === "between" && clock - g.t0 >= MEMO_BETWEEN_MS) {
+        g.round++;
+        g.seq = memoNewSeq(g.lv);
+        g.step = 0;
+        g.lives = MEMO_LIVES;
+        g.flies.length = 0;
+        g.state = "show";
+        g.t0 = clock;
+        memoTitleSet(g);
+    }
+    if (g.state === "play" || g.state === "between") {
         for (let i = g.flies.length - 1; i >= 0; i--) {
             const f = g.flies[i];
             if (f.gone) {
@@ -362,7 +393,7 @@ function memoHit(px, py) {
         g.effects.push({ x: best.x, y: best.y - 30, born: clock, good: true });
         sfx("step", g.step);
         g.step++;
-        if (g.step >= g.seq.length) memoWinShow();
+        if (g.step >= g.seq.length) g.round >= MEMO_ROUNDS ? memoWinShow() : memoRoundDone(g);
     } else {
         g.lives--;
         sfx("minus");
@@ -415,7 +446,10 @@ function memoGameDraw() {
     c.fillRect(0, 0, W, H);
     if (bg.img.complete && bg.img.naturalWidth) c.drawImage(bg.img, 0, 0, W, (W * bg.img.naturalHeight) / bg.img.naturalWidth);
     if (g.state === "show") memoShowDraw(g);
-    else memoPlayDraw(g);
+    else {
+        memoPlayDraw(g);
+        if (g.state === "between") memoBetweenDraw(g);
+    }
 }
 
 function memoShowDraw(g) {
@@ -457,6 +491,28 @@ function memoShowDraw(g) {
     c.beginPath();
     c.roundRect(bx, by, Math.max(12, bw * left), 12, 6);
     c.fill();
+}
+
+// Pauza między rundami: panel z gwiazdką i numerem następnej rundy
+function memoBetweenDraw(g) {
+    const c = memoCtx,
+        t = clamp((clock - g.t0) / 300, 0, 1),
+        pw = W - 80,
+        ph = 150,
+        px = 40,
+        py = 300;
+    c.save();
+    c.globalAlpha = t;
+    memoPanel(c, px, py, pw, ph);
+    c.textAlign = "center";
+    c.fillStyle = "#59485d";
+    c.font = "800 30px system-ui, sans-serif";
+    c.fillText("Brawo!", W / 2, py + 62);
+    c.font = "700 20px system-ui, sans-serif";
+    c.fillText("Runda " + (g.round + 1) + " z " + MEMO_ROUNDS, W / 2, py + 102);
+    const im = images.bubbleStar;
+    if (im) c.drawImage(im, W / 2 - 22, py - 26, 44, 44);
+    c.restore();
 }
 
 function memoPlayDraw(g) {

@@ -93,6 +93,7 @@ $("#pairsPopup .moleCancel").onclick = () => {
 };
 
 // ── Wybór poziomu ────────────────────────────────────────────────
+let pairsLevelsShownAt = 0;
 function pairsShowLevels() {
     const box = $(".pairsLevelGrid"),
         done = pairsDone();
@@ -105,11 +106,13 @@ function pairsShowLevels() {
             '<span class="memoStars">' + "★".repeat(i + 1) + '</span><span class="memoTileTxt">' + lv.rows + " × " + lv.cols + " · " + n + (n < 5 ? " pary" : " par") + "</span>" +
             (done.includes(i) ? '<img class="memoTileCup" alt="Ukończony" src="' + icons.cup + '" />' : "");
         b.onclick = () => {
+            if (Date.now() - pairsLevelsShownAt < 700) return; // "przelot" kliknięcia z poprzedniego ekranu
             $(".pairsLevels").hidden = true;
             pairsStart(i);
         };
         box.appendChild(b);
     });
+    pairsLevelsShownAt = Date.now();
     $(".pairsLevels").hidden = false;
 }
 $(".pairsLevelsClose").onclick = () => {
