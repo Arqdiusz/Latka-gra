@@ -136,6 +136,73 @@ function buildMoleHoles() {
     return holes;
 }
 
+// Podłoże planszy: nieregularne "linie ziemi i piasku" między kopcami —
+// łamane o losowych zygzakach (ciemniejsza linia + jasny piasek tuż pod nią)
+// i garść kamyków. Rysowane raz na grę do osobnego canvasu.
+let moleGround = null;
+function moleGroundBuild() {
+    const cv = document.createElement("canvas");
+    cv.width = MOLE_W;
+    cv.height = MOLE_H;
+    const c = cv.getContext("2d"),
+        colGap = (MOLE_W - MOLE_MARGIN_X * 2) / MOLE_COLS,
+        rowGap = (MOLE_H - MOLE_MARGIN_Y * 2) / MOLE_ROWS,
+        rnd = (a, b) => a + Math.random() * (b - a);
+    c.lineCap = "square";
+    c.lineJoin = "miter";
+    // jedna nieregularna linia od (x0,y0) do (x1,y1); wiggle = wychylenie w bok
+    const crack = (x0, y0, x1, y1, wiggle) => {
+        const horiz = Math.abs(x1 - x0) > Math.abs(y1 - y0),
+            pts = [[x0, y0]];
+        let t = 0;
+        while (t < 1) {
+            t = Math.min(1, t + rnd(0.05, 0.12));
+            const off = t < 1 ? rnd(-wiggle, wiggle) : 0;
+            pts.push(horiz ? [x0 + (x1 - x0) * t, y0 + off] : [x0 + off, y0 + (y1 - y0) * t]);
+        }
+        const draw = (dx, dy, col, w) => {
+            c.strokeStyle = col;
+            c.lineWidth = w;
+            c.beginPath();
+            pts.forEach(([x, y], i) => (i ? c.lineTo(Math.round(x + dx), Math.round(y + dy)) : c.moveTo(Math.round(x + dx), Math.round(y + dy))));
+            c.stroke();
+        };
+        draw(0, 3, "rgba(236,214,150,0.55)", 3); // piasek pod/obok linii
+        draw(0, 0, "rgba(58,102,38,0.55)", 3); // ciemniejsza szczelina w ziemi
+        // krótkie odnogi
+        for (let i = 1; i < pts.length - 1; i++) {
+            if (Math.random() > 0.28) continue;
+            const [x, y] = pts[i],
+                len = rnd(8, 18),
+                side = Math.random() < 0.5 ? -1 : 1;
+            c.strokeStyle = "rgba(58,102,38,0.45)";
+            c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(Math.round(x), Math.round(y));
+            if (horiz) c.lineTo(Math.round(x + rnd(-6, 6)), Math.round(y + side * len));
+            else c.lineTo(Math.round(x + side * len), Math.round(y + rnd(-6, 6)));
+            c.stroke();
+        }
+    };
+    for (let k = 1; k < MOLE_ROWS; k++) {
+        const y = MOLE_MARGIN_Y + rowGap * k;
+        crack(2, y, MOLE_W - 2, y, 5);
+    }
+    for (let k = 1; k < MOLE_COLS; k++) {
+        const x = MOLE_MARGIN_X + colGap * k;
+        crack(x, 2, x, MOLE_H - 2, 5);
+    }
+    // kamyki i ziarenka piasku
+    for (let i = 0; i < 26; i++) {
+        const x = Math.round(rnd(8, MOLE_W - 8)),
+            y = Math.round(rnd(8, MOLE_H - 8)),
+            r = Math.random() < 0.5 ? 3 : 5;
+        c.fillStyle = Math.random() < 0.5 ? "rgba(236,214,150,0.6)" : "rgba(58,102,38,0.4)";
+        c.fillRect(x, y, r, Math.max(2, r - 2));
+    }
+    return cv;
+}
+
 // Losuje tempo i "rodzaj" dla kolejnego kreta.
 // Tempo: im więcej już złapanych, tym szybciej (trudniej), plus spory
 // element losowości (szerszy zakres niż na początku) — żeby kolejne krety
@@ -243,6 +310,7 @@ function moleGameDraw() {
     if (!moleGame) return;
     mctx.clearRect(0, 0, MOLE_W, MOLE_H);
     const g = moleGame;
+    if (moleGround) mctx.drawImage(moleGround, 0, 0);
     for (const h of g.holes) {
         const fn = moleFrameFor(h),
             cell = cells.kret[fn - 1];
@@ -361,6 +429,7 @@ function moleTryStart() {
 // przy fetchStart()/bubbleStart() (sprawdzenia są wcześniej, w
 // moleTryStart()/activity()).
 function moleStart() {
+    moleGround = moleGroundBuild();
     moleGame = { need: MOLE_NEED, caught: 0, holes: buildMoleHoles(), nextSpawn: clock + 300, effects: [] };
     updateMoleUi();
     say("fun", 2200);
