@@ -3027,3 +3027,48 @@ h3,
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.18); border-color: #f2b632; }
 }
+
+/* Dymek nad pieskiem z działaniem do rozwiązania (Liczymy kostki):
+   pikselowy dymek z gry (ikona „speech”), ogonek nad środkiem głowy pieska */
+.bonesSay {
+    position: absolute;
+    left: 108px;
+    top: 62px;
+    width: 220px;
+    height: 140px;
+    z-index: 4;
+    pointer-events: none;
+    background-position: center;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding-bottom: 30px;
+    box-sizing: border-box;
+    font: 800 24px/1 "Baloo 2", sans-serif;
+    color: #4a2f1d;
+    animation: bonesSayIn 0.35s ease-out;
+}
+.bonesSay[hidden] {
+    display: none;
+}
+.bonesSay i {
+    display: inline-block;
+    margin-left: 3px;
+    padding: 2px 6px;
+    border: 3px dashed #b99b66;
+    border-radius: 10px;
+    background: #fff;
+    color: #3d8fd6;
+    font-style: normal;
+    animation: bmPulse 0.9s ease-in-out infinite;
+}
+@keyframes bonesSayIn {
+    from {
+        transform: scale(0.6) translateY(20px);
+        opacity: 0;
+    }
+}

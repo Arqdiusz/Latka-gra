@@ -201,6 +201,7 @@ function bonesRound() {
     $(".bonesEq").className = "bonesEq";
     $(".bonesNext").hidden = true;
     $(".bonesPad").hidden = true;
+    $(".bonesSay").hidden = true;
     $(".bonesHint").textContent = "Piesek kopie… patrz, ile kostek spada!";
     for (const [sel, n] of [
         [".bonesPile.a", g.A],
@@ -280,6 +281,11 @@ function bonesShowEq() {
     $(".bonesHint").textContent = "Ile to razem? Dotknij kratkę.";
     if (bonesOp === "-") $(".bonesHint").textContent = "Ile zostanie? Dotknij kratkę.";
     el.className = "bonesEq in";
+    // dymek nad pieskiem z tym samym działaniem
+    const say = $(".bonesSay");
+    say.style.backgroundImage = "url(" + icons.speech + ")";
+    say.innerHTML = g.A + " " + bonesSign() + " " + g.B + " = <i>?</i>";
+    say.hidden = false;
     el.innerHTML = '<span class="n">' + g.A + "</span><span>" + bonesSign() + '</span><span class="n">' + g.B + '</span><span>=</span><button class="bonesRes" aria-label="Wpisz wynik">?</button>';
     el.querySelector(".bonesRes").onclick = () => {
         if (!$(".bonesPad").hidden || el.querySelector(".bonesRes.ok")) return;
@@ -287,6 +293,7 @@ function bonesShowEq() {
             const r = el.querySelector(".bonesRes");
             r.textContent = bonesResult();
             r.classList.add("ok");
+            $(".bonesSay").hidden = true;
             g.round++;
             bonesStarsDraw();
             sfx("pair");
