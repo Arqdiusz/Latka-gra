@@ -170,8 +170,7 @@ function boneMoleTap() {
     locks();
 }
 
-// Karta z zaproszeniem: pokaz obrazkowych działań z kostkami (dzieci grają
-// wzrokiem) — kostki + kostki = kostki, pod spodem zapis jak w grze.
+// Karta z zaproszeniem: zmieniające się działania z pulsującym „?”.
 const BONE_MOLE_SLIDES = [
     [2, "+", 1],
     [3, "+", 2],
@@ -181,16 +180,8 @@ const BONE_MOLE_SLIDES = [
 let boneMoleShowT = 0;
 function boneMoleCard() {
     $("#boneMolePopup .moleIntroIcon").src = icons.bone;
-    const box = $("#boneMolePopup .bmShow"),
-        bones = (n, cls = "") => '<span class="bmGroup ' + cls + '" style="grid-template-columns:repeat(' + Math.min(n, 3) + ',22px)">' + ('<img alt="" src="' + icons.bone + '">').repeat(n) + "</span>";
-    box.innerHTML = BONE_MOLE_SLIDES.map(([a, op, b]) => {
-        const res = op === "+" ? a + b : a - b;
-        return (
-            '<div class="bmSlide"><div class="bmPics">' +
-            bones(a) + "<b>" + op + "</b>" + bones(b, op === "−" ? "gone" : "") + "<b>=</b>" + bones(res, "res") +
-            '</div><div class="bmEq">' + a + " " + op + " " + b + " = " + res + "</div></div>"
-        );
-    }).join("");
+    const box = $("#boneMolePopup .bmShow");
+    box.innerHTML = BONE_MOLE_SLIDES.map(([a, op, b]) => '<div class="bmSlide"><div class="bmEq">' + a + " " + op + " " + b + ' = <i class="bmQ">?</i></div></div>').join("");
     let i = 0;
     const show = () => box.querySelectorAll(".bmSlide").forEach((s, k) => s.classList.toggle("on", k === i));
     show();

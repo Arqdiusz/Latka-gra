@@ -2978,10 +2978,10 @@ h3,
     top: 118px;
 }
 
-/* Karta „Piesek znalazł kostkę!”: obrazkowy pokaz działań (kostki + kostki = kostki) */
+/* Karta „Piesek znalazł kostkę!”: zmieniające się działania z pulsującym „?” */
 .bmShow {
     position: relative;
-    height: 108px;
+    height: 64px;
     margin: 6px -6px 4px;
     border-radius: 18px;
     background: #f6ecd6;
@@ -2991,10 +2991,8 @@ h3,
     position: absolute;
     inset: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
     opacity: 0;
     transform: translateX(30px);
     transition: opacity 0.45s, transform 0.45s;
@@ -3003,44 +3001,29 @@ h3,
     opacity: 1;
     transform: none;
 }
-.bmPics {
+.bmEq {
     display: flex;
     align-items: center;
-    gap: 4px;
-}
-.bmPics b {
-    font: 800 22px/1 "Baloo 2", sans-serif;
-    color: #4a2f1d;
-}
-.bmGroup {
-    display: grid;
-    gap: 1px;
-    justify-items: center;
-}
-.bmGroup img {
-    width: 22px;
-    height: 22px;
-    image-rendering: pixelated;
-}
-.bmGroup.gone img {
-    opacity: 0.35;
-    filter: grayscale(1);
-}
-.bmGroup.res {
-    padding: 2px;
-    border-radius: 8px;
-    background: #d9f4d5;
-}
-.bmEq {
-    font: 800 26px/1 "Baloo 2", sans-serif;
+    gap: 6px;
+    font: 800 34px/1 "Baloo 2", sans-serif;
     color: #4a2f1d;
     letter-spacing: 1px;
 }
-.bmSlide.on .bmGroup.res {
-    animation: bmPop 0.6s 0.5s both;
+.bmQ {
+    display: inline-block;
+    min-width: 40px;
+    height: 44px;
+    border-radius: 12px;
+    border: 3px dashed #b99b66;
+    background: #fff;
+    color: #3d8fd6;
+    font-style: normal;
+    font-size: 32px;
+    line-height: 38px;
+    text-align: center;
+    animation: bmPulse 0.9s ease-in-out infinite;
 }
-@keyframes bmPop {
-    0% { transform: scale(0.6); opacity: 0; }
-    60% { transform: scale(1.15); opacity: 1; }
-    100% { transform: scale(1); }
+@keyframes bmPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.18); border-color: #f2b632; }
 }
