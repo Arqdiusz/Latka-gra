@@ -387,9 +387,9 @@ const ACTION_EFFECTS = {
     brush: { clean: 12, fun: 5 },
     // Zabawa w kreta — radość jak przy aporcie/bańkach, ale piesek się przy
     // tym trochę brudzi, głoduje i chce pić (patrz js/minigame-mole.js).
-    mole: { fun: 26, clean: -14, food: -5, water: -6, paws: 60 },
+    mole: { fun: 26, clean: -14, food: -5, water: -6, paws: 30 },
     // Jeżyk i owoce (js/minigame-hedge.js) — zdrowa zabawa na trawie.
-    hedgehog: { fun: 24, water: -4, clean: -7, paws: 30 },
+    hedgehog: { fun: 24, water: -4, clean: -7, paws: 15 },
     memory: { fun: 24, water: -3, clean: -4 },
     pairs: { fun: 20, water: -2, clean: -4 },
     // Złapany motylek — krótka, lekka frajda.
@@ -471,16 +471,16 @@ function lumpUpdate(s) {
     lumpLastX = x;
     lumpLastRoom = room;
     if (OUTDOOR_ROOMS.includes(room)) {
-        pawDirt = Math.min(100, pawDirt + 1.6 * s); // ~22 s do brudnych łapek
+        pawDirt = Math.min(100, pawDirt + 0.4 * s); // ~4 min do bardzo brudnych łapek
         return;
     }
-    if (pawDirt < 20 || !INDOOR_ROOMS.includes(room) || moved > 80 || phase === "paws-clean") return; // skok pozycji (zmiana pokoju) nie liczy się
+    if (pawDirt < 45 || !INDOOR_ROOMS.includes(room) || moved > 80 || phase === "paws-clean") return; // skok pozycji (zmiana pokoju) nie liczy się
     lumpDist += moved;
-    if (lumpDist < 110) return;
+    if (lumpDist < 320) return;
     lumpDist = 0;
-    if (lumps.length >= 8) return;
+    if (lumps.length >= 4) return;
     lumps.push({ room, x: clamp(x + (left ? 1 : -1) * (0.04 + Math.random() * 0.05), 0.08, 0.92), seed: Math.floor(Math.random() * 1000) });
-    pawDirt = Math.max(0, pawDirt - 5);
+    pawDirt = Math.max(0, pawDirt - 8);
     save();
 }
 function lumpBox(l) {
