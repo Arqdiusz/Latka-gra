@@ -383,7 +383,7 @@ const ACTION_EFFECTS = {
     water: { water: 35 },
     fun: { fun: 24, water: -5, sleep: -4, clean: -8 },
     den: { fun: 16, food: -2, water: -2 },
-    clean: { clean: 38 },
+    clean: { clean: 38, paws: -100 }, // kąpiel zmywa też brud z łapek
     brush: { clean: 12, fun: 5 },
     // Zabawa w kreta — radość jak przy aporcie/bańkach, ale piesek się przy
     // tym trochę brudzi, głoduje i chce pić (patrz js/minigame-mole.js).
@@ -554,6 +554,7 @@ const FULL_NEED = { food: "food", water: "water", sleep: "sleep", clean: "clean"
 function fullRefuse(id) {
     const need = FULL_NEED[id];
     if (!need || stats[need] < FULL_AT || sadNeed()) return false;
+    if (need === "clean" && pawDirt >= 3) return false; // czysty, ale z brudnymi łapkami — myć wolno
     if (casual()) {
         idle(16);
         phase = "reaction";
@@ -923,7 +924,7 @@ function activity(id) {
     if (!dirty()) {
         // Najedzony / napojony: bez tekstu — piesek kręci głową „NIE”.
         // (Potrzeb pilnuje smutek przy ≤10%, patrz sadBlocks().)
-        if (FULL_NEED[id] && stats[FULL_NEED[id]] >= FULL_AT) {
+        if (FULL_NEED[id] && stats[FULL_NEED[id]] >= FULL_AT && !(FULL_NEED[id] === "clean" && pawDirt >= 3)) {
             idle(16);
             fullRefuse(id);
             return;
@@ -1493,13 +1494,13 @@ function pawsWipe(p) {
     if (!prev) return;
     // szmatka działa tylko przy łapkach (pasek przy podłodze pod pieskiem)
     if (Math.abs(p.x - x * W) > 150 || p.y < GROUND - 90 || p.y > GROUND + 60) return;
-    const d = Math.min(40, Math.hypot(p.x - prev.x, p.y - prev.y)), // pojedynczy skok nie zaciera od razu wszystkiego
+    const d = Math.min(25, Math.hypot(p.x - prev.x, p.y - prev.y)), // pojedynczy skok nie zaciera od razu wszystkiego
         cx = pawsCellX(p.x);
     let touched = false;
     pawLvl.forEach((v, b) => {
-        if (v <= 0 || Math.abs((b + 0.5) * PAW_BUCKET - cx) > 22) return;
+        if (v <= 0 || Math.abs((b + 0.5) * PAW_BUCKET - cx) > 12) return;
         touched = true;
-        pawLvl[b] = Math.max(0, v - d * 0.0026);
+        pawLvl[b] = Math.max(0, v - d * 0.0016);
         if (pawLvl[b] <= 0.02) {
             pawLvl[b] = 0;
             sfx("good"); // „plink” za każdy wytarty fragment
