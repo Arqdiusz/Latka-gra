@@ -186,8 +186,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## 20. Kret z kostką — zdarzenie w pokojach ogrodowych (v0.8.177)
 - Plik `js/event-bone-mole.js`. Łąka, Ogród, Podwórko. Losowany na równi z innymi zwierzakami (`wlPick`: kret, kret z kostką, jeżyk, motylki), z tym samym tempem co zwykły kret; nigdy razem z innym zwierzakiem ani przy leżącym piachu po krecie (zwierzaki nie nachodzą na siebie).
-- Start: piesek najpierw spokojnie odchodzi pod bliższą ścianę (14% szerokości), a kret wychyla się bliżej środka po drugiej stronie (56% szerokości od ściany pieska), na torze pieska; chowa się i zostaje pulsujący kopiec (nieklikany znika po 2 min albo po wyjściu z pokoju). Jeśli piesek nie dojdzie pod ścianę w 8 s, kret i tak wychodzi.
-- Dotyk kopca: piesek podchodzi od swojej strony, przodem do kopca, tak by ziemia z animacji kopania wypadła na kopcu; kopie (a03 „01”), wykopuje kostkę („02”), obraca się przodem do środka ekranu i stoi z kostką („05”), po ok. 0,9 s pojawia się karta „Piesek znalazł kostkę!” → „Liczymy!” otwiera „Liczymy kostki”, „Nie teraz” → odkłada kostkę („06”). Kopanie brudzi łapki (+5).
+- Start: piesek najpierw spokojnie odchodzi w stronę bliższej ściany (do 28% szerokości — cały widoczny, jak w zwykłym chodzeniu), a kret wychyla się po drugiej stronie środka (62% szerokości od ściany pieska), na torze pieska; chowa się i zostaje pulsujący kopiec (nieklikany znika po 2 min albo po wyjściu z pokoju). Jeśli piesek nie dojdzie pod ścianę w 8 s, kret i tak wychodzi.
+- Dotyk kopca: piesek podchodzi od swojej strony, przodem do kopca, tak by ziemia z animacji kopania wypadła na kopcu; kopie (a03 „01”), wykopuje kostkę („02”), obraca się (kopiec zostaje za nim) i stoi z kostką na środku ekranu („05”), po ok. 1,9 s pojawia się karta „Piesek znalazł kostkę!” z obrazkowym pokazem działań (kostki + kostki = kostki, zapis pod spodem; 4 slajdy co 2,2 s) → „Liczymy!” otwiera „Liczymy kostki”, „Nie teraz” → odkłada kostkę („06”). Kopanie brudzi łapki (+5).
 - DEV: przycisk „Kret z kostką”.
 
 ## 21. Brud i czystość (v0.8.178)

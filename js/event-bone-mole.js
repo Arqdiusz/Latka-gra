@@ -13,13 +13,13 @@
 
 const BONE_MOLE = {
     y: GROUND - 43, // środek kreta (126 px): spód kopca ≈ GROUND+6, jak ziemia w klatkach kopania
-    edge: 0.14, // piesek najpierw odchodzi pod bliższą ścianę (ułamek szerokości)
-    moundX: 0.56, // …a kopiec wychodzi bliżej środka, po drugiej stronie (ułamek szerokości od ściany pieska)
+    edge: 0.28, // piesek najpierw odchodzi w stronę bliższej ściany — jak w zwykłym chodzeniu, cały widoczny
+    moundX: 0.62, // kopiec: środek ekranu + „reach” — po wykopaniu i obrocie piesek stoi na środku
     peekMs: 1300, // jak długo kret się rozgląda
     reach: 46, // piesek stoi tak, by kopiec z animacji kopania (≈ +46 px przed nim) wypadł na kopcu kreta
     first: [5000, 17500], // po wejściu do pokoju — jak zwykły kret
     next: [7500, 22500], // po zakończeniu — jak zwykły kret po sprzątnięciu piachu
-    cardAfter: 900, // ile piesek stoi z kostką, zanim pokaże się karta
+    cardAfter: 1900, // ile piesek stoi z kostką, zanim pokaże się karta
 };
 let boneMole = null, // { x, room, state: pending|emerging|peek|retreating|mound|dig, t }
     nextBoneMole = 0,
@@ -147,7 +147,7 @@ function boneMoleTap() {
     const dir = x * W <= m.x ? 1 : -1,
         tx = m.x - dir * BONE_MOLE.reach;
     const face = dir < 0, // left = patrzy w lewo
-        faceCenter = tx > W / 2, // z kostką staje przodem do środka ekranu
+        faceCenter = !face, // z kostką obraca się (kopiec za nim) — stoi mniej więcej na środku
         dig = (anim, time, extra = {}) => ({ sheet: "a03", anim, facing: face, time, ...extra });
     interrupt();
     startQueue([
@@ -170,13 +170,41 @@ function boneMoleTap() {
     locks();
 }
 
+// Karta z zaproszeniem: pokaz obrazkowych działań z kostkami (dzieci grają
+// wzrokiem) — kostki + kostki = kostki, pod spodem zapis jak w grze.
+const BONE_MOLE_SLIDES = [
+    [2, "+", 1],
+    [3, "+", 2],
+    [4, "−", 1],
+    [5, "−", 2],
+];
+let boneMoleShowT = 0;
 function boneMoleCard() {
     $("#boneMolePopup .moleIntroIcon").src = icons.bone;
+    const box = $("#boneMolePopup .bmShow"),
+        bones = (n, cls = "") => '<span class="bmGroup ' + cls + '" style="grid-template-columns:repeat(' + Math.min(n, 3) + ',22px)">' + ('<img alt="" src="' + icons.bone + '">').repeat(n) + "</span>";
+    box.innerHTML = BONE_MOLE_SLIDES.map(([a, op, b]) => {
+        const res = op === "+" ? a + b : a - b;
+        return (
+            '<div class="bmSlide"><div class="bmPics">' +
+            bones(a) + "<b>" + op + "</b>" + bones(b, op === "−" ? "gone" : "") + "<b>=</b>" + bones(res, "res") +
+            '</div><div class="bmEq">' + a + " " + op + " " + b + " = " + res + "</div></div>"
+        );
+    }).join("");
+    let i = 0;
+    const show = () => box.querySelectorAll(".bmSlide").forEach((s, k) => s.classList.toggle("on", k === i));
+    show();
+    clearInterval(boneMoleShowT);
+    boneMoleShowT = setInterval(() => {
+        i = (i + 1) % BONE_MOLE_SLIDES.length;
+        show();
+    }, 2200);
     $("#boneMolePopup").hidden = false;
 }
 
 function boneMoleEnd() {
     $("#boneMolePopup").hidden = true;
+    clearInterval(boneMoleShowT);
     boneMole = null;
     boneMoleSchedule(false);
     // po kostce długo spokój od zwykłego kreta w tym pokoju (zmiana pokoju losuje od nowa)

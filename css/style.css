@@ -2977,3 +2977,70 @@ h3,
 .pairsBoard {
     top: 118px;
 }
+
+/* Karta „Piesek znalazł kostkę!”: obrazkowy pokaz działań (kostki + kostki = kostki) */
+.bmShow {
+    position: relative;
+    height: 108px;
+    margin: 6px -6px 4px;
+    border-radius: 18px;
+    background: #f6ecd6;
+    overflow: hidden;
+}
+.bmSlide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.45s, transform 0.45s;
+}
+.bmSlide.on {
+    opacity: 1;
+    transform: none;
+}
+.bmPics {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.bmPics b {
+    font: 800 22px/1 "Baloo 2", sans-serif;
+    color: #4a2f1d;
+}
+.bmGroup {
+    display: grid;
+    gap: 1px;
+    justify-items: center;
+}
+.bmGroup img {
+    width: 22px;
+    height: 22px;
+    image-rendering: pixelated;
+}
+.bmGroup.gone img {
+    opacity: 0.35;
+    filter: grayscale(1);
+}
+.bmGroup.res {
+    padding: 2px;
+    border-radius: 8px;
+    background: #d9f4d5;
+}
+.bmEq {
+    font: 800 26px/1 "Baloo 2", sans-serif;
+    color: #4a2f1d;
+    letter-spacing: 1px;
+}
+.bmSlide.on .bmGroup.res {
+    animation: bmPop 0.6s 0.5s both;
+}
+@keyframes bmPop {
+    0% { transform: scale(0.6); opacity: 0; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); }
+}
