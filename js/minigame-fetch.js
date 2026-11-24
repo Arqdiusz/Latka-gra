@@ -763,10 +763,8 @@ function dishResume() {
     const approach = clamp(c.land.x - 0.12, 0.06, 0.94),
         toBall = c.land.x < x; // piłka za naczyniem, zwykle po prawej
     startQueue([
-        // radość z posprzątania (a02 #13 podrzut i podskok)…
-        { ...repeatPart("a02", 12, 3), facing: toBall, onStart: () => (stage = "dish-joy") },
-        // …i chwila wyczekiwania w stronę piłki (a02 #25 warowanie)
-        { ...repeatPart("a02", 24, 2), facing: toBall, onStart: () => (stage = "dish-wait") },
+        // radość z posprzątania — merdanie ogonem (a01 #22 „Radość z powrotem”), bez piłki
+        { ...repeatPart("a01", 21, 2), facing: toBall, onStart: () => (stage = "dish-joy") },
         ...moveParts(c.land.room, approach, { label: "ball-chase" }),
         ballPickupPart(toBall ? -1 : 1),
     ]);
