@@ -3161,8 +3161,27 @@ $(".full").onclick = async () => {
     }
 };
 window.addEventListener("pagehide", save);
+// Strona przywrócona z pamięci podręcznej przeglądarki (np. iOS "wstecz"/powrót do karty)
+window.addEventListener("pageshow", (e) => {
+    if (e.persisted && loaded) location.reload();
+});
+let hiddenAt = 0;
 document.addEventListener("visibilitychange", () => {
     last = 0;
+    if (!document.hidden) {
+        // Powrót do okna (np. po zminimalizowaniu na telefonie). Po dłuższej przerwie
+        // system mógł zamrozić stronę / zgubić płótno — odświeżamy grę (stan jest zapisany).
+        if (loaded && hiddenAt && Date.now() - hiddenAt > 5 * 60 * 1000) {
+            location.reload();
+            return;
+        }
+        // Zabezpieczenie: pies nie może zostać "schowany", gdy nie trwa już żaden aport
+        if (loaded && dogHidden && !fetchGame) dogHidden = false;
+        if (loaded) {
+            x = clamp(x, 0, 1);
+            resize();
+        }
+    } else hiddenAt = Date.now();
     if (document.hidden) {
         save();
         if (gesture?.kind === "pet") stopPetting();
