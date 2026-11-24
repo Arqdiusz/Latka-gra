@@ -30,11 +30,9 @@ const BONES_LEVELS = [
         calm: ["a01", 16], // 17. Spokojne stanie (bez kostki)
         look: ["a01", 3], // 04. Rozglądanie się (w czasie wpisywania)
         ears: ["a01", 7], // 08. Uszy / mrugnięcie (dobra liczba)
-        joyBack: ["a01", 21], // Radość z powrotem
-        jump: ["a01", 0], // 01. Skok / podskok (dobry wynik)
         no: ["a02", 19], // 20. „NIE” — próba z powrotem (pomyłka)
         run: ["a01", 1], // 02. Bieg / sus (radość po dobrym wyniku)
-        roll: ["a01", 9], // 10. Turlanie B — fikołek z radości
+        roll: ["a01", 4], // 05. Turlanie A — fikołek z radości po dobrym wyniku
     };
 
 let bonesGame = null,
@@ -314,8 +312,8 @@ function bonesShowEq() {
             bonesStarsDraw();
             sfx("win"); // fanfary po każdym dobrym wyniku
             $(".bonesHint").textContent = ["Dobrze!", "Super!", "Brawo!", "Świetnie!"][bonesRnd(0, 3)];
-            // radość: podskok, fikołek w miejscu i „Radość z powrotem”
-            bonesReact(bonesPart("jump", { times: 1 }), bonesPart("roll", { times: 1 }), bonesPart("joyBack", { times: 1 }), { wait: true });
+            // radość: sam fikołek w miejscu (bez podskoku i „Radości z powrotem”)
+            bonesReact(bonesPart("roll", { times: 1 }), { wait: true });
             if (g.round >= BONES_ROUNDS) g.readyT = setTimeout(() => bonesGame === g && bonesWin(), 1600);
             else $(".bonesNext").hidden = false;
         }, el.querySelector(".bonesRes"));
