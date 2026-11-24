@@ -33,6 +33,8 @@ const BONES_LEVELS = [
         joyBack: ["a01", 21], // Radość z powrotem
         jump: ["a01", 0], // 01. Skok / podskok (dobry wynik)
         no: ["a02", 19], // 20. „NIE” — próba z powrotem (pomyłka)
+        run: ["a01", 1], // 02. Bieg / sus (radość po dobrym wyniku)
+        roll: ["a01", 9], // 10. Turlanie B — fikołek z radości
     };
 
 let bonesGame = null,
@@ -41,12 +43,20 @@ let bonesGame = null,
 
 // ── Animacje pieska (własny odtwarzacz na .bonesCanvas) ─────────────
 // Kolejka części: { sheet, anim, time }. Ostatnia część kręci się bez końca.
+// Część może też przesuwać pieska: { to: x w px } (liniowo przez cały czas
+// części) i obracać go: { face: 1 w prawo / -1 w lewo }.
 let bonesQueue = [],
     bonesCur = null,
-    bonesRaf = 0;
+    bonesRaf = 0,
+    bonesX = BONES_DOG.x,
+    bonesFace = 1;
 function bonesPart(key, opts = {}) {
     const [sheet, anim] = BONES_ANIM[key];
-    return { sheet, anim, time: opts.times ? duration(sheet, anim) * opts.times : opts.time || BONES_FOREVER };
+    return { sheet, anim, time: opts.times ? duration(sheet, anim) * opts.times : opts.time || BONES_FOREVER, to: opts.to, face: opts.face };
+}
+// bieg z miejsca na miejsce (zwrot w stronę celu)
+function bonesRunTo(tx, key = "run", speed = 200) {
+    return bonesPart(key, { time: Math.max(200, (Math.abs(tx - bonesX) / speed) * 1000), to: tx });
 }
 function bonesAnim(...parts) {
     bonesQueue = parts;
@@ -56,7 +66,11 @@ function bonesNext() {
     let p = bonesQueue.shift();
     if (p && p.wait) p = bonesWait(); // „czekanie” wybierane dopiero teraz (klawiatura otwarta czy nie)
     bonesCur = p || bonesCur;
-    if (bonesCur) bonesCur.t0 = performance.now();
+    if (!bonesCur) return;
+    bonesCur.t0 = performance.now();
+    bonesCur.from = bonesX;
+    if (bonesCur.face) bonesFace = bonesCur.face;
+    else if (bonesCur.to !== undefined && Math.abs(bonesCur.to - bonesX) > 1) bonesFace = bonesCur.to > bonesX ? 1 : -1;
 }
 function bonesDraw(now) {
     bonesRaf = 0;
@@ -67,8 +81,9 @@ function bonesDraw(now) {
     const p = bonesCur;
     if (p) {
         if (bonesQueue.length && now - p.t0 >= p.time) bonesNext();
-        const q = bonesCur,
-            pre = getPreset(q.sheet, q.anim),
+        const q = bonesCur;
+        if (q.to !== undefined) bonesX = q.from + (q.to - q.from) * Math.min(1, (now - q.t0) / q.time);
+        const pre = getPreset(q.sheet, q.anim),
             fr = numbers(pre.seq),
             f = fr[Math.floor((now - q.t0) / pre.ms) % fr.length],
             cell = cells[q.sheet][f - 1],
@@ -78,8 +93,8 @@ function bonesDraw(now) {
             c.save();
             c.imageSmoothingEnabled = false;
             // przesunięcia klatek w jednostkach silnika (BASE·0.7 = skala psa w grze)
-            c.translate(BONES_DOG.x + (o.x * BONES_DOG.scale) / 0.7, BONES_DOG.y + (o.y * BONES_DOG.scale) / 0.7);
-            c.scale(s, s);
+            c.translate(bonesX + (bonesFace * o.x * BONES_DOG.scale) / 0.7, BONES_DOG.y + (o.y * BONES_DOG.scale) / 0.7);
+            c.scale(s * bonesFace, s);
             c.drawImage(cell, -cell.width / 2, -CFG[q.sheet].ground);
             c.restore();
         }
@@ -161,7 +176,8 @@ function bonesBegin() {
     g.round = 0;
     $(".bonesMenu").hidden = true;
     $(".bonesPlay").hidden = false;
-    $(".bonesPadTitle img").src = icons.bark;
+    bonesX = BONES_DOG.x;
+    bonesFace = 1;
     // pies z gry czeka pod nakładką, bez własnych pomysłów
     startQueue([{ sheet: "a01", anim: 16, time: 1800000 }]);
     phase = "bones-game";
@@ -201,7 +217,6 @@ function bonesRound() {
     $(".bonesEq").className = "bonesEq";
     $(".bonesNext").hidden = true;
     $(".bonesPad").hidden = true;
-    $(".bonesSay").hidden = true;
     $(".bonesHint").textContent = "Piesek kopie… patrz, ile kostek spada!";
     for (const [sel, n] of [
         [".bonesPile.a", g.A],
@@ -216,8 +231,9 @@ function bonesRound() {
         bonesDropBones(p, n);
     }
     // kopanie trwa, aż spadnie ostatnia kostka, potem wykopanie i zabawa kostką
-    const fall = Math.max(g.A, g.B) * 120 + 700;
-    bonesAnim(...bonesDigParts(fall));
+    const fall = Math.max(g.A, g.B) * 120 + 700,
+        back = Math.abs(bonesX - BONES_DOG.x) > 4 ? [bonesRunTo(BONES_DOG.x)] : [];
+    bonesAnim(...back, bonesPart("dig", { time: 0, face: 1 }), ...bonesDigParts(fall));
     sfx("throw");
     g.readyT = setTimeout(() => {
         if (bonesGame !== g) return;
@@ -257,7 +273,8 @@ function bonesPileTap(which) {
     if ((which === "a" && g.okA) || (which === "b" && g.okB)) return;
     const n = which === "a" ? g.A : g.B;
     const mark = $(".bonesPile." + which + " .bonesQ");
-    bonesPadOpen(which === "a" ? "Ile kostek na lewym dywaniku?" : "Ile kostek na prawym dywaniku?", n, () => {
+    $(".bonesHint").textContent = which === "a" ? "Ile kostek na lewym dywaniku?" : "Ile kostek na prawym dywaniku?";
+    bonesPadOpen(n, () => {
         const q = $(".bonesPile." + which + " .bonesQ");
         q.textContent = n;
         q.className = "bonesQ ok";
@@ -281,25 +298,27 @@ function bonesShowEq() {
     $(".bonesHint").textContent = "Ile to razem? Dotknij kratkę.";
     if (bonesOp === "-") $(".bonesHint").textContent = "Ile zostanie? Dotknij kratkę.";
     el.className = "bonesEq in";
-    // dymek nad pieskiem z tym samym działaniem
-    const say = $(".bonesSay");
-    say.style.backgroundImage = "url(" + icons.thought + ")"; // piesek „myśli” o działaniu
-    say.innerHTML = g.A + " " + bonesSign() + " " + g.B + " = <i>?</i>";
-    say.hidden = false;
     el.innerHTML = '<span class="n">' + g.A + "</span><span>" + bonesSign() + '</span><span class="n">' + g.B + '</span><span>=</span><button class="bonesRes" aria-label="Wpisz wynik">?</button>';
     el.querySelector(".bonesRes").onclick = () => {
         if (!$(".bonesPad").hidden || el.querySelector(".bonesRes.ok")) return;
-        bonesPadOpen(g.A + " " + bonesSign() + " " + g.B + " = ?", bonesResult(), () => {
+        bonesPadOpen(bonesResult(), () => {
             const r = el.querySelector(".bonesRes");
             r.textContent = bonesResult();
             r.classList.add("ok");
-            $(".bonesSay").hidden = true;
             g.round++;
             bonesStarsDraw();
-            sfx("pair");
+            sfx("win"); // fanfary po każdym dobrym wyniku
             $(".bonesHint").textContent = ["Dobrze!", "Super!", "Brawo!", "Świetnie!"][bonesRnd(0, 3)];
-            // radość, a w nagrodę wykopuje sobie kostkę
-            bonesReact(bonesPart("jump", { times: 1 }), bonesPart("joyBack", { times: 1 }), ...bonesDigParts(0));
+            // radość: podskok, bieg pod krawędź, zawrotka i fikołek z powrotem na środek
+            const edge = W - 66;
+            bonesReact(
+                bonesPart("jump", { times: 1 }),
+                bonesRunTo(edge),
+                bonesPart("roll", { times: 1, to: BONES_DOG.x + 40, face: -1 }),
+                bonesRunTo(BONES_DOG.x, "run", 120),
+                bonesPart("joyBack", { times: 1, face: 1 }),
+                { wait: true }
+            );
             if (g.round >= BONES_ROUNDS) g.readyT = setTimeout(() => bonesGame === g && bonesWin(), 1600);
             else $(".bonesNext").hidden = false;
         }, el.querySelector(".bonesRes"));
@@ -328,27 +347,29 @@ function bonesMark(el) {
     document.querySelectorAll(".bonesQ.active, .bonesRes.active").forEach((e) => e.classList.remove("active"));
     if (el) el.classList.add("active");
 }
-function bonesPadOpen(title, target, onOk, mark) {
-    bonesMark(mark);
+// Liczba wpisuje się prosto w zaznaczone pole: „?” nad dywanikiem albo
+// kratkę wyniku w działaniu (bez osobnego okienka nad klawiaturą).
+let bonesField = null;
+function bonesPadOpen(target, onOk, field) {
+    bonesMark(field);
+    bonesField = field;
     bonesBuf = "";
     bonesTarget = target;
     bonesOnOk = onOk;
-    const t = $(".bonesPadTitle span");
-    t.textContent = title;
-    t.className = /\d/.test(title) ? "big" : "";
-    $(".bonesDisp").innerHTML = "&nbsp;";
     $(".bonesPad").hidden = false;
     bonesReact(bonesPart("look"));
 }
 
 function bonesPress(k) {
-    const d = $(".bonesDisp");
+    const d = bonesField;
+    if (!d) return;
     if (k === "⌫") bonesBuf = bonesBuf.slice(0, -1);
     else if (k === "OK") {
         if (bonesBuf === "") return;
         if (+bonesBuf === bonesTarget) {
             $(".bonesPad").hidden = true;
             bonesMark(null);
+            bonesField = null;
             const cb = bonesOnOk;
             bonesOnOk = null;
             bonesBuf = "";
@@ -361,11 +382,14 @@ function bonesPress(k) {
             sfx("miss");
             bonesBuf = "";
             bonesReact(bonesPart("no", { times: 2 }), { wait: true });
-            setTimeout(() => (d.innerHTML = "&nbsp;"), 500);
+            setTimeout(() => {
+                d.classList.remove("bad");
+                if (!bonesBuf) d.textContent = "?";
+            }, 600);
         }
         return;
     } else if (bonesBuf.length < 2) bonesBuf += k;
-    d.innerHTML = bonesBuf || "&nbsp;";
+    d.textContent = bonesBuf || "?";
 }
 
 // ── Koniec ────────────────────────────────────────────────────────
