@@ -13,14 +13,15 @@
 
 const BONE_MOLE = {
     y: GROUND - 43, // środek kreta (126 px): spód kopca ≈ GROUND+6, jak ziemia w klatkach kopania
-    side: 62, // odległość kopca od ściany pokoju
+    edge: 0.14, // piesek najpierw odchodzi pod bliższą ścianę (ułamek szerokości)
+    moundX: 0.56, // …a kopiec wychodzi bliżej środka, po drugiej stronie (ułamek szerokości od ściany pieska)
     peekMs: 1300, // jak długo kret się rozgląda
     reach: 46, // piesek stoi tak, by kopiec z animacji kopania (≈ +46 px przed nim) wypadł na kopcu kreta
     first: [5000, 17500], // po wejściu do pokoju — jak zwykły kret
     next: [7500, 22500], // po zakończeniu — jak zwykły kret po sprzątnięciu piachu
     cardAfter: 900, // ile piesek stoi z kostką, zanim pokaże się karta
 };
-let boneMole = null, // { x, room, state: emerging|peek|retreating|mound|dig, t }
+let boneMole = null, // { x, room, state: pending|emerging|peek|retreating|mound|dig, t }
     nextBoneMole = 0,
     boneMoleRoom = null;
 
@@ -29,12 +30,27 @@ function boneMoleSchedule(first) {
     nextBoneMole = clock + a + Math.random() * (b - a);
 }
 
+// Start zdarzenia: piesek najpierw spokojnie odchodzi pod bliższą ścianę
+// (stan „pending” — scena zajęta, nikt inny nie wychodzi), a kret wychyla się
+// bliżej środka, po drugiej stronie — wtedy kopanie dzieje się na środku ekranu.
 function boneMoleSpawn() {
     wildlifeCooldown();
-    // przy boku pokoju — dalej od pieska (żeby nie wyszedł mu spod łap)
-    const right = x * W < W / 2,
-        mx = right ? W - BONE_MOLE.side : BONE_MOLE.side;
-    boneMole = { x: mx, room, state: "emerging", t: clock };
+    const toLeft = x < 0.5,
+        ex = toLeft ? BONE_MOLE.edge : 1 - BONE_MOLE.edge,
+        dist = Math.abs(ex - x) * W;
+    boneMole = { x: 0, room, state: "pending", t: clock, toLeft };
+    if (dist < 4) return boneMoleEmerge();
+    interrupt();
+    phase = "roam";
+    locks();
+    startQueue([{ sheet: "a01", anim: 6, motion: "walk", to: ex, time: (dist / 60) * 1000, onEnd: () => boneMoleEmerge() }]);
+}
+function boneMoleEmerge() {
+    const m = boneMole;
+    if (!m || m.state !== "pending") return;
+    m.x = (m.toLeft ? BONE_MOLE.moundX : 1 - BONE_MOLE.moundX) * W;
+    m.state = "emerging";
+    m.t = clock;
 }
 
 function boneMoleUpdate() {
@@ -59,7 +75,11 @@ function boneMoleUpdate() {
             m.state = s;
             m.t = clock;
         };
-    if (m.state === "emerging" && el >= moleTeaserDuration(1)) to("peek");
+    // piesek nie doszedł pod ścianę (np. dziecko go pogłaskało) — kret i tak wychodzi
+    if (m.state === "pending" && el >= 8000 && casual()) {
+        m.toLeft = x < 0.5;
+        boneMoleEmerge();
+    } else if (m.state === "emerging" && el >= moleTeaserDuration(1)) to("peek");
     else if (m.state === "peek" && el >= BONE_MOLE.peekMs) to("retreating");
     else if (m.state === "retreating" && el >= moleTeaserDuration(3)) to("mound");
     else if (m.state === "mound" && el >= 120000 && casual()) {
@@ -84,7 +104,7 @@ function boneMoleFrame() {
 
 function boneMoleDraw() {
     const m = boneMole;
-    if (!m || m.room !== room || m.state === "dig" || !cells.kret.length) return;
+    if (!m || m.room !== room || m.state === "dig" || m.state === "pending" || !cells.kret.length) return;
     const cell = cells.kret[boneMoleFrame() - 1];
     if (!cell) return;
     const S = MOLE_TEASER_SIZE,
@@ -123,10 +143,11 @@ function boneMoleTap() {
     if (!m || m.state !== "mound" || !casual()) return;
     if (sadBlocks("butterfly")) return sadRefuse(); // smutny piesek nie kopie (jak przy motylku)
     // strona, z której piesek podchodzi: od swojej strony, chyba że brak miejsca
-    // piesek staje od strony środka pokoju, przodem do ściany
-    const dir = m.x > W / 2 ? 1 : -1,
+    // piesek podchodzi od swojej strony (od ściany) i kopie przodem do kopca
+    const dir = x * W <= m.x ? 1 : -1,
         tx = m.x - dir * BONE_MOLE.reach;
     const face = dir < 0, // left = patrzy w lewo
+        faceCenter = tx > W / 2, // z kostką staje przodem do środka ekranu
         dig = (anim, time, extra = {}) => ({ sheet: "a03", anim, facing: face, time, ...extra });
     interrupt();
     startQueue([
@@ -141,8 +162,8 @@ function boneMoleTap() {
         }),
         dig(1, duration("a03", 1), { onStart: () => sfx("good") }),
         // z kostką w pysku obraca się przodem do środka ekranu — dobrze go widać
-        dig(4, BONE_MOLE.cardAfter, { facing: !face, onEnd: () => boneMoleCard() }),
-        dig(4, 600000, { facing: !face }), // stoi z kostką, póki karta jest otwarta
+        dig(4, BONE_MOLE.cardAfter, { facing: faceCenter, onEnd: () => boneMoleCard() }),
+        dig(4, 600000, { facing: faceCenter }), // stoi z kostką, póki karta jest otwarta
     ]);
     phase = "bonemole";
     stage = "bonemole-run";

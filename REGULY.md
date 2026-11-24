@@ -186,8 +186,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## 20. Kret z kostką — zdarzenie w pokojach ogrodowych (v0.8.177)
 - Plik `js/event-bone-mole.js`. Łąka, Ogród, Podwórko. Losowany na równi z innymi zwierzakami (`wlPick`: kret, kret z kostką, jeżyk, motylki), z tym samym tempem co zwykły kret; nigdy razem z innym zwierzakiem ani przy leżącym piachu po krecie (zwierzaki nie nachodzą na siebie).
-- Kret wychyla się przy boku pokoju (62 px od ściany, po stronie dalszej od pieska), na torze pieska, chowa się i zostaje pulsujący kopiec (nieklikany znika po 2 min albo po wyjściu z pokoju).
-- Dotyk kopca: piesek staje od strony środka pokoju, przodem do ściany, tak by ziemia z animacji kopania wypadła na kopcu; kopie (a03 „01”), wykopuje kostkę („02”), obraca się przodem do środka ekranu i stoi z kostką („05”), po ok. 0,9 s pojawia się karta „Piesek znalazł kostkę!” → „Liczymy!” otwiera „Liczymy kostki”, „Nie teraz” → odkłada kostkę („06”). Kopanie brudzi łapki (+5).
+- Start: piesek najpierw spokojnie odchodzi pod bliższą ścianę (14% szerokości), a kret wychyla się bliżej środka po drugiej stronie (56% szerokości od ściany pieska), na torze pieska; chowa się i zostaje pulsujący kopiec (nieklikany znika po 2 min albo po wyjściu z pokoju). Jeśli piesek nie dojdzie pod ścianę w 8 s, kret i tak wychodzi.
+- Dotyk kopca: piesek podchodzi od swojej strony, przodem do kopca, tak by ziemia z animacji kopania wypadła na kopcu; kopie (a03 „01”), wykopuje kostkę („02”), obraca się przodem do środka ekranu i stoi z kostką („05”), po ok. 0,9 s pojawia się karta „Piesek znalazł kostkę!” → „Liczymy!” otwiera „Liczymy kostki”, „Nie teraz” → odkłada kostkę („06”). Kopanie brudzi łapki (+5).
 - DEV: przycisk „Kret z kostką”.
 
 ## 21. Brud i czystość (v0.8.178)
@@ -200,5 +200,5 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Motylka i kopiec z kostką da się kliknąć także w trakcie samodzielnej wycieczki pieska — kliknięcie ją przerywa (`eventTapOk`/`stopAutoTrip`).
 - Czekający kopiec z kostką ma tę samą pulsującą, okrągłą ramkę co motylek.
 - Po kostce zwykły kret nie wychodzi w tym pokoju przez 60–90 s.
-- Bieg przez więcej niż jeden pokój: 400 px/s (był 520).
+- Bieg między pokojami: zawsze 300 px/s (v0.8.181; wcześniej 520/400 przez kilka pokoi).
 - Arkusz a03 dostaje „meta” (ramka, głowa) liczone z pikseli przy starcie (dymki nad pieskiem, głaskanie).

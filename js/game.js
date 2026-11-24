@@ -1140,7 +1140,7 @@ function route(target, id = null, mode = "menu") {
         dir = to >= from ? 1 : -1,
         facing = dir < 0,
         run = true, // zawsze bieg (anim 02. Bieg/sus), spacer usunięty
-        speed = distance > 1 ? 400 : mode === "auto" ? 340 : 320, // px/s: jeden pokój spokojnie; więcej niż jeden — trochę szybciej, ale bez pędu
+        speed = 300, // px/s: spokojnie, żeby dziecko widziało, dokąd piesek biegnie
         parts = [];
 
     function movement(a, b, onEnd) {
