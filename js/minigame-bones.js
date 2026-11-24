@@ -104,9 +104,10 @@ function bonesDraw(now) {
 // pętla „czekania” zależna od chwili gry: przy otwartej klawiaturze piesek
 // się rozgląda, a poza nią bawi się kostką
 const bonesWait = () => bonesPart(bonesGame && !$(".bonesPad").hidden ? "look" : "calm");
-// wykopanie kostki: kopie, wyciąga kostkę i stoi z nią w pysku, aż dziecko
-// dotknie pierwszego „?” (wtedy bonesReact najpierw ją odkłada/zakopuje)
-const bonesDigParts = () => [bonesPart("dig", { times: 2 }), bonesPart("unearth", { times: 1 }), bonesPart("calmBone")];
+// wykopanie kostki: kopie (raz), wyciąga kostkę, stoi z nią w pysku (2 razy
+// animacja) i ją odkłada — albo wcześniej, gdy dziecko dotknie pierwszego „?”
+// (wtedy bonesReact najpierw ją odkłada/zakopuje)
+const bonesDigParts = () => [bonesPart("dig", { times: 1 }), bonesPart("unearth", { times: 1 }), bonesPart("calmBone", { times: 2 }), bonesPart("putDown", { times: 1 }), { wait: true }];
 // reakcja pieska; jeśli trzyma kostkę w pysku, najpierw ją odkłada
 // (kostka nie znika z pyska nagle)
 function bonesReact(...parts) {
@@ -228,7 +229,7 @@ function bonesRound() {
     // najpierw piesek wykopuje kostkę, dopiero wtedy kostki spadają na dywaniki;
     // „?” dają się kliknąć, gdy spadnie ostatnia kostka
     const back = Math.abs(bonesX - BONES_DOG.x) > 4 ? [bonesRunTo(BONES_DOG.x)] : [],
-        dug = (back.length ? back[0].time : 0) + duration("a03", 0) * 2 + duration("a03", 1),
+        dug = (back.length ? back[0].time : 0) + duration("a03", 0) + duration("a03", 1),
         fall = Math.max(g.A, g.B) * 120 + 700;
     bonesAnim(...back, bonesPart("dig", { time: 0, face: 1 }), ...bonesDigParts());
     clearTimeout(g.dropT);
