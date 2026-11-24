@@ -2364,7 +2364,7 @@ function cleanDish() {
     dishMess = null;
     updateMoleDirtAccess();
     sfx("wipe");
-    say("star", 1600);
+    say("star", waiting ? 3200 : 1600);
     changeNeeds({ clean: 2 });
     save();
     if (waiting) dishResume(); // piesek wstaje, łapie piłkę i wraca

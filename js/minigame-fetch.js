@@ -606,8 +606,12 @@ function ballLaunch(fvx, fvh) {
         // Inny pokój: patrzy, aż piłka zniknie z kadru…
         parts.push({ sheet: "a01", anim: 15, facing: dir < 0, time: clamp(tExit + 150, 300, 2500), onStart: () => (stage = "ball-fly") });
         // …a w pokoju lądowania piłka wpada jako dalszy ciąg lotu
-        const tEnter = path.find((q) => q.t > tExit && ballVisibleIn(q, restIdx))?.t ?? tExit,
-            touch = path.find((q) => q.t > tEnter && q.hb === 0)?.t ?? tEnter,
+        let tEnter = path.find((q) => q.t > tExit && ballVisibleIn(q, restIdx))?.t ?? tExit;
+        // Z naczyniem: skorupy już leżą, a piłka pokazuje się dopiero, gdy toczy się
+        // PO ich minięciu (nie widać uderzenia w nie ani "pojawiania się" szkła)
+        if (dishMess && dishMess.room === order[restIdx])
+            tEnter = path.find((q) => q.t > Math.max(tEnter, dishMess.touchT) && q.hb === 0 && q.X / W - restIdx >= dishMess.x + 0.14)?.t ?? tEnter;
+        const touch = path.find((q) => q.t > tEnter && q.hb === 0)?.t ?? tEnter,
             wait = clamp(touch - tEnter + 260, 250, Math.max(250, tRest - tEnter));
         parts.push(...fetchChaseTo(land, { replay: { tEnter, wait }, minTime: Math.max(0, tRest - tEnter - wait) }));
     }
@@ -710,7 +714,12 @@ function fetchChaseTo(land, opts = {}) {
             onStart: () => {
                 stage = "ball-land";
                 dogHidden = true;
-                if (dishMess) dishMess.armed = true;
+                if (dishMess) {
+                    dishMess.armed = true;
+                    dishMess.shown = true; // skorupy leżą od chwili, gdy pokój wchodzi w kadr
+                    updateDishAccess();
+                    save();
+                }
                 if (ballFlight) ballFlight.t0 = clock - tEnter; // tor od wejścia w kadr
             },
         });
@@ -751,8 +760,16 @@ function dishResume() {
     const c = dishChase;
     dishChase = null;
     if (!c || !fetchGame) return;
-    const approach = clamp(c.land.x - 0.12, 0.06, 0.94);
-    startQueue([...moveParts(c.land.room, approach, { label: "ball-chase" }), ballPickupPart(1)]);
+    const approach = clamp(c.land.x - 0.12, 0.06, 0.94),
+        toBall = c.land.x < x; // piłka za naczyniem, zwykle po prawej
+    startQueue([
+        // radość z posprzątania (a02 #13 podrzut i podskok)…
+        { ...repeatPart("a02", 12, 3), facing: toBall, onStart: () => (stage = "dish-joy") },
+        // …i chwila wyczekiwania w stronę piłki (a02 #25 warowanie)
+        { ...repeatPart("a02", 24, 2), facing: toBall, onStart: () => (stage = "dish-wait") },
+        ...moveParts(c.land.room, approach, { label: "ball-chase" }),
+        ballPickupPart(toBall ? -1 : 1),
+    ]);
 }
 
 // Chwyt piłki — 24. Aport_001_chwyt_pilki (kończy się pozą z piłką w pysku,
