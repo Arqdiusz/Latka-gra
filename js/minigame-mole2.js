@@ -338,7 +338,7 @@ function mole2GameDraw() {
 function mole2PanelDraw(g) {
     const c = m2ctx,
         x = 14,
-        y = 62,
+        y = 78,
         w = W - 28,
         h = 100,
         icon = cells.kret[mole2Seq(1).slice(-1)[0] - 1];

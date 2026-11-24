@@ -609,7 +609,7 @@ function memoPlayDraw(g) {
     // panel: miejsca na motylki (po lewej) i szanse (po prawej)
     const n = g.seq.length,
         x = 14,
-        y = 62,
+        y = 78,
         w = W - 28,
         h = 66,
         slot = 40,

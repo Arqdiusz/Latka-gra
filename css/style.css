@@ -2889,3 +2889,91 @@ h3,
     0%, 100% { transform: scale(1.08); }
     50% { transform: scale(1.18); border-color: #f2b632; }
 }
+
+/* ═══ Wspólna belka mini gier (jak w „Liczymy kostki”): kremowy pasek u góry,
+   tytuł po lewej, dodatki (czas, gwiazdki) po prawej, czerwony ✕ w rogu.
+   Nadpisuje dawne pływające tytuły; bańki mają swój wygląd (bez belki). ═══ */
+.gBar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 64px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 0 64px 0 16px;
+    box-sizing: border-box;
+    background: #fff8ea;
+    border-bottom: 4px solid #d9c9a8;
+}
+.gBar .gBarTtl,
+.gBar h2,
+.gBar .moleTitle {
+    position: static;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    font: 800 21px/1.1 "Baloo 2", "Quicksand", sans-serif;
+    color: #4a2f1d;
+    text-shadow: none;
+    transform: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: none;
+}
+.gBar .moleTitle strong {
+    font: inherit;
+    color: inherit;
+}
+.gBar .moleTitle span {
+    display: none;
+}
+.gBar > button {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    left: auto;
+    bottom: auto;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    border-radius: 50%;
+    border: 3px solid #a33a37;
+    background: #d9534f;
+    color: #fff;
+    font: 800 20px/1 "Baloo 2", sans-serif;
+    box-shadow: none;
+    cursor: pointer;
+}
+.gBar > button:active {
+    background: #c9433f;
+}
+.gBar .memoTimer {
+    position: static;
+    transform: none;
+    margin: 0;
+}
+/* belka wyjęta z przepływu — treść pod nią */
+.moleFull {
+    padding-top: 66px;
+}
+.memoLevels,
+.pairsLevels {
+    padding-top: 80px;
+}
+.gBar .moleTitle strong {
+    font-size: 21px;
+    text-shadow: none;
+}
+.pairsHud {
+    top: 74px;
+}
+.pairsBoard {
+    top: 118px;
+}

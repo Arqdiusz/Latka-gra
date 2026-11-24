@@ -409,7 +409,7 @@ function hedgeGameDraw() {
 function hedgePanelDraw(g) {
     const c = hctx,
         x = 14,
-        y = 62,
+        y = 78,
         w = W - 28,
         h = 66;
     c.save();
