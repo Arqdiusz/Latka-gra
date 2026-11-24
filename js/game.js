@@ -71,6 +71,14 @@ const items = [
         color: "#72d3b0",
     },
     {
+        // Czyszczenie łapek szmatką (łazienka) — patrz pawsStart()
+        id: "paws",
+        icon: "cloth",
+        label: "Łapki",
+        room: "bathroom",
+        color: "#72d3b0",
+    },
+    {
         id: "brush",
         icon: "brush",
         label: "Szczotkowanie",
@@ -231,7 +239,7 @@ const SAD_THRESHOLD = 10;
 const SAD_ANIMS = [25, 26, 27]; // a02: siad i westchnienie, głowa w dół, obrażony tyłem
 const SAD_NO_ANIM = 19; // a02: „NIE” — kręci głową
 // Co pomaga na którą potrzebę (id pozycji menu / "games" = ekran gier)
-const SAD_ALLOWS = { food: ["food"], water: ["water"], sleep: ["sleep"], fun: ["fun", "games", "butterfly"], clean: ["clean", "brush"] };
+const SAD_ALLOWS = { food: ["food"], water: ["water"], sleep: ["sleep"], fun: ["fun", "games", "butterfly"], clean: ["clean", "brush", "paws"] };
 let sadLast = -1,
     sadBoostUntil = 0; // chwilowo mocniejsze pulsowanie (po odmowie)
 
@@ -735,7 +743,7 @@ function statusUpdate() {
 function syncMenu() {
     const allowed = items.filter((i) => i.room === room);
     if (!allowed.length) return;
-    const score = (i) => stats[i.id === "den" ? "fun" : i.id === "brush" ? "clean" : i.id] ?? 50;
+    const score = (i) => stats[i.id === "den" ? "fun" : i.id === "brush" || i.id === "paws" ? "clean" : i.id] ?? 50;
     const min = Math.min(...allowed.map(score)),
         tied = allowed.filter((i) => score(i) === min);
     selected = tied.some((i) => i.id === selected) ? selected : tied[0].id;
@@ -918,6 +926,11 @@ function activity(id) {
 
     if (blockRoomActivity(id)) return;
     pending = id;
+    if (id === "paws") {
+        pending = null;
+        pawsStart();
+        return;
+    }
     if (id === "sleep") {
         sleeping = true;
         phase = "idle";
@@ -1222,6 +1235,7 @@ function action(id) {
         return;
     }
     if (fullRefuse(id)) return; // najedzony / napojony / wyspany / czysty — „NIE”
+    if (id === "paws" && pawDirt < 3) return refuseWith("cloth"); // łapki czyste — „NIE” + szmatka w dymku
     if (i.room === room && dirty()) {
         interrupt();
         blockRoomActivity(id);
@@ -1322,7 +1336,8 @@ function drawDog(c, cx = x * W, gy = GROUND + jumpY, facing = left, ratio = 1) {
 // w kolumnach, więc podążają za łapą także w biegu), bez osobnego arkusza.
 // Kolejność grudek jest stała dla klatki: mniej brudu = mniej grudek (znikają
 // grupami, nie piksel po pikselu). Rysowane w układzie komórki arkusza.
-const PAW_DIRT_COLORS = ["#c9a066", "#6a4524", "#a56a3a", "#d9b87f", "#4a2e17"],
+const PAW_BUCKET = 14, // szerokość „pasa” brudu w pikselach komórki arkusza (czyszczony osobno)
+    PAW_DIRT_COLORS = ["#c9a066", "#6a4524", "#a56a3a", "#d9b87f", "#4a2e17"],
     pawDirtCache = {};
 // Szablon grudek jest WSPÓLNY dla wszystkich klatek (te same współrzędne x w
 // komórce arkusza, ta sama głębokość i kształt), więc gdy piesek stoi w miejscu,
@@ -1374,13 +1389,14 @@ function pawDirtBlobs(sh, f) {
             gx += [1, -1, 0, 0][s.d];
             gy += [0, 0, 1, -1][s.d];
         }
-        if (list.length) blobs.push({ list, px, thr: t.thr });
+        if (list.length) blobs.push({ list, px, thr: t.thr, bucket: Math.floor(bx / PAW_BUCKET) });
     }
     return (pawDirtCache[key] = blobs);
 }
 function pawDirtDraw(c, sh, f, amount) {
     for (const bl of pawDirtBlobs(sh, f)) {
-        if (bl.thr >= amount) continue;
+        // w trakcie czyszczenia każdy fragment łapek ma własny poziom brudu (pawLvl)
+        if (bl.thr >= (pawLvl ? (pawLvl[bl.bucket] ?? 0) : amount)) continue;
         for (const q of bl.list) {
             c.fillStyle = q.col;
             c.fillRect(q.x, q.y, bl.px, bl.px);
@@ -1389,20 +1405,23 @@ function pawDirtDraw(c, sh, f, amount) {
 }
 
 // ── Czyszczenie łapek szmatką (łazienka) ──────────────────────────
-// Przycisk ze szmatką pojawia się w łazience, gdy łapki są brudne. Piesek staje
-// w miejscu, a dziecko przeciąga palcem po jego łapkach — brud znika grupami.
+// Wybór „Łapki” w menu kołowym → piesek idzie do łazienki, staje w miejscu, a
+// dziecko przeciąga palcem po jego łapkach. Brud jest podzielony na pasy wzdłuż
+// łap (pawLvl) — szmatka zciera te pasy, nad którymi przesuwasz palec, całymi
+// grupami grudek (nie piksel po pikselu). Gdy znika ostatnia grudka: fanfary.
 let pawsPtr = null, // poprzedni punkt przeciągania (do liczenia drogi)
-    pawsCloth = null; // gdzie rysować szmatkę
+    pawsCloth = null, // gdzie jest palec
+    pawsClothVis = null, // wygładzona pozycja rysowanej szmatki
+    pawLvl = null; // poziom brudu (0–1) każdego pasa podczas czyszczenia
 function updatePawsUi() {
-    const a = $(".pawsAccess"),
-        e = $(".pawsEnd");
-    if (a) a.hidden = !(room === "bathroom" && pawDirt >= 3 && casual());
+    const e = $(".pawsEnd");
     if (e) e.hidden = phase !== "paws-clean";
 }
 function pawsStart() {
-    if (!casual() || room !== "bathroom" || pawDirt < 3) return;
+    if (room !== "bathroom" || pawDirt < 3) return idle(16);
     bubble = null;
-    pawsPtr = pawsCloth = null;
+    pawsPtr = pawsCloth = pawsClothVis = null;
+    pawLvl = new Array(16).fill(pawDirt / 100);
     startQueue([
         {
             sheet: "a01",
@@ -1419,37 +1438,75 @@ function pawsStart() {
 }
 function pawsEnd(done) {
     if (phase !== "paws-clean") return;
-    pawsPtr = pawsCloth = null;
+    pawsPtr = pawsCloth = pawsClothVis = null;
     if (done) {
+        pawLvl = null;
         pawDirt = 0;
         changeNeeds(ACTION_EFFECTS.paws);
-        sfx("pair");
-        say("star", 2600);
         save();
-        startQueue([{ ...repeatPart("a01", 21, 2), onStart: () => (stage = "paws-joy") }]);
-    } else idle(16);
+        // Brawo, czysty piesek: fanfary, konfetti i karta końcowa jak w grach
+        $("#pawsWinPopup .memoWinImg").src = icons.cup;
+        moleWinSpawnConfetti("#pawsWinPopup .moleWinConfetti");
+        say("star", 2600);
+        startQueue([{ sheet: "a01", anim: 21, time: 600000 }]);
+        phase = "paws-end";
+        stage = "paws-end";
+        $("#pawsWinPopup").hidden = false;
+    } else {
+        // przerwane: zostaje tyle brudu, ile nie zdążyłeś wytrzeć
+        if (pawLvl) pawDirt = (pawLvl.slice(0, 10).reduce((a, v) => a + v, 0) / 10) * 100;
+        pawLvl = null;
+        save();
+        idle(16);
+    }
     locks();
 }
+$("#pawsWinPopup .moleWinOk").onclick = () => {
+    $("#pawsWinPopup").hidden = true;
+    idle(16);
+};
+// x w komórce arkusza dla punktu na ekranie (ta sama matematyka co w drawDog)
+function pawsCellX(px) {
+    const g = geometry();
+    let dx = px - x * W;
+    if (left) dx = -dx;
+    return (dx - g.o.x * BASE) / g.s + g.w / 2;
+}
 function pawsWipe(p) {
-    if (phase !== "paws-clean") return;
+    if (phase !== "paws-clean" || !pawLvl) return;
     pawsCloth = p;
     const prev = pawsPtr;
     pawsPtr = p;
     if (!prev) return;
     // szmatka działa tylko przy łapkach (pasek przy podłodze pod pieskiem)
-    if (Math.abs(p.x - x * W) > 140 || p.y < GROUND - 80 || p.y > GROUND + 50) return;
-    pawDirt = Math.max(0, pawDirt - Math.hypot(p.x - prev.x, p.y - prev.y) * 0.2);
-    sfx("wipe");
-    if (pawDirt < 2) pawsEnd(true);
+    if (Math.abs(p.x - x * W) > 150 || p.y < GROUND - 90 || p.y > GROUND + 60) return;
+    const d = Math.min(40, Math.hypot(p.x - prev.x, p.y - prev.y)), // pojedynczy skok nie zaciera od razu wszystkiego
+        cx = pawsCellX(p.x);
+    let touched = false;
+    pawLvl.forEach((v, b) => {
+        if (v <= 0 || Math.abs((b + 0.5) * PAW_BUCKET - cx) > 26) return;
+        touched = true;
+        pawLvl[b] = Math.max(0, v - d * 0.006);
+        if (pawLvl[b] <= 0.02) {
+            pawLvl[b] = 0;
+            sfx("good"); // „plink” za każdy wytarty fragment
+        }
+    });
+    if (touched) sfx("wipe");
+    // koniec, gdy na bieżącej klatce nie widać już żadnej grudki
+    const f = geometry().f;
+    if (!pawDirtBlobs(sheet, f).some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) pawsEnd(true);
 }
 function pawsClothDraw() {
     const im = cells.ui[UI.map.cloth - 1];
     if (!im) return;
     const hint = !pawsCloth,
-        px = pawsCloth ? pawsCloth.x : x * W + Math.sin(clock / 260) * 70,
-        py = pawsCloth ? pawsCloth.y : GROUND - 4;
+        tx = pawsCloth ? pawsCloth.x : x * W + Math.sin(clock / 700) * 40,
+        ty = pawsCloth ? pawsCloth.y : GROUND - 4;
+    // wygładzanie: szmatka płynnie dogania palec (bez szarpania)
+    pawsClothVis = pawsClothVis ? { x: pawsClothVis.x + (tx - pawsClothVis.x) * 0.4, y: pawsClothVis.y + (ty - pawsClothVis.y) * 0.4 } : { x: tx, y: ty };
     ctx.save();
-    ctx.translate(px, py);
+    ctx.translate(pawsClothVis.x, pawsClothVis.y);
     ctx.rotate(-0.35);
     ctx.globalAlpha = hint ? 0.8 : 1;
     ctx.imageSmoothingEnabled = false;
@@ -1457,7 +1514,6 @@ function pawsClothDraw() {
     ctx.restore();
 }
 $(".pawsEnd").onclick = () => pawsEnd(false);
-$(".pawsAccess").onclick = pawsStart;
 
 function headPosition() {
     const g = geometry(),
@@ -3366,7 +3422,6 @@ async function boot() {
     // Szybki dostęp do gier — puchar w górnym pasku sceny.
     $(".gamesAccess img").src = icons.cup;
     $(".gamesAccess").onclick = () => action("games");
-    $(".pawsAccess img").src = icons.cloth;
     lp(0.98);
     loaded = true;
     setRoom(room);
