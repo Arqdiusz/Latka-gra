@@ -9,7 +9,7 @@
 // ═══════════════════════════════════════════════════════════════
 (() => {
     const GUARD_MS = 700,
-        SEL = ".molePopup, .moleWinPopup, .memoLevels, .pairsLevels, .gamesFull",
+        SEL = ".molePopup, .moleWinPopup, .memoLevels, .pairsLevels, .gamesFull, .bonesMenu",
         shownAt = new WeakMap(),
         mo = new MutationObserver((list) => {
             for (const m of list) if (m.target instanceof Element && !m.target.hidden) shownAt.set(m.target, performance.now());

@@ -7,6 +7,7 @@ const
     cells = {
         a01: [],
         a02: [],
+        a03: [],
         ui: [],
         bubbles: [],
         motyle: [],
@@ -17,6 +18,7 @@ const
     pixels = {
         a01: [],
         a02: [],
+        a03: [],
     },
     // Pozycje zielonych znaczników (#00ff43) wykrytych w klatkach a02 —
     // klucz to numer klatki (1-based), wartość to {x,y} w lokalnych
@@ -137,6 +139,7 @@ let loaded = false,
     travelMode = "",
     travelTarget = "",
     jumpY = 0,
+    dogLift = 0, // stałe przesunięcie psa w górę (mini gra z kostkami: piesek stoi nad dywanikami)
     pending = null,
     menu = null,
     gesture = null,
@@ -392,6 +395,7 @@ const ACTION_EFFECTS = {
     hedgehog: { fun: 24, water: -4, clean: -7, paws: 15 },
     memory: { fun: 24, water: -3, clean: -4 },
     pairs: { fun: 20, water: -2, clean: -4 },
+    bones: { fun: 22, water: -3, clean: -4, paws: 15 },
     // Złapany motylek — krótka, lekka frajda.
     butterfly: { fun: 6, water: -1, clean: -2 },
     // Pojedynczy rzut piłki w aporcie (minigame-fetch.js).
@@ -1323,7 +1327,7 @@ function geometry() {
     };
 }
 
-function drawDog(c, cx = x * W, gy = GROUND + jumpY, facing = left, ratio = 1) {
+function drawDog(c, cx = x * W, gy = GROUND + jumpY + dogLift, facing = left, ratio = 1) {
     const g = geometry();
     c.save();
     c.translate(cx, gy);
@@ -2500,7 +2504,7 @@ function moleTeaserSpawn() {
 function moleTeaserUpdate() {
     // Kret może wychodzić na KAŻDEJ mapce (nie tylko w ogrodzie/na łące) —
     // jedyne co go blokuje to brak grafiki albo trwająca pełna mini-gra.
-    if (!cells.kret.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo") || phase.startsWith("pairs")) {
+    if (!cells.kret.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo") || phase.startsWith("pairs") || phase.startsWith("bones")) {
         if (moleTeaser) moleTeaser = null;
         return;
     }
@@ -2808,7 +2812,7 @@ function hedgehogRollFruit() {
 function hedgehogUpdate(dt) {
     if (hedgeFruit && clock - hedgeFruit.born > HEDGEHOG_FRUIT_LIFE) hedgeFruit = null;
     if (!GARDEN_ROOMS.includes(room)) hedgeFruit = null;
-    if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo") || phase.startsWith("pairs")) {
+    if (!cells.hedgehog.length || !GARDEN_ROOMS.includes(room) || phase === "mole-game" || phase.startsWith("hedge") || phase.startsWith("mole2") || phase.startsWith("memo") || phase.startsWith("pairs") || phase.startsWith("bones")) {
         hedgehog = null;
         return;
     }
@@ -3262,9 +3266,10 @@ async function boot() {
     lp(0.1);
     // Załaduj animacje z plików edytora (animacje-ustawienia/)
     // — te pliki są źródłem prawdy; config.json trzyma resztę ustawień
-    const [anim01, anim02, motyleAnim, kretAnim, hedgehogAnim, hedgehogGameAnim, skel] = await Promise.all([
+    const [anim01, anim02, anim03, motyleAnim, kretAnim, hedgehogAnim, hedgehogGameAnim, skel] = await Promise.all([
         fresh("animacje-ustawienia/latka-animacje-01.json"),
         fresh("animacje-ustawienia/latka-animacje-02.json"),
+        fresh("animacje-ustawienia/latka-animacje-03.json"), // kopanie kostek (mini gra z liczeniem)
         fresh("animacje-ustawienia/motyle-001-animacje.json"),
         fresh("animacje-ustawienia/kret-animacje.json"),
         fresh("animacje-ustawienia/hedgehog-animacje.json"),
@@ -3291,12 +3296,14 @@ async function boot() {
     CFG = P.config;
     CFG.a01 = anim01;
     CFG.a02 = anim02;
+    CFG.a03 = anim03;
     CFG.motyle = motyleAnim;
     CFG.kret = kretAnim;
     CFG.hedgehog = hedgehogAnim;
     CFG.hedgehogGame = hedgehogGameAnim;
     UI = CFG.ui;
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
+    images.a03 = await loadImage("animacje/latka-animacje-03.png");
     images.dish = await loadImage("animacje/naczynia.png");
     // Stary dwuklatkowy motyl-1.png/motyl-2.png (P.assets.butterflies) nie
     // jest już używany — cały butterflyEvent() lata teraz jedną, spójną
@@ -3375,7 +3382,7 @@ async function boot() {
     }
     if (P.assets.bubbleStar) images.bubbleStar = await loadImage(P.assets.bubbleStar);
     if (P.assets.bubbleWrong) images.bubbleWrong = await loadImage(P.assets.bubbleWrong);
-    for (const key of ["a01", "a02", "ui"]) {
+    for (const key of ["a01", "a02", "a03", "ui"]) {
         const rows = key === "ui" ? 6 : 12,
             im = images[key],
             w = im.width / 6,

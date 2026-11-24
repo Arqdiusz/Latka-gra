@@ -81,6 +81,21 @@ const GAMES_LIST = [
         },
         start: () => pairsTryStart(),
     },
+    {
+        id: "bones",
+        name: "Liczymy kostki",
+        // piesek z kostką w pysku i dwie kostki obok
+        draw: (c, s) => {
+            const dog = cells.a03[11],
+                bone = cells.ui[UI.map.bone - 1];
+            if (dog) c.drawImage(dog, s * 0.04, s * 0.1, s * 0.92, s * 0.92);
+            if (bone) {
+                c.drawImage(bone, s * 0.0, s * 0.62, s * 0.3, s * 0.3);
+                c.drawImage(bone, s * 0.7, s * 0.66, s * 0.3, s * 0.3);
+            }
+        },
+        start: () => bonesTryStart(),
+    },
 ];
 
 function gamesBuild() {

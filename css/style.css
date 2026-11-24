@@ -2442,3 +2442,427 @@ h3,
 .memoStats .pairsRes {
     font-size: 20px;
 }
+
+/* ── Mini gra „Liczymy kostki” (js/minigame-bones.js) ─────────────────────────
+   Nakładka na cały ekran gry. Środkowa część jest przezroczysta, żeby było
+   widać łąkę i pieska rysowanego przez silnik (kopanie, zabawa kostką). */
+.bonesFull {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    pointer-events: none;
+    color: #4a2f1d;
+    font-family: "Baloo 2", "Quicksand", sans-serif;
+}
+.bonesFull[hidden],
+.bonesMenu[hidden],
+.bonesPlay[hidden],
+.bonesPad[hidden],
+.bonesNext[hidden] {
+    display: none;
+}
+.bonesMenu {
+    position: absolute;
+    inset: 0;
+    pointer-events: auto;
+    background: #a3d45c url("../tla/001.png") top center / 100% auto no-repeat;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    padding: 56px 16px 24px;
+}
+.bonesClose {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid #a33a37;
+    background: #d9534f;
+    color: #fff;
+    font: 800 20px/1 "Baloo 2", sans-serif;
+    cursor: pointer;
+    z-index: 3;
+}
+.bonesCard {
+    background: rgba(255, 248, 234, 0.94);
+    border: 3px solid #d9c9a8;
+    border-radius: 22px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.bonesCard h2 {
+    margin: 0;
+    font-size: 21px;
+    text-align: center;
+}
+.bonesOps {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.bonesOp,
+.bonesLvl {
+    border: 3px solid #d9c9a8;
+    background: #fff;
+    border-radius: 18px;
+    color: #4a2f1d;
+    font: 800 17px "Baloo 2", sans-serif;
+    cursor: pointer;
+}
+.bonesOp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px;
+}
+.bonesOp b {
+    font-size: 50px;
+    line-height: 1;
+}
+.bonesLevels {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.bonesLvl {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    text-align: left;
+}
+.bonesLvl small {
+    display: block;
+    font: 600 13px "Quicksand", sans-serif;
+    opacity: 0.75;
+}
+.bonesLvl .dots {
+    margin-left: auto;
+    display: flex;
+    gap: 3px;
+}
+.bonesLvl .dots i {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #d9c9a8;
+}
+.bonesLvl .dots i.on {
+    background: #f2b632;
+}
+.bonesOp[aria-pressed="true"],
+.bonesLvl[aria-pressed="true"] {
+    border-color: #255f96;
+    background: #e3f0fc;
+    box-shadow: 0 0 0 3px rgba(59, 130, 196, 0.35);
+}
+.bonesPlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: auto; /* nie przepuszcza dotyku do sceny (pogłaskanie pieska itp.) */
+}
+.bonesTop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 106px;
+    background: #fff8ea;
+    border-bottom: 4px solid #d9c9a8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.bonesTtl {
+    font: 800 24px "Baloo 2", sans-serif;
+}
+.bonesStars {
+    display: flex;
+    gap: 6px;
+}
+.bonesStars i {
+    width: 28px;
+    height: 28px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    filter: grayscale(1) opacity(0.35);
+}
+.bonesStars i.on {
+    filter: none;
+}
+.bonesPile {
+    position: absolute;
+    top: 322px;
+    width: 140px;
+    height: 88px;
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+}
+.bonesPile.a {
+    left: 8px;
+}
+.bonesPile.b {
+    right: 8px;
+}
+.bonesRug {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(#c9ad6b 1.6px, transparent 2.2px) 0 0 / 11px 11px, radial-gradient(ellipse at center, #ecd9a3 0 62%, #dcc386 63% 100%);
+    border: 5px solid #b08a4e;
+    box-shadow: 0 7px 0 rgba(0, 0, 0, 0.2), inset 0 0 0 5px rgba(244, 231, 192, 0.67);
+    transition: filter 0.4s;
+}
+.bonesPile.cover .bonesRug {
+    filter: brightness(0.75);
+}
+.bonesBone {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.2));
+    animation: bonesDrop 0.7s cubic-bezier(0.3, 0.9, 0.4, 1) both;
+}
+.bonesPile.cover .bonesBone {
+    opacity: 0;
+}
+@keyframes bonesDrop {
+    0% {
+        transform: translateY(-260px) rotate(var(--r, 0deg));
+        opacity: 0;
+    }
+    15% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0) rotate(var(--r, 0deg));
+    }
+}
+.bonesQ {
+    position: absolute;
+    top: -44px;
+    left: 50%;
+    translate: -50% 0;
+    min-width: 52px;
+    height: 52px;
+    padding: 0 10px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #4a2f1d;
+    font: 800 30px/46px "Baloo 2", sans-serif;
+    font-style: normal;
+    text-align: center;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+    animation: bonesPulse 1.2s ease-in-out infinite;
+}
+.bonesQ::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -11px;
+    translate: -50% 0;
+    border: 8px solid transparent;
+    border-top-color: #4a2f1d;
+    border-bottom: 0;
+}
+.bonesQ.ok {
+    background: #d9f4d5;
+    border-color: #2f8a3a;
+    color: #1f6a29;
+    animation: bonesPop 0.35s;
+}
+@keyframes bonesPulse {
+    50% {
+        transform: scale(1.12);
+    }
+}
+@keyframes bonesPop {
+    40% {
+        transform: scale(1.3);
+    }
+}
+.bonesMath {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 345px;
+    background: #f6ecd6;
+    border-top: 4px solid #d9c9a8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 10px 14px 20px;
+}
+.bonesEq {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: 800 64px/1 "Baloo 2", sans-serif;
+    min-height: 74px;
+}
+.bonesEq .n {
+    min-width: 50px;
+    text-align: center;
+}
+.bonesEq.in {
+    animation: bonesRise 0.5s;
+}
+@keyframes bonesRise {
+    from {
+        transform: translateY(24px);
+        opacity: 0;
+    }
+}
+.bonesRes {
+    min-width: 76px;
+    height: 72px;
+    border-radius: 18px;
+    border: 4px dashed #b99b66;
+    color: #b99b66;
+    background: #fff;
+    font: 800 52px/62px "Baloo 2", sans-serif;
+    cursor: pointer;
+}
+.bonesRes.ok {
+    border: 4px solid #2f8a3a;
+    color: #1f6a29;
+    background: #d9f4d5;
+}
+.bonesHint {
+    margin: 0;
+    min-height: 22px;
+    font: 700 16px "Quicksand", sans-serif;
+    text-align: center;
+    color: #6b4a2c;
+}
+.bonesPad {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+.bonesPadCard {
+    background: #fff8ea;
+    border-radius: 24px 24px 0 0;
+    border-top: 4px solid #d9c9a8;
+    padding: 10px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: bonesUp 0.25s;
+    box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.2);
+}
+@keyframes bonesUp {
+    from {
+        transform: translateY(100%);
+    }
+}
+.bonesPadTitle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font: 800 18px "Baloo 2", sans-serif;
+}
+.bonesPadTitle img {
+    width: 34px;
+    height: 34px;
+    image-rendering: pixelated;
+}
+.bonesPadTitle span.big {
+    font-size: 28px;
+    letter-spacing: 1px;
+}
+.bonesDisp {
+    height: 52px;
+    border-radius: 14px;
+    background: #fff;
+    border: 4px solid #4a2f1d;
+    font: 800 38px/44px "Baloo 2", sans-serif;
+    text-align: center;
+    letter-spacing: 2px;
+}
+.bonesDisp.bad {
+    border-color: #d9534f;
+    animation: bonesShake 0.4s;
+}
+@keyframes bonesShake {
+    25% {
+        transform: translateX(-7px);
+    }
+    75% {
+        transform: translateX(7px);
+    }
+}
+.bonesKeys {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+}
+.bonesKey {
+    height: 46px;
+    border-radius: 13px;
+    border: 3px solid #b99b66;
+    background: #fff;
+    color: #4a2f1d;
+    font: 800 24px "Baloo 2", sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #b99b66;
+}
+.bonesKey:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #b99b66;
+}
+.bonesKey.ok {
+    background: #4caf50;
+    border-color: #2f8a3a;
+    color: #fff;
+    box-shadow: 0 4px 0 #2f8a3a;
+}
+.bonesKey.del {
+    background: #ffe3e0;
+    border-color: #d9857f;
+    box-shadow: 0 4px 0 #d9857f;
+}
+.bonesStart,
+.bonesNext {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    padding: 10px 34px;
+    border: none;
+    border-radius: 20px;
+    font: 700 22px "Baloo 2", sans-serif;
+    color: white;
+    background: var(--b);
+    box-shadow: 0 5px 0 var(--sh);
+    cursor: pointer;
+}
+.bonesStart:active,
+.bonesNext:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 var(--sh);
+}
+/* w czasie liczenia chowamy plakietki sceny (pokój, serce, puchar, pełny ekran) */
+body.bonesOn .roomBadge,
+body.bonesOn .heartBadge,
+body.bonesOn .gamesAccess,
+body.bonesOn .full {
+    visibility: hidden;
+}

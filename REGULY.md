@@ -174,3 +174,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - `python3 narzedzia/szkielet.py` → `animacje-ustawienia/szkielet.json` (72 klatki × arkusz; nos i ogon zapisane na przyszłość).
 - Animacje statyczne (łapy się nie ruszają) mają punkty przyklejone do 1. klatki (tolerancja 5 px), więc brud stoi w miejscu; w fikołku i przy uniesionej łapie jedzie za punktem.
 - Klatka bez punktów łap = brak brudu. Po zmianie siatki uruchom skrypt ponownie.
+
+## 18. Mini gra „Liczymy kostki” (v0.8.172)
+- Plik `js/minigame-bones.js`, kafelek w menu Gry. Dodawanie lub odejmowanie w zakresie 10, poziomy: do 5 / do 10 / do 10 z zakryciem kostek po 3 s. 5 działań = wygrana, nagroda `ACTION_EFFECTS.bones`.
+- Przebieg: kostki spadają na dwa dywaniki → dziecko wpisuje liczbę na każdym (klawiatura) → pojawia się działanie (np. 5 + 2 = ?) → wpisuje wynik.
+- Piesek to pies silnika na łące, podniesiony nad dywaniki przez `dogLift`. Animacje: kopanie / wykopanie / zabawa kostką (arkusz `latka-animacje-03.png`, presety w `animacje-ustawienia/latka-animacje-03.json`), wpisywanie = a01 „04. Rozglądanie się”, dobra liczba = a01 „08. Uszy / mrugnięcie”, pomyłka = a02 „20. NIE — próba z powrotem”, dobry wynik = a01 „01. Skok” + „Radość z powrotem”.
