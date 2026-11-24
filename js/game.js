@@ -360,25 +360,25 @@ function bubbleThink() {
 }
 
 const NEEDS_KEY = "latka-potrzeby-v1";
-const NEEDS_DECAY = { food: 0.65, water: 1, fun: 0.8, sleep: 0.55, clean: 0.35 };
+const NEEDS_DECAY = { food: 1.1, water: 1.3, fun: 1.2, sleep: 0.8, clean: 0.9 };
 const ACTION_EFFECTS = {
-    food: { food: 28, water: -3 },
+    food: { food: 100, water: -3 }, // karmienie najada do pełna
     water: { water: 35 },
-    fun: { fun: 24, water: -5, sleep: -4, clean: -3 },
+    fun: { fun: 24, water: -5, sleep: -4, clean: -8 },
     den: { fun: 16, food: -2, water: -2 },
     clean: { clean: 38 },
     brush: { clean: 12, fun: 5 },
     // Zabawa w kreta — radość jak przy aporcie/bańkach, ale piesek się przy
     // tym trochę brudzi, głoduje i chce pić (patrz js/minigame-mole.js).
-    mole: { fun: 26, clean: -8, food: -4, water: -5 },
+    mole: { fun: 26, clean: -14, food: -5, water: -6 },
     // Jeżyk i owoce (js/minigame-hedge.js) — zdrowa zabawa na trawie.
-    hedgehog: { fun: 24, water: -3, clean: -2 },
-    memory: { fun: 24, water: -3, clean: -2 },
-    pairs: { fun: 20, water: -2 },
+    hedgehog: { fun: 24, water: -4, clean: -7 },
+    memory: { fun: 24, water: -3, clean: -4 },
+    pairs: { fun: 20, water: -2, clean: -4 },
     // Złapany motylek — krótka, lekka frajda.
-    butterfly: { fun: 6, water: -1 },
+    butterfly: { fun: 6, water: -1, clean: -2 },
     // Pojedynczy rzut piłki w aporcie (minigame-fetch.js).
-    throw: { fun: 5, water: -2, sleep: -1 },
+    throw: { fun: 5, water: -2, sleep: -1, clean: -3 },
     // Posprzątanie kupki / piachu po krecie.
     poop: { clean: 6 },
     moleDirt: { clean: 2 },

@@ -155,3 +155,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Skorupy leżą od chwili, gdy pokój wchodzi w kadr; piłka pokazuje się dopiero, gdy toczy się za nimi (nie widać uderzenia w naczynie). Gdy piesek wbiega do tego pokoju: staje na x 0,46, siada tyłem (a02 „28. Smutek — obrażony tyłem”), w dymku pulsują skorupy (`say("dish")`), etap `dish-sad`. Dopiero po posprzątaniu (dotyk skorup lub ukryty `.dishAccess`) cieszy się merdaniem ogona (a01 #22 „Radość z powrotem”, 2 cykle, dymek ⭐ 3,2 s) i od razu biegnie do piłki, podnosi ją i wraca (`dishResume`).
 - `dishMess = {room, x, idx, shown}` zapisuje się w `save()` (tylko gdy `shown`). Sprzątanie +2 czystości.
 - `window.dishForce = N` wymusza próbę przerzutu o N pokoi (testy).
+
+## 16. Tempo statusów (v0.8.161)
+- Spadek na minutę (`NEEDS_DECAY`): jedzenie 1,1 · woda 1,3 · zabawa 1,2 · sen 0,8 · czystość 0,9 (było 0,65 / 1 / 0,8 / 0,55 / 0,35). Przy pełnych 100% piesek dojdzie do ≤ 10% w ok. 1,5–2 h zabawy.
+- Karmienie ustawia jedzenie na 100%.
+- Brudzenie przy zabawie (czystość za rundę/rzut): kret −14, jeżyk −7, zabawa −8, pary/pamięć −4, rzut piłką −3, motylek −2.
