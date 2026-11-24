@@ -168,3 +168,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Czyszczenie: pozycja „Łapki” (szmatka) w menu kołowym → piesek idzie do łazienki i staje w miejscu (`paws-clean`). Przy czystych łapkach (< 3) piesek kręci głową „NIE” + szmatka w dymku. Brud jest podzielony na pasy wzdłuż łap (`pawLvl`, 14 px komórki arkusza); przeciągnięcie palca zciera pasy pod szmatką (0,0026 na px, pojedynczy skok max 40 px), „plink” za każdy wytarty pas. Szmatka płynnie dogania palec; zanim dziecko dotknie, lekko kołysze się przy łapach. Czerwony ✕ przerywa (zostaje niewytarty brud).
 - Gdy zniknie ostatnia grudka na bieżącej klatce: fanfary + konfetti + karta „Brawo! Czysty piesek!”, czystość +25, zabawa +6.
 - W dymku „chęci” w domu pojawia się szmatka, gdy łapki są brudne.
+
+### 17a. Brud na łapkach — siatka punktów (v0.8.166)
+- Pozycje łap bierzemy z ręcznie narysowanych siatek `animacje/latka-animacje-0N-lapki-nos-ogon.png` (magenta = łapy, zielony = nos, niebieski = czubek ogona).
+- `python3 narzedzia/szkielet.py` → `animacje-ustawienia/szkielet.json` (72 klatki × arkusz; nos i ogon zapisane na przyszłość).
+- Animacje statyczne (łapy się nie ruszają) mają punkty przyklejone do 1. klatki (tolerancja 5 px), więc brud stoi w miejscu; w fikołku i przy uniesionej łapie jedzie za punktem.
+- Klatka bez punktów łap = brak brudu. Po zmianie siatki uruchom skrypt ponownie.

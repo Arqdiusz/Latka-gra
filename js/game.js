@@ -1345,201 +1345,56 @@ function drawDog(c, cx = x * W, gy = GROUND + jumpY, facing = left, ratio = 1) {
 const PAW_BUCKET = 14, // szerokość „pasa” brudu w pikselach komórki arkusza (czyszczony osobno)
     PAW_DIRT_COLORS = ["#c9a066", "#6a4524", "#a56a3a", "#d9b87f", "#4a2e17"],
     pawDirtCache = {};
-// Szablon grudek jest WSPÓLNY dla wszystkich klatek (te same współrzędne x w
-// komórce arkusza, ta sama głębokość i kształt), więc gdy piesek stoi w miejscu,
-// brud stoi w miejscu; rusza się tylko razem z łapą, gdy ta się unosi (zmienia
-// się najniższy punkt sierści w danej kolumnie).
-let pawDirtTemplate = null;
+// Brud sypie się wokół punktów łap z ręcznie narysowanych siatek
+// (animacje/latka-animacje-0N-lapki-nos-ogon.png → szkielet.json, patrz
+// narzedzia/szkielet.py). W animacjach, w których łapy się nie ruszają, punkty są
+// wspólne dla wszystkich klatek, więc brud stoi w miejscu; w fikołku i przy
+// uniesionej łapie jedzie razem z punktem. Klatki bez punktów łap — bez brudu.
+// Wzorzec grudek (przesunięcia, kolory, kolejność znikania) jest stały dla łapy.
+let skeleton = null,
+    pawDirtTemplate = null;
 function pawDirtMake() {
     let seed = 4242;
     const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280),
         out = [];
-    for (let i = 0; i < 110; i++) {
-        const blob = { x: Math.floor(rnd() * 200), depth: rnd(), thr: rnd(), steps: [] },
+    for (let i = 0; i < 120; i++) {
+        const t = { ox: Math.round(rnd() * 18 - 9), oy: Math.round(rnd() * 12 - 6), thr: rnd(), steps: [] },
             len = 2 + Math.floor(rnd() * 3);
-        for (let k = 0; k < len; k++) blob.steps.push({ col: PAW_DIRT_COLORS[Math.floor(rnd() * PAW_DIRT_COLORS.length)], d: Math.floor(rnd() * 4) });
-        out.push(blob);
+        for (let k = 0; k < len; k++) t.steps.push({ col: PAW_DIRT_COLORS[Math.floor(rnd() * PAW_DIRT_COLORS.length)], d: Math.floor(rnd() * 4) });
+        out.push(t);
     }
     return out;
 }
-function pawDirtBlobsLow(sh, f) {
-    const key = sh + f;
-    if (pawDirtCache[key]) return pawDirtCache[key];
-    pawDirtTemplate ||= pawDirtMake();
-    const cell = cells[sh][f - 1],
-        w = cell.width,
-        h = cell.height,
-        src = cell.getContext("2d").getImageData(0, 0, w, h).data,
-        al = (px, py) => (px < 0 || py < 0 || px >= w || py >= h ? 0 : src[(py * w + px) * 4 + 3]),
-        box = P.meta[sh][f - 1].box,
-        bh = box[3] - box[1],
-        px = 3,
-        band = Math.round(bh * 0.19),
-        low = new Array(w).fill(-1);
-    for (let xx = 0; xx < w; xx++)
-        for (let yy = h - 1; yy >= 0; yy--)
-            if (al(xx, yy) > 200) {
-                low[xx] = yy;
-                break;
-            }
-    const blobs = [];
-    for (const t of pawDirtTemplate) {
-        const bx = t.x,
-            lw = bx < w ? low[bx] : -1;
-        if (lw < 0 || lw < box[3] - bh * 0.15) continue; // tylko łapy blisko dołu
-        let gx = Math.floor(bx / px),
-            gy = Math.floor((lw - Math.floor(t.depth * band)) / px);
-        const list = [];
-        for (const s of t.steps) {
-            if (al(Math.floor(gx * px + px / 2), Math.floor(gy * px + px / 2)) > 128) list.push({ x: gx * px, y: gy * px, col: s.col });
-            gx += [1, -1, 0, 0][s.d];
-            gy += [0, 0, 1, -1][s.d];
-        }
-        if (list.length) blobs.push({ list, px, thr: t.thr, bucket: Math.floor(bx / PAW_BUCKET) });
-    }
-    return (pawDirtCache[key] = blobs);
-}
-// Łapy w KAŻDEJ klatce (też fikołek, leżenie, tyłem): cienkie części sylwetki
-// (sylwetka minus jej „otwarcie” morfologiczne = nogi, ogon, uszy), bez głowy,
-// tylko te, które mają jasne (podpalane) końcówki — to łapy. Grudka siedzi na
-// piksel łapy najdalszym od środka ciała w danej kolumnie, więc w fikołku jest
-// przy uniesionych łapach, a nie na ziemi/plecach. Brak łap → stara metoda.
 function pawDirtBlobs(sh, f) {
     const key = sh + f;
     if (pawDirtCache[key]) return pawDirtCache[key];
     pawDirtTemplate ||= pawDirtMake();
-    const cell = cells[sh][f - 1],
-        w = cell.width,
-        h = cell.height,
-        src = cell.getContext("2d").getImageData(0, 0, w, h).data,
-        meta = P.meta[sh][f - 1],
-        box = meta.box,
-        bh = box[3] - box[1],
-        n = w * h,
-        sil = new Uint8Array(n);
-    for (let i = 0; i < n; i++) sil[i] = src[i * 4 + 3] > 200 ? 1 : 0;
-    const r = Math.max(4, Math.round(bh * 0.075)),
-        full = (2 * r + 1) ** 2,
-        integral = (a) => {
-            const I = new Int32Array((w + 1) * (h + 1));
-            for (let y = 0; y < h; y++) {
-                let row = 0;
-                for (let x = 0; x < w; x++) {
-                    row += a[y * w + x];
-                    I[(y + 1) * (w + 1) + x + 1] = I[y * (w + 1) + x + 1] + row;
-                }
-            }
-            return I;
-        },
-        count = (I, x, y) => {
-            const x0 = Math.max(0, x - r),
-                y0 = Math.max(0, y - r),
-                x1 = Math.min(w, x + r + 1),
-                y1 = Math.min(h, y + r + 1);
-            return I[y1 * (w + 1) + x1] - I[y0 * (w + 1) + x1] - I[y1 * (w + 1) + x0] + I[y0 * (w + 1) + x0];
-        },
-        Is = integral(sil),
-        eroded = new Uint8Array(n);
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (sil[y * w + x] && count(Is, x, y) === full) eroded[y * w + x] = 1;
-    const Ie = integral(eroded),
-        thin = new Uint8Array(n);
-    let cxs = 0,
-        cys = 0,
-        cn = 0;
-    const hx = meta.head ? meta.head[0] : -999,
-        hy = meta.head ? meta.head[1] : -999,
-        headR = bh * 0.32;
-    for (let y = 0; y < h; y++)
-        for (let x = 0; x < w; x++) {
-            const i = y * w + x;
-            if (!sil[i]) continue;
-            if (count(Ie, x, y) > 0) {
-                cxs += x;
-                cys += y;
-                cn++;
-            } else if (Math.hypot(x - hx, y - hy) > headR) thin[i] = 1;
-        }
-    const cx = cn ? cxs / cn : (box[0] + box[2]) / 2,
-        cy = cn ? cys / cn : (box[1] + box[3]) / 2,
-        mask = new Uint8Array(n),
-        seen = new Uint8Array(n),
-        tan = (i) => src[i * 4] > 165 && src[i * 4 + 1] > 105 && src[i * 4 + 2] < 140 && src[i * 4] - src[i * 4 + 2] > 55;
-    let any = false;
-    for (let s = 0; s < n; s++) {
-        if (!thin[s] || seen[s]) continue;
-        const comp = [s];
-        seen[s] = 1;
-        let tans = 0;
-        for (let k = 0; k < comp.length; k++) {
-            const i = comp[k],
-                x = i % w,
-                y = (i / w) | 0;
-            if (tan(i)) tans++;
-            for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1])
-                if (j >= 0 && thin[j] && !seen[j]) {
-                    seen[j] = 1;
-                    comp.push(j);
-                }
-        }
-        if (comp.length >= 18 && tans >= 3) {
-            for (const i of comp) mask[i] = 1;
-            any = true;
-        }
-    }
-    // Uzupełnienie: małe jasne plamy (końcówki łap) bez względu na kształt — dla klatek,
-    // gdzie łapy zlewają się z ciałem (fikołek, zwinięty w kłębek, leżenie na grzbiecie).
-    // Duże jasne plamy (brzuch, klatka piersiowa, pyszczek) są pomijane.
-    const seenT = new Uint8Array(n);
-    for (let s = 0; s < n; s++) {
-        if (!sil[s] || seenT[s] || mask[s] || !tan(s) || Math.hypot((s % w) - hx, ((s / w) | 0) - hy) <= headR) continue;
-        const comp = [s];
-        seenT[s] = 1;
-        for (let k = 0; k < comp.length; k++) {
-            const i = comp[k],
-                x = i % w,
-                y = (i / w) | 0;
-            for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1])
-                if (j >= 0 && sil[j] && !seenT[j] && !mask[j] && tan(j)) {
-                    seenT[j] = 1;
-                    comp.push(j);
-                }
-        }
-        if (comp.length >= 6 && comp.length <= 170) {
-            for (const i of comp) mask[i] = 1;
-            any = true;
-        }
-    }
-    if (!any) return pawDirtBlobsLow(sh, f);
-    const px = 3,
-        reach = bh * 0.17,
+    const paws = skeleton?.[sh]?.[f - 1]?.paws || [],
         blobs = [];
-    for (const t of pawDirtTemplate) {
-        if (t.x >= w) continue;
-        // piksel łapy najdalej od środka ciała w tej kolumnie
-        let bestY = -1,
-            bestD = -1;
-        for (let y = 0; y < h; y++)
-            if (mask[y * w + t.x]) {
-                const d = Math.hypot(t.x - cx, y - cy);
-                if (d > bestD) {
-                    bestD = d;
-                    bestY = y;
+    if (paws.length) {
+        const cell = cells[sh][f - 1],
+            w = cell.width,
+            h = cell.height,
+            src = cell.getContext("2d").getImageData(0, 0, w, h).data,
+            px = 3,
+            PER_PAW = 9;
+        paws.forEach(([pxx, pyy], k) => {
+            for (let j = 0; j < PER_PAW; j++) {
+                const t = pawDirtTemplate[(k * PER_PAW + j) % pawDirtTemplate.length];
+                let gx = Math.floor((pxx + t.ox) / px),
+                    gy = Math.floor((pyy + t.oy) / px);
+                const list = [];
+                for (const s of t.steps) {
+                    const mx = Math.floor(gx * px + px / 2),
+                        my = Math.floor(gy * px + px / 2);
+                    // tylko na pieskiem (nie na tle)
+                    if (mx >= 0 && my >= 0 && mx < w && my < h && src[(my * w + mx) * 4 + 3] > 128) list.push({ x: gx * px, y: gy * px, col: s.col });
+                    gx += [1, -1, 0, 0][s.d];
+                    gy += [0, 0, 1, -1][s.d];
                 }
+                if (list.length) blobs.push({ list, px, thr: t.thr, bucket: Math.floor(pxx / PAW_BUCKET) });
             }
-        if (bestY < 0) continue;
-        const vx = (cx - t.x) / (bestD || 1),
-            vy = (cy - bestY) / (bestD || 1);
-        let gx = Math.floor((t.x + vx * t.depth * reach) / px),
-            gy = Math.floor((bestY + vy * t.depth * reach) / px);
-        const list = [];
-        for (const s of t.steps) {
-            const mx = Math.floor(gx * px + px / 2),
-                my = Math.floor(gy * px + px / 2);
-            if (mx >= 0 && my >= 0 && mx < w && my < h && mask[my * w + mx]) list.push({ x: gx * px, y: gy * px, col: s.col });
-            gx += [1, -1, 0, 0][s.d];
-            gy += [0, 0, 1, -1][s.d];
-        }
-        if (list.length) blobs.push({ list, px, thr: t.thr, bucket: Math.floor(t.x / PAW_BUCKET) });
+        });
     }
     return (pawDirtCache[key] = blobs);
 }
@@ -3398,14 +3253,16 @@ async function boot() {
     lp(0.1);
     // Załaduj animacje z plików edytora (animacje-ustawienia/)
     // — te pliki są źródłem prawdy; config.json trzyma resztę ustawień
-    const [anim01, anim02, motyleAnim, kretAnim, hedgehogAnim, hedgehogGameAnim] = await Promise.all([
+    const [anim01, anim02, motyleAnim, kretAnim, hedgehogAnim, hedgehogGameAnim, skel] = await Promise.all([
         fresh("animacje-ustawienia/latka-animacje-01.json"),
         fresh("animacje-ustawienia/latka-animacje-02.json"),
         fresh("animacje-ustawienia/motyle-001-animacje.json"),
         fresh("animacje-ustawienia/kret-animacje.json"),
         fresh("animacje-ustawienia/hedgehog-animacje.json"),
         fresh("animacje-ustawienia/hedgehog-game-animacje.json"),
+        fresh("animacje-ustawienia/szkielet.json").catch(() => null), // punkty łap/nosa/ogona (brud na łapkach)
     ]);
+    skeleton = skel;
     lp(0.16);
     // Wszystkie grafiki naraz (tła pokoi też — żeby nic nie "doskakiwało" w grze);
     // pasek ładowania rośnie z każdą wczytaną grafiką.
