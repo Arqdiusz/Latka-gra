@@ -194,3 +194,11 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Łapki brudzą się na zewnątrz ~0,15/s (ok. 11 min do bardzo brudnych). Gry: Kretowisko +15, Jeżyk +8, Liczymy kostki +8, kret z kostką +5.
 - Czystość spada szybciej przy brudnych łapkach: tempo × (1 + brud/100), czyli do 2×.
 - Udana kąpiel (bańki) = czystość 100 i czyste łapki (ścierka nie jest jedynym sposobem).
+
+## 22. Zdarzenia a wycieczki pieska (v0.8.180)
+- Gdy w pokoju jest zdarzenie (motylek do złapania, kret, jeżyk, kopiec z kostką — także czekający kopiec), piesek sam nigdzie nie wybiega (`worldBusy`).
+- Motylka i kopiec z kostką da się kliknąć także w trakcie samodzielnej wycieczki pieska — kliknięcie ją przerywa (`eventTapOk`/`stopAutoTrip`).
+- Czekający kopiec z kostką ma tę samą pulsującą, okrągłą ramkę co motylek.
+- Po kostce zwykły kret nie wychodzi w tym pokoju przez 60–90 s.
+- Bieg przez więcej niż jeden pokój: 400 px/s (był 520).
+- Arkusz a03 dostaje „meta” (ramka, głowa) liczone z pikseli przy starcie (dymki nad pieskiem, głaskanie).

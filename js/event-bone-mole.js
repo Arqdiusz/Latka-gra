@@ -91,11 +91,20 @@ function boneMoleDraw() {
         cx = m.x + roomOffset;
     ctx.save();
     if (m.state === "mound") {
-        // pulsujący kopiec = „dotknij mnie” (jak motylek do złapania)
+        // pulsujący kopiec = „dotknij mnie” — ta sama okrągła ramka co przy motylku
         const p = (Math.sin(clock / 260) + 1) / 2,
-            k = 1 + 0.07 * p;
-        ctx.shadowColor = "rgba(255,226,140,0.95)";
-        ctx.shadowBlur = 8 + p * 10;
+            k = 1 + 0.05 * p;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, BONE_MOLE.y + 17, 50 + p * 5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${0.1 + 0.08 * p})`;
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = `rgba(255,255,255,${0.6 + 0.3 * p})`;
+        ctx.shadowColor = "rgba(255,190,235,0.95)";
+        ctx.shadowBlur = 8 + p * 8;
+        ctx.stroke();
+        ctx.restore();
         ctx.translate(cx, BONE_MOLE.y + S / 2);
         ctx.scale(k, k);
         ctx.drawImage(cell, -S / 2, -S, S, S);
@@ -112,6 +121,7 @@ function boneMoleHit(px, py) {
 function boneMoleTap() {
     const m = boneMole;
     if (!m || m.state !== "mound" || !casual()) return;
+    if (sadBlocks("butterfly")) return sadRefuse(); // smutny piesek nie kopie (jak przy motylku)
     // strona, z której piesek podchodzi: od swojej strony, chyba że brak miejsca
     // piesek staje od strony środka pokoju, przodem do ściany
     const dir = m.x > W / 2 ? 1 : -1,
@@ -148,6 +158,8 @@ function boneMoleEnd() {
     $("#boneMolePopup").hidden = true;
     boneMole = null;
     boneMoleSchedule(false);
+    // po kostce długo spokój od zwykłego kreta w tym pokoju (zmiana pokoju losuje od nowa)
+    nextMoleSpawn = Math.max(nextMoleSpawn, clock + 60000 + Math.random() * 30000);
 }
 
 $("#boneMolePopup .moleOk").onclick = () => {

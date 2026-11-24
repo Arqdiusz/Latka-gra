@@ -1140,7 +1140,7 @@ function route(target, id = null, mode = "menu") {
         dir = to >= from ? 1 : -1,
         facing = dir < 0,
         run = true, // zawsze bieg (anim 02. Bieg/sus), spacer usunięty
-        speed = distance > 1 ? 520 : mode === "auto" ? 340 : 320, // px/s: jeden pokój spokojnie; więcej niż jeden — zawsze ta sama, szybsza prędkość
+        speed = distance > 1 ? 400 : mode === "auto" ? 340 : 320, // px/s: jeden pokój spokojnie; więcej niż jeden — trochę szybciej, ale bez pędu
         parts = [];
 
     function movement(a, b, onEnd) {
@@ -1762,12 +1762,12 @@ canvas.addEventListener("pointerdown", (e) => {
         moleDirt: moleDirtHit(p.x, p.y),
         dish: dishHit(p.x, p.y),
         lump: lumpHit(p.x, p.y) >= 0,
-        catchFly: casual() ? butterflyHit(p.x, p.y) : false,
+        catchFly: eventTapOk() ? butterflyHit(p.x, p.y) : false,
         butterfly: phase !== "butterfly" ? ambientHit(p.x, p.y) : null,
         hog: casual() ? hedgehogHit(p.x, p.y) : null,
         fruit: casual() ? hedgeFruitHit(p.x, p.y) : null,
         mole: gameEntryOk() ? moleTeaserHit(p.x, p.y) : null,
-        boneMole: casual() && typeof boneMoleHit === "function" ? boneMoleHit(p.x, p.y) : false,
+        boneMole: eventTapOk() && typeof boneMoleHit === "function" ? boneMoleHit(p.x, p.y) : false,
         hedge: gameEntryOk() ? hedgePeekHit(p.x, p.y) : false,
     };
     // Aport: dotknięcie piłki przy łapach = złapanie jej (dalej ciągnięcie i rzut)
@@ -1848,13 +1848,13 @@ function pointerEnd(e, cancel = false) {
         if (g.hog && hedgehogHit(p.x, p.y) === g.hog) hedgehogScare(g.hog);
         else if (g.fruit && hedgeFruitHit(p.x, p.y)) hedgeFruitCollect(g.fruit);
         else if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
-        else if (g.boneMole && boneMoleHit(p.x, p.y)) boneMoleTap();
+        else if (g.boneMole && boneMoleHit(p.x, p.y)) stopAutoTrip() || boneMoleTap();
         else if (g.hedge && hedgePeekHit(p.x, p.y)) hedgePeekTap();
         else if (g.poop && poopHit(p.x, p.y)) cleanPoop();
         else if (g.moleDirt && moleDirtHit(p.x, p.y)) cleanMoleDirt();
         else if (g.dish && dishHit(p.x, p.y)) cleanDish();
         else if (g.lump && lumpHit(p.x, p.y) >= 0) cleanLump(lumpHit(p.x, p.y));
-        else if (g.catchFly && butterflyHit(p.x, p.y)) butterflyCatch();
+        else if (g.catchFly && butterflyHit(p.x, p.y)) stopAutoTrip() || butterflyCatch();
         else if (g.dog && petHit(p.x, p.y)) react();
         else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientFlee(g.butterfly);
     }
@@ -1879,7 +1879,17 @@ function chooseDestination() {
 // Coś dzieje się w świecie (kret, jeżyk, motylek do złapania) — piesek wtedy
 // stoi spokojnie, żeby dało się to kliknąć, i nie wybiega sam w drogę.
 function worldBusy() {
-    return !!(moleTeaser || hedgehog || butterfly || (typeof boneMole !== "undefined" && boneMole && boneMole.state !== "mound"));
+    return !!(moleTeaser || hedgehog || butterfly || (typeof boneMole !== "undefined" && boneMole));
+}
+
+// Zdarzenie (motylek do złapania, kopiec z kostką) da się kliknąć też wtedy,
+// gdy piesek akurat sam gdzieś biegnie — kliknięcie przerywa jego wycieczkę.
+function eventTapOk() {
+    return casual() || (phase === "travel" && travelMode === "auto" && !sleeping);
+}
+function stopAutoTrip() {
+    if (phase === "travel" && travelMode === "auto") idle(16);
+    return false; // dalej w łańcuchu || wykonuje właściwą akcję
 }
 
 function autoTrip(target = chooseDestination()) {
@@ -3415,6 +3425,27 @@ async function boot() {
             if (key !== "ui") pixels[key].push(cx.getImageData(0, 0, w, h).data);
         }
     }
+    // Arkusz a03 (kopanie kostek) nie ma gotowych „meta” w config.json —
+    // liczymy ramkę (box) i miejsce głowy (head) z pikseli, jak dla a01/a02.
+    if (!P.meta.a03)
+        P.meta.a03 = pixels.a03.map((d, i) => {
+            const w = cells.a03[i].width,
+                h = cells.a03[i].height;
+            let x0 = w,
+                y0 = h,
+                x1 = 0,
+                y1 = 0;
+            for (let y = 0; y < h; y++)
+                for (let xx = 0; xx < w; xx++)
+                    if (d[(y * w + xx) * 4 + 3] > 120) {
+                        if (xx < x0) x0 = xx;
+                        if (xx > x1) x1 = xx;
+                        if (y < y0) y0 = y;
+                        if (y > y1) y1 = y;
+                    }
+            if (x1 < x0) return { box: [4, 32, 124, 116], head: [95.2, 34] };
+            return { box: [x0, y0, x1 + 1, y1 + 1], head: [x0 + 0.76 * (x1 + 1 - x0), y0 + 2] };
+        });
     for (const [key, n] of Object.entries(UI.map)) icons[key] = cells.ui[n - 1].toDataURL("image/png");
     loadNeeds();
     statusBuild();
