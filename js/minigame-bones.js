@@ -52,7 +52,7 @@ let bonesQueue = [],
     bonesFace = 1;
 function bonesPart(key, opts = {}) {
     const [sheet, anim] = BONES_ANIM[key];
-    return { sheet, anim, time: opts.times ? duration(sheet, anim) * opts.times : opts.time || BONES_FOREVER, to: opts.to, face: opts.face };
+    return { sheet, anim, time: opts.times ? duration(sheet, anim) * opts.times : opts.time ?? BONES_FOREVER, to: opts.to, face: opts.face };
 }
 // bieg z miejsca na miejsce (zwrot w stronę celu)
 function bonesRunTo(tx, key = "run", speed = 200) {
@@ -230,8 +230,10 @@ function bonesRound() {
         q.style.visibility = "hidden";
         bonesDropBones(p, n);
     }
-    // kopanie trwa, aż spadnie ostatnia kostka, potem wykopanie i zabawa kostką
+    // kopanie trwa, aż spadnie ostatnia kostka, potem wykopanie kostki; dywaniki
+    // dają się kliknąć dopiero, gdy kostka jest w pysku (nic nie przerywa kopania)
     const fall = Math.max(g.A, g.B) * 120 + 700,
+        dig = Math.max(fall, duration("a03", 0)),
         back = Math.abs(bonesX - BONES_DOG.x) > 4 ? [bonesRunTo(BONES_DOG.x)] : [];
     bonesAnim(...back, bonesPart("dig", { time: 0, face: 1 }), ...bonesDigParts(fall));
     sfx("throw");
@@ -246,7 +248,7 @@ function bonesRound() {
                 document.querySelectorAll(".bonesPile").forEach((p) => p.classList.add("cover"));
                 $(".bonesHint").textContent = "Pamiętasz? Dotknij dywanik i wpisz.";
             }, 3000);
-    }, fall + 150);
+    }, (back.length ? back[0].time : 0) + dig + duration("a03", 1) + 150);
 }
 
 function bonesDropBones(pile, n) {
@@ -309,16 +311,8 @@ function bonesShowEq() {
             bonesStarsDraw();
             sfx("win"); // fanfary po każdym dobrym wyniku
             $(".bonesHint").textContent = ["Dobrze!", "Super!", "Brawo!", "Świetnie!"][bonesRnd(0, 3)];
-            // radość: podskok, bieg pod krawędź, zawrotka i fikołek z powrotem na środek
-            const edge = W - 66;
-            bonesReact(
-                bonesPart("jump", { times: 1 }),
-                bonesRunTo(edge),
-                bonesPart("roll", { times: 1, to: BONES_DOG.x + 40, face: -1 }),
-                bonesRunTo(BONES_DOG.x, "run", 120),
-                bonesPart("joyBack", { times: 1, face: 1 }),
-                { wait: true }
-            );
+            // radość: podskok, fikołek w miejscu i „Radość z powrotem”
+            bonesReact(bonesPart("jump", { times: 1 }), bonesPart("roll", { times: 1 }), bonesPart("joyBack", { times: 1 }), { wait: true });
             if (g.round >= BONES_ROUNDS) g.readyT = setTimeout(() => bonesGame === g && bonesWin(), 1600);
             else $(".bonesNext").hidden = false;
         }, el.querySelector(".bonesRes"));
