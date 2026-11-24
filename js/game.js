@@ -1765,6 +1765,7 @@ canvas.addEventListener("pointerdown", (e) => {
         hog: casual() ? hedgehogHit(p.x, p.y) : null,
         fruit: casual() ? hedgeFruitHit(p.x, p.y) : null,
         mole: gameEntryOk() ? moleTeaserHit(p.x, p.y) : null,
+        boneMole: casual() && typeof boneMoleHit === "function" ? boneMoleHit(p.x, p.y) : false,
         hedge: gameEntryOk() ? hedgePeekHit(p.x, p.y) : false,
     };
     // Aport: dotknięcie piłki przy łapach = złapanie jej (dalej ciągnięcie i rzut)
@@ -1845,6 +1846,7 @@ function pointerEnd(e, cancel = false) {
         if (g.hog && hedgehogHit(p.x, p.y) === g.hog) hedgehogScare(g.hog);
         else if (g.fruit && hedgeFruitHit(p.x, p.y)) hedgeFruitCollect(g.fruit);
         else if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
+        else if (g.boneMole && boneMoleHit(p.x, p.y)) boneMoleTap();
         else if (g.hedge && hedgePeekHit(p.x, p.y)) hedgePeekTap();
         else if (g.poop && poopHit(p.x, p.y)) cleanPoop();
         else if (g.moleDirt && moleDirtHit(p.x, p.y)) cleanMoleDirt();
@@ -1875,7 +1877,7 @@ function chooseDestination() {
 // Coś dzieje się w świecie (kret, jeżyk, motylek do złapania) — piesek wtedy
 // stoi spokojnie, żeby dało się to kliknąć, i nie wybiega sam w drogę.
 function worldBusy() {
-    return !!(moleTeaser || hedgehog || butterfly);
+    return !!(moleTeaser || hedgehog || butterfly || (typeof boneMole !== "undefined" && boneMole && boneMole.state !== "mound"));
 }
 
 function autoTrip(target = chooseDestination()) {
@@ -1959,7 +1961,7 @@ function wildlifeBusy(who) {
     // motylek do złapania i motylek-tło (5 kolorów to tylko losowy kolor) to jedna "grupa"
     if (who === "butterfly" || who === "ambient") who = "butterflies";
     // zgubiony przez jeżyka owoc też "zajmuje scenę" — póki leży, nikt nowy nie wychodzi (np. kret na owoc)
-    if (moleTeaser || hedgehog || hedgeFruit || butterfly || ambient.length) {
+    if (moleTeaser || hedgehog || hedgeFruit || butterfly || ambient.length || (typeof boneMole !== "undefined" && boneMole)) {
         wlWasBusy = true;
         return true;
     }
@@ -3107,6 +3109,7 @@ function draw(dt) {
         ctx.drawImage(images.poop, r.x, r.y, r.w, r.h);
     }
     moleTeaserDraw();
+    if (typeof boneMoleDraw === "function") boneMoleDraw();
     hedgePeekDraw();
     // Jeżyk i zgubiony owoc — pierwszy plan, przed pieskiem.
     hedgeFruitDraw();
@@ -3197,6 +3200,7 @@ function loopFrame(t) {
         ambientUpdate(dt);
         hedgehogUpdate(dt);
         moleTeaserUpdate();
+        if (typeof boneMoleUpdate === "function") boneMoleUpdate();
         bubbleThink();
         draw(dt);
     }

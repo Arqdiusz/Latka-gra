@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.175</title>
+        <title>Łatka v0.8.176</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
-        <link rel="stylesheet" href="css/style.css?v=194" />
+        <link rel="stylesheet" href="css/style.css?v=195" />
     </head>
 
     <body>
@@ -99,6 +99,15 @@
                     <button class="winAgain btnGreen">Jeszcze raz</button>
                     <button class="bonesToMenu moleWinOk btnBlue">Zmień ustawienia</button>
                     <button class="bonesExit moleWinOk btnRed">Powrót</button>
+                </div>
+            </div>
+            <div class="molePopup" id="boneMolePopup" hidden>
+                <div class="moleCard">
+                    <img class="moleIntroIcon" alt="" />
+                    <h2>Piesek znalazł kostkę!</h2>
+                    <p>Pod kopcem było więcej kostek. Policzymy je razem?</p>
+                    <button class="moleOk btnGreen">Liczymy!</button>
+                    <button class="moleCancel btnRed">Nie teraz</button>
                 </div>
             </div>
             <div class="gamesFull" hidden>
@@ -408,7 +417,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=194"></script>
+            <script src="js/loader.js?v=195"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -416,7 +425,7 @@
                     document.fonts.load("700 16px Quicksand");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=194"></script>
+            <script src="js/audio.js?v=195"></script>
         </main>
         <div class="rotate"><span>📱 ↻</span>Obróć urządzenie do pionu.<small>Gra jest wstrzymana.</small></div>
         <div class="toast" hidden role="status"></div>
@@ -434,20 +443,22 @@
                 <button class="devWake">Obudź</button>
                 <button class="devClean">Usuń kupę</button>
                 <button class="devCleanMole">Usuń piach</button>
+                <button class="devBoneMole">Kret z kostką</button>
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=194"></script>
-        <script defer src="js/game.js?v=194"></script>
-        <script defer src="js/minigame-fetch.js?v=194"></script>
-        <script defer src="js/minigame-bubbles.js?v=194"></script>
-        <script defer src="js/minigame-mole.js?v=194"></script>
-        <script defer src="js/minigame-hedge.js?v=194"></script>
-        <script defer src="js/minigame-mole2.js?v=194"></script>
-        <script defer src="js/minigame-memory.js?v=194"></script>
-        <script defer src="js/minigame-pairs.js?v=194"></script>
-        <script defer src="js/minigame-bones.js?v=194"></script>
-        <script defer src="js/games-menu.js?v=194"></script>
-        <script defer src="js/popup-guard.js?v=194"></script>
+        <script defer src="js/arc-carousel.js?v=195"></script>
+        <script defer src="js/game.js?v=195"></script>
+        <script defer src="js/minigame-fetch.js?v=195"></script>
+        <script defer src="js/minigame-bubbles.js?v=195"></script>
+        <script defer src="js/minigame-mole.js?v=195"></script>
+        <script defer src="js/minigame-hedge.js?v=195"></script>
+        <script defer src="js/minigame-mole2.js?v=195"></script>
+        <script defer src="js/minigame-memory.js?v=195"></script>
+        <script defer src="js/minigame-pairs.js?v=195"></script>
+        <script defer src="js/minigame-bones.js?v=195"></script>
+        <script defer src="js/event-bone-mole.js?v=195"></script>
+        <script defer src="js/games-menu.js?v=195"></script>
+        <script defer src="js/popup-guard.js?v=195"></script>
     </body>
 </html>

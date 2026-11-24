@@ -183,3 +183,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 ## 19. Wspólna belka mini gier (v0.8.175)
 - Klasa `.gBar` (css na końcu `style.css`): kremowy pasek 64 px u góry, tytuł po lewej (`.gBarTtl`), dodatki po prawej (np. czas), czerwony ✕ w rogu. Używają jej: Gry, wybór poziomu, Znajdź pary, Pamięć motylków, Kretowisko, Krety na łące, Jeżyk i owoce, Liczymy kostki. Bańki zostają bez belki (decyzja użytkownika).
 - Panele rysowane na canvasie zaczynają się od y = 78 (pod belką).
+
+## 20. Kret z kostką — zdarzenie w Ogrodzie (v0.8.176)
+- Plik `js/event-bone-mole.js`. Co ok. 1,5–3 min (pierwszy raz po 45–80 s), gdy w Ogrodzie nic się nie dzieje, na torze pieska wychyla się kret, chowa się i zostaje pulsujący kopiec (nieklikany znika po 2 min albo po wyjściu z Ogrodu).
+- Dotyk kopca: piesek podbiega, kopie (a03 „01”), wykopuje kostkę („02”), stoi z nią („05”), a na środku pojawia się karta „Piesek znalazł kostkę!” → „Liczymy!” otwiera „Liczymy kostki”, „Nie teraz” → piesek odkłada kostkę („06”). Kopanie brudzi łapki (+10).
+- Zwykłe krety-zapowiedzi działają jak dawniej. DEV: przycisk „Kret z kostką”.
