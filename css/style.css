@@ -300,6 +300,7 @@ body {
 }
 
 .fetchEnd,
+.pawsEnd,
 .fetchRestart {
     position: relative;
     width: 56px;
@@ -313,7 +314,8 @@ body {
     overflow: hidden;
 }
 
-.fetchEnd {
+.fetchEnd,
+.pawsEnd {
     background: #d9534f;
 }
 
@@ -330,6 +332,7 @@ body {
 }
 
 .fetchEnd svg,
+.pawsEnd svg,
 .fetchRestart svg {
     position: relative;
     width: 28px;
@@ -337,12 +340,15 @@ body {
 }
 
 .fetchEnd:focus-visible,
+.pawsEnd:focus-visible,
 .fetchRestart:focus-visible {
     outline: 3px solid #9674ab;
     outline-offset: 2px;
 }
 
 .fetchEnd[hidden],
+.pawsEnd[hidden],
+.pawsAccess[hidden],
 .fetchRestart[hidden] {
     display: none;
 }
@@ -1507,6 +1513,26 @@ body {
 }
 
 /* Puchar — szybki dostęp do ekranu Gry (obok pełnego ekranu) */
+.pawsAccess {
+    position: absolute;
+    right: 57px;
+    top: 57px;
+    z-index: 5;
+    width: 40px;
+    height: 40px;
+    padding: 3px;
+    border: 2px solid white;
+    border-radius: 11px;
+    background: #c6ebf0;
+    cursor: pointer;
+}
+
+.pawsAccess img {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
 .gamesAccess {
     position: absolute;
     right: 57px;

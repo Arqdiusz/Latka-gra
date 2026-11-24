@@ -160,3 +160,10 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Spadek na minutę (`NEEDS_DECAY`): jedzenie 1,1 · woda 1,3 · zabawa 1,2 · sen 0,8 · czystość 0,9 (było 0,65 / 1 / 0,8 / 0,55 / 0,35). Przy pełnych 100% piesek dojdzie do ≤ 10% w ok. 1,5–2 h zabawy.
 - Karmienie ustawia jedzenie na 100%.
 - Brudzenie przy zabawie (czystość za rundę/rzut): kret −14, jeżyk −7, zabawa −8, pary/pamięć −4, rzut piłką −3, motylek −2.
+
+## 17. Brudne łapki (v0.8.162)
+- `pawDirt` 0–100 (zapis w `save()`). Rośnie ~1,6/s w ogrodzie, na podwórku i na łące; po Kretowisku +60, po Jeżyku +30. Brudne łapki lekko obniżają czystość (−0,4/min od 35).
+- Brud widać na łapkach pieska (tylko arkusz a01): `pawDirtDraw` rysuje grudki z każdej klatki (najniższe piksele sierści w kolumnach), bez osobnego arkusza. Mniej brudu = mniej grudek, znikają grupami.
+- W domu (salon, kuchnia, łazienka) piesek z `pawDirt ≥ 20` co ok. 3,5 s gubi grudkę ziemi na podłodze (maks. 8, `lumps`), każda −7 brudu. Dotknięcie grudki sprząta ją (+1,5 czystości).
+- Czyszczenie: w łazience przy `pawDirt ≥ 3` pojawia się przycisk ze szmatką (`.pawsAccess`, pod pucharem). Piesek staje w miejscu (`paws-clean`), dziecko przeciąga palcem po jego łapkach (0,2 brudu na px), czerwony ✕ przerywa. Po wyczyszczeniu: czystość +25, zabawa +6, radość z merdaniem ogona.
+- W dymku „chęci” w domu pojawia się szmatka, gdy łapki są brudne.

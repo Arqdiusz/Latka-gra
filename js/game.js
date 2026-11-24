@@ -149,6 +149,12 @@ let loaded = false,
     // Stłuczone naczynie po zbyt mocnym rzucie w aporcie (patrz minigame-fetch.js):
     // { room, x (0..1), idx (0..3), shown } — leży, aż dziecko je posprzątane.
     dishMess = null,
+    // Brudne łapki: 0–100. Rośnie w ogrodzie/na łące/podwórku i po grach w ziemi;
+    // w domu piesek gubi grudki (lumps: {room,x,seed}) — sprząta się je dotykiem,
+    // a łapki czyści minigra "Czyste łapki" (js/minigame-paws.js).
+    pawDirt = 0,
+    lumps = [],
+    lumpTimer = 0,
     // Motylek nakładany na klatki a02 oznaczone zielonym znacznikiem
     // (#00ff43) podczas pogoni/łapania w butterflyEvent() — patrz
     // catchMarker (wykrywane w boot()) i catchMarkerPos().
@@ -188,6 +194,8 @@ try {
         if (s.moleDirts) {
             for (const [r, d] of Object.entries(s.moleDirts)) if (GARDEN_ROOMS.includes(r) && d) moleDirts[r] = d;
         } else if (s.moleDirt && GARDEN_ROOMS.includes(s.moleDirt.room)) moleDirts[s.moleDirt.room] = s.moleDirt; // stary zapis
+        pawDirt = clamp(+s.pawDirt || 0, 0, 100);
+        lumps = Array.isArray(s.lumps) ? s.lumps.filter((l) => order.includes(l.room)).slice(0, 8) : [];
         dishMess = s.dishMess && order.includes(s.dishMess.room) ? { ...s.dishMess, shown: true } : null;
         if (sleeping) room = "living";
         if (poop?.room === room) sleeping = false;
@@ -321,6 +329,7 @@ function bubbleWish() {
     const ctx = [];
     if (butterfly?.free && !butterfly.lure && butterfly.plan) ctx.push("butterfly");
     if (moleTeaser || moleDirts[room]) ctx.push("mole");
+    if (pawDirt >= PAW_DIRTY_AT && INDOOR_ROOMS.includes(room)) ctx.push("cloth"); // "umyj mi łapki"
     const pool = ctx.length && Math.random() < 0.6 ? ctx : WISH_ICONS.filter((w) => w !== lastWish);
     return (lastWish = pool[Math.floor(Math.random() * pool.length)]);
 }
@@ -370,9 +379,9 @@ const ACTION_EFFECTS = {
     brush: { clean: 12, fun: 5 },
     // Zabawa w kreta — radość jak przy aporcie/bańkach, ale piesek się przy
     // tym trochę brudzi, głoduje i chce pić (patrz js/minigame-mole.js).
-    mole: { fun: 26, clean: -14, food: -5, water: -6 },
+    mole: { fun: 26, clean: -14, food: -5, water: -6, paws: 60 },
     // Jeżyk i owoce (js/minigame-hedge.js) — zdrowa zabawa na trawie.
-    hedgehog: { fun: 24, water: -4, clean: -7 },
+    hedgehog: { fun: 24, water: -4, clean: -7, paws: 30 },
     memory: { fun: 24, water: -3, clean: -4 },
     pairs: { fun: 20, water: -2, clean: -4 },
     // Złapany motylek — krótka, lekka frajda.
@@ -382,11 +391,14 @@ const ACTION_EFFECTS = {
     // Posprzątanie kupki / piachu po krecie.
     poop: { clean: 6 },
     moleDirt: { clean: 2 },
+    // Czyste łapki (minigame-paws.js)
+    paws: { clean: 25, fun: 6 },
 };
 let needsSaveSeconds = 0;
 function changeNeeds(changes) {
     for (const [k, v] of Object.entries(changes)) {
         if (Object.prototype.hasOwnProperty.call(stats, k)) stats[k] = clamp(stats[k] + v, 0, 100);
+        else if (k === "paws") pawDirt = clamp(pawDirt + v, 0, 100);
     }
     if (loaded) statusUpdate();
 }
@@ -426,6 +438,8 @@ function updateNeeds(seconds) {
         }
     }
     if (poop) stats.clean = clamp(stats.clean - 0.8 * m, 0, 100);
+    if (pawDirt >= 35) stats.clean = clamp(stats.clean - 0.4 * m, 0, 100); // brudne łapki trochę brudzą
+    lumpUpdate(seconds);
     statusUpdate();
     needsSaveSeconds += seconds;
     if (needsSaveSeconds >= 10) {
@@ -433,10 +447,68 @@ function updateNeeds(seconds) {
         saveNeeds();
     }
 }
+// ── Brudne łapki i grudki w domu ────────────────────────────────
+const OUTDOOR_ROOMS = ["meadow", "garden", "yard"],
+    INDOOR_ROOMS = ["living", "kitchen", "bathroom"],
+    PAW_DIRTY_AT = 35,
+    LUMP_COLORS = ["#5a3a1c", "#7a4f24", "#3e2812", "#946032"];
+function lumpUpdate(s) {
+    if (!loaded || sleeping) return;
+    updatePawsUi();
+    if (OUTDOOR_ROOMS.includes(room)) {
+        pawDirt = Math.min(100, pawDirt + 1.6 * s); // ~22 s do brudnych łapek
+        return;
+    }
+    // w domu z brudnymi łapkami: co kilka sekund spokojnego chodzenia grudka za pieskiem
+    if (pawDirt < 20 || !INDOOR_ROOMS.includes(room) || !["idle", "roam", "pause", "look"].includes(phase)) return;
+    lumpTimer += s;
+    if (lumpTimer < 3.5) return;
+    lumpTimer = 0;
+    if (lumps.length >= 8) return;
+    lumps.push({ room, x: clamp(x + (left ? 1 : -1) * (0.1 + Math.random() * 0.08), 0.08, 0.92), seed: Math.floor(Math.random() * 1000) });
+    pawDirt = Math.max(0, pawDirt - 7);
+    save();
+}
+function lumpBox(l) {
+    const offset = (order.indexOf(l.room) - order.indexOf(room)) * W + roomOffset;
+    return { x: l.x * W - 18 + offset, y: GROUND + 14 + (l.seed % 3) * 7, w: 36, h: 20 };
+}
+function lumpHit(px, py) {
+    for (let i = lumps.length - 1; i >= 0; i--) {
+        if (lumps[i].room !== room) continue;
+        const b = lumpBox(lumps[i]);
+        if (px > b.x - 14 && px < b.x + b.w + 14 && py > b.y - 16 && py < b.y + b.h + 16) return i;
+    }
+    return -1;
+}
+function cleanLump(i) {
+    if (!casual() || !lumps[i]) return;
+    lumps.splice(i, 1);
+    sfx("wipe");
+    changeNeeds({ clean: 1.5 });
+    save();
+}
+function lumpDraw() {
+    for (const l of lumps) {
+        if (Math.abs(order.indexOf(l.room) - order.indexOf(room)) > 1) continue;
+        const b = lumpBox(l);
+        let r = l.seed + 1;
+        ctx.fillStyle = "rgba(0,0,0,0.18)"; // cień pod grudką
+        ctx.fillRect(Math.round(b.x) + 2, Math.round(b.y) + 16, 32, 4);
+        for (let k = 0; k < 9; k++) {
+            r = (r * 9301 + 49297) % 233280;
+            const px = Math.floor((r / 233280) * 6) * 6,
+                py = Math.floor((((r * 7) % 233280) / 233280) * 3) * 5 + (k % 2) * 2;
+            ctx.fillStyle = LUMP_COLORS[(r >> 3) % LUMP_COLORS.length];
+            ctx.fillRect(Math.round(b.x + px), Math.round(b.y + py), 6, 6);
+        }
+    }
+}
+
 function save() {
     if (!loaded) return;
     try {
-        localStorage.setItem(KEY, JSON.stringify({ room, sleeping, left, poop, moleDirts, dishMess: dishMess?.shown ? dishMess : null }));
+        localStorage.setItem(KEY, JSON.stringify({ room, sleeping, left, poop, moleDirts, dishMess: dishMess?.shown ? dishMess : null, pawDirt: Math.round(pawDirt), lumps }));
     } catch (e) {}
     saveNeeds();
 }
@@ -695,6 +767,7 @@ function locks() {
     document.body.classList.toggle("locked", !casual() && phase !== "ball-ready" && phase !== "bubble-game" && phase !== "mole-game");
     document.querySelectorAll(".arrow").forEach((b) => (b.disabled = !casual()));
     $(".petAccess").disabled = !canPet();
+    updatePawsUi();
     updateArrows();
     updateFetchUi();
     updateBubbleUi();
@@ -1238,8 +1311,140 @@ function drawDog(c, cx = x * W, gy = GROUND + jumpY, facing = left, ratio = 1) {
     c.scale(g.s * ratio, g.s * ratio);
     c.imageSmoothingEnabled = false;
     c.drawImage(cells[sheet][g.f - 1], -g.w / 2, -g.g);
+    if (pawDirt >= 4 && sheet === "a01") {
+        c.translate(-g.w / 2, -g.g);
+        pawDirtDraw(c, sheet, g.f, pawDirt / 100);
+    }
     c.restore();
 }
+
+// Grudki ziemi na łapkach — liczone z każdej klatki (najniższe piksele sierści
+// w kolumnach, więc podążają za łapą także w biegu), bez osobnego arkusza.
+// Kolejność grudek jest stała dla klatki: mniej brudu = mniej grudek (znikają
+// grupami, nie piksel po pikselu). Rysowane w układzie komórki arkusza.
+const PAW_DIRT_COLORS = ["#c9a066", "#6a4524", "#a56a3a", "#d9b87f", "#4a2e17"],
+    pawDirtCache = {};
+function pawDirtBlobs(sh, f) {
+    const key = sh + f;
+    if (pawDirtCache[key]) return pawDirtCache[key];
+    const cell = cells[sh][f - 1],
+        w = cell.width,
+        h = cell.height,
+        src = cell.getContext("2d").getImageData(0, 0, w, h).data,
+        al = (px, py) => (px < 0 || py < 0 || px >= w || py >= h ? 0 : src[(py * w + px) * 4 + 3]),
+        box = P.meta[sh][f - 1].box,
+        bh = box[3] - box[1],
+        px = Math.max(3, Math.round(bh / 52)),
+        band = Math.round(bh * 0.19),
+        low = new Array(w).fill(-1);
+    for (let xx = 0; xx < w; xx++)
+        for (let yy = h - 1; yy >= 0; yy--)
+            if (al(xx, yy) > 200) {
+                low[xx] = yy;
+                break;
+            }
+    let seed = (f * 7919 + sh.charCodeAt(1) * 104729) % 233280;
+    const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280),
+        blobs = [];
+    let tries = 0;
+    while (blobs.length < 34 && tries++ < 600) {
+        const bx = Math.floor(box[0] + rnd() * (box[2] - box[0])),
+            lw = low[bx];
+        if (lw < 0 || lw < box[3] - bh * 0.15) continue; // tylko łapy blisko dołu
+        let gx = Math.floor(bx / px),
+            gy = Math.floor((lw - Math.floor(rnd() * band)) / px);
+        const list = [],
+            len = 2 + Math.floor(rnd() * 3);
+        for (let k = 0; k < len; k++) {
+            if (al(Math.floor(gx * px + px / 2), Math.floor(gy * px + px / 2)) > 128) list.push({ x: gx * px, y: gy * px, col: PAW_DIRT_COLORS[Math.floor(rnd() * PAW_DIRT_COLORS.length)] });
+            const d = Math.floor(rnd() * 4);
+            gx += [1, -1, 0, 0][d];
+            gy += [0, 0, 1, -1][d];
+        }
+        if (list.length) blobs.push({ list, px });
+    }
+    return (pawDirtCache[key] = blobs);
+}
+function pawDirtDraw(c, sh, f, amount) {
+    const bl = pawDirtBlobs(sh, f),
+        n = Math.ceil(bl.length * amount);
+    for (let i = 0; i < n; i++)
+        for (const q of bl[i].list) {
+            c.fillStyle = q.col;
+            c.fillRect(q.x, q.y, bl[i].px, bl[i].px);
+        }
+}
+
+// ── Czyszczenie łapek szmatką (łazienka) ──────────────────────────
+// Przycisk ze szmatką pojawia się w łazience, gdy łapki są brudne. Piesek staje
+// w miejscu, a dziecko przeciąga palcem po jego łapkach — brud znika grupami.
+let pawsPtr = null, // poprzedni punkt przeciągania (do liczenia drogi)
+    pawsCloth = null; // gdzie rysować szmatkę
+function updatePawsUi() {
+    const a = $(".pawsAccess"),
+        e = $(".pawsEnd");
+    if (a) a.hidden = !(room === "bathroom" && pawDirt >= 3 && casual());
+    if (e) e.hidden = phase !== "paws-clean";
+}
+function pawsStart() {
+    if (!casual() || room !== "bathroom" || pawDirt < 3) return;
+    bubble = null;
+    pawsPtr = pawsCloth = null;
+    startQueue([
+        {
+            sheet: "a01",
+            anim: 16,
+            time: 1800000,
+            onStart: () => {
+                phase = "paws-clean";
+                stage = "paws-clean";
+                locks();
+            },
+            onEnd: () => phase === "paws-clean" && pawsEnd(false),
+        },
+    ]);
+}
+function pawsEnd(done) {
+    if (phase !== "paws-clean") return;
+    pawsPtr = pawsCloth = null;
+    if (done) {
+        pawDirt = 0;
+        changeNeeds(ACTION_EFFECTS.paws);
+        sfx("pair");
+        say("star", 2600);
+        save();
+        startQueue([{ ...repeatPart("a01", 21, 2), onStart: () => (stage = "paws-joy") }]);
+    } else idle(16);
+    locks();
+}
+function pawsWipe(p) {
+    if (phase !== "paws-clean") return;
+    pawsCloth = p;
+    const prev = pawsPtr;
+    pawsPtr = p;
+    if (!prev) return;
+    // szmatka działa tylko przy łapkach (pasek przy podłodze pod pieskiem)
+    if (Math.abs(p.x - x * W) > 140 || p.y < GROUND - 80 || p.y > GROUND + 50) return;
+    pawDirt = Math.max(0, pawDirt - Math.hypot(p.x - prev.x, p.y - prev.y) * 0.2);
+    sfx("wipe");
+    if (pawDirt < 2) pawsEnd(true);
+}
+function pawsClothDraw() {
+    const im = cells.ui[UI.map.cloth - 1];
+    if (!im) return;
+    const hint = !pawsCloth,
+        px = pawsCloth ? pawsCloth.x : x * W + Math.sin(clock / 260) * 70,
+        py = pawsCloth ? pawsCloth.y : GROUND - 4;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(-0.35);
+    ctx.globalAlpha = hint ? 0.8 : 1;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(im, -34, -34, 68, 68);
+    ctx.restore();
+}
+$(".pawsEnd").onclick = () => pawsEnd(false);
+$(".pawsAccess").onclick = pawsStart;
 
 function headPosition() {
     const g = geometry(),
@@ -1448,6 +1653,16 @@ canvas.addEventListener("pointerdown", (e) => {
         gesture = null;
         if (!stale) return;
     }
+    if (phase === "paws-clean") {
+        // czyszczenie łapek: palec = szmatka
+        gesture = { id: e.pointerId, sx: e.clientX, sy: e.clientY, kind: "wipe" };
+        pawsPtr = null;
+        pawsWipe(pointerXY(e));
+        try {
+            canvas.setPointerCapture(e.pointerId);
+        } catch (_) {}
+        return;
+    }
     const p = pointerXY(e);
     gesture = {
         id: e.pointerId,
@@ -1458,6 +1673,7 @@ canvas.addEventListener("pointerdown", (e) => {
         poop: poopHit(p.x, p.y),
         moleDirt: moleDirtHit(p.x, p.y),
         dish: dishHit(p.x, p.y),
+        lump: lumpHit(p.x, p.y) >= 0,
         catchFly: casual() ? butterflyHit(p.x, p.y) : false,
         butterfly: phase !== "butterfly" ? ambientHit(p.x, p.y) : null,
         hog: casual() ? hedgehogHit(p.x, p.y) : null,
@@ -1476,6 +1692,10 @@ canvas.addEventListener("pointermove", (e) => {
     if (!g || g.id !== e.pointerId) return;
     const dx = e.clientX - g.sx,
         dy = e.clientY - g.sy;
+    if (g.kind === "wipe") {
+        pawsWipe(pointerXY(e));
+        return;
+    }
     if (g.kind === "ball") {
         const p = pointerXY(e);
         ballHoldMove(p.x, p.y, e.timeStamp);
@@ -1507,6 +1727,10 @@ function pointerEnd(e, cancel = false) {
     try {
         if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     } catch (_) {}
+    if (g.kind === "wipe") {
+        pawsPtr = null;
+        return;
+    }
     if (g.kind === "pet") {
         stopPetting();
         return;
@@ -1539,6 +1763,7 @@ function pointerEnd(e, cancel = false) {
         else if (g.poop && poopHit(p.x, p.y)) cleanPoop();
         else if (g.moleDirt && moleDirtHit(p.x, p.y)) cleanMoleDirt();
         else if (g.dish && dishHit(p.x, p.y)) cleanDish();
+        else if (g.lump && lumpHit(p.x, p.y) >= 0) cleanLump(lumpHit(p.x, p.y));
         else if (g.catchFly && butterflyHit(p.x, p.y)) butterflyCatch();
         else if (g.dog && petHit(p.x, p.y)) react();
         else if (g.butterfly && ambientHit(p.x, p.y) === g.butterfly) ambientFlee(g.butterfly);
@@ -2326,6 +2551,7 @@ function updateMoleDirtAccess() {
     const btn = $(".moleDirtAccess");
     if (btn) btn.hidden = !moleDirts[room];
     updateDishAccess();
+    updatePawsUi();
 }
 
 function cleanMoleDirt() {
@@ -2785,6 +3011,7 @@ function draw(dt) {
     // rzeczywistym, zamiast znikać na czas pogoni za innym motylkiem.
     ambientDraw();
     if (!dogHidden) drawDog(ctx);
+    if (phase === "paws-clean") pawsClothDraw();
     // Kret-zapowiedź PRZED pieskiem (na pierwszym planie) — w
     // przeciwieństwie do motylków-tła, które lecą za nim.
     // Kupka: pierwszy plan, tuż pod linią podłogi pieska — ale za kretem
@@ -2813,6 +3040,7 @@ function draw(dt) {
             ctx.restore();
         }
     }
+    lumpDraw();
     dishDraw(); // skorupy za piłką (piłka leży przed nimi)
     ballDraw();
     moleDirtDraw();
@@ -3125,6 +3353,7 @@ async function boot() {
     // Szybki dostęp do gier — puchar w górnym pasku sceny.
     $(".gamesAccess img").src = icons.cup;
     $(".gamesAccess").onclick = () => action("games");
+    $(".pawsAccess img").src = icons.cloth;
     lp(0.98);
     loaded = true;
     setRoom(room);
