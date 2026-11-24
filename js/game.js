@@ -1380,9 +1380,17 @@ function pawDirtBlobs(sh, f) {
             PER_PAW = 9;
         paws.forEach(([pxx, pyy], k) => {
             for (let j = 0; j < PER_PAW; j++) {
-                const t = pawDirtTemplate[(k * PER_PAW + j) % pawDirtTemplate.length];
+                const t = pawDirtTemplate[(k * PER_PAW + j) % pawDirtTemplate.length],
+                    thr = (j + t.thr) / PER_PAW; // równo rozłożone progi: każda łapa brudzi się tak samo
                 let gx = Math.floor((pxx + t.ox) / px),
                     gy = Math.floor((pyy + t.oy) / px);
+                const mx0 = Math.floor(gx * px + px / 2),
+                    my0 = Math.floor(gy * px + px / 2);
+                // przesunięcie wypadło poza psa → kładziemy grudkę dokładnie na punkcie łapy
+                if (!(mx0 >= 0 && my0 >= 0 && mx0 < w && my0 < h && src[(my0 * w + mx0) * 4 + 3] > 128)) {
+                    gx = Math.floor(pxx / px);
+                    gy = Math.floor(pyy / px);
+                }
                 const list = [];
                 for (const s of t.steps) {
                     const mx = Math.floor(gx * px + px / 2),
@@ -1392,7 +1400,7 @@ function pawDirtBlobs(sh, f) {
                     gx += [1, -1, 0, 0][s.d];
                     gy += [0, 0, 1, -1][s.d];
                 }
-                if (list.length) blobs.push({ list, px, thr: t.thr, bucket: Math.floor(pxx / PAW_BUCKET) });
+                if (list.length) blobs.push({ list, px, thr, bucket: Math.floor(pxx / PAW_BUCKET) });
             }
         });
     }
