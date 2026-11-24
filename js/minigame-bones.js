@@ -3,7 +3,7 @@
 // LICZYMY KOSTKI — dodawanie i odejmowanie w zakresie 10 (dla 6+).
 // 1) Wybór: dodawanie / odejmowanie i poziom (do 5, do 10, do 10 z zakryciem).
 // 2) Kostki spadają na dwa dywaniki, a piesek w tym czasie kopie dołek
-//    (arkusz a03), wykopuje kostkę i się nią bawi.
+//    (arkusz a03), wykopuje kostkę, chwilę stoi z nią spokojnie i ją odkłada.
 // 3) Dziecko dotyka dywanik i wpisuje liczbę kostek na klawiaturze
 //    (piesek się rozgląda). Dobrze → uszy/mrugnięcie, źle → „NIE”.
 // 4) Po obu liczbach pojawia się działanie (np. 5 + 2 = ?) — wpisanie wyniku
@@ -25,7 +25,9 @@ const BONES_LEVELS = [
     BONES_ANIM = {
         dig: ["a03", 0], // 01. Kopanie dołka
         unearth: ["a03", 1], // 02. Wykopuje kostkę
-        play: ["a03", 2], // 03. Zabawa kostką
+        calmBone: ["a03", 4], // 05. Stoi z kostką, przechyla głowę (spokojnie, nie rozprasza)
+        putDown: ["a03", 5], // 06. Odkłada kostkę
+        calm: ["a01", 16], // 17. Spokojne stanie (bez kostki)
         look: ["a01", 3], // 04. Rozglądanie się (w czasie wpisywania)
         ears: ["a01", 7], // 08. Uszy / mrugnięcie (dobra liczba)
         joyBack: ["a01", 21], // Radość z powrotem
@@ -51,7 +53,9 @@ function bonesAnim(...parts) {
     bonesNext();
 }
 function bonesNext() {
-    bonesCur = bonesQueue.shift() || bonesCur;
+    let p = bonesQueue.shift();
+    if (p && p.wait) p = bonesWait(); // „czekanie” wybierane dopiero teraz (klawiatura otwarta czy nie)
+    bonesCur = p || bonesCur;
     if (bonesCur) bonesCur.t0 = performance.now();
 }
 function bonesDraw(now) {
@@ -84,7 +88,23 @@ function bonesDraw(now) {
 }
 // pętla „czekania” zależna od chwili gry: przy otwartej klawiaturze piesek
 // się rozgląda, a poza nią bawi się kostką
-const bonesWait = () => bonesPart(bonesGame && !$(".bonesPad").hidden ? "look" : "play");
+const bonesWait = () => bonesPart(bonesGame && !$(".bonesPad").hidden ? "look" : "calm");
+// wykopanie kostki: kopie, wyciąga kostkę, chwilę z nią stoi, odkłada i stoi spokojnie
+// (kostka nigdy nie pojawia się w pysku znikąd)
+const bonesDigParts = (digMs) => [
+    bonesPart("dig", { time: Math.max(digMs, duration("a03", 0)) }),
+    bonesPart("unearth", { times: 1 }),
+    bonesPart("calmBone", { times: 1 }),
+    bonesPart("putDown", { times: 1 }),
+    { wait: true },
+];
+// reakcja pieska; jeśli trzyma kostkę w pysku, najpierw ją odkłada
+// (kostka nie znika z pyska nagle)
+function bonesReact(...parts) {
+    const c = bonesCur,
+        holds = c && c.sheet === "a03" && (c.anim === 1 || c.anim === 4);
+    bonesAnim(...(holds ? [bonesPart("putDown", { times: 1 })] : []), ...parts);
+}
 
 // ── Wejście i ekran wyboru ────────────────────────────────────────
 function bonesTryStart() {
@@ -188,7 +208,6 @@ function bonesRound() {
     ]) {
         const p = $(sel);
         p.classList.remove("cover");
-        p.style.opacity = 1;
         const q = p.querySelector(".bonesQ");
         q.className = "bonesQ";
         q.textContent = "?";
@@ -197,7 +216,7 @@ function bonesRound() {
     }
     // kopanie trwa, aż spadnie ostatnia kostka, potem wykopanie i zabawa kostką
     const fall = Math.max(g.A, g.B) * 120 + 700;
-    bonesAnim(bonesPart("dig", { time: Math.max(fall, duration("a03", 0)) }), bonesPart("unearth", { times: 1 }), bonesPart("play"));
+    bonesAnim(...bonesDigParts(fall));
     sfx("throw");
     g.readyT = setTimeout(() => {
         if (bonesGame !== g) return;
@@ -236,6 +255,7 @@ function bonesPileTap(which) {
     if (!g || !g.ready || !$(".bonesPad").hidden) return;
     if ((which === "a" && g.okA) || (which === "b" && g.okB)) return;
     const n = which === "a" ? g.A : g.B;
+    const mark = $(".bonesPile." + which + " .bonesQ");
     bonesPadOpen(which === "a" ? "Ile kostek na lewym dywaniku?" : "Ile kostek na prawym dywaniku?", n, () => {
         const q = $(".bonesPile." + which + " .bonesQ");
         q.textContent = n;
@@ -247,8 +267,8 @@ function bonesPileTap(which) {
         sfx("good");
         if (g.okA && g.okB) bonesShowEq();
         else $(".bonesHint").textContent = "Super! Teraz drugi dywanik.";
-        bonesAnim(bonesPart("ears", { times: 1 }), bonesWait());
-    });
+        bonesReact(bonesPart("ears", { times: 1 }), { wait: true });
+    }, mark);
 }
 $(".bonesPile.a").onclick = () => bonesPileTap("a");
 $(".bonesPile.b").onclick = () => bonesPileTap("b");
@@ -261,8 +281,6 @@ function bonesShowEq() {
     if (bonesOp === "-") $(".bonesHint").textContent = "Ile zostanie? Dotknij kratkę.";
     el.className = "bonesEq in";
     el.innerHTML = '<span class="n">' + g.A + "</span><span>" + bonesSign() + '</span><span class="n">' + g.B + '</span><span>=</span><button class="bonesRes" aria-label="Wpisz wynik">?</button>';
-    // przy odejmowaniu kostki z prawego dywanika „odchodzą”
-    if (bonesOp === "-") $(".bonesPile.b").style.opacity = 0.45;
     el.querySelector(".bonesRes").onclick = () => {
         if (!$(".bonesPad").hidden || el.querySelector(".bonesRes.ok")) return;
         bonesPadOpen(g.A + " " + bonesSign() + " " + g.B + " = ?", bonesResult(), () => {
@@ -273,10 +291,11 @@ function bonesShowEq() {
             bonesStarsDraw();
             sfx("pair");
             $(".bonesHint").textContent = ["Dobrze!", "Super!", "Brawo!", "Świetnie!"][bonesRnd(0, 3)];
-            bonesAnim(bonesPart("jump", { times: 1 }), bonesPart("joyBack", { times: 1 }), bonesPart("play"));
+            // radość, a w nagrodę wykopuje sobie kostkę
+            bonesReact(bonesPart("jump", { times: 1 }), bonesPart("joyBack", { times: 1 }), ...bonesDigParts(0));
             if (g.round >= BONES_ROUNDS) g.readyT = setTimeout(() => bonesGame === g && bonesWin(), 1600);
             else $(".bonesNext").hidden = false;
-        });
+        }, el.querySelector(".bonesRes"));
     };
 }
 $(".bonesNext").onclick = () => bonesGame && bonesRound();
@@ -297,7 +316,13 @@ let bonesBuf = "",
     }
 })();
 
-function bonesPadOpen(title, target, onOk) {
+// zaznaczenie, czego dotyczy wpisywanie: większy, mrugający „?”
+function bonesMark(el) {
+    document.querySelectorAll(".bonesQ.active, .bonesRes.active").forEach((e) => e.classList.remove("active"));
+    if (el) el.classList.add("active");
+}
+function bonesPadOpen(title, target, onOk, mark) {
+    bonesMark(mark);
     bonesBuf = "";
     bonesTarget = target;
     bonesOnOk = onOk;
@@ -306,7 +331,7 @@ function bonesPadOpen(title, target, onOk) {
     t.className = /\d/.test(title) ? "big" : "";
     $(".bonesDisp").innerHTML = "&nbsp;";
     $(".bonesPad").hidden = false;
-    bonesAnim(bonesPart("look"));
+    bonesReact(bonesPart("look"));
 }
 
 function bonesPress(k) {
@@ -316,6 +341,7 @@ function bonesPress(k) {
         if (bonesBuf === "") return;
         if (+bonesBuf === bonesTarget) {
             $(".bonesPad").hidden = true;
+            bonesMark(null);
             const cb = bonesOnOk;
             bonesOnOk = null;
             bonesBuf = "";
@@ -327,7 +353,7 @@ function bonesPress(k) {
             d.classList.add("bad");
             sfx("miss");
             bonesBuf = "";
-            bonesAnim(bonesPart("no", { times: 2 }), bonesWait());
+            bonesReact(bonesPart("no", { times: 2 }), { wait: true });
             setTimeout(() => (d.innerHTML = "&nbsp;"), 500);
         }
         return;

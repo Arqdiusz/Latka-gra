@@ -2869,3 +2869,23 @@ h3,
     transform: translateY(3px);
     box-shadow: 0 2px 0 var(--sh);
 }
+/* „?” dywanika / kratka wyniku, którą dziecko właśnie wpisuje */
+.bonesQ.active {
+    border-color: #3d8fd6;
+    background: #e3f0fc;
+    animation: bonesBlink 0.9s ease-in-out infinite;
+}
+@keyframes bonesBlink {
+    0%, 100% { transform: scale(1.3); }
+    50% { transform: scale(1.45); border-color: #f2b632; background: #fff6d6; }
+}
+.bonesRes.active {
+    border-style: solid;
+    border-color: #3d8fd6;
+    color: #3d8fd6;
+    animation: bonesBlinkRes 0.9s ease-in-out infinite;
+}
+@keyframes bonesBlinkRes {
+    0%, 100% { transform: scale(1.08); }
+    50% { transform: scale(1.18); border-color: #f2b632; }
+}
