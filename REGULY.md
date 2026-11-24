@@ -187,7 +187,7 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 ## 20. Kret z kostką — zdarzenie w pokojach ogrodowych (v0.8.177)
 - Plik `js/event-bone-mole.js`. Łąka, Ogród, Podwórko. Losowany na równi z innymi zwierzakami (`wlPick`: kret, kret z kostką, jeżyk, motylki), z tym samym tempem co zwykły kret; nigdy razem z innym zwierzakiem ani przy leżącym piachu po krecie (zwierzaki nie nachodzą na siebie).
 - Kret wychyla się przy boku pokoju (62 px od ściany, po stronie dalszej od pieska), na torze pieska, chowa się i zostaje pulsujący kopiec (nieklikany znika po 2 min albo po wyjściu z pokoju).
-- Dotyk kopca: piesek staje od strony środka pokoju, przodem do ściany, tak by ziemia z animacji kopania wypadła na kopcu; kopie (a03 „01”), wykopuje kostkę („02”), stoi z nią („05”) i po ok. 0,9 s pojawia się karta „Piesek znalazł kostkę!” → „Liczymy!” otwiera „Liczymy kostki”, „Nie teraz” → odkłada kostkę („06”). Kopanie brudzi łapki (+5).
+- Dotyk kopca: piesek staje od strony środka pokoju, przodem do ściany, tak by ziemia z animacji kopania wypadła na kopcu; kopie (a03 „01”), wykopuje kostkę („02”), obraca się przodem do środka ekranu i stoi z kostką („05”), po ok. 0,9 s pojawia się karta „Piesek znalazł kostkę!” → „Liczymy!” otwiera „Liczymy kostki”, „Nie teraz” → odkłada kostkę („06”). Kopanie brudzi łapki (+5).
 - DEV: przycisk „Kret z kostką”.
 
 ## 21. Brud i czystość (v0.8.178)

@@ -130,8 +130,9 @@ function boneMoleTap() {
             },
         }),
         dig(1, duration("a03", 1), { onStart: () => sfx("good") }),
-        dig(4, BONE_MOLE.cardAfter, { onEnd: () => boneMoleCard() }),
-        dig(4, 600000), // stoi z kostką, póki karta jest otwarta
+        // z kostką w pysku obraca się przodem do środka ekranu — dobrze go widać
+        dig(4, BONE_MOLE.cardAfter, { facing: !face, onEnd: () => boneMoleCard() }),
+        dig(4, 600000, { facing: !face }), // stoi z kostką, póki karta jest otwarta
     ]);
     phase = "bonemole";
     stage = "bonemole-run";
