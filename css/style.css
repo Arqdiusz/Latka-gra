@@ -2564,32 +2564,42 @@ h3,
 .bonesPlay {
     position: absolute;
     inset: 0;
-    pointer-events: auto; /* nie przepuszcza dotyku do sceny (pogłaskanie pieska itp.) */
+    pointer-events: auto;
+    /* własne okno gry: łąka z mini gier, piesek rysowany na .bonesCanvas */
+    background: #a3d45c url("../tla/001-gry.png") top center / 100% auto no-repeat;
+}
+.bonesCanvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 384px;
+    height: 423px;
+    image-rendering: pixelated;
 }
 .bonesTop {
     position: absolute;
     left: 0;
     right: 0;
     top: 0;
-    height: 106px;
+    height: 64px;
     background: #fff8ea;
     border-bottom: 4px solid #d9c9a8;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
+    gap: 10px;
+    padding: 0 64px 0 16px;
 }
 .bonesTtl {
-    font: 800 24px "Baloo 2", sans-serif;
+    flex: 1;
+    font: 800 21px "Baloo 2", sans-serif;
 }
 .bonesStars {
     display: flex;
-    gap: 6px;
+    gap: 4px;
 }
 .bonesStars i {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     background-size: contain;
     background-repeat: no-repeat;
     image-rendering: pixelated;
@@ -2600,9 +2610,9 @@ h3,
 }
 .bonesPile {
     position: absolute;
-    top: 322px;
+    top: 328px;
     width: 140px;
-    height: 88px;
+    height: 86px;
     border: 0;
     background: none;
     padding: 0;
@@ -2858,11 +2868,4 @@ h3,
 .bonesNext:active {
     transform: translateY(3px);
     box-shadow: 0 2px 0 var(--sh);
-}
-/* w czasie liczenia chowamy plakietki sceny (pokój, serce, puchar, pełny ekran) */
-body.bonesOn .roomBadge,
-body.bonesOn .heartBadge,
-body.bonesOn .gamesAccess,
-body.bonesOn .full {
-    visibility: hidden;
 }

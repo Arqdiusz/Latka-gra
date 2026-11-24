@@ -8,8 +8,9 @@
 //    (piesek się rozgląda). Dobrze → uszy/mrugnięcie, źle → „NIE”.
 // 4) Po obu liczbach pojawia się działanie (np. 5 + 2 = ?) — wpisanie wyniku
 //    to skok i radość. 5 działań = wygrana i nagroda (ACTION_EFFECTS.bones).
-// Piesek to zwykły pies silnika (łąka w tle), podniesiony nad dywaniki przez
-// dogLift. Nakładka (.bonesFull) zasłania tylko górny pasek i dół ekranu.
+// Gra ma własne okno (.bonesFull) z łąką z mini gier. Piesek jest rysowany na
+// .bonesCanvas własnym małym odtwarzaczem (klatki i tempo z presetów JSON,
+// przesunięcia klatek jak w silniku), a pies z gry czeka pod spodem.
 // ═══════════════════════════════════════════════════════════════
 
 const BONES_LEVELS = [
@@ -18,7 +19,7 @@ const BONES_LEVELS = [
         { name: "Trudny", info: "do 10, kostki znikają po 3 s", max: 10, hide: true },
     ],
     BONES_ROUNDS = 5,
-    BONES_LIFT = -209, // stopy pieska tuż nad dywanikami
+    BONES_DOG = { x: 192, y: 332, scale: 1.25 }, // stopy pieska na trawie, tuż nad dywanikami
     BONES_FOREVER = 600000,
     // animacje (indeksy presetów z animacje-ustawienia/*.json)
     BONES_ANIM = {
@@ -36,16 +37,50 @@ let bonesGame = null,
     bonesOp = "+",
     bonesLevel = 0;
 
-// ── Animacje pieska ───────────────────────────────────────────────
+// ── Animacje pieska (własny odtwarzacz na .bonesCanvas) ─────────────
+// Kolejka części: { sheet, anim, time }. Ostatnia część kręci się bez końca.
+let bonesQueue = [],
+    bonesCur = null,
+    bonesRaf = 0;
 function bonesPart(key, opts = {}) {
     const [sheet, anim] = BONES_ANIM[key];
-    return { sheet, anim, facing: false, time: opts.times ? duration(sheet, anim) * opts.times : opts.time || BONES_FOREVER, onStart: opts.onStart };
+    return { sheet, anim, time: opts.times ? duration(sheet, anim) * opts.times : opts.time || BONES_FOREVER };
 }
 function bonesAnim(...parts) {
-    startQueue(parts);
-    phase = "bones-game";
-    stage = "bones-game";
-    locks();
+    bonesQueue = parts;
+    bonesNext();
+}
+function bonesNext() {
+    bonesCur = bonesQueue.shift() || bonesCur;
+    if (bonesCur) bonesCur.t0 = performance.now();
+}
+function bonesDraw(now) {
+    bonesRaf = 0;
+    if (!bonesGame || $(".bonesPlay").hidden) return;
+    const cv = $(".bonesCanvas"),
+        c = cv.getContext("2d");
+    c.clearRect(0, 0, cv.width, cv.height);
+    const p = bonesCur;
+    if (p) {
+        if (bonesQueue.length && now - p.t0 >= p.time) bonesNext();
+        const q = bonesCur,
+            pre = getPreset(q.sheet, q.anim),
+            fr = numbers(pre.seq),
+            f = fr[Math.floor((now - q.t0) / pre.ms) % fr.length],
+            cell = cells[q.sheet][f - 1],
+            o = { x: 0, y: 0, scale: 100, ...CFG[q.sheet].offsets[String(f)] },
+            s = (BONES_DOG.scale * o.scale) / 100;
+        if (cell) {
+            c.save();
+            c.imageSmoothingEnabled = false;
+            // przesunięcia klatek w jednostkach silnika (BASE·0.7 = skala psa w grze)
+            c.translate(BONES_DOG.x + (o.x * BONES_DOG.scale) / 0.7, BONES_DOG.y + (o.y * BONES_DOG.scale) / 0.7);
+            c.scale(s, s);
+            c.drawImage(cell, -cell.width / 2, -CFG[q.sheet].ground);
+            c.restore();
+        }
+    }
+    bonesRaf = requestAnimationFrame(bonesDraw);
 }
 // pętla „czekania” zależna od chwili gry: przy otwartej klawiaturze piesek
 // się rozgląda, a poza nią bawi się kostką
@@ -55,7 +90,7 @@ const bonesWait = () => bonesPart(bonesGame && !$(".bonesPad").hidden ? "look" :
 function bonesTryStart() {
     if (sadBlocks("games")) return sadRefuse(); // smutny piesek nie chce się bawić
     if (!gameEntryOk()) return;
-    bonesGame = { prevRoom: room };
+    bonesGame = {};
     bonesBuildMenu();
     $(".bonesFull").hidden = false;
     $(".bonesMenu").hidden = false;
@@ -102,16 +137,17 @@ $(".bonesMenuClose").onclick = () => bonesFinish(false);
 $(".bonesPlayClose").onclick = () => bonesFinish(false);
 
 function bonesBegin() {
-    const g = bonesGame || (bonesGame = { prevRoom: room });
+    const g = bonesGame || (bonesGame = {});
     g.round = 0;
     $(".bonesMenu").hidden = true;
     $(".bonesPlay").hidden = false;
-    document.body.classList.add("bonesOn");
-    if (room !== "meadow") setRoom("meadow");
-    x = 0.5;
-    left = false;
-    dogLift = BONES_LIFT;
     $(".bonesPadTitle img").src = icons.bark;
+    // pies z gry czeka pod nakładką, bez własnych pomysłów
+    startQueue([{ sheet: "a01", anim: 16, time: 1800000 }]);
+    phase = "bones-game";
+    stage = "bones-game";
+    locks();
+    if (!bonesRaf) bonesRaf = requestAnimationFrame(bonesDraw);
     bonesRound();
 }
 
@@ -312,9 +348,7 @@ function bonesWin() {
         save();
     }
     sfx("win");
-    startQueue([{ sheet: "a01", anim: 17, time: BONES_FOREVER }]);
-    phase = "bones-end";
-    stage = "bones-end";
+    bonesAnim({ sheet: "a01", anim: 17, time: BONES_FOREVER });
 }
 $("#bonesWinPopup .winAgain").onclick = () => {
     $("#bonesWinPopup").hidden = true;
@@ -342,11 +376,10 @@ function bonesFinish() {
     bonesGame = null;
     $(".bonesFull").hidden = true;
     $(".bonesPad").hidden = true;
-    document.body.classList.remove("bonesOn");
     $("#bonesWinPopup").hidden = true;
-    dogLift = 0;
-    x = 0.5;
-    if (g && g.prevRoom && g.prevRoom !== room) setRoom(g.prevRoom);
+    cancelAnimationFrame(bonesRaf);
+    bonesRaf = 0;
+    bonesCur = null;
     const grace = clock + 4000 + Math.random() * 2500;
     nextMoleSpawn = Math.max(nextMoleSpawn, grace);
     nextAmbientSpawn = Math.max(nextAmbientSpawn, grace);

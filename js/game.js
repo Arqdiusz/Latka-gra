@@ -139,7 +139,6 @@ let loaded = false,
     travelMode = "",
     travelTarget = "",
     jumpY = 0,
-    dogLift = 0, // stałe przesunięcie psa w górę (mini gra z kostkami: piesek stoi nad dywanikami)
     pending = null,
     menu = null,
     gesture = null,
@@ -1327,7 +1326,7 @@ function geometry() {
     };
 }
 
-function drawDog(c, cx = x * W, gy = GROUND + jumpY + dogLift, facing = left, ratio = 1) {
+function drawDog(c, cx = x * W, gy = GROUND + jumpY, facing = left, ratio = 1) {
     const g = geometry();
     c.save();
     c.translate(cx, gy);
