@@ -3,19 +3,26 @@
   "cols": 6,
   "rows": 12,
   "ground": 113,
-  "offsets": {},
+  "offsets": {
+    "24": {
+      "x": 0,
+      "y": -6,
+      "scale": 100
+    }
+  },
   "presets": [
     {
       "name": "01. Kopanie dołka",
-      "seq": "1,2,4,7,8,6,9,10",
-      "ms": 200,
+      "seq": "10,4,9,5,1",
+      "ms": 333,
       "intro": "",
       "outro": "",
-      "repeat": true
+      "repeat": true,
+      "_previewMs": 333
     },
     {
       "name": "02. Wykopuje kostkę",
-      "seq": "8,10,11,12",
+      "seq": "14,6,13,19,12",
       "ms": 220,
       "intro": "",
       "outro": "",
@@ -23,15 +30,16 @@
     },
     {
       "name": "03. Zabawa kostką",
-      "seq": "15,17,16,18,22,24,21,23,22,24",
-      "ms": 200,
+      "seq": "17,18,24,21,23,22,16",
+      "ms": 333,
       "intro": "",
       "outro": "",
-      "repeat": true
+      "repeat": true,
+      "_previewMs": 333
     },
     {
       "name": "04. Kopie przy kostce",
-      "seq": "13,14,13,14,19,20",
+      "seq": "13,6,14,6,13,14,6",
       "ms": 200,
       "intro": "",
       "outro": "",
@@ -39,15 +47,16 @@
     },
     {
       "name": "05. Stoi z kostką, przechyla głowę",
-      "seq": "15,15,15,15,17,17,17,17,15,15,15,22,22,15",
-      "ms": 260,
+      "seq": "17,15,17,16,18,24,17,15,17,15,18,24",
+      "ms": 333,
       "intro": "",
       "outro": "",
-      "repeat": true
+      "repeat": true,
+      "_previewMs": 333
     },
     {
       "name": "06. Odkłada kostkę",
-      "seq": "15,13,13,3,3",
+      "seq": "15,20,14,13,9,5,4,3",
       "ms": 300,
       "intro": "",
       "outro": "",
