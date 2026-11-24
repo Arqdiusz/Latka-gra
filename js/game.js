@@ -1324,9 +1324,27 @@ function drawDog(c, cx = x * W, gy = GROUND + jumpY, facing = left, ratio = 1) {
 // grupami, nie piksel po pikselu). Rysowane w układzie komórki arkusza.
 const PAW_DIRT_COLORS = ["#c9a066", "#6a4524", "#a56a3a", "#d9b87f", "#4a2e17"],
     pawDirtCache = {};
+// Szablon grudek jest WSPÓLNY dla wszystkich klatek (te same współrzędne x w
+// komórce arkusza, ta sama głębokość i kształt), więc gdy piesek stoi w miejscu,
+// brud stoi w miejscu; rusza się tylko razem z łapą, gdy ta się unosi (zmienia
+// się najniższy punkt sierści w danej kolumnie).
+let pawDirtTemplate = null;
+function pawDirtMake() {
+    let seed = 4242;
+    const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280),
+        out = [];
+    for (let i = 0; i < 110; i++) {
+        const blob = { x: Math.floor(rnd() * 200), depth: rnd(), thr: rnd(), steps: [] },
+            len = 2 + Math.floor(rnd() * 3);
+        for (let k = 0; k < len; k++) blob.steps.push({ col: PAW_DIRT_COLORS[Math.floor(rnd() * PAW_DIRT_COLORS.length)], d: Math.floor(rnd() * 4) });
+        out.push(blob);
+    }
+    return out;
+}
 function pawDirtBlobs(sh, f) {
     const key = sh + f;
     if (pawDirtCache[key]) return pawDirtCache[key];
+    pawDirtTemplate ||= pawDirtMake();
     const cell = cells[sh][f - 1],
         w = cell.width,
         h = cell.height,
@@ -1334,7 +1352,7 @@ function pawDirtBlobs(sh, f) {
         al = (px, py) => (px < 0 || py < 0 || px >= w || py >= h ? 0 : src[(py * w + px) * 4 + 3]),
         box = P.meta[sh][f - 1].box,
         bh = box[3] - box[1],
-        px = Math.max(3, Math.round(bh / 52)),
+        px = 3,
         band = Math.round(bh * 0.19),
         low = new Array(w).fill(-1);
     for (let xx = 0; xx < w; xx++)
@@ -1343,36 +1361,31 @@ function pawDirtBlobs(sh, f) {
                 low[xx] = yy;
                 break;
             }
-    let seed = (f * 7919 + sh.charCodeAt(1) * 104729) % 233280;
-    const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280),
-        blobs = [];
-    let tries = 0;
-    while (blobs.length < 34 && tries++ < 600) {
-        const bx = Math.floor(box[0] + rnd() * (box[2] - box[0])),
-            lw = low[bx];
+    const blobs = [];
+    for (const t of pawDirtTemplate) {
+        const bx = t.x,
+            lw = bx < w ? low[bx] : -1;
         if (lw < 0 || lw < box[3] - bh * 0.15) continue; // tylko łapy blisko dołu
         let gx = Math.floor(bx / px),
-            gy = Math.floor((lw - Math.floor(rnd() * band)) / px);
-        const list = [],
-            len = 2 + Math.floor(rnd() * 3);
-        for (let k = 0; k < len; k++) {
-            if (al(Math.floor(gx * px + px / 2), Math.floor(gy * px + px / 2)) > 128) list.push({ x: gx * px, y: gy * px, col: PAW_DIRT_COLORS[Math.floor(rnd() * PAW_DIRT_COLORS.length)] });
-            const d = Math.floor(rnd() * 4);
-            gx += [1, -1, 0, 0][d];
-            gy += [0, 0, 1, -1][d];
+            gy = Math.floor((lw - Math.floor(t.depth * band)) / px);
+        const list = [];
+        for (const s of t.steps) {
+            if (al(Math.floor(gx * px + px / 2), Math.floor(gy * px + px / 2)) > 128) list.push({ x: gx * px, y: gy * px, col: s.col });
+            gx += [1, -1, 0, 0][s.d];
+            gy += [0, 0, 1, -1][s.d];
         }
-        if (list.length) blobs.push({ list, px });
+        if (list.length) blobs.push({ list, px, thr: t.thr });
     }
     return (pawDirtCache[key] = blobs);
 }
 function pawDirtDraw(c, sh, f, amount) {
-    const bl = pawDirtBlobs(sh, f),
-        n = Math.ceil(bl.length * amount);
-    for (let i = 0; i < n; i++)
-        for (const q of bl[i].list) {
+    for (const bl of pawDirtBlobs(sh, f)) {
+        if (bl.thr >= amount) continue;
+        for (const q of bl.list) {
             c.fillStyle = q.col;
-            c.fillRect(q.x, q.y, bl[i].px, bl[i].px);
+            c.fillRect(q.x, q.y, bl.px, bl.px);
         }
+    }
 }
 
 // ── Czyszczenie łapek szmatką (łazienka) ──────────────────────────
