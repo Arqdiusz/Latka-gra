@@ -385,16 +385,16 @@ const ACTION_EFFECTS = {
     water: { water: 35 },
     fun: { fun: 24, water: -5, sleep: -4, clean: -8 },
     den: { fun: 16, food: -2, water: -2 },
-    clean: { clean: 38, paws: -100 }, // kąpiel zmywa też brud z łapek
+    clean: { clean: 100, paws: -100 }, // udana kąpiel: piesek cały czysty, łapki też
     brush: { clean: 12, fun: 5 },
     // Zabawa w kreta — radość jak przy aporcie/bańkach, ale piesek się przy
     // tym trochę brudzi, głoduje i chce pić (patrz js/minigame-mole.js).
-    mole: { fun: 26, clean: -14, food: -5, water: -6, paws: 30 },
+    mole: { fun: 26, clean: -14, food: -5, water: -6, paws: 15 },
     // Jeżyk i owoce (js/minigame-hedge.js) — zdrowa zabawa na trawie.
-    hedgehog: { fun: 24, water: -4, clean: -7, paws: 15 },
+    hedgehog: { fun: 24, water: -4, clean: -7, paws: 8 },
     memory: { fun: 24, water: -3, clean: -4 },
     pairs: { fun: 20, water: -2, clean: -4 },
-    bones: { fun: 22, water: -3, clean: -4, paws: 15 },
+    bones: { fun: 22, water: -3, clean: -4, paws: 8 },
     // Złapany motylek — krótka, lekka frajda.
     butterfly: { fun: 6, water: -1, clean: -2 },
     // Pojedynczy rzut piłki w aporcie (minigame-fetch.js).
@@ -439,7 +439,9 @@ function updateNeeds(seconds) {
     const m = seconds / 60;
     for (const [k, r] of Object.entries(NEEDS_DECAY)) {
         if (sleeping && k === "sleep") continue;
-        stats[k] = clamp(stats[k] - r * m * (sleeping ? 0.5 : 1), 0, 100);
+        // brudne łapki = piesek brudzi się szybciej (do 2× przy bardzo brudnych)
+        const dirt = k === "clean" ? 1 + pawDirt / 100 : 1;
+        stats[k] = clamp(stats[k] - r * m * dirt * (sleeping ? 0.5 : 1), 0, 100);
     }
     if (sleeping) {
         stats.sleep = clamp(stats.sleep + 12 * m, 0, 100);
@@ -474,7 +476,7 @@ function lumpUpdate(s) {
     lumpLastX = x;
     lumpLastRoom = room;
     if (OUTDOOR_ROOMS.includes(room)) {
-        pawDirt = Math.min(100, pawDirt + 0.4 * s); // ~4 min do bardzo brudnych łapek
+        pawDirt = Math.min(100, pawDirt + 0.15 * s); // ~11 min do bardzo brudnych łapek
         return;
     }
     if (pawDirt < 45 || !INDOOR_ROOMS.includes(room) || moved > 80 || phase === "paws-clean") return; // skok pozycji (zmiana pokoju) nie liczy się

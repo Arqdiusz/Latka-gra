@@ -125,7 +125,7 @@ function boneMoleTap() {
             onStart: () => {
                 m.state = "dig"; // kopiec przejmuje animacja kopania
                 stage = "bonemole-dig";
-                changeNeeds({ paws: 10 });
+                changeNeeds({ paws: 5 });
                 sfx("wipe");
             },
         }),
