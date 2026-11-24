@@ -1752,7 +1752,6 @@ canvas.addEventListener("pointerdown", (e) => {
         sx: e.clientX,
         sy: e.clientY,
         kind: null,
-        t0: e.timeStamp,
         dog: petHit(p.x, p.y),
         poop: poopHit(p.x, p.y),
         moleDirt: moleDirtHit(p.x, p.y),
@@ -1795,20 +1794,7 @@ canvas.addEventListener("pointermove", (e) => {
             g.kind = "swipe";
         }
     }
-    if (g.kind === "swipe") {
-        // pokój jedzie za palcem (podgląd), po puszczeniu dojeżdża albo wraca
-        if (phase !== "swipe-preview") {
-            if (!casual() || (sadNeed() && !sleeping)) {
-                g.kind = "swipe-none";
-                return;
-            }
-            interrupt();
-            phase = "swipe-preview";
-            locks();
-        }
-        e.preventDefault();
-        previewSwipe(dx);
-    }
+    if (g.kind === "swipe") { /* podgląd wyłączony — używamy animacji strzałek */ }
     if (g.kind === "pet") {
         e.preventDefault();
         petLast = clock;
@@ -1839,16 +1825,13 @@ function pointerEnd(e, cancel = false) {
         ballRelease(e.timeStamp, cancel);
         return;
     }
-    if (g.kind === "swipe-none") {
-        if (!cancel && Math.abs(dx) >= 45 && sadNeed() && !sleeping) sadRefuse();
-        return;
-    }
     if (g.kind === "swipe") {
-        if (phase !== "swipe-preview") return;
-        const dir = dx < 0 ? 1 : -1;
-        // dojeżdża, gdy palec przesunął pokój o ponad ~1/4 szerokości (albo szybki machnięcie)
-        const fast = Math.abs(dx) / scale > 50 && e.timeStamp - g.t0 < 250;
-        settleSwipe(dir, !cancel && (Math.abs(dx) / scale > W * 0.25 || fast) && Math.abs(dx) > Math.abs(dy) * 1.2);
+        if (!cancel && Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+            setOffset(0);
+            stepRoom(dx < 0 ? 1 : -1);
+        } else {
+            setOffset(0);
+        }
         return;
     }
     if (cancel) return;
