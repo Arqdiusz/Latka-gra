@@ -283,7 +283,7 @@ function bonesShowEq() {
     el.className = "bonesEq in";
     // dymek nad pieskiem z tym samym działaniem
     const say = $(".bonesSay");
-    say.style.backgroundImage = "url(" + icons.speech + ")";
+    say.style.backgroundImage = "url(" + icons.thought + ")"; // piesek „myśli” o działaniu
     say.innerHTML = g.A + " " + bonesSign() + " " + g.B + " = <i>?</i>";
     say.hidden = false;
     el.innerHTML = '<span class="n">' + g.A + "</span><span>" + bonesSign() + '</span><span class="n">' + g.B + '</span><span>=</span><button class="bonesRes" aria-label="Wpisz wynik">?</button>';

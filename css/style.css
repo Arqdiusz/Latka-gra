@@ -3029,10 +3029,10 @@ h3,
 }
 
 /* Dymek nad pieskiem z działaniem do rozwiązania (Liczymy kostki):
-   pikselowy dymek z gry (ikona „speech”), ogonek nad środkiem głowy pieska */
+   pikselowy dymek-myśl z gry (ikona „thought”), kropeczki nad środkiem głowy pieska */
 .bonesSay {
     position: absolute;
-    left: 108px;
+    left: 73px;
     top: 62px;
     width: 220px;
     height: 140px;
