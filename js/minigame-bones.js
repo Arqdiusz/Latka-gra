@@ -104,15 +104,9 @@ function bonesDraw(now) {
 // pętla „czekania” zależna od chwili gry: przy otwartej klawiaturze piesek
 // się rozgląda, a poza nią bawi się kostką
 const bonesWait = () => bonesPart(bonesGame && !$(".bonesPad").hidden ? "look" : "calm");
-// wykopanie kostki: kopie, wyciąga kostkę, chwilę z nią stoi, odkłada i stoi spokojnie
-// (kostka nigdy nie pojawia się w pysku znikąd)
-const bonesDigParts = (digMs) => [
-    bonesPart("dig", { time: Math.max(digMs, duration("a03", 0)) }),
-    bonesPart("unearth", { times: 1 }),
-    bonesPart("calmBone", { times: 1 }),
-    bonesPart("putDown", { times: 1 }),
-    { wait: true },
-];
+// wykopanie kostki: kopie, wyciąga kostkę i stoi z nią w pysku, aż dziecko
+// dotknie pierwszego „?” (wtedy bonesReact najpierw ją odkłada/zakopuje)
+const bonesDigParts = () => [bonesPart("dig", { times: 2 }), bonesPart("unearth", { times: 1 }), bonesPart("calmBone")];
 // reakcja pieska; jeśli trzyma kostkę w pysku, najpierw ją odkłada
 // (kostka nie znika z pyska nagle)
 function bonesReact(...parts) {
@@ -211,13 +205,14 @@ function bonesRound() {
     g.ready = false;
     clearTimeout(g.coverT);
     clearTimeout(g.readyT);
+    clearTimeout(g.dropT);
     $(".bonesTtl").textContent = bonesOp === "+" ? "Dodawanie" : "Odejmowanie";
     bonesStarsDraw();
     $(".bonesEq").innerHTML = "";
     $(".bonesEq").className = "bonesEq";
     $(".bonesNext").hidden = true;
     $(".bonesPad").hidden = true;
-    $(".bonesHint").textContent = "Piesek kopie… patrz, ile kostek spada!";
+    $(".bonesHint").textContent = "Piesek kopie… co wykopie?";
     for (const [sel, n] of [
         [".bonesPile.a", g.A],
         [".bonesPile.b", g.B],
@@ -228,15 +223,22 @@ function bonesRound() {
         q.className = "bonesQ";
         q.textContent = "?";
         q.style.visibility = "hidden";
-        bonesDropBones(p, n);
+        p.querySelectorAll(".bonesBone").forEach((b) => b.remove());
     }
-    // kopanie trwa, aż spadnie ostatnia kostka, potem wykopanie kostki; dywaniki
-    // dają się kliknąć dopiero, gdy kostka jest w pysku (nic nie przerywa kopania)
-    const fall = Math.max(g.A, g.B) * 120 + 700,
-        dig = Math.max(fall, duration("a03", 0)),
-        back = Math.abs(bonesX - BONES_DOG.x) > 4 ? [bonesRunTo(BONES_DOG.x)] : [];
-    bonesAnim(...back, bonesPart("dig", { time: 0, face: 1 }), ...bonesDigParts(fall));
-    sfx("throw");
+    // najpierw piesek wykopuje kostkę, dopiero wtedy kostki spadają na dywaniki;
+    // „?” dają się kliknąć, gdy spadnie ostatnia kostka
+    const back = Math.abs(bonesX - BONES_DOG.x) > 4 ? [bonesRunTo(BONES_DOG.x)] : [],
+        dug = (back.length ? back[0].time : 0) + duration("a03", 0) * 2 + duration("a03", 1),
+        fall = Math.max(g.A, g.B) * 120 + 700;
+    bonesAnim(...back, bonesPart("dig", { time: 0, face: 1 }), ...bonesDigParts());
+    clearTimeout(g.dropT);
+    g.dropT = setTimeout(() => {
+        if (bonesGame !== g) return;
+        bonesDropBones($(".bonesPile.a"), g.A);
+        bonesDropBones($(".bonesPile.b"), g.B);
+        $(".bonesHint").textContent = "Patrz, ile kostek spada!";
+        sfx("throw");
+    }, dug);
     g.readyT = setTimeout(() => {
         if (bonesGame !== g) return;
         g.ready = true;
@@ -248,7 +250,7 @@ function bonesRound() {
                 document.querySelectorAll(".bonesPile").forEach((p) => p.classList.add("cover"));
                 $(".bonesHint").textContent = "Pamiętasz? Dotknij dywanik i wpisz.";
             }, 3000);
-    }, (back.length ? back[0].time : 0) + dig + duration("a03", 1) + 150);
+    }, dug + fall + 150);
 }
 
 function bonesDropBones(pile, n) {
@@ -423,6 +425,7 @@ function bonesFinish() {
     if (g) {
         clearTimeout(g.coverT);
         clearTimeout(g.readyT);
+        clearTimeout(g.dropT);
     }
     bonesGame = null;
     $(".bonesFull").hidden = true;
