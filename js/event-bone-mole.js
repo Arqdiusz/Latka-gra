@@ -1,7 +1,8 @@
 "use strict";
 // ═══════════════════════════════════════════════════════════════
-// KRET Z KOSTKĄ — zdarzenie w Ogrodzie (jak motylek do złapania).
-// Od czasu do czasu, gdy w ogrodzie nic się nie dzieje, na torze pieska
+// KRET Z KOSTKĄ — zdarzenie w pokojach ogrodowych (Łąka, Ogród, Podwórko).
+// Losowane na równi z innymi zwierzakami (kret, jeżyk, motylki — wlPick),
+// nigdy razem z nimi (wildlifeBusy). Przy boku pokoju, na torze pieska,
 // wychyla się kret, chowa się i zostaje pulsujący kopiec. Dotyk kopca:
 // piesek podbiega, rozkopuje go (arkusz a03), wykopuje kostkę, chwilę z nią
 // stoi — a na środku pojawia się karta z zaproszeniem do „Liczymy kostki”.
@@ -11,15 +12,17 @@
 // ═══════════════════════════════════════════════════════════════
 
 const BONE_MOLE = {
-    room: "garden",
-    y: GROUND + 12, // środek kreta/kopca — na wysokości toru pieska
+    y: GROUND - 43, // środek kreta (126 px): spód kopca ≈ GROUND+6, jak ziemia w klatkach kopania
+    side: 62, // odległość kopca od ściany pokoju
     peekMs: 1300, // jak długo kret się rozgląda
-    reach: 78, // odległość pieska od kopca (przednie łapy przy kopcu)
-    first: [45000, 80000], // pierwszy raz po wejściu do gry
-    next: [100000, 170000], // kolejne razy
+    reach: 46, // piesek stoi tak, by kopiec z animacji kopania (≈ +46 px przed nim) wypadł na kopcu kreta
+    first: [5000, 17500], // po wejściu do pokoju — jak zwykły kret
+    next: [7500, 22500], // po zakończeniu — jak zwykły kret po sprzątnięciu piachu
+    cardAfter: 900, // ile piesek stoi z kostką, zanim pokaże się karta
 };
 let boneMole = null, // { x, room, state: emerging|peek|retreating|mound|dig, t }
-    nextBoneMole = 0;
+    nextBoneMole = 0,
+    boneMoleRoom = null;
 
 function boneMoleSchedule(first) {
     const [a, b] = first ? BONE_MOLE.first : BONE_MOLE.next;
@@ -28,21 +31,21 @@ function boneMoleSchedule(first) {
 
 function boneMoleSpawn() {
     wildlifeCooldown();
-    const half = MOLE_TEASER_SIZE / 2 + 10;
-    let mx = W / 2;
-    for (let i = 0; i < 8; i++) {
-        mx = half + Math.random() * (W - 2 * half);
-        if (Math.abs(mx - x * W) > 110) break; // nie pod samym pieskiem
-    }
-    boneMole = { x: mx, room: BONE_MOLE.room, state: "emerging", t: clock };
+    // przy boku pokoju — dalej od pieska (żeby nie wyszedł mu spod łap)
+    const right = x * W < W / 2,
+        mx = right ? W - BONE_MOLE.side : BONE_MOLE.side;
+    boneMole = { x: mx, room, state: "emerging", t: clock };
 }
 
 function boneMoleUpdate() {
     if (!loaded || !cells.kret.length) return;
-    if (!nextBoneMole) boneMoleSchedule(true);
+    if (room !== boneMoleRoom) {
+        boneMoleRoom = room;
+        boneMoleSchedule(true);
+    }
     const m = boneMole;
     if (!m) {
-        if (room === BONE_MOLE.room && clock >= nextBoneMole && casual() && !sleeping && !dirty() && !menu.drag && !gesture && !wildlifeBusy("mole")) boneMoleSpawn();
+        if (GARDEN_ROOMS.includes(room) && !moleDirts[room] && clock >= nextBoneMole && casual() && !sleeping && !dirty() && !menu.drag && !gesture && !wildlifeBusy("boneMole")) boneMoleSpawn();
         return;
     }
     // piesek wyszedł z ogrodu, zanim kopiec rozkopał — kopiec znika (wróci innym razem)
@@ -110,12 +113,9 @@ function boneMoleTap() {
     const m = boneMole;
     if (!m || m.state !== "mound" || !casual()) return;
     // strona, z której piesek podchodzi: od swojej strony, chyba że brak miejsca
-    let dir = x * W <= m.x ? 1 : -1,
+    // piesek staje od strony środka pokoju, przodem do ściany
+    const dir = m.x > W / 2 ? 1 : -1,
         tx = m.x - dir * BONE_MOLE.reach;
-    if (tx < 30 || tx > W - 30) {
-        dir = -dir;
-        tx = m.x - dir * BONE_MOLE.reach;
-    }
     const face = dir < 0, // left = patrzy w lewo
         dig = (anim, time, extra = {}) => ({ sheet: "a03", anim, facing: face, time, ...extra });
     interrupt();
@@ -130,7 +130,7 @@ function boneMoleTap() {
             },
         }),
         dig(1, duration("a03", 1), { onStart: () => sfx("good") }),
-        dig(4, duration("a03", 4), { onEnd: () => boneMoleCard() }),
+        dig(4, BONE_MOLE.cardAfter, { onEnd: () => boneMoleCard() }),
         dig(4, 600000), // stoi z kostką, póki karta jest otwarta
     ]);
     phase = "bonemole";
@@ -163,7 +163,8 @@ $("#boneMolePopup .moleCancel").onclick = () => {
 // DEV: od razu kret z kostką w ogrodzie
 $(".devBoneMole").onclick = () => {
     if (!casual()) return;
-    if (room !== BONE_MOLE.room) setRoom(BONE_MOLE.room);
+    if (!GARDEN_ROOMS.includes(room)) setRoom("garden");
+    moleTeaser = null;
     boneMole = null;
     boneMoleSpawn();
 };

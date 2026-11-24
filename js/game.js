@@ -1969,7 +1969,7 @@ function wildlifeBusy(who) {
     // zwierzak — inaczej zawsze wygrywałby ten sprawdzany w pętli jako pierwszy.
     if (wlWasBusy) {
         wlWasBusy = false;
-        wlPick = ["mole", "hedgehog", "butterflies"][Math.floor(Math.random() * 3)];
+        wlPick = ["mole", "boneMole", "hedgehog", "butterflies"][Math.floor(Math.random() * 4)];
         wlFreeAt = clock;
     }
     return !!wlPick && who !== wlPick && clock - wlFreeAt < 5000;
@@ -1980,6 +1980,7 @@ function wildlifeCooldown() {
     nextMoleSpawn = Math.max(nextMoleSpawn, t);
     nextHedgehogSpawn = Math.max(nextHedgehogSpawn, t);
     nextButterfly = Math.max(nextButterfly, t);
+    if (typeof nextBoneMole !== "undefined") nextBoneMole = Math.max(nextBoneMole, t);
 }
 
 function butterflySpawn() {

@@ -184,7 +184,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Klasa `.gBar` (css na końcu `style.css`): kremowy pasek 64 px u góry, tytuł po lewej (`.gBarTtl`), dodatki po prawej (np. czas), czerwony ✕ w rogu. Używają jej: Gry, wybór poziomu, Znajdź pary, Pamięć motylków, Kretowisko, Krety na łące, Jeżyk i owoce, Liczymy kostki. Bańki zostają bez belki (decyzja użytkownika).
 - Panele rysowane na canvasie zaczynają się od y = 78 (pod belką).
 
-## 20. Kret z kostką — zdarzenie w Ogrodzie (v0.8.176)
-- Plik `js/event-bone-mole.js`. Co ok. 1,5–3 min (pierwszy raz po 45–80 s), gdy w Ogrodzie nic się nie dzieje, na torze pieska wychyla się kret, chowa się i zostaje pulsujący kopiec (nieklikany znika po 2 min albo po wyjściu z Ogrodu).
-- Dotyk kopca: piesek podbiega, kopie (a03 „01”), wykopuje kostkę („02”), stoi z nią („05”), a na środku pojawia się karta „Piesek znalazł kostkę!” → „Liczymy!” otwiera „Liczymy kostki”, „Nie teraz” → piesek odkłada kostkę („06”). Kopanie brudzi łapki (+10).
-- Zwykłe krety-zapowiedzi działają jak dawniej. DEV: przycisk „Kret z kostką”.
+## 20. Kret z kostką — zdarzenie w pokojach ogrodowych (v0.8.177)
+- Plik `js/event-bone-mole.js`. Łąka, Ogród, Podwórko. Losowany na równi z innymi zwierzakami (`wlPick`: kret, kret z kostką, jeżyk, motylki), z tym samym tempem co zwykły kret; nigdy razem z innym zwierzakiem ani przy leżącym piachu po krecie (zwierzaki nie nachodzą na siebie).
+- Kret wychyla się przy boku pokoju (62 px od ściany, po stronie dalszej od pieska), na torze pieska, chowa się i zostaje pulsujący kopiec (nieklikany znika po 2 min albo po wyjściu z pokoju).
+- Dotyk kopca: piesek staje od strony środka pokoju, przodem do ściany, tak by ziemia z animacji kopania wypadła na kopcu; kopie (a03 „01”), wykopuje kostkę („02”), stoi z nią („05”) i po ok. 0,9 s pojawia się karta „Piesek znalazł kostkę!” → „Liczymy!” otwiera „Liczymy kostki”, „Nie teraz” → odkłada kostkę („06”). Kopanie brudzi łapki (+10).
+- DEV: przycisk „Kret z kostką”.
