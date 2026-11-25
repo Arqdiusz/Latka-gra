@@ -140,10 +140,8 @@ function bonesTryStart(direct) {
 
 // piesek z kostką na karcie wyboru (te same klatki co na karcie kreta), stopami w jednym miejscu
 let bonesDogT = 0;
-function bonesDogStart() {
-    $(".bonesParentBtn img").src = icons.lock || "";
-    const cv = $(".bonesMenuDog"),
-        c = cv.getContext("2d"),
+function bonesDogLoop(cv) {
+    const c = cv.getContext("2d"),
         seq = numbers(CFG.a03.presets[4].seq);
     let i = 0;
     const draw = () => {
@@ -155,9 +153,54 @@ function bonesDogStart() {
         c.imageSmoothingEnabled = false;
         if (cell) c.drawImage(cell, 80 - ((b[0] + b[2]) / 2) * k, 152 - b[3] * k, cell.width * k, cell.height * k);
     };
-    clearInterval(bonesDogT);
     draw();
-    bonesDogT = setInterval(draw, 330);
+    return setInterval(draw, 330);
+}
+function bonesDogStart() {
+    $(".bonesParentBtn img").src = icons.lock || "";
+    clearInterval(bonesDogT);
+    bonesDogT = bonesDogLoop($(".bonesMenuDog"));
+}
+
+// okienko „Nowość” (dla dzieci, które jeszcze nie czytają): znak działania, dymek pieska
+// z trzema przykładami po kolei i zielone OK
+const BONES_NEWS = {
+    sub: { name: "Odejmowanie ( − )", cls: "sub", ex: [[5, 2], [4, 1], [6, 3]] },
+    miss: { name: "Czego brakuje ( ? )", cls: "miss", ex: [[3, 2], [2, 3], [4, 1]] },
+};
+let bonesNewsT = 0,
+    bonesNewsDogT = 0;
+function bonesNewsShow(kind, onOk) {
+    const N = BONES_NEWS[kind],
+        el = $(".bonesNews"),
+        bubble = $(".bnBubble"),
+        badge = $(".bnBadge");
+    badge.textContent = N.name;
+    badge.className = "bnBadge " + N.cls;
+    let i = 0;
+    const show = () => {
+        const [a, b] = N.ex[i % N.ex.length];
+        bubble.innerHTML =
+            kind === "sub"
+                ? "<span>" + a + '</span><span class="sg sub">−</span><span>' + b + "</span><span>=</span><span class=\"res\">" + (a - b) + "</span>"
+                : "<span>" + a + '</span><span class="sg add">+</span><i class="bnQ">?</i><span>=</span><span>' + (a + b) + "</span>";
+        document.querySelectorAll(".bnDots i").forEach((d, k) => d.classList.toggle("on", k === i % 3));
+        i++;
+    };
+    show();
+    clearInterval(bonesNewsT);
+    bonesNewsT = setInterval(show, 2300);
+    clearInterval(bonesNewsDogT);
+    bonesNewsDogT = bonesDogLoop($(".bonesNewsDog"));
+    sfx("good");
+    el.hidden = false;
+    $(".bnOk").onclick = () => {
+        clearInterval(bonesNewsT);
+        clearInterval(bonesNewsDogT);
+        el.hidden = true;
+        adaptSeen(kind);
+        onOk();
+    };
 }
 $(".bonesStart").onclick = () => {
     adaptLog("start");
@@ -201,6 +244,12 @@ function bonesStarsDraw() {
 function bonesRound() {
     const g = bonesGame,
         t = adaptPick(g.round); // zadanie dobrane do poziomu dziecka
+    // nowe działanie: najpierw okienko „Nowość” z podglądem, dopiero po OK startuje zadanie
+    if (t.news) bonesNewsShow(t.news, () => bonesGame === g && bonesRoundGo(t));
+    else bonesRoundGo(t);
+}
+function bonesRoundGo(t) {
+    const g = bonesGame;
     bonesTask = t;
     bonesOp = t.op;
     bonesLv = { hide: t.hide, test: t.test };
@@ -213,8 +262,7 @@ function bonesRound() {
     // kolor działania: dodawanie niebieskie, odejmowanie pomarańczowe
     $(".bonesPlay").classList.toggle("opAdd", t.op === "+");
     $(".bonesPlay").classList.toggle("opSub", t.op === "-");
-    if (t.news) bonesBanner(t.news === "sub" ? "Nowość: odejmowanie!" : "Nowość: czego brakuje?", t.news === "sub" ? "-" : t.op);
-    else if (g.prevOp && g.prevOp !== t.op) bonesBanner(t.op === "-" ? "Teraz odejmujemy!" : "Teraz dodajemy!", t.op);
+    if (!t.news && g.prevOp && g.prevOp !== t.op) bonesBanner(t.op === "-" ? "Teraz odejmujemy!" : "Teraz dodajemy!", t.op);
     g.prevOp = t.op;
     document.querySelectorAll(".bonesPile").forEach((p) => (p.style.display = lv.test ? "none" : ""));
     g.okA = g.okB = false;
@@ -516,6 +564,9 @@ function bonesFinish() {
     }
     bonesGame = null;
     clearInterval(bonesDogT);
+    clearInterval(bonesNewsT);
+    clearInterval(bonesNewsDogT);
+    $(".bonesNews").hidden = true;
     $(".bonesFull").hidden = true;
     $(".bonesPad").hidden = true;
     $("#bonesWinPopup").hidden = true;

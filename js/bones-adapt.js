@@ -49,6 +49,7 @@ function adaptFresh() {
         add: { lvl: 0, hist: [], n: 0, ok: 0, ms: 0 },
         sub: { lvl: 0, hist: [], n: 0, ok: 0, ms: 0, on: false },
         miss: { lvl: 0, hist: [], n: 0, ok: 0, ms: 0, on: false },
+        seen: { sub: false, miss: false }, // czy dziecko widziało okienko „Nowość”
         err: {}, // „+7,5”: ile razy pomylone (powtórki)
         tasks: 0,
         rounds: 0,
@@ -90,16 +91,13 @@ function adaptCap(sk) {
     return Math.min(adaptMaxLvl(sk), Math.max(0, adapt.add.lvl - 1));
 }
 function adaptUnlock() {
-    let news = null;
-    if (!adapt.sub.on && adapt.add.lvl >= 2) {
-        adapt.sub.on = true;
-        news = "sub";
-    }
-    if (!adapt.miss.on && adapt.add.lvl >= 3 && adapt.sub.lvl >= 1) {
-        adapt.miss.on = true;
-        news = news || "miss";
-    }
-    return news;
+    if (!adapt.seen) adapt.seen = { sub: false, miss: false };
+    if (!adapt.sub.on && adapt.add.lvl >= 2) adapt.sub.on = true;
+    if (!adapt.miss.on && adapt.add.lvl >= 3 && adapt.sub.lvl >= 1) adapt.miss.on = true;
+    // okienko „Nowość” pokazuje się, dopóki dziecko go nie zatwierdzi (raz na umiejętność)
+    if (adapt.sub.on && !adapt.seen.sub) return "sub";
+    if (adapt.miss.on && !adapt.seen.miss) return "miss";
+    return null;
 }
 
 function adaptMakeNumbers(op, lvlDef, avoid) {
@@ -201,6 +199,11 @@ function adaptResult(task, mistakes, ms) {
         s.lvl--;
         s.hist = [];
     }
+    adaptSave();
+}
+function adaptSeen(k) {
+    if (!adapt.seen) adapt.seen = { sub: false, miss: false };
+    adapt.seen[k] = true;
     adaptSave();
 }
 function adaptRoundDone() {

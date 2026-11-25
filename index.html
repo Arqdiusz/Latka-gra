@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.221</title>
+        <title>Łatka v0.8.222</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
-        <link rel="stylesheet" href="css/style.css?v=240" />
+        <link rel="stylesheet" href="css/style.css?v=241" />
     </head>
 
     <body>
@@ -79,6 +79,15 @@
                             <div class="bonesKeys"></div>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="bonesNews" hidden>
+                <div class="moleCard bnCard">
+                    <div class="bnBubble"></div>
+                    <canvas class="bonesNewsDog" width="160" height="160" aria-hidden="true"></canvas>
+                    <div class="bnBadge"></div>
+                    <div class="bnDots"><i class="on"></i><i></i><i></i></div>
+                    <button class="bnOk btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>OK</button>
                 </div>
             </div>
             <div class="bonesParent" hidden>
@@ -433,7 +442,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=240"></script>
+            <script src="js/loader.js?v=241"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -441,7 +450,7 @@
                     document.fonts.load("700 16px Quicksand");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=240"></script>
+            <script src="js/audio.js?v=241"></script>
             <div class="parentLock" hidden>
                 <!-- dla dziecka: obrazki, bez czytania — piesek śpi, po więcej czasu idź do rodziców -->
                 <div class="plKid">
@@ -495,23 +504,23 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=240"></script>
-        <script defer src="js/game.js?v=240"></script>
-        <script defer src="js/session.js?v=240"></script>
-        <script defer src="js/minigame-fetch.js?v=240"></script>
-        <script defer src="js/minigame-bubbles.js?v=240"></script>
-        <script defer src="js/minigame-mole.js?v=240"></script>
-        <script defer src="js/minigame-hedge.js?v=240"></script>
-        <script defer src="js/minigame-mole2.js?v=240"></script>
-        <script defer src="js/level-pick.js?v=240"></script>
-        <script defer src="js/minigame-memory.js?v=240"></script>
-        <script defer src="js/minigame-pairs.js?v=240"></script>
-        <script defer src="js/bones-adapt.js?v=240"></script>
-        <script defer src="js/bones-parent.js?v=240"></script>
-        <script defer src="js/minigame-bones.js?v=240"></script>
-        <script defer src="js/event-bone-mole.js?v=240"></script>
-        <script defer src="js/event-bone-dig.js?v=240"></script>
-        <script defer src="js/games-menu.js?v=240"></script>
-        <script defer src="js/popup-guard.js?v=240"></script>
+        <script defer src="js/arc-carousel.js?v=241"></script>
+        <script defer src="js/game.js?v=241"></script>
+        <script defer src="js/session.js?v=241"></script>
+        <script defer src="js/minigame-fetch.js?v=241"></script>
+        <script defer src="js/minigame-bubbles.js?v=241"></script>
+        <script defer src="js/minigame-mole.js?v=241"></script>
+        <script defer src="js/minigame-hedge.js?v=241"></script>
+        <script defer src="js/minigame-mole2.js?v=241"></script>
+        <script defer src="js/level-pick.js?v=241"></script>
+        <script defer src="js/minigame-memory.js?v=241"></script>
+        <script defer src="js/minigame-pairs.js?v=241"></script>
+        <script defer src="js/bones-adapt.js?v=241"></script>
+        <script defer src="js/bones-parent.js?v=241"></script>
+        <script defer src="js/minigame-bones.js?v=241"></script>
+        <script defer src="js/event-bone-mole.js?v=241"></script>
+        <script defer src="js/event-bone-dig.js?v=241"></script>
+        <script defer src="js/games-menu.js?v=241"></script>
+        <script defer src="js/popup-guard.js?v=241"></script>
     </body>
 </html>

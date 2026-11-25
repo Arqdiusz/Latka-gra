@@ -311,3 +311,10 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Rozróżnianie działania: dodawanie niebieskie (tytuł, znak „+”, linia pod belką), odejmowanie pomarańczowe; przy zmianie działania napis „Teraz odejmujemy!” / „Teraz dodajemy!”, przy pierwszym razie „Nowość: odejmowanie!” / „Nowość: czego brakuje?”.
 - Stan w localStorage (`latka-liczenie-v1`).
 - Ekran dla rodzica (`js/bones-parent.js`): kłódka na ekranie startowym → mnożenie → poziomy umiejętności (kropki, zakres, % bez pomyłek, średni czas), pomyłki do powtórki oraz tabela „Czy dziecko chce liczyć?” (7 dni i razem): gra zaproponowana (kret z kostką), rozpoczęta, dokończona, „Nie teraz”, „Wróć” na ekranie startowym, ✕ w trakcie gry. Przycisk „Zacznij liczenie od nowa” (dwa dotknięcia) zeruje poziomy, statystyka odmów zostaje.
+
+## 38. Liczymy kostki — okienko „Nowość” dla dzieci, które nie czytają (v0.8.222)
+- Gdy gra odblokuje nowe działanie, pierwsze zadanie z nim poprzedza okienko na pół ekranu: dymek pieska z trzema przykładami po kolei (zmiana co ~2,3 s, kropki pod spodem), pod pieskiem plakietka z nazwą i znakiem — „Odejmowanie ( − )” (pomarańczowa) albo „Czego brakuje ( ? )” (fioletowa) — i duży zielony przycisk OK. Dźwięk „good” przy pokazaniu.
+- Odejmowanie: `5 − 2 = 3` (wynik na zielono). „Czego brakuje”: `3 + [?] = 5` z pustym polem w ramce.
+- Okienko pokazuje się tylko raz na umiejętność: po OK zapisuje się `adapt.seen.sub/miss` (localStorage). „Zacznij liczenie od nowa” w widoku rodzica zeruje też to, więc okienko wróci przy ponownym odblokowaniu.
+- Po OK startuje normalne zadanie. Zamiast banera „Nowość: odejmowanie!” jest teraz to okienko; baner „Teraz odejmujemy!/Teraz dodajemy!” przy zmianie działania został.
+- `.bonesNews` jest w ochronie przed „przelotem” kliknięcia (700 ms); ✕/zakończenie gry zamyka okienko i zatrzymuje animacje.
