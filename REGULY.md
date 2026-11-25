@@ -214,3 +214,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - DEV: przycisk „Piesek kopie”.
 - Dymek z kostką (v0.8.194): ok. 2 s po pokazaniu piesek biegnie do najbliższego pokoju ogrodowego (z innego pokoju lub w tym samym, na środek) i tam kopie (`boneWishStart`/`boneWishUpdate`). Kostka trafia do puli dymków tylko wtedy, gdy kopanie jest możliwe (po wspólnym odstępie, bez smutku). Chęć wygasa po 45 s.
 - Po posprzątaniu kupy, piachu kreta, naczyń i po czystych łapkach w dymku jest serduszko (wcześniej gwiazdka).
+
+## 24. Iskierki po sprzątaniu (v0.8.195)
+- Grafika `animacje/star-check.png` (arkusz 2×2 po 64 px). `sparkleBurst(cx, cy, pts)` w `game.js`: w miejscu sprzątnięcia zapalają się po kolei 5 gwiazdek (~1,1 s), unoszą się i gasną; rysowane nad pieskiem (`sparklesDraw`).
+- Wywołują je: `cleanPoop`, `cleanMoleDirt`, `cleanDish` (duży wariant) i `cleanLump` (mały). Przy czystych łapkach (`pawsEnd(true)`) każda łapa dostaje małe iskierki po kolei (punkty łap ze szkieletu: `pawScreenPoints`).
+- Uwaga: `clamp` w tej grze wymaga 3 argumentów (`clamp(v, min, max)`), bez domyślnych.

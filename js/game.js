@@ -506,6 +506,8 @@ function lumpHit(px, py) {
 }
 function cleanLump(i) {
     if (!casual() || !lumps[i]) return;
+    const lb = lumpBox(lumps[i]);
+    sparkleBurst(lb.x + lb.w / 2, lb.y + lb.h / 2, SPARKLE_PAW);
     lumps.splice(i, 1);
     sfx("wipe");
     changeNeeds({ clean: 1.5 });
@@ -1463,6 +1465,8 @@ function pawsEnd(done) {
     if (phase !== "paws-clean") return;
     pawsPtr = pawsCloth = pawsClothVis = null;
     if (done) {
+        // iskierki przy każdej wyczyszczonej łapce (po kolei)
+        pawScreenPoints().forEach((pt, k) => sparkleBurst(pt.x, pt.y, SPARKLE_PAW, k * 90));
         pawLvl = null;
         pawDirt = 0;
         changeNeeds(ACTION_EFFECTS.paws);
@@ -1603,6 +1607,8 @@ function poopHit(px, py) {
 
 function cleanPoop() {
     if (!casual() || !dirty()) return;
+    const pr = poopRect();
+    sparkleBurst(pr.x + pr.w / 2, pr.y + pr.h / 2);
     sfx("wipe");
     interrupt();
     wake();
@@ -2664,6 +2670,8 @@ function updateMoleDirtAccess() {
 
 function cleanMoleDirt() {
     if (!casual() || !moleDirts[room]) return;
+    const mr = moleDirtRect();
+    sparkleBurst(mr.x + mr.w / 2, mr.y + mr.h / 2);
     delete moleDirts[room];
     changeNeeds(ACTION_EFFECTS.moleDirt);
     updateMoleDirtAccess();
@@ -2695,6 +2703,8 @@ function updateDishAccess() {
 function cleanDish() {
     const waiting = stage === "dish-sad"; // piesek siedzi smutny i czeka na sprzątanie
     if (!(casual() || waiting) || !dishMess?.shown || dishMess.room !== room) return;
+    const dr = dishRect();
+    sparkleBurst(dr.x + dr.w / 2, dr.y + dr.h / 2);
     dishMess = null;
     updateMoleDirtAccess();
     sfx("wipe");
@@ -3109,6 +3119,48 @@ function bubbleBodyCenter(type) {
     return (artCenterCache[k] = res);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   ISKIERKI PO SPRZĄTANIU (grafika animacje/star-check.png, arkusz 2×2: 64 px)
+   Kupka, piach kreta, naczynie, grudka i czyste łapki: w tym miejscu zapalają
+   się po kolei gwiazdki, unoszą się i gasną (~1,1 s). Tylko ozdoba.
+   ═══════════════════════════════════════════════════════════════ */
+const SPARKLE_CELL = { A: [0, 0], B: [64, 0], C: [0, 64], D: [64, 64] },
+    SPARKLE_MS = 760,
+    SPARKLE_BIG = [[-34, -6, 0, "D", 1.4], [28, -14, 90, "A", 1.6], [-8, -34, 180, "B", 1.2], [38, 8, 270, "D", 1.2], [-30, 14, 360, "A", 1.4]],
+    SPARKLE_PAW = [[-9, -4, 0, "D", 1.0], [11, -14, 110, "A", 1.1], [0, -26, 220, "B", 0.9]];
+let sparkles = [];
+function sparkleBurst(cx, cy, pts = SPARKLE_BIG, delay = 0) {
+    sparkles.push({ room, cx, cy, t0: clock + delay, pts });
+}
+function sparklesDraw() {
+    if (!sparkles.length || !images.sparkle) return;
+    sparkles = sparkles.filter((b) => clock < b.t0 + SPARKLE_MS + 400);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    for (const b of sparkles) {
+        if (b.room !== room) continue;
+        for (const [dx, dy, d, k, sc] of b.pts) {
+            const u = clamp((clock - b.t0 - d) / SPARKLE_MS, 0, 1);
+            if (u <= 0 || u >= 1) continue;
+            const ease = u < 0.3 ? 1 + 2.7 * Math.pow(u / 0.3 - 1, 3) + 1.7 * Math.pow(u / 0.3 - 1, 2) : 1 - (u - 0.3) * 0.5,
+                z = sc * ease,
+                [sx, sy] = SPARKLE_CELL[k];
+            ctx.globalAlpha = u < 0.7 ? 1 : 1 - (u - 0.7) / 0.3;
+            ctx.drawImage(images.sparkle, sx, sy, 64, 64, Math.round(b.cx + dx - 32 * z), Math.round(b.cy - 6 + dy - u * 16 - 32 * z), 64 * z, 64 * z);
+        }
+    }
+    ctx.restore();
+}
+// Punkty łap na ekranie (ta sama matematyka co headPosition) — dla iskierek przy czystych łapkach
+function pawScreenPoints() {
+    const g = geometry(),
+        paws = skeleton?.[sheet]?.[g.f - 1]?.paws || [];
+    return paws.map(([px, py]) => ({
+        x: x * W + (left ? -1 : 1) * ((px - g.w / 2) * g.s + g.o.x * BASE),
+        y: GROUND + jumpY + (py - g.g) * g.s + g.o.y * BASE,
+    }));
+}
+
 function draw(dt) {
     ctx.clearRect(0, 0, W, SH);
     ctx.imageSmoothingEnabled = false;
@@ -3131,6 +3183,7 @@ function draw(dt) {
     moleTeaserDraw();
     if (typeof boneMoleDraw === "function") boneMoleDraw();
     if (typeof boneDigDraw === "function") boneDigDraw();
+    sparklesDraw();
     hedgePeekDraw();
     // Jeżyk i zgubiony owoc — pierwszy plan, przed pieskiem.
     hedgeFruitDraw();
@@ -3330,6 +3383,7 @@ async function boot() {
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
     images.a03 = await loadImage("animacje/latka-animacje-03.png");
     images.dish = await loadImage("animacje/naczynia.png");
+    images.sparkle = await loadImage("animacje/star-check.png");
     // Stary dwuklatkowy motyl-1.png/motyl-2.png (P.assets.butterflies) nie
     // jest już używany — cały butterflyEvent() lata teraz jedną, spójną
     // grafiką z motyle-new.png (patrz eventButterflyCell()).
