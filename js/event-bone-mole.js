@@ -17,13 +17,18 @@ const BONE_MOLE = {
     moundX: 0.62, // kopiec: środek ekranu + „reach” — po wykopaniu i obrocie piesek stoi na środku
     peekMs: 1300, // jak długo kret się rozgląda
     reach: 46, // piesek stoi tak, by kopiec z animacji kopania (≈ +46 px przed nim) wypadł na kopcu kreta
-    first: [5000, 17500], // po wejściu do pokoju — jak zwykły kret
-    next: [7500, 22500], // po zakończeniu — jak zwykły kret po sprzątnięciu piachu
+    first: [60000, 150000], // po wejściu do pokoju — rzadko (wspólnie z kopaniem pieska)
+    next: [240000, 360000], // po zakończeniu — kilka minut spokoju
     cardAfter: 1900, // ile piesek stoi z kostką, zanim pokaże się karta
 };
 let boneMole = null, // { x, room, state: pending|emerging|peek|retreating|mound|dig, t }
     nextBoneMole = 0,
-    boneMoleRoom = null;
+    boneMoleRoom = null,
+    boneGapUntil = 0; // wspólny odstęp: kret z kostką, kopanie pieska i gra w kostki nie następują jedno po drugim
+// Odstęp po zdarzeniu / po grze w kostki: nic z kostkami przez kilka minut
+function boneGapSet(a = 180000, b = 300000) {
+    boneGapUntil = Math.max(boneGapUntil, clock + a + Math.random() * (b - a));
+}
 
 function boneMoleSchedule(first) {
     const [a, b] = first ? BONE_MOLE.first : BONE_MOLE.next;
@@ -35,6 +40,7 @@ function boneMoleSchedule(first) {
 // bliżej środka, po drugiej stronie — wtedy kopanie dzieje się na środku ekranu.
 function boneMoleSpawn() {
     wildlifeCooldown();
+    boneGapSet(150000, 210000);
     const toLeft = x < 0.5,
         ex = toLeft ? BONE_MOLE.edge : 1 - BONE_MOLE.edge,
         dist = Math.abs(ex - x) * W;
@@ -61,7 +67,7 @@ function boneMoleUpdate() {
     }
     const m = boneMole;
     if (!m) {
-        if (GARDEN_ROOMS.includes(room) && !moleDirts[room] && clock >= nextBoneMole && casual() && !sleeping && !dirty() && !menu.drag && !gesture && !wildlifeBusy("boneMole")) boneMoleSpawn();
+        if (GARDEN_ROOMS.includes(room) && !moleDirts[room] && clock >= nextBoneMole && clock >= boneGapUntil && casual() && !sleeping && !dirty() && !menu.drag && !gesture && !wildlifeBusy("boneMole")) boneMoleSpawn();
         return;
     }
     // piesek wyszedł z ogrodu, zanim kopiec rozkopał — kopiec znika (wróci innym razem)
@@ -198,6 +204,7 @@ function boneMoleEnd() {
     clearInterval(boneMoleShowT);
     boneMole = null;
     boneMoleSchedule(false);
+    boneGapSet();
     // po kostce długo spokój od zwykłego kreta w tym pokoju (zmiana pokoju losuje od nowa)
     nextMoleSpawn = Math.max(nextMoleSpawn, clock + 60000 + Math.random() * 30000);
 }

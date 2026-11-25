@@ -438,6 +438,7 @@ function bonesFinish() {
     cancelAnimationFrame(bonesRaf);
     bonesRaf = 0;
     bonesCur = null;
+    if (typeof boneGapSet === "function") boneGapSet(); // po grze kilka minut bez kostkowych zdarzeń
     const grace = clock + 4000 + Math.random() * 2500;
     nextMoleSpawn = Math.max(nextMoleSpawn, grace);
     nextAmbientSpawn = Math.max(nextAmbientSpawn, grace);

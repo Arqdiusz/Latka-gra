@@ -202,3 +202,12 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Po kostce zwykły kret nie wychodzi w tym pokoju przez 60–90 s.
 - Bieg między pokojami: zawsze 300 px/s (v0.8.181; wcześniej 520/400 przez kilka pokoi).
 - Arkusz a03 dostaje „meta” (ramka, głowa) liczone z pikseli przy starcie (dymki nad pieskiem, głaskanie).
+
+## 23. Piesek kopie kostkę i odstęp między zdarzeniami z kostką (v0.8.192)
+- Plik `js/event-bone-dig.js`. Rzadkie zdarzenie w Łące/Ogrodzie/Podwórku, losowane na równi z innymi zwierzakami (`wlPick` ma teraz 5 pozycji). Piesek sam kopie (a03 „01”), wykopuje kostkę (a03 „02”), stoi z nią (a03 „05”) do 18 s. W tym czasie wokół kostki pulsuje okrągła ramka.
+- Dotyk kostki albo pieska otwiera wybór „Liczymy kostki”. Bez dotyku piesek odkłada kostkę (a03 „06”) i wraca do swoich spraw. Żadnego okienka ani nacisku.
+- Startuje tylko, gdy piesek stoi między 25% a 75% szerokości, nie jest smutny ani brudny, nie ma kupki ani piachu kreta; łapki +5 brudu.
+- Wspólny odstęp `boneGapUntil` (`boneGapSet()` w `event-bone-mole.js`): kret z kostką, kopanie pieska i zakończona gra w kostki wyznaczają kilka minut bez następnego zdarzenia z kostką (po starcie ~2,5–3,5 min, po końcu ~3–5 min).
+- Kret z kostką też jest rzadszy: pierwszy 60–150 s po wejściu do pokoju, kolejny po 4–6 min.
+- Kopanie jest „zajętą sceną” (`worldBusy`, `wildlifeBusy`): nikt inny się nie pojawia, piesek nie rusza na wycieczkę.
+- DEV: przycisk „Piesek kopie”.

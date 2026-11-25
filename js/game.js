@@ -1768,6 +1768,7 @@ canvas.addEventListener("pointerdown", (e) => {
         fruit: casual() ? hedgeFruitHit(p.x, p.y) : null,
         mole: gameEntryOk() ? moleTeaserHit(p.x, p.y) : null,
         boneMole: eventTapOk() && typeof boneMoleHit === "function" ? boneMoleHit(p.x, p.y) : false,
+        boneDig: typeof boneDigHit === "function" ? boneDigHit(p.x, p.y) : false,
         hedge: gameEntryOk() ? hedgePeekHit(p.x, p.y) : false,
     };
     // Aport: dotknięcie piłki przy łapach = złapanie jej (dalej ciągnięcie i rzut)
@@ -1845,7 +1846,8 @@ function pointerEnd(e, cancel = false) {
         const p = pointerXY(e);
         // Wejścia do gier (kret, jeżyk) mają pierwszeństwo przed pieskiem —
         // inaczej, gdy piesek stał obok kopca, dotyk szedł w "pogłaskanie".
-        if (g.hog && hedgehogHit(p.x, p.y) === g.hog) hedgehogScare(g.hog);
+        if (g.boneDig && boneDigHit(p.x, p.y)) boneDigTap();
+        else if (g.hog && hedgehogHit(p.x, p.y) === g.hog) hedgehogScare(g.hog);
         else if (g.fruit && hedgeFruitHit(p.x, p.y)) hedgeFruitCollect(g.fruit);
         else if (g.mole && moleTeaserHit(p.x, p.y) === g.mole) moleTeaserTap(g.mole);
         else if (g.boneMole && boneMoleHit(p.x, p.y)) stopAutoTrip() || boneMoleTap();
@@ -1879,7 +1881,7 @@ function chooseDestination() {
 // Coś dzieje się w świecie (kret, jeżyk, motylek do złapania) — piesek wtedy
 // stoi spokojnie, żeby dało się to kliknąć, i nie wybiega sam w drogę.
 function worldBusy() {
-    return !!(moleTeaser || hedgehog || butterfly || (typeof boneMole !== "undefined" && boneMole));
+    return !!(moleTeaser || hedgehog || butterfly || (typeof boneMole !== "undefined" && boneMole) || (typeof boneDig !== "undefined" && boneDig));
 }
 
 // Zdarzenie (motylek do złapania, kopiec z kostką) da się kliknąć też wtedy,
@@ -1973,7 +1975,7 @@ function wildlifeBusy(who) {
     // motylek do złapania i motylek-tło (5 kolorów to tylko losowy kolor) to jedna "grupa"
     if (who === "butterfly" || who === "ambient") who = "butterflies";
     // zgubiony przez jeżyka owoc też "zajmuje scenę" — póki leży, nikt nowy nie wychodzi (np. kret na owoc)
-    if (moleTeaser || hedgehog || hedgeFruit || butterfly || ambient.length || (typeof boneMole !== "undefined" && boneMole)) {
+    if (moleTeaser || hedgehog || hedgeFruit || butterfly || ambient.length || (typeof boneMole !== "undefined" && boneMole) || (typeof boneDig !== "undefined" && boneDig)) {
         wlWasBusy = true;
         return true;
     }
@@ -1981,7 +1983,7 @@ function wildlifeBusy(who) {
     // zwierzak — inaczej zawsze wygrywałby ten sprawdzany w pętli jako pierwszy.
     if (wlWasBusy) {
         wlWasBusy = false;
-        wlPick = ["mole", "boneMole", "hedgehog", "butterflies"][Math.floor(Math.random() * 4)];
+        wlPick = ["mole", "boneMole", "boneDig", "hedgehog", "butterflies"][Math.floor(Math.random() * 5)];
         wlFreeAt = clock;
     }
     return !!wlPick && who !== wlPick && clock - wlFreeAt < 5000;
@@ -1993,6 +1995,7 @@ function wildlifeCooldown() {
     nextHedgehogSpawn = Math.max(nextHedgehogSpawn, t);
     nextButterfly = Math.max(nextButterfly, t);
     if (typeof nextBoneMole !== "undefined") nextBoneMole = Math.max(nextBoneMole, t);
+    if (typeof nextBoneDig !== "undefined") nextBoneDig = Math.max(nextBoneDig, t);
 }
 
 function butterflySpawn() {
@@ -3123,6 +3126,7 @@ function draw(dt) {
     }
     moleTeaserDraw();
     if (typeof boneMoleDraw === "function") boneMoleDraw();
+    if (typeof boneDigDraw === "function") boneDigDraw();
     hedgePeekDraw();
     // Jeżyk i zgubiony owoc — pierwszy plan, przed pieskiem.
     hedgeFruitDraw();
@@ -3214,6 +3218,7 @@ function loopFrame(t) {
         hedgehogUpdate(dt);
         moleTeaserUpdate();
         if (typeof boneMoleUpdate === "function") boneMoleUpdate();
+        if (typeof boneDigUpdate === "function") boneDigUpdate();
         bubbleThink();
         draw(dt);
     }
