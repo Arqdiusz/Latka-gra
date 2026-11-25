@@ -2497,6 +2497,8 @@ h3,
 /* Karta wyboru: jasna, jak „Piesek znalazł kostkę!” — wszystko blisko siebie */
 .bonesPop {
     width: 316px;
+    max-height: none;
+    overflow: visible; /* lista poziomów nie może robić paska przewijania */
     padding: 26px 18px 18px;
     display: flex;
     flex-direction: column;
@@ -2625,8 +2627,8 @@ h3,
     top: calc(100% + 6px);
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 8px;
+    gap: 5px;
+    padding: 7px;
     border: 3px solid #d9c9a8;
     border-radius: 18px;
     background: #fff8ea;
@@ -2639,13 +2641,14 @@ h3,
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 6px 12px;
+    min-height: 38px;
+    padding: 3px 12px;
     text-align: left;
     border: 3px solid #e2d4b4;
     background: #fff;
     border-radius: 14px;
     color: #4a2f1d;
-    font: 800 17px "Baloo 2", sans-serif;
+    font: 800 16px "Baloo 2", sans-serif;
     cursor: pointer;
 }
 .bonesLvl small {

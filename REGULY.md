@@ -279,3 +279,4 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Poziom: rozwijana belka (nazwa + kropki + duża niebieska strzałka). Dotknięcie rozwija listę czterech poziomów pod belką (bez podpisów), wybór zwija ją z powrotem.
 - Pod belką: „Dodajemy i odejmujemy kostki. Policzymy razem?”, potem zielony „▶ Liczymy!” i czerwony „‹ Wróć”. Wszystko blisko siebie (karta ma wysokość zawartości, wyśrodkowana).
 - Ochrona przed „przelotem” kliknięć (700 ms) działa jak dotąd.
+- v0.8.214: karta wyboru nie ma paska przewijania (`overflow: visible` — wspólna reguła `.moleCard` dawała `overflow-y: auto`); lista poziomów jest niższa (wiersze 38 px), więc w całości mieści się w karcie.
