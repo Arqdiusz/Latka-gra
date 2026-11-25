@@ -1546,6 +1546,7 @@ let pawsPtr = null, // poprzedni punkt przeciągania (do liczenia drogi)
     pawsCloth = null, // gdzie jest palec
     pawsClothVis = null, // wygładzona pozycja rysowanej szmatki
     pawLvl = null, // poziom brudu (0–1) każdego pasa podczas czyszczenia
+    pawsRate = 0, // ile brudu schodzi na piksel drogi szmatki (ustalane na starcie)
     pawsDone = new Set(); // które łapki są już czyste (każda dostaje iskierki)
 function updatePawsUi() {
     const e = $(".pawsEnd");
@@ -1576,9 +1577,12 @@ function pawsStart() {
     bubble = null;
     pawsPtr = pawsCloth = pawsClothVis = null;
     pawLvl = new Array(16).fill(pawDirt / 100);
+    pawsRate = PAWS_WIPE_RATE * (pawDirt / 100); // im brudniej, tym szybciej schodzi — czas zawsze ten sam
     pawsDone = new Set();
     startQueue(pawsLie());
 }
+// Czyszczenie trwa zawsze tyle samo: każdy pas łapek schodzi po ~800 px drogi szmatki.
+const PAWS_WIPE_RATE = 1 / 800;
 // Piesek leży na grzbiecie, łapki do góry („11. Na grzbiecie”, a01): spokojnie
 // (39), co jakiś czas lekko się wierci (40). giggle = najpierw krótkie, gęste
 // wiercenie (39↔40 szybko) — gdy któraś łapka zrobi się czysta.
@@ -1694,8 +1698,8 @@ function pawsWipe(p) {
     pawLvl.forEach((v, b) => {
         if (v <= 0 || Math.abs((b + 0.5) * PAW_BUCKET - cx) > 12) return;
         touched = true;
-        pawLvl[b] = Math.max(0, v - d * 0.0016);
-        if (pawLvl[b] <= 0.02) {
+        pawLvl[b] = Math.max(0, v - d * pawsRate);
+        if (pawLvl[b] <= pawsRate * 12) {
             pawLvl[b] = 0;
             sfx("good"); // „plink” za każdy wytarty fragment
         }
@@ -1721,17 +1725,18 @@ function pawsWipe(p) {
     // koniec, gdy na bieżącej klatce nie widać już żadnej grudki
     if (!blobs.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) pawsEnd(true);
 }
-// Szmatka z arkusza animacje/szmatka.png (4×4 po 64 px). Spokojnie, mało klatek:
-// 9 — czeka; 9↔10 — trze (gdy palec przeciera łapki, wolno); 14→15 — krótkie
-// wyżymanie raz, gdy któraś łapka zrobi się czysta. Reszta klatek nieużywana.
+// Szmatka: jedna klatka z arkusza animacje/szmatka.png (9 — 4×4 po 64 px), bez
+// przeskakiwania klatek. Przy tarciu tylko delikatnie kołysze się o kilka
+// stopni w lewo i w prawo (płynnie narasta i gaśnie); gdy łapka zrobi się
+// czysta — małe, miękkie „podskoczenie” (lekkie powiększenie).
 let clothRubT = -1e9,
-    clothWringT = -1e9;
-const CLOTH_SIZE = 72; // w pikselach sceny (scena jest przybliżona ×1,25)
+    clothWringT = -1e9,
+    clothSwing = 0; // 0..1 — siła kołysania (płynnie)
+const CLOTH_SIZE = 90, // w pikselach sceny (scena jest przybliżona ×1,25)
+    CLOTH_FRAME = 9,
+    CLOTH_SWING_DEG = 7;
 function clothFrame() {
-    const w = clock - clothWringT;
-    if (w < 2 * 170) return 14 + Math.floor(w / 170);
-    if (clock - clothRubT < 250) return 9 + (Math.floor(clock / 230) % 2);
-    return 9;
+    return CLOTH_FRAME;
 }
 function pawsClothDraw() {
     const im = images.cloth;
@@ -1746,8 +1751,15 @@ function pawsClothDraw() {
     ctx.save();
     ctx.translate(pawsClothVis.x, pawsClothVis.y);
     ctx.imageSmoothingEnabled = false;
-    const i = clothFrame() - 1;
+    const i = clothFrame() - 1,
+        rubbing = clock - clothRubT < 250;
+    clothSwing += ((rubbing ? 1 : 0) - clothSwing) * 0.12;
+    const pop = clamp(1 - (clock - clothWringT) / 300, 0, 1); // 1 → 0 przez 0,3 s
+    ctx.save();
+    ctx.rotate(((Math.sin(clock / 160) * CLOTH_SWING_DEG * clothSwing) * Math.PI) / 180);
+    ctx.scale(1 + 0.08 * Math.sin(pop * Math.PI), 1 + 0.08 * Math.sin(pop * Math.PI));
     ctx.drawImage(im, (i % 4) * 64, Math.floor(i / 4) * 64, 64, 64, -CLOTH_SIZE / 2, -CLOTH_SIZE / 2, CLOTH_SIZE, CLOTH_SIZE);
+    ctx.restore();
     if (hint) {
         const pulse = 0.5 + 0.5 * Math.sin(clock / 220);
         ctx.strokeStyle = `rgba(255,255,255,${0.4 + pulse * 0.55})`;
