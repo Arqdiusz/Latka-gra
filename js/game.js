@@ -1692,7 +1692,10 @@ function pawsWipe(p) {
             sfx("good"); // „plink” za każdy wytarty fragment
         }
     });
-    if (touched) sfx("wipe");
+    if (touched) {
+        sfx("wipe");
+        clothRubT = clock;
+    }
     // każda wyczyszczona łapka dostaje iskierki (pierwsza, druga, …)
     const f = geometry().f,
         blobs = pawDirtBlobs(sheet, f),
@@ -1702,14 +1705,27 @@ function pawsWipe(p) {
         const mine = blobs.filter((bl) => bl.paw === k);
         if (!mine.length || mine.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) return;
         pawsDone.add(k);
+        clothWringT = clock; // szmatka się wyżyma
         sparkleBurst(pt.x, pt.y, SPARKLE_PAW);
         sfx("good");
     });
     // koniec, gdy na bieżącej klatce nie widać już żadnej grudki
     if (!blobs.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) pawsEnd(true);
 }
+// Szmatka z arkusza animacje/szmatka.png (4×4 po 64 px):
+// klatka 1 — czeka; 5–12 — trze (gdy palec przeciera łapki); 13–16 — wyżymanie
+// (raz, gdy któraś łapka zrobi się czysta).
+let clothRubT = -1e9,
+    clothWringT = -1e9;
+const CLOTH_SIZE = 58; // w pikselach sceny (scena jest przybliżona ×2,1)
+function clothFrame() {
+    const w = clock - clothWringT;
+    if (w < 4 * 120) return 13 + Math.floor(w / 120);
+    if (clock - clothRubT < 200) return 5 + (Math.floor(clock / 85) % 8);
+    return 1;
+}
 function pawsClothDraw() {
-    const im = cells.ui[UI.map.cloth - 1];
+    const im = images.cloth;
     if (!im) return;
     const hint = !pawsCloth,
         tx = pawsCloth ? pawsCloth.x : x * W + Math.sin(clock / 700) * 40,
@@ -1718,10 +1734,10 @@ function pawsClothDraw() {
     pawsClothVis = pawsClothVis ? { x: pawsClothVis.x + (tx - pawsClothVis.x) * 0.4, y: pawsClothVis.y + (ty - pawsClothVis.y) * 0.4 } : { x: tx, y: ty };
     ctx.save();
     ctx.translate(pawsClothVis.x, pawsClothVis.y);
-    ctx.rotate(-0.35);
     ctx.globalAlpha = hint ? 0.8 : 1;
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(im, -34, -34, 68, 68);
+    const i = clothFrame() - 1;
+    ctx.drawImage(im, (i % 4) * 64, Math.floor(i / 4) * 64, 64, 64, -CLOTH_SIZE / 2, -CLOTH_SIZE / 2, CLOTH_SIZE, CLOTH_SIZE);
     ctx.restore();
 }
 $(".pawsEnd").onclick = () => pawsEnd(false);
@@ -3596,6 +3612,7 @@ async function boot() {
     images.a03 = await loadImage("animacje/latka-animacje-03.png");
     images.dish = await loadImage("animacje/naczynia.png");
     images.sparkle = await loadImage("animacje/star-check.png");
+    images.cloth = await loadImage("animacje/szmatka.png");
     // Stary dwuklatkowy motyl-1.png/motyl-2.png (P.assets.butterflies) nie
     // jest już używany — cały butterflyEvent() lata teraz jedną, spójną
     // grafiką z motyle-new.png (patrz eventButterflyCell()).
