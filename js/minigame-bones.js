@@ -1,7 +1,7 @@
 "use strict";
 // ═══════════════════════════════════════════════════════════════
 // LICZYMY KOSTKI — dodawanie i odejmowanie w zakresie 10 (dla 6+).
-// 1) Wybór: dodawanie / odejmowanie i poziom (do 5, do 10, do 10 z zakryciem).
+// 1) Wybór: dodawanie / odejmowanie i poziom (sumy 2–6, 4–8, 6–10 i Sprawdzian).
 // 2) Kostki spadają na dwa dywaniki, a piesek w tym czasie kopie dołek
 //    (arkusz a03), wykopuje kostkę, chwilę stoi z nią spokojnie i ją odkłada.
 // 3) Dziecko dotyka dywanik i wpisuje liczbę kostek na klawiaturze
@@ -14,10 +14,11 @@
 // ═══════════════════════════════════════════════════════════════
 
 const BONES_LEVELS = [
-        { name: "Łatwy", info: "liczby do 5", max: 5, hide: false },
-        { name: "Średni", info: "liczby do 10", max: 10, hide: false },
-        { name: "Trudny", info: "do 10, kostki znikają — liczysz w głowie", max: 10, hide: true },
-        { name: "Sprawdzian", info: "do 10, bez kostek, czegoś brakuje", max: 10, test: true },
+        // min–max: zakres sumy (dodawanie) albo liczby, od której odejmujemy
+        { name: "Łatwy", info: "sumy 2–6", min: 2, max: 6, hide: false },
+        { name: "Średni", info: "sumy 4–8", min: 4, max: 8, hide: false },
+        { name: "Trudny", info: "sumy 6–10", min: 6, max: 10, hide: false },
+        { name: "Sprawdzian", info: "6–10, bez kostek, czegoś brakuje", min: 6, max: 10, test: true },
     ],
     BONES_ROUNDS = 5,
     BONES_DOG = { x: 192, y: 332, scale: 1.25 }, // stopy pieska na trawie, tuż nad dywanikami
@@ -232,13 +233,20 @@ function bonesRound() {
     const g = bonesGame,
         lv = BONES_LEVELS[bonesLevel],
         m = lv.max;
-    if (bonesOp === "+") {
-        g.A = bonesRnd(1, m - 1);
-        g.B = bonesRnd(1, m - g.A);
-    } else {
-        g.A = bonesRnd(2, m);
-        g.B = bonesRnd(1, g.A - 1);
+    // zakres poziomu: suma (dodawanie) albo liczba, od której odejmujemy (odejmowanie);
+    // ta sama para nie wypada dwa razy z rzędu
+    for (let tries = 0; tries < 8; tries++) {
+        if (bonesOp === "+") {
+            const s = bonesRnd(lv.min, m);
+            g.A = bonesRnd(1, s - 1);
+            g.B = s - g.A;
+        } else {
+            g.A = bonesRnd(lv.min, m);
+            g.B = bonesRnd(1, g.A - 1);
+        }
+        if (g.A + "," + g.B !== g.last) break;
     }
+    g.last = g.A + "," + g.B;
     // sprawdzian: ta sama trójka liczb, ale w działaniu brakuje losowo jednej z nich
     g.C = bonesOp === "+" ? g.A + g.B : g.A - g.B;
     g.unk = lv.test ? ["a", "b", "c"][bonesRnd(0, 2)] : "c";
