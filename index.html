@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.212</title>
+        <title>Łatka v0.8.213</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
-        <link rel="stylesheet" href="css/style.css?v=231" />
+        <link rel="stylesheet" href="css/style.css?v=232" />
     </head>
 
     <body>
@@ -54,19 +54,21 @@
             </div>
             <div class="bonesFull" hidden>
                 <div class="bonesMenu">
-                    <button class="bonesClose bonesMenuClose" aria-label="Wróć do pieska">✕</button>
-                    <div class="bonesCard">
-                        <h2>Co liczymy?</h2>
+                    <div class="moleCard bonesPop">
+                        <canvas class="bonesMenuDog" width="160" height="160" aria-hidden="true"></canvas>
+                        <h2>Piesek znalazł kostkę!</h2>
                         <div class="bonesOps">
-                            <button class="bonesOp" data-op="+" aria-pressed="true"><b>+</b>Dodawanie</button>
-                            <button class="bonesOp" data-op="-" aria-pressed="false"><b>−</b>Odejmowanie</button>
+                            <button class="bonesOp add" data-op="+" aria-pressed="true"><span class="eq">3+2=<i class="q">?</i></span><span class="lab">Dodawanie</span></button>
+                            <button class="bonesOp sub" data-op="-" aria-pressed="false"><span class="eq">5−2=<i class="q">?</i></span><span class="lab">Odejmowanie</span></button>
                         </div>
+                        <div class="bonesDd">
+                            <button class="bonesLvlBar" aria-haspopup="listbox" aria-expanded="false"><span class="nm"></span><span class="dots"></span><span class="chev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="#fff" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                            <div class="bonesLevels" role="listbox" hidden></div>
+                        </div>
+                        <p>Dodajemy i odejmujemy kostki. Policzymy razem?</p>
+                        <button class="bonesStart btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5v17l15-8.5z" fill="#fff"/></svg>Liczymy!</button>
+                        <button class="bonesBack btnRed">Wróć</button>
                     </div>
-                    <div class="bonesCard">
-                        <h2>Jak trudno?</h2>
-                        <div class="bonesLevels"></div>
-                    </div>
-                    <button class="bonesStart btnGreen">Start</button>
                 </div>
                 <div class="bonesPlay" hidden>
                     <canvas class="bonesCanvas" width="384" height="423"></canvas>
@@ -418,7 +420,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=231"></script>
+            <script src="js/loader.js?v=232"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -426,7 +428,7 @@
                     document.fonts.load("700 16px Quicksand");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=231"></script>
+            <script src="js/audio.js?v=232"></script>
             <div class="parentLock" hidden>
                 <!-- dla dziecka: obrazki, bez czytania — piesek śpi, po więcej czasu idź do rodziców -->
                 <div class="plKid">
@@ -480,20 +482,20 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=231"></script>
-        <script defer src="js/game.js?v=231"></script>
-        <script defer src="js/session.js?v=231"></script>
-        <script defer src="js/minigame-fetch.js?v=231"></script>
-        <script defer src="js/minigame-bubbles.js?v=231"></script>
-        <script defer src="js/minigame-mole.js?v=231"></script>
-        <script defer src="js/minigame-hedge.js?v=231"></script>
-        <script defer src="js/minigame-mole2.js?v=231"></script>
-        <script defer src="js/minigame-memory.js?v=231"></script>
-        <script defer src="js/minigame-pairs.js?v=231"></script>
-        <script defer src="js/minigame-bones.js?v=231"></script>
-        <script defer src="js/event-bone-mole.js?v=231"></script>
-        <script defer src="js/event-bone-dig.js?v=231"></script>
-        <script defer src="js/games-menu.js?v=231"></script>
-        <script defer src="js/popup-guard.js?v=231"></script>
+        <script defer src="js/arc-carousel.js?v=232"></script>
+        <script defer src="js/game.js?v=232"></script>
+        <script defer src="js/session.js?v=232"></script>
+        <script defer src="js/minigame-fetch.js?v=232"></script>
+        <script defer src="js/minigame-bubbles.js?v=232"></script>
+        <script defer src="js/minigame-mole.js?v=232"></script>
+        <script defer src="js/minigame-hedge.js?v=232"></script>
+        <script defer src="js/minigame-mole2.js?v=232"></script>
+        <script defer src="js/minigame-memory.js?v=232"></script>
+        <script defer src="js/minigame-pairs.js?v=232"></script>
+        <script defer src="js/minigame-bones.js?v=232"></script>
+        <script defer src="js/event-bone-mole.js?v=232"></script>
+        <script defer src="js/event-bone-dig.js?v=232"></script>
+        <script defer src="js/games-menu.js?v=232"></script>
+        <script defer src="js/popup-guard.js?v=232"></script>
     </body>
 </html>

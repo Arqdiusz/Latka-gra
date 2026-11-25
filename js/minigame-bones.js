@@ -139,20 +139,37 @@ function bonesTryStart() {
 }
 
 function bonesBuildMenu() {
-    const box = $(".bonesLevels");
+    const box = $(".bonesLevels"),
+        bar = $(".bonesLvlBar"),
+        dots = (n) => [0, 1, 2, 3].map((j) => '<i class="' + (j <= n ? "on" : "") + '"></i>').join("");
+    const refresh = () => {
+        bar.querySelector(".nm").textContent = BONES_LEVELS[bonesLevel].name;
+        bar.querySelector(".dots").innerHTML = dots(bonesLevel);
+    };
+    const toggle = (open) => {
+        box.hidden = !open;
+        bar.setAttribute("aria-expanded", open);
+        bar.parentNode.classList.toggle("open", open);
+    };
     box.innerHTML = "";
     BONES_LEVELS.forEach((l, i) => {
         const b = document.createElement("button");
         b.className = "bonesLvl";
         b.setAttribute("aria-pressed", i === bonesLevel);
-        b.innerHTML = "<span>" + l.name + "<small>" + l.info + '</small></span><span class="dots">' + [0, 1, 2, 3].map((j) => '<i class="' + (j <= i ? "on" : "") + '"></i>').join("") + "</span>";
+        b.innerHTML = "<span>" + l.name + "<small>" + l.info + '</small></span><span class="dots">' + dots(i) + "</span>";
         b.onclick = () => {
             bonesLevel = i;
-            box.querySelectorAll(".bonesLvl").forEach((c, j) => c.setAttribute("aria-pressed", j === i));
+            box.querySelectorAll(".bonesLvl").forEach((c, k) => c.setAttribute("aria-pressed", k === i));
+            refresh();
+            toggle(false);
         };
         box.appendChild(b);
     });
+    bar.onclick = () => toggle(box.hidden);
+    toggle(false);
+    refresh();
     document.querySelectorAll(".bonesOp").forEach((b) => b.setAttribute("aria-pressed", b.dataset.op === bonesOp));
+    bonesDogStart();
 }
 document.querySelectorAll(".bonesOp").forEach(
     (b) =>
@@ -161,14 +178,35 @@ document.querySelectorAll(".bonesOp").forEach(
             document.querySelectorAll(".bonesOp").forEach((c) => c.setAttribute("aria-pressed", c === b));
         })
 );
+// piesek z kostką na karcie wyboru (te same klatki co na karcie kreta), stopami w jednym miejscu
+let bonesDogT = 0;
+function bonesDogStart() {
+    const cv = $(".bonesMenuDog"),
+        c = cv.getContext("2d"),
+        seq = numbers(CFG.a03.presets[4].seq);
+    let i = 0;
+    const draw = () => {
+        const f = seq[i++ % seq.length],
+            cell = cells.a03[f - 1],
+            b = P.meta.a03[f - 1].box,
+            k = 1.2;
+        c.clearRect(0, 0, 160, 160);
+        c.imageSmoothingEnabled = false;
+        if (cell) c.drawImage(cell, 80 - ((b[0] + b[2]) / 2) * k, 152 - b[3] * k, cell.width * k, cell.height * k);
+    };
+    clearInterval(bonesDogT);
+    draw();
+    bonesDogT = setInterval(draw, 330);
+}
 $(".bonesStart").onclick = () => bonesBegin();
-$(".bonesMenuClose").onclick = () => bonesFinish(false);
+$(".bonesBack").onclick = () => bonesFinish(false);
 $(".bonesPlayClose").onclick = () => bonesFinish(false);
 
 function bonesBegin() {
     const g = bonesGame || (bonesGame = {});
     g.round = 0;
     $(".bonesMenu").hidden = true;
+    clearInterval(bonesDogT);
     $(".bonesPlay").hidden = false;
     bonesX = BONES_DOG.x;
     bonesFace = 1;
@@ -432,6 +470,7 @@ function bonesFinish() {
         clearTimeout(g.dropT);
     }
     bonesGame = null;
+    clearInterval(bonesDogT);
     $(".bonesFull").hidden = true;
     $(".bonesPad").hidden = true;
     $("#bonesWinPopup").hidden = true;

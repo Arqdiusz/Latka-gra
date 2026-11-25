@@ -272,3 +272,10 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Kiedy: dymek „szczekanie” → „hau, hau”; dymek z potrzebą (< 40%) → grzeczne hau (prośba); dotknięcie pieska → w 35% wesołe hau zamiast zwykłej reakcji; samo z siebie ok. 5% samodzielnych zachowań → „hau” lub „hau, hau”. Nie szczeka śpiący, smutny ani schowany (`bark()`).
 - Ekran blokady (v0.8.212, wybrany wariant 2): dla dziecka same obrazki, bez tekstu — śpiący piesek w legowisku z małym dymkiem (ikona snu), pod nim w pionie: zegar z zielonym plusem („więcej czasu”) → strzałka w dół → pulsujący obrazek rodziców (bez tła, tylko poświata). Ikony z arkusza ikon: thought, sleep, clock, plus, parents, lock. Mnożenie dla rodzica jest schowane pod kłódką w prawym dolnym rogu (okienko „Dla rodzica”: informacja o 15 minutach, działanie, „Odblokuj”, „Zamknij”).
 - Zasada pracy: przed każdym wdrożeniem trzy propozycje do wyboru.
+
+## 32. Nowe menu „Liczymy kostki” (v0.8.213)
+- Wygląd jak karta kreta „Piesek znalazł kostkę!”: jasna karta na przyciemnionej grze, u góry piesek z kostką (a03, to samo co na karcie kreta), tytuł „Piesek znalazł kostkę!”. Bez okrągłych przycisków i bez ✕ — wyjście to czerwony „‹ Wróć”.
+- Dwa duże kolorowe działania z zapisem, bez kostek: niebieskie „3+2=?” (Dodawanie) i pomarańczowe „5−2=?” (Odejmowanie), kratka „?” przerywana; wybrane ma żółtą obwódkę i ✓, niewybrane jest wyblakłe.
+- Poziom: rozwijana belka (nazwa + kropki + duża niebieska strzałka). Dotknięcie rozwija listę czterech poziomów pod belką (bez podpisów), wybór zwija ją z powrotem.
+- Pod belką: „Dodajemy i odejmujemy kostki. Policzymy razem?”, potem zielony „▶ Liczymy!” i czerwony „‹ Wróć”. Wszystko blisko siebie (karta ma wysokość zawartości, wyśrodkowana).
+- Ochrona przed „przelotem” kliknięć (700 ms) działa jak dotąd.
