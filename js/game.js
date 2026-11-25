@@ -2092,13 +2092,12 @@ function butterflyEmerge() {
     b.x = b.dir > 0 ? -25 : W + 25;
     b.start = catchButterflyStart = clock;
     b.p = 0;
-    b.turn = true; // piesek odwróci się w stronę motylka (w pętli, poza onEnd kolejki)
 }
 
 // Lot przed kliknięciem i ucieczka po kliknięciu — wołane co klatkę z loopFrame().
 const BUTTERFLY_SPEED = (W + 50) / BUTTERFLY_CROSS_MS; // px/ms
 const BUTTERFLY_FLEE_SPEED = 0.075; // px/ms — spłoszony ucieka trochę szybciej
-const CATCH_MIN_WAIT = 250; // ms patrzenia na motylka tuż przed skokiem
+const CATCH_MIN_WAIT = 150; // ms patrzenia na motylka tuż przed skokiem
 
 // Plan pogoni: po kliknięciu motylek zawraca i ucieka tam, skąd przyleciał
 // (dir = -b.dir), a piesek biegnie za nim tak, żeby w chwili T motylek był
@@ -2114,19 +2113,21 @@ function butterflyPlan() {
     // motylek musi być jeszcze przed pieskiem (nie przeleciał nad nim)
     if ((b.x - x * W) * dir < 40) return null;
     const [lo, hi] = CATCH_ZONE[dir];
-    for (let T = 600; T <= 2500; T += 100) {
-        const sx = b.x + dir * BUTTERFLY_FLEE_SPEED * T;
-        if (sx < 24 || sx > W - 24) break;
-        let xd = (sx - A) / W;
-        if (xd < lo || xd > hi) continue;
-        const dist = Math.abs(xd - x) * W;
-        if (dist < 6) xd = x;
-        else if ((xd - x) * dir < 0) continue; // motylek za plecami — piesek by się cofał
-        const walk = dist < 48,
-            m = dist < 6 ? 0 : walk ? (dist / 60) * 1000 : Math.max(350, (dist / 260) * 1000);
-        if (m + CATCH_MIN_WAIT > T) continue;
-        return { dir, T, xd, m, walk, dist, spot: { x: sx, y: catchSpotFor("a02", first, xd, dir < 0)?.y ?? 231 } };
-    }
+    // najpierw najszybsza ucieczka; gdy motylek jest jeszcze daleko, ucieka wolniej
+    for (const v of [BUTTERFLY_FLEE_SPEED, 0.055, 0.035, 0.02])
+        for (let T = 500; T <= 2500; T += 100) {
+            const sx = b.x + dir * v * T;
+            if (sx < 24 || sx > W - 24) break;
+            let xd = (sx - A) / W;
+            if (xd < lo || xd > hi) continue;
+            const dist = Math.abs(xd - x) * W;
+            if (dist < 6) xd = x;
+            else if ((xd - x) * dir < 0) continue; // motylek za plecami — piesek by się cofał
+            const walk = dist < 48,
+                m = dist < 6 ? 0 : walk ? (dist / 60) * 1000 : Math.max(300, (dist / 300) * 1000);
+            if (m + CATCH_MIN_WAIT > T) continue;
+            return { dir, T, v, xd, m, walk, dist, spot: { x: sx, y: catchSpotFor("a02", first, xd, dir < 0)?.y ?? 231 } };
+        }
     return null;
 }
 
@@ -2143,13 +2144,6 @@ function butterflyFreeUpdate() {
         if (clock - b.start > 8000 && casual()) butterflyEmerge();
         return;
     }
-    if (b.turn && casual() && !gesture) {
-        b.turn = false;
-        interrupt();
-        phase = "look";
-        locks();
-        startQueue([{ sheet: "a01", anim: 16, facing: b.dir > 0, time: BUTTERFLY_CROSS_MS }]);
-    }
     if (b.lure?.done) return;
     if (b.lure) {
         // ucieczka: zawraca i leci tam, skąd przyleciał; spłoszony zygzak zerowy
@@ -2158,7 +2152,7 @@ function butterflyFreeUpdate() {
             el = clock - L.t0,
             t = clamp(el / L.T, 0, 1),
             e = t * t * (3 - 2 * t);
-        b.x = L.x0 + L.dir * BUTTERFLY_FLEE_SPEED * Math.min(el, L.T) + Math.sin(t * Math.PI * 4 * L.cycles) * 5;
+        b.x = L.x0 + L.dir * L.v * Math.min(el, L.T) + Math.sin(t * Math.PI * 4 * L.cycles) * 5;
         b.y = L.y0 + (L.spot.y - L.y0) * e + Math.sin(t * Math.PI * 2 * L.cycles) * L.amp;
     } else {
         const p = (clock - b.start) / BUTTERFLY_CROSS_MS;
@@ -2248,6 +2242,7 @@ function butterflyCatch() {
         x0: b.x,
         y0: b.y,
         dir,
+        v: pl.v,
         T,
         spot: pl.spot,
         done: false,
@@ -3347,7 +3342,7 @@ function loopFrame(t) {
             if (sadNeed()) sadStart();
             else if (!poop && poopUrge()) spawnPoop();
             else if (clock >= nextTrip) autoTrip();
-            else if (clock >= idleUntil) autonomous();
+            else if (clock >= idleUntil && !(butterfly?.free && !butterfly.lure)) autonomous();
         }
         if (bubbleGame) bubbleGameUpdate(dt);
         if (moleGame) moleGameUpdate(dt);

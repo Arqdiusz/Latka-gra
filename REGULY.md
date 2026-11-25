@@ -227,3 +227,4 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Okno klikania: pulsująca ramka tylko wtedy, gdy pościg jest wykonalny (`butterflyPlan`): motylek musi być jeszcze przed pieskiem (≥ 40 px), a złapanie musi wypaść w ciągu 2,5 s. W praktyce ok. 2,5 s.
 - Po kliknięciu motylek zawraca i ucieka tam, skąd przyleciał (0,075 px/ms, spłoszony zygzak, „frrr”), a piesek biegnie za nim i łapie go w skoku (a02 „15”), potem motylek siada na nosie (a02 „18”) i odlatuje dalej w stronę ucieczki.
 - Niekliknięty motylek przelatuje nad pieskiem i znika za ekranem.
+- Poprawki (v0.8.198): piesek pod ścianą stoi jak zwykle, przodem do ściany (nie odwraca się do motylka), i w czasie przelotu nie spaceruje sam (`autonomous` wstrzymane). Po kliknięciu obraca się i biegnie za motylkiem (300 px/s). Ramka pojawia się wcześniej (~1 s): gdy motylek jest jeszcze daleko, ucieka wolniej (0,075 → 0,055 → 0,035 → 0,02 px/ms), żeby piesek zdążył; okno klikania ok. 3,4 s.
