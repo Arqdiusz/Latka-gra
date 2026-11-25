@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.211</title>
+        <title>Łatka v0.8.212</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
-        <link rel="stylesheet" href="css/style.css?v=230" />
+        <link rel="stylesheet" href="css/style.css?v=231" />
     </head>
 
     <body>
@@ -418,7 +418,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=230"></script>
+            <script src="js/loader.js?v=231"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -426,19 +426,30 @@
                     document.fonts.load("700 16px Quicksand");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=230"></script>
+            <script src="js/audio.js?v=231"></script>
             <div class="parentLock" hidden>
-                <div class="plCard">
+                <!-- dla dziecka: obrazki, bez czytania — piesek śpi, po więcej czasu idź do rodziców -->
+                <div class="plKid">
+                    <div class="plThought"><img class="plThoughtBg" alt="" /><img class="plSleep" alt="Piesek śpi" /></div>
                     <canvas class="plDog" width="240" height="150" aria-hidden="true"></canvas>
-                    <h2>Piesek śpi</h2>
-                    <p>Zmęczył się zabawą i poszedł spać. Pobawimy się znowu później!</p>
+                    <div class="plPath">
+                        <div class="plClock"><img class="plClockImg" alt="Więcej czasu" /><img class="plPlus" alt="" /></div>
+                        <span class="plArrow" aria-hidden="true">↓</span>
+                        <img class="plParents" alt="Zawołaj rodziców" />
+                    </div>
+                </div>
+                <button class="plLockBtn" type="button" aria-label="Dla rodzica"><img alt="" /></button>
+                <!-- dla rodzica: schowane pod kłódką -->
+                <div class="plParent" hidden>
                     <form class="plForm" autocomplete="off">
                         <span class="plLabel">Dla rodzica</span>
+                        <p class="plInfo">Minęło 15 minut zabawy. Żeby odblokować grę, wpisz wynik:</p>
                         <div class="plRow">
                             <label class="plQ" for="plInput">7 × 8 =</label>
                             <input id="plInput" class="plInput" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="Wynik" />
                             <button class="plOk" type="submit">Odblokuj</button>
                         </div>
+                        <button class="plBack" type="button">Zamknij</button>
                     </form>
                 </div>
             </div>
@@ -469,20 +480,20 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=230"></script>
-        <script defer src="js/game.js?v=230"></script>
-        <script defer src="js/session.js?v=230"></script>
-        <script defer src="js/minigame-fetch.js?v=230"></script>
-        <script defer src="js/minigame-bubbles.js?v=230"></script>
-        <script defer src="js/minigame-mole.js?v=230"></script>
-        <script defer src="js/minigame-hedge.js?v=230"></script>
-        <script defer src="js/minigame-mole2.js?v=230"></script>
-        <script defer src="js/minigame-memory.js?v=230"></script>
-        <script defer src="js/minigame-pairs.js?v=230"></script>
-        <script defer src="js/minigame-bones.js?v=230"></script>
-        <script defer src="js/event-bone-mole.js?v=230"></script>
-        <script defer src="js/event-bone-dig.js?v=230"></script>
-        <script defer src="js/games-menu.js?v=230"></script>
-        <script defer src="js/popup-guard.js?v=230"></script>
+        <script defer src="js/arc-carousel.js?v=231"></script>
+        <script defer src="js/game.js?v=231"></script>
+        <script defer src="js/session.js?v=231"></script>
+        <script defer src="js/minigame-fetch.js?v=231"></script>
+        <script defer src="js/minigame-bubbles.js?v=231"></script>
+        <script defer src="js/minigame-mole.js?v=231"></script>
+        <script defer src="js/minigame-hedge.js?v=231"></script>
+        <script defer src="js/minigame-mole2.js?v=231"></script>
+        <script defer src="js/minigame-memory.js?v=231"></script>
+        <script defer src="js/minigame-pairs.js?v=231"></script>
+        <script defer src="js/minigame-bones.js?v=231"></script>
+        <script defer src="js/event-bone-mole.js?v=231"></script>
+        <script defer src="js/event-bone-dig.js?v=231"></script>
+        <script defer src="js/games-menu.js?v=231"></script>
+        <script defer src="js/popup-guard.js?v=231"></script>
     </body>
 </html>

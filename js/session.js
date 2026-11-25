@@ -65,6 +65,14 @@ function sessionShowLock() {
     const el = $(".parentLock");
     lockNewQuestion();
     $(".plInput").value = "";
+    $(".plParent").hidden = true;
+    // ikony z arkusza ikon (dymek, sen, zegar, plus, rodzice, kłódka)
+    $(".plThoughtBg").src = icons.thought;
+    $(".plSleep").src = icons.sleep;
+    $(".plClockImg").src = icons.clock;
+    $(".plPlus").src = icons.plus;
+    $(".plParents").src = icons.parents;
+    $(".plLockBtn img").src = icons.lock;
     el.hidden = false;
     // śpiący piesek na ekranie blokady (a02 „07. Sen w legowisku”), stopami w jednym miejscu
     const cv = $(".plDog"),
@@ -104,6 +112,15 @@ function sessionNew() {
     statusUpdate();
     save();
 }
+
+// kłódka w rogu: okienko z działaniem dla rodzica
+$(".plLockBtn").onclick = () => {
+    lockNewQuestion();
+    $(".plInput").value = "";
+    $(".plParent").hidden = false;
+    $(".plInput").focus();
+};
+$(".plBack").onclick = () => ($(".plParent").hidden = true);
 
 $(".plForm").addEventListener("submit", (e) => {
     e.preventDefault();

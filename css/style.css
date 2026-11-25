@@ -3037,50 +3037,132 @@ h3,
 }
 
 
-/* ═══ Blokada rodzica: po 15 minutach „Piesek śpi” (js/session.js) ═══ */
+/* ═══ Blokada rodzica: po 15 minutach „Piesek śpi” (js/session.js) ═══
+   Dla dziecka same obrazki: śpiący piesek z dymkiem (sen), pod nim zegar
+   z plusem → strzałka → rodzice. Mnożenie dla rodzica pod kłódką w rogu. */
 .parentLock {
     position: absolute;
     inset: 0;
     z-index: 60;
+    background: linear-gradient(180deg, #2d3557, #1c2240);
     display: grid;
     place-items: center;
-    padding: 20px;
-    background: linear-gradient(180deg, #2d3557ee, #1c2240f5);
 }
 .parentLock[hidden] {
     display: none;
 }
-.plCard {
+.plKid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+.plThought {
+    position: relative;
+    width: 96px;
+    margin-left: 150px;
+    margin-bottom: -14px;
+}
+.plThoughtBg {
+    width: 100%;
+    display: block;
+    image-rendering: pixelated;
+}
+.plSleep {
+    position: absolute;
+    left: 22%;
+    top: 14%;
+    width: 54%;
+    image-rendering: pixelated;
+}
+.plDog {
+    display: block;
+    width: 220px;
+    height: 138px;
+    image-rendering: pixelated;
+}
+.plPath {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 16px 30px 18px;
+    border-radius: 24px;
+    background: #ffffff14;
+}
+.plClock {
+    position: relative;
+    width: 64px;
+}
+.plClockImg {
+    width: 100%;
+    display: block;
+    image-rendering: pixelated;
+}
+.plPlus {
+    position: absolute;
+    right: -14px;
+    top: -14px;
+    width: 36px;
+    image-rendering: pixelated;
+}
+.plArrow {
+    font-size: 34px;
+    line-height: 1;
+    font-weight: 700;
+    color: #ffe9a8;
+}
+.plParents {
+    width: 118px;
+    image-rendering: pixelated;
+    animation: plPulse 1.6s ease-in-out infinite;
+}
+@keyframes plPulse {
+    50% {
+        transform: scale(1.07);
+        filter: drop-shadow(0 0 12px #ffe9a8);
+    }
+}
+.plLockBtn {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    border: 1px solid #ffffff33;
+    background: #ffffff1f;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    padding: 0;
+}
+.plLockBtn img {
+    width: 26px;
+    image-rendering: pixelated;
+}
+.plParent {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: #0008;
+}
+.plParent[hidden] {
+    display: none;
+}
+.plForm {
     width: 300px;
     max-width: 100%;
     background: #fff8ea;
     border: 5px solid white;
-    border-radius: 30px;
-    padding: 18px 20px 20px;
+    border-radius: 26px;
+    padding: 16px 18px 14px;
     text-align: center;
     color: #4a3626;
     box-shadow: 0 12px 30px #0006;
-}
-.plDog {
-    display: block;
-    width: 200px;
-    height: 125px;
-    margin: 0 auto 4px;
-    image-rendering: pixelated;
-}
-.plCard h2 {
-    margin: 0 0 6px;
-    font-size: 30px;
-    color: #3d5a99;
-}
-.plCard p {
-    margin: 0 0 18px;
-    font-size: 15px;
-    line-height: 1.35;
-}
-.plForm {
-    border-top: 2px dashed #e6d9bd;
-    padding-top: 12px;
 }
 .plLabel {
     display: block;
@@ -3089,7 +3171,11 @@ h3,
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: #9a8466;
-    margin-bottom: 8px;
+}
+.plInfo {
+    margin: 6px 0 12px;
+    font-size: 14px;
+    line-height: 1.35;
 }
 .plRow {
     display: flex;
@@ -3123,6 +3209,16 @@ h3,
     padding: 9px 12px;
     background: #3d8fd6;
     color: white;
+    cursor: pointer;
+}
+.plBack {
+    margin-top: 12px;
+    font: inherit;
+    font-size: 13px;
+    border: 0;
+    background: none;
+    color: #9a8466;
+    text-decoration: underline;
     cursor: pointer;
 }
 .plForm.bad .plRow {
