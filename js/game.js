@@ -4047,11 +4047,26 @@ window.gameTest = {
 // ── TYMCZASOWY panel deweloperski — do usunięcia przed publikacją ──
 // Pozwala ręcznie zmieniać potrzeby (jedzenie/woda/zabawa/sen/czystość),
 // budzić Łatkę i usuwać kupkę, żeby łatwo testować dowolny stan gry.
+// Brud łapek = pawDirt (0–100). Brud sierści (0–100) to przeliczona czystość:
+// 0% przy czystości ≥ 65, 100% przy czystości 15 (jak furLevel).
+function devGet(k) {
+    if (k === "paws") return pawDirt;
+    if (k === "fur") return (furLevel() / FUR_MAX) * 100;
+    return stats[k] ?? 0;
+}
+function devSet(k, v) {
+    v = clamp(v, 0, 100);
+    if (k === "paws") {
+        pawDirt = v;
+        save();
+    } else if (k === "fur") stats.clean = clamp(65 - (v / 100) * FUR_MAX * 50, 0, 100);
+    else stats[k] = v;
+}
 function devRefresh() {
     document.querySelectorAll(".devPanel .devRow").forEach((row) => {
         const k = row.dataset.stat,
             out = row.querySelector("output");
-        if (out) out.textContent = Math.round(stats[k] ?? 0);
+        if (out) out.textContent = Math.round(devGet(k));
     });
 }
 document.querySelectorAll(".devPanel .devRow button").forEach((btn) => {
@@ -4059,7 +4074,7 @@ document.querySelectorAll(".devPanel .devRow button").forEach((btn) => {
         const row = btn.closest(".devRow"),
             k = row.dataset.stat,
             d = Number(btn.dataset.d);
-        stats[k] = clamp((stats[k] ?? 0) + d, 0, 100);
+        devSet(k, devGet(k) + d);
         if (loaded) {
             statusUpdate();
             syncMenu();

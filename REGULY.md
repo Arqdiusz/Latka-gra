@@ -249,3 +249,4 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Kąpiel (`bubbleWinShow` w `minigame-bubbles.js`): otrząśnięcie raz → mignięcia → stanie z merdaniem (zamiast pętli rozglądanie ↔ siad).
 - Iskierki przy każdej czyszczonej łapce w trakcie czyszczenia zostały (krótkie, jednorazowe).
 - Poprawki (v0.8.207): na karcie piesek jest wyrównany do ramki pierwszej klatki (wcześniej ramka zmieniała się z ogonem i piesek skakał 1–2 px na boki); merdanie wolniej (300 ms). Przy szorowaniu co ~0,2 s pojawia się przy szmatce jedna mała iskierka. Gdy łapka zrobi się czysta: duży błysk (miękkie białe światło 0,35 s + 5 dużych gwiazdek, `sparkleBurst(..., flash = true)`).
+- Panel DEV (v0.8.208): wiersze „Brud łapek” (`pawDirt` 0–100) i „Brud sierści” (0–100, przeliczane na czystość: 0% przy czystości ≥ 65, 100% przy 15), ±20 jak inne potrzeby (`devGet`/`devSet`).
