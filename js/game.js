@@ -1365,15 +1365,40 @@ const PAW_BUCKET = 14, // szerokość „pasa” brudu w pikselach komórki arku
 // Wzorzec grudek (przesunięcia, kolory, kolejność znikania) jest stały dla łapy.
 let skeleton = null,
     pawDirtTemplate = null;
+// Okruchy brudu: bez siatki, różnej wielkości (1–3 px, czasem podłużne), gęściej
+// przy samej łapie, rzadziej dalej, część „wspina się” w górę nóżki. Każda łapa
+// ma własny, stały wzorzec. Próg pojawiania się (thr) rośnie od środka łapy na
+// zewnątrz z dużą domieszką losowości — brud rozchodzi się nierówno, plamami.
+const PAW_GRAINS = 34;
 function pawDirtMake() {
-    let seed = 4242;
-    const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280),
-        out = [];
-    for (let i = 0; i < 120; i++) {
-        const t = { ox: Math.round(rnd() * 18 - 9), oy: Math.round(rnd() * 12 - 6), thr: rnd(), steps: [] },
-            len = 2 + Math.floor(rnd() * 3);
-        for (let k = 0; k < len; k++) t.steps.push({ col: PAW_DIRT_COLORS[Math.floor(rnd() * PAW_DIRT_COLORS.length)], d: Math.floor(rnd() * 4) });
-        out.push(t);
+    const out = [];
+    for (let k = 0; k < 6; k++) {
+        let seed = 4242 + k * 977;
+        const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280),
+            gr = [];
+        for (let i = 0; i < PAW_GRAINS; i++) {
+            const r = Math.pow(rnd(), 1.5) * 12,
+                a = rnd() * Math.PI * 2,
+                climb = rnd() < 0.25 ? rnd() * 9 : 0, // okruch wyżej na nóżce
+                sz = r < 5 ? 3 + Math.floor(rnd() * 2) : 2 + Math.floor(rnd() * 2),
+                g = {
+                    ox: Math.cos(a) * r * 1.15,
+                    oy: Math.sin(a) * r * 0.75 - climb,
+                    w: sz + (rnd() < 0.3 ? 1 : 0),
+                    h: sz + (rnd() < 0.15 ? 1 : 0),
+                    col: PAW_DIRT_COLORS[Math.floor(rnd() * PAW_DIRT_COLORS.length)],
+                    score: (r + climb) / 14 + rnd() * 0.7,
+                    bits: [],
+                };
+            // czasem przyklejony drobny okruszek innego koloru (nierówny brzeg)
+            if (rnd() < 0.4) g.bits.push({ dx: Math.round(rnd() * 6 - 3), dy: Math.round(rnd() * 6 - 3), s: 2, col: PAW_DIRT_COLORS[Math.floor(rnd() * PAW_DIRT_COLORS.length)] });
+            gr.push(g);
+        }
+        // progi rozłożone równo (każda łapa brudzi się tak samo), kolejność wg score
+        gr.slice()
+            .sort((p, q) => p.score - q.score)
+            .forEach((g, i) => (g.thr = (i + 0.5) / PAW_GRAINS));
+        out.push(gr);
     }
     return out;
 }
@@ -1388,31 +1413,22 @@ function pawDirtBlobs(sh, f) {
             w = cell.width,
             h = cell.height,
             src = cell.getContext("2d").getImageData(0, 0, w, h).data,
-            px = 3,
-            PER_PAW = 9;
+            onDog = (x, y) => x >= 0 && y >= 0 && x < w && y < h && src[(Math.floor(y) * w + Math.floor(x)) * 4 + 3] > 128;
         paws.forEach(([pxx, pyy], k) => {
-            for (let j = 0; j < PER_PAW; j++) {
-                const t = pawDirtTemplate[(k * PER_PAW + j) % pawDirtTemplate.length],
-                    thr = (j + t.thr) / PER_PAW; // równo rozłożone progi: każda łapa brudzi się tak samo
-                let gx = Math.floor((pxx + t.ox) / px),
-                    gy = Math.floor((pyy + t.oy) / px);
-                const mx0 = Math.floor(gx * px + px / 2),
-                    my0 = Math.floor(gy * px + px / 2);
-                // przesunięcie wypadło poza psa → kładziemy grudkę dokładnie na punkcie łapy
-                if (!(mx0 >= 0 && my0 >= 0 && mx0 < w && my0 < h && src[(my0 * w + mx0) * 4 + 3] > 128)) {
-                    gx = Math.floor(pxx / px);
-                    gy = Math.floor(pyy / px);
+            for (const g of pawDirtTemplate[k % pawDirtTemplate.length]) {
+                // okruch tylko na piesku: gdy wypada poza, przysuwamy go do łapy
+                let gx = pxx + g.ox,
+                    gy = pyy + g.oy;
+                if (!onDog(gx + g.w / 2, gy + g.h / 2)) {
+                    gx = pxx + g.ox * 0.4;
+                    gy = pyy + g.oy * 0.4;
+                    if (!onDog(gx + g.w / 2, gy + g.h / 2)) continue;
                 }
-                const list = [];
-                for (const s of t.steps) {
-                    const mx = Math.floor(gx * px + px / 2),
-                        my = Math.floor(gy * px + px / 2);
-                    // tylko na pieskiem (nie na tle)
-                    if (mx >= 0 && my >= 0 && mx < w && my < h && src[(my * w + mx) * 4 + 3] > 128) list.push({ x: gx * px, y: gy * px, col: s.col });
-                    gx += [1, -1, 0, 0][s.d];
-                    gy += [0, 0, 1, -1][s.d];
-                }
-                if (list.length) blobs.push({ list, px, thr, bucket: Math.floor(pxx / PAW_BUCKET), paw: k });
+                gx = Math.round(gx);
+                gy = Math.round(gy);
+                const list = [{ x: gx, y: gy, w: g.w, h: g.h, col: g.col }];
+                for (const t of g.bits) if (onDog(gx + t.dx, gy + t.dy)) list.push({ x: gx + t.dx, y: gy + t.dy, w: t.s, h: t.s, col: t.col });
+                blobs.push({ list, thr: g.thr, bucket: Math.floor(pxx / PAW_BUCKET), paw: k });
             }
         });
     }
@@ -1424,7 +1440,7 @@ function pawDirtDraw(c, sh, f, amount) {
         if (bl.thr >= (pawLvl ? (pawLvl[bl.bucket] ?? 0) : amount)) continue;
         for (const q of bl.list) {
             c.fillStyle = q.col;
-            c.fillRect(q.x, q.y, bl.px, bl.px);
+            c.fillRect(q.x, q.y, q.w, q.h);
         }
     }
 }

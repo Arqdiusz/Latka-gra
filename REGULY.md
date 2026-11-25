@@ -228,3 +228,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Po kliknięciu motylek zawraca i ucieka tam, skąd przyleciał (0,075 px/ms, spłoszony zygzak, „frrr”), a piesek biegnie za nim i łapie go w skoku (a02 „15”), potem motylek siada na nosie (a02 „18”) i odlatuje dalej w stronę ucieczki.
 - Niekliknięty motylek przelatuje nad pieskiem i znika za ekranem.
 - Poprawki (v0.8.198): piesek pod ścianą stoi jak zwykle, przodem do ściany (nie odwraca się do motylka), i w czasie przelotu nie spaceruje sam (`autonomous` wstrzymane). Po kliknięciu obraca się i biegnie za motylkiem (300 px/s). Ramka pojawia się wcześniej (~1 s): gdy motylek jest jeszcze daleko, ucieka wolniej (0,075 → 0,055 → 0,035 → 0,02 px/ms), żeby piesek zdążył; okno klikania ok. 3,4 s.
+
+## 26. Brud na łapkach — okruchy zamiast siatki (v0.8.199)
+- `pawDirtMake()`: każda łapa ma własny, stały wzorzec 34 okruchów (ziarno losowania zależne od numeru łapy). Okruchy leżą bez siatki, mają 2–4 px, czasem są podłużne i mają doklejony drobny okruszek innego koloru. Gęściej leżą przy samej łapie, rzadziej dalej, a ok. 25% „wspina się” w górę nóżki.
+- Kolejność pojawiania się: od środka łapy na zewnątrz z dużą domieszką losowości, więc brud rozchodzi się nierówno, plamami. Progi (`thr`) są nadal rozłożone równo, więc każda łapa brudzi się w tym samym tempie.
+- Okruch, który wypada poza pieska, jest przysuwany do łapy, a gdy i to nie trafia w psa, pomijany.
