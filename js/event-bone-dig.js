@@ -28,12 +28,41 @@ function boneDigSchedule(first) {
     nextBoneDig = clock + a + Math.random() * (b - a);
 }
 
+// ── Chęć z dymka: kostka w dymku → piesek biegnie do (najbliższego) pokoju ogrodowego i kopie ──
+let boneWish = null; // { state: wait|go, at, expire }
+function boneWishOk() {
+    return !boneWish && !boneDig && !boneMole && clock >= boneGapUntil && !sadNeed();
+}
+function boneWishStart() {
+    boneWish = { state: "wait", at: clock + 2200, expire: clock + 45000 }; // chwila na zobaczenie dymku
+}
+function boneWishUpdate() {
+    const w = boneWish;
+    if (!w) return;
+    if (clock > w.expire || boneDig || sleeping || sadNeed()) {
+        boneWish = null;
+        return;
+    }
+    if (!casual() || gesture || menu.drag) return;
+    if (w.state === "wait") {
+        if (clock < w.at || dirty() || wildlifeBusy("boneDig")) return;
+        const here = order.indexOf(room),
+            near = GARDEN_ROOMS.slice().sort((a, b) => Math.abs(order.indexOf(a) - here) - Math.abs(order.indexOf(b) - here))[0];
+        w.state = "go";
+        route(near, null, "auto"); // także w tym samym pokoju: podejdzie na środek
+    } else if (GARDEN_ROOMS.includes(room) && x >= BONE_DIG.xMin && x <= BONE_DIG.xMax && !wildlifeBusy("boneDig") && !moleDirts[room]) {
+        boneWish = null;
+        boneDigSpawn();
+    }
+}
+
 function boneDigUpdate() {
     if (!loaded) return;
     if (room !== boneDigRoom) {
         boneDigRoom = room;
         boneDigSchedule(true);
     }
+    boneWishUpdate();
     if (boneDig) return;
     if (GARDEN_ROOMS.includes(room) && clock >= nextBoneDig && clock >= boneGapUntil && x >= BONE_DIG.xMin && x <= BONE_DIG.xMax && !moleDirts[room] && casual() && !sleeping && !dirty() && !sadNeed() && !menu.drag && !gesture && !wildlifeBusy("boneDig")) boneDigSpawn();
 }

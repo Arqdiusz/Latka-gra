@@ -212,3 +212,5 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Kret z kostką też jest rzadszy: pierwszy 60–150 s po wejściu do pokoju, kolejny po 4–6 min.
 - Kopanie jest „zajętą sceną” (`worldBusy`, `wildlifeBusy`): nikt inny się nie pojawia, piesek nie rusza na wycieczkę.
 - DEV: przycisk „Piesek kopie”.
+- Dymek z kostką (v0.8.194): ok. 2 s po pokazaniu piesek biegnie do najbliższego pokoju ogrodowego (z innego pokoju lub w tym samym, na środek) i tam kopie (`boneWishStart`/`boneWishUpdate`). Kostka trafia do puli dymków tylko wtedy, gdy kopanie jest możliwe (po wspólnym odstępie, bez smutku). Chęć wygasa po 45 s.
+- Po posprzątaniu kupy, piachu kreta, naczyń i po czystych łapkach w dymku jest serduszko (wcześniej gwiazdka).

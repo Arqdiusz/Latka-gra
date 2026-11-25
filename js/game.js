@@ -340,7 +340,9 @@ function bubbleWish() {
     if (butterfly?.free && !butterfly.lure && butterfly.plan) ctx.push("butterfly");
     if (moleTeaser || moleDirts[room]) ctx.push("mole");
     if (pawDirt >= PAW_DIRTY_AT && INDOOR_ROOMS.includes(room)) ctx.push("cloth"); // "umyj mi łapki"
-    const pool = ctx.length && Math.random() < 0.6 ? ctx : WISH_ICONS.filter((w) => w !== lastWish);
+    // kostka w dymku = piesek zaraz pobiegnie kopać, więc tylko gdy kopanie jest możliwe (odstęp, wolna scena)
+    const boneOk = typeof boneWishOk === "function" && boneWishOk();
+    const pool = ctx.length && Math.random() < 0.6 ? ctx : WISH_ICONS.filter((w) => w !== lastWish && (w !== "bone" || boneOk));
     return (lastWish = pool[Math.floor(Math.random() * pool.length)]);
 }
 
@@ -374,7 +376,9 @@ function bubbleThink() {
     }
     if (clock >= nextWishBubble) {
         nextWishBubble = clock + R.wishEveryMs + Math.random() * R.wishJitterMs;
-        say(bubbleWish(), R.showMs);
+        const wish = bubbleWish();
+        say(wish, R.showMs);
+        if (wish === "bone" && typeof boneWishStart === "function") boneWishStart(); // „chcę kopać” — biegnie do ogrodu
     }
 }
 
@@ -1466,7 +1470,7 @@ function pawsEnd(done) {
         // Brawo, czysty piesek: fanfary, konfetti i karta końcowa jak w grach
         $("#pawsWinPopup .memoWinImg").src = icons.cup;
         moleWinSpawnConfetti("#pawsWinPopup .moleWinConfetti");
-        say("star", 2600);
+        say("heart", 2600);
         startQueue([{ sheet: "a01", anim: 21, time: 600000 }]);
         phase = "paws-end";
         stage = "paws-end";
@@ -1607,7 +1611,7 @@ function cleanPoop() {
     if (Math.random() < POOP_GAG_CHANCE) poopGagAt = clock + POOP_GAG_DELAY_MS[0] + Math.random() * (POOP_GAG_DELAY_MS[1] - POOP_GAG_DELAY_MS[0]);
     changeNeeds(ACTION_EFFECTS.poop);
     updatePoopAccess();
-    say("star");
+    say("heart");
     save();
 }
 
@@ -2663,7 +2667,7 @@ function cleanMoleDirt() {
     delete moleDirts[room];
     changeNeeds(ACTION_EFFECTS.moleDirt);
     updateMoleDirtAccess();
-    say("star", 1600);
+    say("heart", 1600);
     // Dopiero teraz zaczyna się odliczanie do kolejnego kreta.
     nextMoleSpawn = clock + 7500 + Math.random() * 15000;
     save();
@@ -2694,7 +2698,7 @@ function cleanDish() {
     dishMess = null;
     updateMoleDirtAccess();
     sfx("wipe");
-    say("star", waiting ? 3200 : 1600);
+    say("heart", waiting ? 3200 : 1600);
     changeNeeds({ clean: 2 });
     save();
     if (waiting) dishResume(); // piesek wstaje, łapie piłkę i wraca
