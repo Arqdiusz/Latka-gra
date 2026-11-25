@@ -221,3 +221,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Uwaga: `clamp` w tej grze wymaga 3 argumentów (`clamp(v, min, max)`), bez domyślnych.
 - Czyszczenie łapek (v0.8.196): każda łapka, która zrobi się czysta, dostaje iskierki od razu (pierwsza, druga, …) i „plink”. Blobs brudu mają numer łapy (`paw`), `pawsDone` pilnuje, które już świeciły.
 - Karta „Brawo!” po łapkach pojawia się po ~0,9 s (żeby było widać ostatnie iskierki), z fanfarami i konfetti. Zamiast pucharu jest wesoły piesek („Radość z powrotem” a01, klatki wyrównane stopami), a przy jego łapkach mrugają iskierki (`pawsWinDogStart`).
+
+## 25. Motylek do złapania — nowy przebieg (v0.8.197)
+- Start: piesek spokojnie odchodzi pod bliższą ścianę (28% szerokości, jak przy krecie z kostką) i odwraca się do środka. Dopiero wtedy z przeciwnej strony nadlatuje motylek (przelot 9 s). Do tego czasu motylek czeka niewidoczny (`pending`), a scena jest zajęta. Jeśli piesek nie dojdzie pod ścianę w 8 s, motylek i tak leci.
+- Okno klikania: pulsująca ramka tylko wtedy, gdy pościg jest wykonalny (`butterflyPlan`): motylek musi być jeszcze przed pieskiem (≥ 40 px), a złapanie musi wypaść w ciągu 2,5 s. W praktyce ok. 2,5 s.
+- Po kliknięciu motylek zawraca i ucieka tam, skąd przyleciał (0,075 px/ms, spłoszony zygzak, „frrr”), a piesek biegnie za nim i łapie go w skoku (a02 „15”), potem motylek siada na nosie (a02 „18”) i odlatuje dalej w stronę ucieczki.
+- Niekliknięty motylek przelatuje nad pieskiem i znika za ekranem.

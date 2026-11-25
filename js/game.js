@@ -2017,16 +2017,15 @@ function autonomous() {
 
 /* ═══════════════════════════════════════════════════════════════
    MOTYLEK DO ZŁAPANIA ("Chwytanie motylka")
-   Co jakiś czas (garden/yard) przez ekran przelatuje motylek po linii
-   y≈BUTTERFLY_LINE_Y, otoczony delikatną, okrągłą, pulsującą ramką.
-   Piesek w tym czasie dalej robi swoje (nic go nie blokuje). Gdy gracz
-   kliknie motylka (dopóki nie przeleciał BUTTERFLY_CLICKABLE_UNTIL drogi),
-   piesek podbiega w odpowiednie miejsce, a potem rusza animacja chwytania
-   (butterflyCatch). Nieklikniętego motylka ramka znika i wylatuje za ekran.
+   Co jakiś czas (garden/yard): piesek odchodzi pod bliższą ścianę i odwraca
+   się, a z drugiej strony nadlatuje motylek po linii y≈BUTTERFLY_LINE_Y.
+   Pulsująca ramka = można kliknąć (tylko gdy pościg jest wykonalny —
+   butterflyPlan). Po kliknięciu motylek zawraca i ucieka tam, skąd
+   przyleciał, a piesek biegnie za nim i łapie go w skoku (butterflyCatch).
+   Nieklikniętego motylka ramka gaśnie, a on przelatuje nad pieskiem i znika.
    ═══════════════════════════════════════════════════════════════ */
 const BUTTERFLY_LINE_Y = 200,
-    BUTTERFLY_CROSS_MS = 7000, // przelot przez cały ekran
-    BUTTERFLY_CLICKABLE_UNTIL = 0.9, // ułamek drogi, do którego można go kliknąć
+    BUTTERFLY_CROSS_MS = 9000, // przelot przez cały ekran (od strony przeciwnej do pieska)
     BUTTERFLY_HIT_R = 58;
 
 // Zwierzaki ogrodowe (motylek do złapania, motylek-tło, kret, jeżyk): na
@@ -2064,51 +2063,71 @@ function wildlifeCooldown() {
     if (typeof nextBoneDig !== "undefined") nextBoneDig = Math.max(nextBoneDig, t);
 }
 
+// Start: piesek najpierw spokojnie odchodzi pod bliższą ścianę (jak przy krecie
+// z kostką), odwraca się — a z drugiej strony nadlatuje motylek. Do tego czasu
+// motylek „czeka” (pending, niewidoczny), a scena jest zajęta.
+const BUTTERFLY_DOG_EDGE = 0.28;
 function butterflySpawn() {
     if (butterfly || phase === "butterfly") return false;
     wildlifeCooldown();
-    const dir = Math.random() < 0.5 ? 1 : -1;
     catchButterflyColor = Math.floor(Math.random() * CFG.motyle.presets.length);
     catchButterflyStart = clock;
-    butterfly = { visible: true, free: true, x: dir > 0 ? -25 : W + 25, y: BUTTERFLY_LINE_Y, dir, start: clock, p: 0 };
+    const toLeft = x < 0.5,
+        ex = toLeft ? BUTTERFLY_DOG_EDGE : 1 - BUTTERFLY_DOG_EDGE,
+        dist = Math.abs(ex - x) * W;
+    butterfly = { visible: false, free: true, pending: true, start: clock, x: -100, y: BUTTERFLY_LINE_Y, dir: toLeft ? -1 : 1, p: 0 };
+    if (dist < 4 || !casual()) return butterflyEmerge(), true;
+    interrupt();
+    phase = "roam";
+    locks();
+    startQueue([{ sheet: "a01", anim: 6, motion: "walk", to: ex, time: (dist / 60) * 1000, onEnd: () => butterflyEmerge() }]);
     return true;
 }
+function butterflyEmerge() {
+    const b = butterfly;
+    if (!b?.pending) return;
+    b.pending = false;
+    b.visible = true;
+    b.dir = x < 0.5 ? -1 : 1; // leci w stronę pieska (piesek stoi przy ścianie)
+    b.x = b.dir > 0 ? -25 : W + 25;
+    b.start = catchButterflyStart = clock;
+    b.p = 0;
+    b.turn = true; // piesek odwróci się w stronę motylka (w pętli, poza onEnd kolejki)
+}
 
-// Swobodny przelot (zanim gracz go kliknie) — wołane co klatkę z loopFrame().
+// Lot przed kliknięciem i ucieczka po kliknięciu — wołane co klatkę z loopFrame().
 const BUTTERFLY_SPEED = (W + 50) / BUTTERFLY_CROSS_MS; // px/ms
-const LURE_SPEED = 2; // po kliknięciu motylek leci do punktu pościgu 2x szybciej
+const BUTTERFLY_FLEE_SPEED = 0.075; // px/ms — spłoszony ucieka trochę szybciej
 const CATCH_MIN_WAIT = 250; // ms patrzenia na motylka tuż przed skokiem
 
-// Plan "Chwytania motylka": motylek leci dalej swoim torem, a to PIESEK
-// ustawia się tak, żeby w chwili T motylek był dokładnie tam, gdzie grafika
-// pościgu (a02/14) ma zielony znacznik. Szukamy kierunku pieska (dir) i czasu
-// T (0,9–3,5 s) o najmniejszym koszcie — krótki czas, bez cofania się tyłem.
+// Plan pogoni: po kliknięciu motylek zawraca i ucieka tam, skąd przyleciał
+// (dir = -b.dir), a piesek biegnie za nim tak, żeby w chwili T motylek był
+// dokładnie tam, gdzie grafika pościgu (a02/14) ma zielony znacznik. Piesek
+// nigdy nie cofa się tyłem; brak planu = motylka nie da się teraz kliknąć.
 function butterflyPlan() {
     const b = butterfly;
-    if (!b?.free || b.lure) return null;
+    if (!b?.free || b.lure || b.pending) return null;
     const first = numbers(getPreset("a02", 14).seq)[0],
-        bd = b.dir > 0 ? 1 : -1;
-    let best = null;
-    for (const dir of [1, -1]) {
-        const A = catchSpotFor("a02", first, 0.5, dir < 0)?.x - 0.5 * W;
-        if (!isFinite(A)) return null;
-        const [lo, hi] = CATCH_ZONE[dir];
-        for (let T = 900; T <= 3500; T += 100) {
-            if (b.p + (LURE_SPEED * T) / BUTTERFLY_CROSS_MS > 0.92) break;
-            const sx = b.x + bd * BUTTERFLY_SPEED * LURE_SPEED * T;
-            let xd = (sx - A) / W;
-            if (xd < lo || xd > hi) continue;
-            let dist = Math.abs(xd - x) * W;
-            if (dist < 6) xd = x;
-            const back = dist >= 6 && (xd - x) * dir < 0;
-            const walk = dist < 48,
-                m = dist < 6 ? 0 : walk ? (dist / 60) * 1000 : Math.max(350, (dist / 260) * 1000);
-            if (m + CATCH_MIN_WAIT + (back ? 250 : 0) > T) continue; // back: bieg przodem do celu i dopiero obrót
-            const c = T + dist * 2 + (back ? 1500 : 0) + ((dir < 0) !== left && dist < 6 ? 150 : 0);
-            if (!best || c < best.cost) best = { dir, T, xd, m, walk, dist, cost: c, spot: { x: sx, y: catchSpotFor("a02", first, xd, dir < 0)?.y ?? 231 } };
-        }
+        dir = b.dir > 0 ? -1 : 1,
+        A = catchSpotFor("a02", first, 0.5, dir < 0)?.x - 0.5 * W;
+    if (!isFinite(A)) return null;
+    // motylek musi być jeszcze przed pieskiem (nie przeleciał nad nim)
+    if ((b.x - x * W) * dir < 40) return null;
+    const [lo, hi] = CATCH_ZONE[dir];
+    for (let T = 600; T <= 2500; T += 100) {
+        const sx = b.x + dir * BUTTERFLY_FLEE_SPEED * T;
+        if (sx < 24 || sx > W - 24) break;
+        let xd = (sx - A) / W;
+        if (xd < lo || xd > hi) continue;
+        const dist = Math.abs(xd - x) * W;
+        if (dist < 6) xd = x;
+        else if ((xd - x) * dir < 0) continue; // motylek za plecami — piesek by się cofał
+        const walk = dist < 48,
+            m = dist < 6 ? 0 : walk ? (dist / 60) * 1000 : Math.max(350, (dist / 260) * 1000);
+        if (m + CATCH_MIN_WAIT > T) continue;
+        return { dir, T, xd, m, walk, dist, spot: { x: sx, y: catchSpotFor("a02", first, xd, dir < 0)?.y ?? 231 } };
     }
-    return best;
+    return null;
 }
 
 function butterflyFreeUpdate() {
@@ -2119,30 +2138,40 @@ function butterflyFreeUpdate() {
         nextButterfly = clock + 10000;
         return;
     }
-    if (b.lure?.done) return;
-    const p = b.lure ? b.lure.p0 + (LURE_SPEED * (clock - b.lure.t0)) / BUTTERFLY_CROSS_MS : (clock - b.start) / BUTTERFLY_CROSS_MS;
-    if (p >= 1) {
-        butterfly = null;
-        nextButterfly = clock + 12500 + Math.random() * 17500;
+    if (b.pending) {
+        // piesek nie doszedł pod ścianę (np. ktoś go pogłaskał) — motylek i tak leci
+        if (clock - b.start > 8000 && casual()) butterflyEmerge();
         return;
     }
-    const x0 = b.dir > 0 ? -25 : W + 25,
-        x1 = b.dir > 0 ? W + 25 : -25;
-    b.p = p;
-    b.x = x0 + (x1 - x0) * p;
-    b.y = BUTTERFLY_LINE_Y + Math.sin(p * Math.PI * 4) * 13;
+    if (b.turn && casual() && !gesture) {
+        b.turn = false;
+        interrupt();
+        phase = "look";
+        locks();
+        startQueue([{ sheet: "a01", anim: 16, facing: b.dir > 0, time: BUTTERFLY_CROSS_MS }]);
+    }
+    if (b.lure?.done) return;
     if (b.lure) {
-        // wysokość łagodnie schodzi do wysokości znacznika pościgu
-        const t = clamp((clock - b.lure.t0) / b.lure.T, 0, 1),
+        // ucieczka: zawraca i leci tam, skąd przyleciał; spłoszony zygzak zerowy
+        // na początku i na końcu — kończy dokładnie w punkcie pościgu
+        const L = b.lure,
+            el = clock - L.t0,
+            t = clamp(el / L.T, 0, 1),
             e = t * t * (3 - 2 * t);
-        b.y = b.y + (b.lure.spot.y - b.y) * e;
-        // Spłoszony zygzak (jak ucieczka motylków-tła): sinusoidalne
-        // wygięcia toru, zerowe dokładnie na początku i na końcu, więc motylek
-        // startuje z miejsca kliknięcia i kończy dokładnie w punkcie pościgu.
-        const z = Math.sin(t * Math.PI * 2 * b.lure.cycles);
-        b.y += z * b.lure.amp;
-        b.x += Math.sin(t * Math.PI * 4 * b.lure.cycles) * 5;
+        b.x = L.x0 + L.dir * BUTTERFLY_FLEE_SPEED * Math.min(el, L.T) + Math.sin(t * Math.PI * 4 * L.cycles) * 5;
+        b.y = L.y0 + (L.spot.y - L.y0) * e + Math.sin(t * Math.PI * 2 * L.cycles) * L.amp;
     } else {
+        const p = (clock - b.start) / BUTTERFLY_CROSS_MS;
+        if (p >= 1) {
+            butterfly = null;
+            nextButterfly = clock + 12500 + Math.random() * 17500;
+            return;
+        }
+        const x0 = b.dir > 0 ? -25 : W + 25,
+            x1 = b.dir > 0 ? W + 25 : -25;
+        b.p = p;
+        b.x = x0 + (x1 - x0) * p;
+        b.y = BUTTERFLY_LINE_Y + Math.sin(p * Math.PI * 4) * 13;
         b.plan = casual() && !dirty() ? butterflyPlan() : null;
     }
     b.ringA = clamp((b.ringA || 0) + ((b.plan && !b.lure ? 1 : -1) * (clock - (b.lc ?? clock))) / 300, 0, 1);
@@ -2151,7 +2180,7 @@ function butterflyFreeUpdate() {
 
 function butterflyHit(px, py) {
     const b = butterfly;
-    return !!(b?.free && !b.lure && b.plan && b.ringA > 0.2 && Math.hypot(px - b.x, py - b.y) <= BUTTERFLY_HIT_R);
+    return !!(b?.free && !b.pending && !b.lure && b.plan && b.ringA > 0.2 && Math.hypot(px - b.x, py - b.y) <= BUTTERFLY_HIT_R);
 }
 
 // Delikatna, okrągła, pulsująca ramka wokół klikalnego motylka.
@@ -2213,16 +2242,20 @@ function butterflyCatch() {
     phase = "butterfly";
     bubble = null;
     locks();
-    const { dir, xd, T, walk, dist, m } = pl;
+    const { dir, xd, T, walk, dist, m } = pl; // dir = kierunek ucieczki motylka i biegu pieska
     b.lure = {
         t0: clock,
-        p0: b.p,
+        x0: b.x,
+        y0: b.y,
+        dir,
         T,
         spot: pl.spot,
         done: false,
         cycles: clamp(Math.round(T / 450), 2, 6), // liczba zygzaków
         amp: (10 + Math.random() * 10) * (Math.random() < 0.5 ? 1 : -1),
     };
+    b.dir = dir; // zawraca: grafika patrzy w stronę ucieczki
+    sfx("throw"); // frrr — spłoszony
     const parts = [];
     if (dist >= 6)
         parts.push({
