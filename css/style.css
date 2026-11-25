@@ -3352,3 +3352,151 @@ h3,
     25% { transform: translateX(-6px); }
     75% { transform: translateX(6px); }
 }
+
+/* ── Wybór poziomu (Pamięć motylków, Znajdź pary): karta jak okienko kreta ── */
+.memoLevels.lvPick,
+.pairsLevels.lvPick {
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    gap: 0;
+    overflow: visible;
+    background: #3b2e3c38;
+    font-family: "Baloo 2", "Quicksand", sans-serif;
+}
+.lvPick[hidden] {
+    display: none !important;
+}
+.lvTitle {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px 6px 8px;
+    border: 3px solid white;
+    border-radius: 24px;
+    background: #fff8ea;
+    box-shadow: 0 4px 0 #0002;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1;
+    color: #4a2f1d;
+}
+.lvIcon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+}
+.lvCard {
+    width: min(100%, 346px);
+    box-sizing: border-box;
+    padding: 14px 18px 18px;
+    background: #fff8ea;
+    border: 5px solid white;
+    border-radius: 30px;
+    box-shadow: 0 6px #0002;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 28px;
+}
+.lvChase {
+    display: block;
+    width: 100%;
+    aspect-ratio: 288 / 136;
+    border-radius: 18px;
+    image-rendering: pixelated;
+}
+.lvCard h3 {
+    margin: 0;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: #3c5a28;
+}
+.lvPick .memoGrid {
+    gap: 10px;
+    margin-top: 0;
+}
+.lvPick .memoTile {
+    padding: 10px 8px 12px;
+    border: 3px solid #e2d4b4;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 4px 0 #e2d4b4;
+    gap: 1px;
+}
+.lvPick .memoStars {
+    font-size: 26px;
+    letter-spacing: 3px;
+}
+.lvPick .memoTileTxt {
+    font-size: 20px;
+}
+.lvPick .memoTileStats {
+    flex-wrap: nowrap;
+    gap: 2px 12px;
+    margin-top: 1px;
+}
+.lvPick .memoTileStat {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 4px;
+}
+.lvPick .memoTileStat i {
+    font-size: 11px;
+}
+.lvPick .memoTileStat b {
+    font-size: 14px;
+}
+.lvPick .memoTileNew {
+    font-size: 13px;
+}
+.lvPick .memoTileCup {
+    right: 10px;
+    top: 10px;
+    width: 30px;
+    height: 30px;
+    transform: none;
+}
+.lvPick .lvBack {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    height: auto;
+    min-height: 60px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    background: var(--b);
+    color: white;
+    font: 700 21px "Baloo 2", sans-serif;
+    box-shadow: 0 5px 0 var(--sh);
+    cursor: pointer;
+}
+.lvPick .lvBack:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 var(--sh);
+}
+.lvPick .lvBack::before {
+    content: "";
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15 4l-8 8 8 8' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15 4l-8 8 8 8' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.lvPick .memoTileStats.col {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+.lvPick .memoTileStat b {
+    white-space: nowrap;
+}

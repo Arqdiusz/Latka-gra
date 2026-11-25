@@ -124,8 +124,7 @@ function pairsShowLevels() {
             R = pairsRecords(),
             has = R.bestT[i] !== undefined,
             stats = has
-                ? '<span class="pairsTileStats"><i></i><i>Czas</i><i>Próby</i><i>Rekord</i><b class="rec">' + pairsFmt(R.bestT[i]) + '</b><b class="rec">' + R.bestN[i] +
-                  "</b><i>Ostatnio</i><b>" + pairsFmt(R.lastT[i]) + "</b><b>" + R.lastN[i] + "</b></span>"
+                ? '<span class="memoTileStats col"><span class="memoTileStat"><i>Rekord</i><b>' + pairsFmt(R.bestT[i]) + " · " + R.bestN[i] + ' prób</b></span><span class="memoTileStat"><i>Ostatnio</i><b>' + pairsFmt(R.lastT[i]) + " · " + R.lastN[i] + " prób</b></span></span>"
                 : '<span class="memoTileStats memoTileNew">Jeszcze bez wyniku</span>';
         b.className = "memoTile";
         b.innerHTML =
@@ -140,6 +139,7 @@ function pairsShowLevels() {
     });
     pairsLevelsShownAt = Date.now();
     $(".pairsLevels").hidden = false;
+    levelPickOpen($(".pairsLevels"), "memory");
 }
 $(".pairsLevelsClose").onclick = () => {
     $(".pairsLevels").hidden = true;

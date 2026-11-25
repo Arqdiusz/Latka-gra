@@ -295,3 +295,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 ## 35. Wpisana liczba zostaje po przełączeniu dywanika (v0.8.217)
 - Liczba wpisana w „?” zostaje na swoim dywaniku, gdy dziecko przełączy się na drugi (bez zielonego OK). Po powrocie można ją poprawić (⌫) albo zatwierdzić. OK nadal sprawdza tylko aktualnie wybrane pole.
 - v0.8.218: jedno zielone OK sprawdza wszystkie dywaniki naraz. Dobre zostają zielone, złe mrugają na czerwono i wracają do „?” (wybrane jest wtedy pierwsze złe). Jeśli obie liczby są dobre — od razu pokazuje się działanie. Wynik działania nadal zatwierdza się własnym OK.
+
+## 36. Nowy wybór poziomu: Pamięć motylków i Znajdź pary (v0.8.219)
+- Ekran wyboru poziomu to jasna karta na przyciemnionej grze (jak okienko kreta i menu kostek). W lewym górnym rogu pastylka z ikoną i nazwą gry: „Pamięć motylków” (ikona motylka) i „Znajdź pary” (ikona kart/pamięci).
+- U góry karty pas trawy z pościgiem: piesek biegnie (a01 „02. Bieg”, klatki 3,4,9,10) i goni motylka (losowy kolor, klatki z `CFG.motyle`). Rysuje to `js/level-pick.js` (jedna pętla, sama się zatrzymuje, gdy ekran jest zamknięty).
+- Poziomy to duże, wyśrodkowane przyciski: gwiazdki, nazwa, rekord i ostatni wynik (w Parach dwa wiersze: rekord i ostatnio — czas · próby); puchar za ukończony poziom w rogu. Na dole czerwony „‹ Wróć” (zamiast kółka ✕).
+- Ochrona przed „przelotem” kliknięcia (700 ms) bez zmian.
