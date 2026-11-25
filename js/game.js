@@ -383,7 +383,8 @@ function bubbleThink() {
 }
 
 const NEEDS_KEY = "latka-potrzeby-v1";
-const NEEDS_DECAY = { food: 1.1, water: 1.3, fun: 1.2, sleep: 0.8, clean: 0.9 };
+// TYMCZASOWO clean: 8 (test brudu na sierści) — normalnie 0.9
+const NEEDS_DECAY = { food: 1.1, water: 1.3, fun: 1.2, sleep: 0.8, clean: 8 };
 const ACTION_EFFECTS = {
     food: { food: 100, water: -3 }, // karmienie najada do pełna
     water: { water: 35 },
@@ -1343,11 +1344,102 @@ function drawDog(c, cx = x * W, gy = GROUND + jumpY, facing = left, ratio = 1) {
     c.scale(g.s * ratio, g.s * ratio);
     c.imageSmoothingEnabled = false;
     c.drawImage(cells[sheet][g.f - 1], -g.w / 2, -g.g);
+    const fl = furLevel();
+    if (fl > 0.02) c.drawImage(furOverlay(sheet, g.f, Math.max(1, Math.round((fl / FUR_MAX) * FUR_STEPS))), -g.w / 2, -g.g);
     if (pawDirt >= 4) {
         c.translate(-g.w / 2, -g.g);
         pawDirtDraw(c, sheet, g.f, pawDirt / 100);
     }
     c.restore();
+}
+
+// ── Brud na sierści (zależny od czystości) ──────────────────────
+// Liczony z samej klatki, bez dodatkowych grafik: zaschnięte błoto narasta od
+// dolnych krawędzi (brzuszek, łapki od spodu) w górę, z nierównym, plamistym
+// brzegiem (szum) i jaśniejszymi okruchami. Obrys zostaje czysty, cieniowanie
+// sierści prześwituje. 8 poziomów, każdy jako gotowa nakładka (cache).
+// Czystość 65 → brak brudu, 15 i mniej → najmocniej. Kąpiel (100) zmywa.
+const FUR_MUD = [146, 108, 68],
+    FUR_DRY = [200, 166, 116],
+    FUR_STEPS = 8,
+    FUR_MAX = 1.05,
+    furPixCache = {},
+    furOverCache = {};
+let furGrid = null;
+function furLevel() {
+    return clamp((65 - stats.clean) / 50, 0, FUR_MAX);
+}
+function furNoise(x, y) {
+    if (!furGrid) {
+        let seed = 777;
+        const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+        furGrid = Array.from({ length: 64 * 64 }, rnd);
+    }
+    const G = 6,
+        gx = x / G,
+        gy = y / G,
+        i = Math.floor(gx),
+        j = Math.floor(gy),
+        s = (t) => t * t * (3 - 2 * t),
+        fx = s(gx - i),
+        fy = s(gy - j),
+        v = (a, b) => furGrid[(((b + 64) % 64) * 64 + ((a + 64) % 64)) | 0],
+        a = v(i, j) * (1 - fx) + v(i + 1, j) * fx,
+        b = v(i, j + 1) * (1 - fx) + v(i + 1, j + 1) * fx;
+    return a * (1 - fy) + b * fy;
+}
+function furPixels(sh, f) {
+    const key = sh + f;
+    if (furPixCache[key]) return furPixCache[key];
+    const cell = cells[sh][f - 1],
+        w = cell.width,
+        h = cell.height,
+        src = cell.getContext("2d").getImageData(0, 0, w, h).data,
+        op = (x, y) => y < h && src[(y * w + x) * 4 + 3] > 128,
+        out = [];
+    let x0 = w;
+    for (let x = 0; x < w && x0 === w; x++) for (let y = 0; y < h; y++) if (op(x, y)) { x0 = x; break; }
+    for (let x = 0; x < w; x++) {
+        let below = 0; // ile pikseli psa ciągnie się pod spodem (od dołu kolumny w górę)
+        for (let y = h - 1; y >= 0; y--) {
+            if (!op(x, y)) { below = 0; continue; }
+            const i = (y * w + x) * 4,
+                r = src[i], g = src[i + 1], b = src[i + 2];
+            const d = below;
+            below++;
+            if (r + g + b < 90) continue; // obrys zostaje czysty
+            const qx = Math.floor((x - x0) / 3) * 3,
+                qy = Math.floor(y / 3) * 3,
+                score = d / 13 + furNoise(qx, qy) * 0.9 - 0.25;
+            if (score >= FUR_MAX * 1.25) continue;
+            const sp = furGrid[((qx / 3) * 7 + (qy / 3) * 13) % furGrid.length];
+            out.push({ i, score, r, g, b, dry: sp < 0.07 });
+        }
+    }
+    return (furPixCache[key] = { w, h, px: out });
+}
+function furOverlay(sh, f, step) {
+    const key = sh + f + "_" + step;
+    if (furOverCache[key]) return furOverCache[key];
+    const { w, h, px } = furPixels(sh, f),
+        L = (step / FUR_STEPS) * FUR_MAX,
+        cv = document.createElement("canvas");
+    cv.width = w;
+    cv.height = h;
+    const c = cv.getContext("2d"),
+        im = c.createImageData(w, h),
+        d = im.data;
+    for (const p of px) {
+        if (p.score >= L * 1.25) continue;
+        const k = p.score < L * 1.25 - 0.22 ? 0.72 : 0.45,
+            col = p.dry && p.score < L ? FUR_DRY : [p.r + (FUR_MUD[0] - p.r) * k, p.g + (FUR_MUD[1] - p.g) * k, p.b + (FUR_MUD[2] - p.b) * k];
+        d[p.i] = col[0];
+        d[p.i + 1] = col[1];
+        d[p.i + 2] = col[2];
+        d[p.i + 3] = 255;
+    }
+    c.putImageData(im, 0, 0);
+    return (furOverCache[key] = cv);
 }
 
 // Grudki ziemi na łapkach — liczone z każdej klatki (najniższe piksele sierści
@@ -1458,6 +1550,25 @@ let pawsPtr = null, // poprzedni punkt przeciągania (do liczenia drogi)
 function updatePawsUi() {
     const e = $(".pawsEnd");
     if (e) e.hidden = phase !== "paws-clean";
+    if (phase !== "paws-clean") pawsZoom(false);
+}
+// Kamera na łapki: cała scena (tło + piesek) przybliżona tak, żeby łapki były na
+// środku. Dotyk dalej trafia, bo pointerXY liczy z przybliżonego prostokąta canvasu.
+const PAWS_ZOOM = 2.1;
+let pawsZoomed = false;
+function pawsZoom(on) {
+    if (on === pawsZoomed) return;
+    pawsZoomed = on;
+    const el = $(".sceneZoom");
+    if (!on) return (el.style.transform = "");
+    const pts = pawScreenPoints();
+    if (!pts.length) return (pawsZoomed = false);
+    const cx = pts.reduce((a, p) => a + p.x, 0) / pts.length,
+        cy = pts.reduce((a, p) => a + p.y, 0) / pts.length - 12,
+        Z = PAWS_ZOOM,
+        tx = clamp((0.5 - (cx / W) * Z) * 100, (1 - Z) * 100, 0),
+        ty = clamp((0.6 - (cy / SH) * Z) * 100, (1 - Z) * 100, 0);
+    el.style.transform = `translate(${tx}%, ${ty}%) scale(${Z})`;
 }
 function pawsStart() {
     if (room !== "bathroom" || pawDirt < 3) return idle(16);
@@ -1474,6 +1585,7 @@ function pawsStart() {
                 phase = "paws-clean";
                 stage = "paws-clean";
                 locks();
+                pawsZoom(true);
             },
             onEnd: () => phase === "paws-clean" && pawsEnd(false),
         },

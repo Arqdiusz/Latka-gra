@@ -233,3 +233,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - `pawDirtMake()`: każda łapa ma własny, stały wzorzec 34 okruchów (ziarno losowania zależne od numeru łapy). Okruchy leżą bez siatki, mają 2–4 px, czasem są podłużne i mają doklejony drobny okruszek innego koloru. Gęściej leżą przy samej łapie, rzadziej dalej, a ok. 25% „wspina się” w górę nóżki.
 - Kolejność pojawiania się: od środka łapy na zewnątrz z dużą domieszką losowości, więc brud rozchodzi się nierówno, plamami. Progi (`thr`) są nadal rozłożone równo, więc każda łapa brudzi się w tym samym tempie.
 - Okruch, który wypada poza pieska, jest przysuwany do łapy, a gdy i to nie trafia w psa, pomijany.
+
+## 27. Brud na sierści i kamera na łapki (v0.8.200)
+- Brud na sierści (`furLevel`, `furPixels`, `furOverlay` w `game.js`) liczy się z samej klatki, bez dodatkowych grafik. Zaschnięte błoto narasta od dolnych krawędzi (brzuszek, łapki od spodu, też spód ucha i podbródek) w górę, z plamistym brzegiem (szum na siatce 3 px) i jaśniejszymi okruchami. Obrys zostaje czysty.
+- Zależy od czystości: przy 65 brudu nie ma, przy 15 i mniej jest najmocniejszy. 8 poziomów, każdy jako gotowa nakładka (cache). Kąpiel w bańkach (czystość 100) zmywa wszystko.
+- **TYMCZASOWO** `NEEDS_DECAY.clean = 8` (normalnie 0.9), żeby szybko zobaczyć brud. Przed oddaniem gry przywrócić 0.9.
+- Czyszczenie łapek: kamera zbliża się na łapki (`pawsZoom`, ×2,1, płynnie 0,6 s). Przybliżana jest cała scena (`.sceneZoom` = tło + canvas), więc dotyk szmatki trafia jak wcześniej (`pointerXY` liczy z przybliżonego prostokąta canvasu). Kamera wraca po zakończeniu lub po ✕.

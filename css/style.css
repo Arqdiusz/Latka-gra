@@ -765,6 +765,14 @@ body {
     background: #5f8a44;
 }
 
+/* Tło + piesek razem — przy czyszczeniu łapek kamera zbliża się do łapek (pawsZoom) */
+.sceneZoom {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+    transition: transform 0.6s ease;
+}
+
 .roomTrack {
     position: absolute;
     inset: 0;
