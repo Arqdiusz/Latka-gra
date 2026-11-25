@@ -16,7 +16,8 @@
 const BONES_LEVELS = [
         { name: "Łatwy", info: "liczby do 5", max: 5, hide: false },
         { name: "Średni", info: "liczby do 10", max: 10, hide: false },
-        { name: "Trudny", info: "do 10, kostki znikają po 3 s", max: 10, hide: true },
+        { name: "Trudny", info: "do 10, kostki znikają — liczysz w głowie", max: 10, hide: true },
+        { name: "Sprawdzian", info: "do 10, bez kostek, czegoś brakuje", max: 10, test: true },
     ],
     BONES_ROUNDS = 5,
     BONES_DOG = { x: 192, y: 332, scale: 1.25 }, // stopy pieska na trawie, tuż nad dywanikami
@@ -144,7 +145,7 @@ function bonesBuildMenu() {
         const b = document.createElement("button");
         b.className = "bonesLvl";
         b.setAttribute("aria-pressed", i === bonesLevel);
-        b.innerHTML = "<span>" + l.name + "<small>" + l.info + '</small></span><span class="dots">' + [0, 1, 2].map((j) => '<i class="' + (j <= i ? "on" : "") + '"></i>').join("") + "</span>";
+        b.innerHTML = "<span>" + l.name + "<small>" + l.info + '</small></span><span class="dots">' + [0, 1, 2, 3].map((j) => '<i class="' + (j <= i ? "on" : "") + '"></i>').join("") + "</span>";
         b.onclick = () => {
             bonesLevel = i;
             box.querySelectorAll(".bonesLvl").forEach((c, j) => c.setAttribute("aria-pressed", j === i));
@@ -200,6 +201,10 @@ function bonesRound() {
         g.A = bonesRnd(2, m);
         g.B = bonesRnd(1, g.A - 1);
     }
+    // sprawdzian: ta sama trójka liczb, ale w działaniu brakuje losowo jednej z nich
+    g.C = bonesOp === "+" ? g.A + g.B : g.A - g.B;
+    g.unk = lv.test ? ["a", "b", "c"][bonesRnd(0, 2)] : "c";
+    document.querySelectorAll(".bonesPile").forEach((p) => (p.style.display = lv.test ? "none" : ""));
     g.okA = g.okB = false;
     g.ready = false;
     clearTimeout(g.coverT);
@@ -232,7 +237,7 @@ function bonesRound() {
     bonesAnim(...back, bonesPart("dig", { time: 0, face: 1 }), ...bonesDigParts());
     clearTimeout(g.dropT);
     g.dropT = setTimeout(() => {
-        if (bonesGame !== g) return;
+        if (bonesGame !== g || lv.test) return;
         bonesDropBones($(".bonesPile.a"), g.A);
         bonesDropBones($(".bonesPile.b"), g.B);
         $(".bonesHint").textContent = "Patrz, ile kostek spada!";
@@ -241,15 +246,10 @@ function bonesRound() {
     g.readyT = setTimeout(() => {
         if (bonesGame !== g) return;
         g.ready = true;
+        if (lv.test) return bonesShowEq(); // bez kostek: od razu działanie z brakującą liczbą
         document.querySelectorAll(".bonesQ").forEach((q) => (q.style.visibility = "visible"));
-        $(".bonesHint").textContent = lv.hide ? "Policz szybko — zaraz przykryje je piasek!" : "Dotknij dywanik i wpisz, ile jest kostek.";
-        if (lv.hide)
-            g.coverT = setTimeout(() => {
-                if (bonesGame !== g) return;
-                document.querySelectorAll(".bonesPile").forEach((p) => p.classList.add("cover"));
-                $(".bonesHint").textContent = "Pamiętasz? Dotknij dywanik i wpisz.";
-            }, 3000);
-    }, dug + fall + 150);
+        $(".bonesHint").textContent = "Dotknij dywanik i wpisz, ile jest kostek.";
+    }, dug + (lv.test ? 300 : fall + 150));
 }
 
 function bonesDropBones(pile, n) {
@@ -283,8 +283,8 @@ function bonesPileTap(which) {
         q.className = "bonesQ ok";
         if (which === "a") g.okA = true;
         else g.okB = true;
-        // po dobrej liczbie kostki wracają (trudny poziom), żeby było widać działanie
-        document.querySelectorAll(".bonesPile").forEach((p) => p.classList.remove("cover"));
+        // trudny poziom: gdy obie liczby są wpisane, kostki się chowają — wynik w głowie
+        if (g.okA && g.okB && BONES_LEVELS[bonesLevel].hide) document.querySelectorAll(".bonesPile").forEach((p) => p.classList.add("cover"));
         sfx("good");
         if (g.okA && g.okB) bonesShowEq();
         else $(".bonesHint").textContent = "Super! Teraz drugi dywanik.";
@@ -298,16 +298,21 @@ function bonesShowEq() {
     const g = bonesGame,
         el = $(".bonesEq");
     clearTimeout(g.coverT);
-    $(".bonesHint").textContent = "Ile to razem? Dotknij kratkę.";
-    if (bonesOp === "-") $(".bonesHint").textContent = "Ile zostanie? Dotknij kratkę.";
+    const lv = BONES_LEVELS[bonesLevel],
+        vals = { a: g.A, b: g.B, c: g.C },
+        target = vals[g.unk],
+        slot = (k) => (k === g.unk ? '<button class="bonesRes" aria-label="Wpisz brakującą liczbę">?</button>' : '<span class="n">' + vals[k] + "</span>");
+    $(".bonesHint").textContent = lv.test ? "Czego brakuje? Dotknij kratkę." : bonesOp === "-" ? "Ile zostanie? Dotknij kratkę." : "Ile to razem? Dotknij kratkę.";
+    if (lv.hide) $(".bonesHint").textContent = "Kostki się schowały — policz w głowie. Dotknij kratkę.";
     el.className = "bonesEq in";
-    el.innerHTML = '<span class="n">' + g.A + "</span><span>" + bonesSign() + '</span><span class="n">' + g.B + '</span><span>=</span><button class="bonesRes" aria-label="Wpisz wynik">?</button>';
+    el.innerHTML = slot("a") + "<span>" + bonesSign() + "</span>" + slot("b") + "<span>=</span>" + slot("c");
     el.querySelector(".bonesRes").onclick = () => {
         if (!$(".bonesPad").hidden || el.querySelector(".bonesRes.ok")) return;
-        bonesPadOpen(bonesResult(), () => {
+        bonesPadOpen(target, () => {
             const r = el.querySelector(".bonesRes");
-            r.textContent = bonesResult();
+            r.textContent = target;
             r.classList.add("ok");
+            document.querySelectorAll(".bonesPile").forEach((p) => p.classList.remove("cover")); // kostki wracają — można sprawdzić
             g.round++;
             bonesStarsDraw();
             sfx("win"); // fanfary po każdym dobrym wyniku
@@ -390,7 +395,7 @@ function bonesPress(k) {
 // ── Koniec ────────────────────────────────────────────────────────
 function bonesWin() {
     const lv = BONES_LEVELS[bonesLevel];
-    $("#bonesWinPopup .bonesWinTxt").textContent = BONES_ROUNDS + " działań, " + (bonesOp === "+" ? "dodawanie" : "odejmowanie") + ", poziom " + lv.name.toLowerCase() + ".";
+    $("#bonesWinPopup .bonesWinTxt").textContent = BONES_ROUNDS + " działań, " + (bonesOp === "+" ? "dodawanie" : "odejmowanie") + ", poziom: " + lv.name.toLowerCase() + ".";
     $("#bonesWinPopup .memoWinImg").src = icons.cup;
     moleWinSpawnConfetti("#bonesWinPopup .moleWinConfetti");
     $("#bonesWinPopup").hidden = false;
