@@ -2946,6 +2946,9 @@ h3,
     color: #fff;
     box-shadow: 0 4px 0 #2f8a3a;
 }
+.bonesPad.idle .bonesKey {
+    opacity: 0.55;
+}
 .bonesKey.del {
     background: #ffe3e0;
     border-color: #d9857f;

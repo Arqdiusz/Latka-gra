@@ -280,3 +280,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Pod belką: „Dodajemy i odejmujemy kostki. Policzymy razem?”, potem zielony „▶ Liczymy!” i czerwony „‹ Wróć”. Wszystko blisko siebie (karta ma wysokość zawartości, wyśrodkowana).
 - Ochrona przed „przelotem” kliknięć (700 ms) działa jak dotąd.
 - v0.8.214: karta wyboru nie ma paska przewijania (`overflow: visible` — wspólna reguła `.moleCard` dawała `overflow-y: auto`); lista poziomów jest niższa (wiersze 38 px), więc w całości mieści się w karcie.
+
+## 33. Liczenie kostek — klawiatura od początku i przełączanie dywaników (v0.8.215)
+- Klawiatura jest widoczna od początku rundy (przyciemniona i nieaktywna, gdy żadne pole nie jest wybrane — np. gdy piesek jeszcze kopie). Znika dopiero po poprawnym wyniku, żeby zrobić miejsce na „Dalej”, i wraca z następną rundą.
+- Gdy kostki spadną, sam jest wybrany lewy dywanik: jego „?” jest większe i mruga, drugie stoi spokojnie. Dotknięcie drugiego dywanika w dowolnej chwili przełącza pisanie na niego; to, co było wpisane (jeszcze niezatwierdzone), wraca do „?”.
+- Po zatwierdzeniu liczby sam wybiera drugi dywanik; po obu liczbach pokazuje działanie i od razu wybiera kratkę wyniku (można ją też dotknąć ponownie).
+- Piesek się rozgląda tylko, gdy jakieś pole jest wybrane (nie przez całą rundę).

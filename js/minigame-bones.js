@@ -102,7 +102,7 @@ function bonesDraw(now) {
 }
 // pętla „czekania” zależna od chwili gry: przy otwartej klawiaturze piesek
 // się rozgląda, a poza nią bawi się kostką
-const bonesWait = () => bonesPart(bonesGame && !$(".bonesPad").hidden ? "look" : "calm");
+const bonesWait = () => bonesPart(bonesGame && bonesField ? "look" : "calm");
 // wykopanie kostki: kopie (raz), wyciąga kostkę, stoi z nią w pysku (2 razy
 // animacja) i ją odkłada — albo wcześniej, gdy dziecko dotknie pierwszego „?”
 // (wtedy bonesReact najpierw ją odkłada/zakopuje)
@@ -253,7 +253,11 @@ function bonesRound() {
     $(".bonesEq").innerHTML = "";
     $(".bonesEq").className = "bonesEq";
     $(".bonesNext").hidden = true;
-    $(".bonesPad").hidden = true;
+    // klawiatura jest od początku; „?” wybrane do wpisywania dostaje się po spadnięciu kostek
+    $(".bonesPad").hidden = false;
+    bonesField = null;
+    bonesBuf = "";
+    bonesMark(null);
     $(".bonesHint").textContent = "Piesek kopie… co wykopie?";
     for (const [sel, n] of [
         [".bonesPile.a", g.A],
@@ -286,7 +290,7 @@ function bonesRound() {
         g.ready = true;
         if (lv.test) return bonesShowEq(); // bez kostek: od razu działanie z brakującą liczbą
         document.querySelectorAll(".bonesQ").forEach((q) => (q.style.visibility = "visible"));
-        $(".bonesHint").textContent = "Dotknij dywanik i wpisz, ile jest kostek.";
+        bonesPileTap("a"); // od razu wybrany lewy dywanik; można dotknąć drugi, żeby przełączyć
     }, dug + (lv.test ? 300 : fall + 150));
 }
 
@@ -310,10 +314,11 @@ function bonesDropBones(pile, n) {
 
 function bonesPileTap(which) {
     const g = bonesGame;
-    if (!g || !g.ready || !$(".bonesPad").hidden) return;
+    if (!g || !g.ready) return;
     if ((which === "a" && g.okA) || (which === "b" && g.okB)) return;
     const n = which === "a" ? g.A : g.B;
     const mark = $(".bonesPile." + which + " .bonesQ");
+    if (bonesField === mark) return; // ten już wybrany
     $(".bonesHint").textContent = which === "a" ? "Ile kostek na lewym dywaniku?" : "Ile kostek na prawym dywaniku?";
     bonesPadOpen(n, () => {
         const q = $(".bonesPile." + which + " .bonesQ");
@@ -325,7 +330,7 @@ function bonesPileTap(which) {
         if (g.okA && g.okB && BONES_LEVELS[bonesLevel].hide) document.querySelectorAll(".bonesPile").forEach((p) => p.classList.add("cover"));
         sfx("good");
         if (g.okA && g.okB) bonesShowEq();
-        else $(".bonesHint").textContent = "Super! Teraz drugi dywanik.";
+        else bonesPileTap(which === "a" ? "b" : "a"); // sam wybiera drugi dywanik
         bonesReact(bonesPart("ears", { times: 1 }), { wait: true });
     }, mark);
 }
@@ -344,8 +349,8 @@ function bonesShowEq() {
     if (lv.hide) $(".bonesHint").textContent = "Kostki się schowały — policz w głowie. Dotknij kratkę.";
     el.className = "bonesEq in";
     el.innerHTML = slot("a") + "<span>" + bonesSign() + "</span>" + slot("b") + "<span>=</span>" + slot("c");
-    el.querySelector(".bonesRes").onclick = () => {
-        if (!$(".bonesPad").hidden || el.querySelector(".bonesRes.ok")) return;
+    const openRes = () => {
+        if (el.querySelector(".bonesRes.ok") || bonesField === el.querySelector(".bonesRes")) return;
         bonesPadOpen(target, () => {
             const r = el.querySelector(".bonesRes");
             r.textContent = target;
@@ -358,9 +363,14 @@ function bonesShowEq() {
             // radość: sam fikołek w miejscu (bez podskoku i „Radości z powrotem”)
             bonesReact(bonesPart("roll", { times: 1 }), { wait: true });
             if (g.round >= BONES_ROUNDS) g.readyT = setTimeout(() => bonesGame === g && bonesWin(), 1600);
-            else $(".bonesNext").hidden = false;
+            else {
+                $(".bonesPad").hidden = true; // na jego miejscu „Dalej”; klawiatura wraca z następną rundą
+                $(".bonesNext").hidden = false;
+            }
         }, el.querySelector(".bonesRes"));
     };
+    el.querySelector(".bonesRes").onclick = openRes;
+    openRes(); // klawiatura od razu pisze w kratkę wyniku
 }
 $(".bonesNext").onclick = () => bonesGame && bonesRound();
 
@@ -384,11 +394,14 @@ let bonesBuf = "",
 function bonesMark(el) {
     document.querySelectorAll(".bonesQ.active, .bonesRes.active").forEach((e) => e.classList.remove("active"));
     if (el) el.classList.add("active");
+    $(".bonesPad").classList.toggle("idle", !el);
 }
 // Liczba wpisuje się prosto w zaznaczone pole: „?” nad dywanikiem albo
 // kratkę wyniku w działaniu (bez osobnego okienka nad klawiaturą).
 let bonesField = null;
 function bonesPadOpen(target, onOk, field) {
+    // przełączenie na inne pole w trakcie wpisywania: poprzednie wraca do „?”
+    if (bonesField && bonesField !== field && !bonesField.classList.contains("ok")) bonesField.textContent = "?";
     bonesMark(field);
     bonesField = field;
     bonesBuf = "";
@@ -405,7 +418,6 @@ function bonesPress(k) {
     else if (k === "OK") {
         if (bonesBuf === "") return;
         if (+bonesBuf === bonesTarget) {
-            $(".bonesPad").hidden = true;
             bonesMark(null);
             bonesField = null;
             const cb = bonesOnOk;
