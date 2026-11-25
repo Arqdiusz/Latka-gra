@@ -1412,7 +1412,7 @@ function pawDirtBlobs(sh, f) {
                     gx += [1, -1, 0, 0][s.d];
                     gy += [0, 0, 1, -1][s.d];
                 }
-                if (list.length) blobs.push({ list, px, thr, bucket: Math.floor(pxx / PAW_BUCKET) });
+                if (list.length) blobs.push({ list, px, thr, bucket: Math.floor(pxx / PAW_BUCKET), paw: k });
             }
         });
     }
@@ -1437,7 +1437,8 @@ function pawDirtDraw(c, sh, f, amount) {
 let pawsPtr = null, // poprzedni punkt przeciągania (do liczenia drogi)
     pawsCloth = null, // gdzie jest palec
     pawsClothVis = null, // wygładzona pozycja rysowanej szmatki
-    pawLvl = null; // poziom brudu (0–1) każdego pasa podczas czyszczenia
+    pawLvl = null, // poziom brudu (0–1) każdego pasa podczas czyszczenia
+    pawsDone = new Set(); // które łapki są już czyste (każda dostaje iskierki)
 function updatePawsUi() {
     const e = $(".pawsEnd");
     if (e) e.hidden = phase !== "paws-clean";
@@ -1447,6 +1448,7 @@ function pawsStart() {
     bubble = null;
     pawsPtr = pawsCloth = pawsClothVis = null;
     pawLvl = new Array(16).fill(pawDirt / 100);
+    pawsDone = new Set();
     startQueue([
         {
             sheet: "a01",
@@ -1465,20 +1467,23 @@ function pawsEnd(done) {
     if (phase !== "paws-clean") return;
     pawsPtr = pawsCloth = pawsClothVis = null;
     if (done) {
-        // iskierki przy każdej wyczyszczonej łapce (po kolei)
-        pawScreenPoints().forEach((pt, k) => sparkleBurst(pt.x, pt.y, SPARKLE_PAW, k * 90));
+        // łapki, które nie zdążyły dostać iskierek (np. bez grudek), dostają je teraz
+        pawScreenPoints().forEach((pt, k) => !pawsDone.has(k) && sparkleBurst(pt.x, pt.y, SPARKLE_PAW, k * 90));
         pawLvl = null;
         pawDirt = 0;
         changeNeeds(ACTION_EFFECTS.paws);
         save();
-        // Brawo, czysty piesek: fanfary, konfetti i karta końcowa jak w grach
-        $("#pawsWinPopup .memoWinImg").src = icons.cup;
-        moleWinSpawnConfetti("#pawsWinPopup .moleWinConfetti");
+        // Brawo, czysty piesek: po chwili na iskierki — fanfary, konfetti i karta z wesołym pieskiem
         say("heart", 2600);
         startQueue([{ sheet: "a01", anim: 21, time: 600000 }]);
         phase = "paws-end";
         stage = "paws-end";
-        $("#pawsWinPopup").hidden = false;
+        setTimeout(() => {
+            if (phase !== "paws-end") return;
+            moleWinSpawnConfetti("#pawsWinPopup .moleWinConfetti"); // fanfary
+            $("#pawsWinPopup").hidden = false;
+            pawsWinDogStart();
+        }, 900);
     } else {
         // przerwane: zostaje tyle brudu, ile nie zdążyłeś wytrzeć
         if (pawLvl) pawDirt = (pawLvl.slice(0, 10).reduce((a, v) => a + v, 0) / 10) * 100;
@@ -1490,8 +1495,48 @@ function pawsEnd(done) {
 }
 $("#pawsWinPopup .moleWinOk").onclick = () => {
     $("#pawsWinPopup").hidden = true;
+    pawsWinDogStop();
     idle(16);
 };
+// Wesoły piesek na karcie końcowej: „Radość z powrotem” (a01), stopami w jednym miejscu,
+// a przy łapkach mrugają iskierki.
+let pawsWinDogT = 0;
+function pawsWinDogStop() {
+    clearInterval(pawsWinDogT);
+}
+function pawsWinDogStart() {
+    const cv = $("#pawsWinPopup .pawsWinDog"),
+        c = cv.getContext("2d"),
+        pre = CFG.a01.presets[21],
+        seq = numbers(pre.seq),
+        t0 = performance.now(),
+        K = 1.5;
+    const draw = () => {
+        const t = performance.now() - t0,
+            f = seq[Math.floor(t / (pre.ms || 220)) % seq.length],
+            cell = cells.a01[f - 1],
+            b = P.meta.a01[f - 1].box,
+            ox = 130 - ((b[0] + b[2]) / 2) * K,
+            oy = 190 - b[3] * K;
+        c.clearRect(0, 0, cv.width, cv.height);
+        c.imageSmoothingEnabled = false;
+        if (cell) c.drawImage(cell, ox, oy, cell.width * K, cell.height * K);
+        const paws = skeleton?.a01?.[f - 1]?.paws || [];
+        paws.forEach(([px, py], i) => {
+            const ph = (t / 520 + i * 0.31) % 1,
+                a = Math.sin(Math.PI * ph),
+                kk = ["D", "A", "B"][(Math.floor(t / 520 + i * 0.31) + i) % 3],
+                [sx, sy] = SPARKLE_CELL[kk],
+                z = 1.0 + 0.7 * a;
+            c.globalAlpha = a;
+            c.drawImage(images.sparkle, sx, sy, 64, 64, Math.round(ox + px * K - 32 * z), Math.round(oy + py * K - 8 - 32 * z), 64 * z, 64 * z);
+            c.globalAlpha = 1;
+        });
+    };
+    clearInterval(pawsWinDogT);
+    draw();
+    pawsWinDogT = setInterval(draw, 70);
+}
 // x w komórce arkusza dla punktu na ekranie (ta sama matematyka co w drawDog)
 function pawsCellX(px) {
     const g = geometry();
@@ -1520,9 +1565,20 @@ function pawsWipe(p) {
         }
     });
     if (touched) sfx("wipe");
+    // każda wyczyszczona łapka dostaje iskierki (pierwsza, druga, …)
+    const f = geometry().f,
+        blobs = pawDirtBlobs(sheet, f),
+        pts = pawScreenPoints();
+    pts.forEach((pt, k) => {
+        if (pawsDone.has(k)) return;
+        const mine = blobs.filter((bl) => bl.paw === k);
+        if (!mine.length || mine.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) return;
+        pawsDone.add(k);
+        sparkleBurst(pt.x, pt.y, SPARKLE_PAW);
+        sfx("good");
+    });
     // koniec, gdy na bieżącej klatce nie widać już żadnej grudki
-    const f = geometry().f;
-    if (!pawDirtBlobs(sheet, f).some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) pawsEnd(true);
+    if (!blobs.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) pawsEnd(true);
 }
 function pawsClothDraw() {
     const im = cells.ui[UI.map.cloth - 1];

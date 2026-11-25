@@ -219,3 +219,5 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Grafika `animacje/star-check.png` (arkusz 2×2 po 64 px). `sparkleBurst(cx, cy, pts)` w `game.js`: w miejscu sprzątnięcia zapalają się po kolei 5 gwiazdek (~1,1 s), unoszą się i gasną; rysowane nad pieskiem (`sparklesDraw`).
 - Wywołują je: `cleanPoop`, `cleanMoleDirt`, `cleanDish` (duży wariant) i `cleanLump` (mały). Przy czystych łapkach (`pawsEnd(true)`) każda łapa dostaje małe iskierki po kolei (punkty łap ze szkieletu: `pawScreenPoints`).
 - Uwaga: `clamp` w tej grze wymaga 3 argumentów (`clamp(v, min, max)`), bez domyślnych.
+- Czyszczenie łapek (v0.8.196): każda łapka, która zrobi się czysta, dostaje iskierki od razu (pierwsza, druga, …) i „plink”. Blobs brudu mają numer łapy (`paw`), `pawsDone` pilnuje, które już świeciły.
+- Karta „Brawo!” po łapkach pojawia się po ~0,9 s (żeby było widać ostatnie iskierki), z fanfarami i konfetti. Zamiast pucharu jest wesoły piesek („Radość z powrotem” a01, klatki wyrównane stopami), a przy jego łapkach mrugają iskierki (`pawsWinDogStart`).
