@@ -12,8 +12,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 const BONE_DIG = {
-    first: [90000, 200000], // po wejściu do pokoju ogrodowego
-    next: [240000, 360000], // po zakończeniu
+    first: [45000, 110000], // po wejściu do pokoju ogrodowego
+    next: [120000, 180000], // po zakończeniu
     holdMs: 18000, // tyle piesek czeka z kostką na dotyk
     hitR: 58, // promień dotyku wokół kostki
     xMin: 0.25, // nie zaczyna kopać przy samej ścianie (kopiec musi się zmieścić)
@@ -69,7 +69,7 @@ function boneDigUpdate() {
 
 function boneDigSpawn() {
     wildlifeCooldown();
-    boneGapSet(150000, 210000);
+    boneGapSet(90000, 120000);
     interrupt();
     const face = left,
         part = (anim, time, extra = {}) => ({ sheet: "a03", anim, facing: face, time, ...extra });

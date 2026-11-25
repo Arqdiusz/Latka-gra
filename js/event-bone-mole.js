@@ -17,8 +17,8 @@ const BONE_MOLE = {
     moundX: 0.62, // kopiec: środek ekranu + „reach” — po wykopaniu i obrocie piesek stoi na środku
     peekMs: 1300, // jak długo kret się rozgląda
     reach: 46, // piesek stoi tak, by kopiec z animacji kopania (≈ +46 px przed nim) wypadł na kopcu kreta
-    first: [60000, 150000], // po wejściu do pokoju — rzadko (wspólnie z kopaniem pieska)
-    next: [240000, 360000], // po zakończeniu — kilka minut spokoju
+    first: [30000, 90000], // po wejściu do pokoju (wspólnie z kopaniem pieska)
+    next: [120000, 180000], // po zakończeniu — 2–3 min spokoju
     cardAfter: 1900, // ile piesek stoi z kostką, zanim pokaże się karta
 };
 let boneMole = null, // { x, room, state: pending|emerging|peek|retreating|mound|dig, t }
@@ -26,7 +26,7 @@ let boneMole = null, // { x, room, state: pending|emerging|peek|retreating|mound
     boneMoleRoom = null,
     boneGapUntil = 0; // wspólny odstęp: kret z kostką, kopanie pieska i gra w kostki nie następują jedno po drugim
 // Odstęp po zdarzeniu / po grze w kostki: nic z kostkami przez kilka minut
-function boneGapSet(a = 180000, b = 300000) {
+function boneGapSet(a = 90000, b = 150000) {
     boneGapUntil = Math.max(boneGapUntil, clock + a + Math.random() * (b - a));
 }
 
@@ -40,7 +40,7 @@ function boneMoleSchedule(first) {
 // bliżej środka, po drugiej stronie — wtedy kopanie dzieje się na środku ekranu.
 function boneMoleSpawn() {
     wildlifeCooldown();
-    boneGapSet(150000, 210000);
+    boneGapSet(90000, 120000);
     const toLeft = x < 0.5,
         ex = toLeft ? BONE_MOLE.edge : 1 - BONE_MOLE.edge,
         dist = Math.abs(ex - x) * W;

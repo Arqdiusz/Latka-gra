@@ -335,14 +335,25 @@ const ROOM_ICON = { yard: "den", garden: "garden", living: "living", kitchen: "k
 const WISH_ICONS = ["fun", "butterfly", "mole", "heart", "bubbles", "bark", "bone"];
 let lastWish = "";
 
+// Dymek musi mieć sens: potrzeba w dymku tylko wtedy, gdy naprawdę spada
+// (żółta, < 40%) — wtedy piesek częściej „mówi”, czego mu brakuje. Kąpiel
+// (bańki) tylko gdy czystość < 50%, piłka tylko gdy zabawa < 75%.
+const WISH_NEED_AT = 40,
+    NEED_WISH_ICON = { food: "food", water: "water", fun: "fun", sleep: "sleep", clean: "bubbles" };
 function bubbleWish() {
+    let low = null;
+    for (const k of ["food", "water", "fun", "sleep", "clean"]) if (stats[k] < WISH_NEED_AT && (!low || stats[k] < stats[low])) low = k;
+    if (low && Math.random() < 0.6) return (lastWish = NEED_WISH_ICON[low]);
     const ctx = [];
     if (butterfly?.free && !butterfly.lure && butterfly.plan) ctx.push("butterfly");
     if (moleTeaser || moleDirts[room]) ctx.push("mole");
     if (pawDirt >= PAW_DIRTY_AT && INDOOR_ROOMS.includes(room)) ctx.push("cloth"); // "umyj mi łapki"
     // kostka w dymku = piesek zaraz pobiegnie kopać, więc tylko gdy kopanie jest możliwe (odstęp, wolna scena)
     const boneOk = typeof boneWishOk === "function" && boneWishOk();
-    const pool = ctx.length && Math.random() < 0.6 ? ctx : WISH_ICONS.filter((w) => w !== lastWish && (w !== "bone" || boneOk));
+    const pool =
+        ctx.length && Math.random() < 0.6
+            ? ctx
+            : WISH_ICONS.filter((w) => w !== lastWish && (w !== "bone" || boneOk) && (w !== "bubbles" || stats.clean < 50) && (w !== "fun" || stats.fun < 75));
     return (lastWish = pool[Math.floor(Math.random() * pool.length)]);
 }
 
@@ -366,6 +377,9 @@ function bubbleThink() {
     }
     if (!["idle", "roam", "pause", "look"].includes(phase) || clock < nextBubble) return;
     nextBubble = clock + R.checkEveryMs;
+    // przy samej krawędzi dymek przygasa — poczekaj, aż piesek odejdzie od ściany
+    const hx = headPosition().x;
+    if (hx < 84 || hx > W - 84) return;
     if (bubble && clock < bubble.until) return;
     if (dirty()) {
         if (clock - bubbleLast.poop >= R.poopEveryMs) {
@@ -2350,7 +2364,7 @@ function butterflyFreeUpdate() {
         const p = (clock - b.start) / BUTTERFLY_CROSS_MS;
         if (p >= 1) {
             butterfly = null;
-            nextButterfly = clock + 12500 + Math.random() * 17500;
+            nextButterfly = clock + 8000 + Math.random() * 12000;
             return;
         }
         const x0 = b.dir > 0 ? -25 : W + 25,
@@ -2514,7 +2528,7 @@ function butterflyCatch() {
             },
             onEnd: () => {
                 changeNeeds(ACTION_EFFECTS.butterfly);
-                nextButterfly = clock + 12500 + Math.random() * 17500;
+                nextButterfly = clock + 8000 + Math.random() * 12000;
                 butterfly = null;
             },
         },
@@ -2953,7 +2967,7 @@ function cleanMoleDirt() {
     updateMoleDirtAccess();
     say("heart", 1600);
     // Dopiero teraz zaczyna się odliczanie do kolejnego kreta.
-    nextMoleSpawn = clock + 7500 + Math.random() * 15000;
+    nextMoleSpawn = clock + 6000 + Math.random() * 9000;
     save();
 }
 $(".moleDirtAccess").onclick = cleanMoleDirt;
@@ -3139,7 +3153,7 @@ function hedgehogUpdate(dt) {
     if (h.state === "leaving" || h.state === "fleeing") {
         if (h.x < -HEDGEHOG_SIZE || h.x > W + HEDGEHOG_SIZE) {
             hedgehog = null;
-            nextHedgehogSpawn = clock + 12000 + Math.random() * 15000;
+            nextHedgehogSpawn = clock + 8000 + Math.random() * 10000;
         }
         return;
     }

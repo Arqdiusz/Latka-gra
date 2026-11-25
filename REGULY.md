@@ -259,3 +259,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Odblokowuje tylko rodzic: działanie z mnożenia 6–9 × 6–9 (zła odpowiedź = drgnięcie i nowe działanie). Blokada zostaje po odświeżeniu strony.
 - Nowa sesja po odblokowaniu: energia 100%, jedzenie/woda/zabawa 75%, czystość 80%, czyste łapki, licznik od zera. Tak samo przy pierwszym uruchomieniu.
 - DEV: „Sesja (min)” ±5, przyciski „Blokada rodzica” i „Nowa sesja”.
+
+## 30. Częstsze zdarzenia i sensowne dymki (v0.8.210)
+- Zdarzenia w ogrodzie wracają szybciej: motylek po 8–20 s (było 12,5–30), jeżyk 8–18 s (było 12–27), kret 6–15 s (było 7,5–22,5). Kret z kostką i kopanie: pierwsze 30–90 s / 45–110 s po wejściu do pokoju, kolejne po 2–3 min; wspólny odstęp z kostkami 1,5–2,5 min (po starcie 1,5–2 min).
+- Dymki z chęciami mają sens: gdy któraś potrzeba spada poniżej 40% (żółta), w 60% dymków piesek pokazuje tę najniższą (jedzenie, woda, piłka, sen, kąpiel). Kąpiel (bańki) pojawia się tylko przy czystości < 50%, piłka tylko przy zabawie < 75%.
+- Przy samej ścianie (głowa < 84 px od krawędzi) dymek się nie pojawia — czeka, aż piesek odejdzie (przy krawędzi dymek przygasa).
