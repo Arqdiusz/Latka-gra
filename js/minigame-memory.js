@@ -157,7 +157,7 @@ function memoShowLevels() {
     });
     memoLevelsShownAt = Date.now();
     $(".memoLevels").hidden = false;
-    levelPickOpen($(".memoLevels"), "butterfly");
+    levelPickOpen($(".memoLevels"), "butterfly", "memo");
 }
 $(".memoLevelsClose").onclick = () => {
     $(".memoLevels").hidden = true;

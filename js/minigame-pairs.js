@@ -128,7 +128,7 @@ function pairsShowLevels() {
                 : '<span class="memoTileStats memoTileNew">Jeszcze bez wyniku</span>';
         b.className = "memoTile";
         b.innerHTML =
-            '<span class="memoStars">' + "★".repeat(i + 1) + '</span><span class="memoTileTxt">' + lv.rows + " × " + lv.cols + " · " + n + (n < 5 ? " pary" : " par") + "</span>" + stats +
+            '<span class="memoStars">' + "★".repeat(i + 1) + '</span><span class="memoTileTxt">' + n + (n < 5 ? " pary" : " par") + "</span>" + stats +
             (done.includes(i) ? '<img class="memoTileCup" alt="Ukończony" src="' + icons.cup + '" />' : "");
         b.onclick = () => {
             if (Date.now() - pairsLevelsShownAt < 700) return; // "przelot" kliknięcia z poprzedniego ekranu
@@ -139,7 +139,7 @@ function pairsShowLevels() {
     });
     pairsLevelsShownAt = Date.now();
     $(".pairsLevels").hidden = false;
-    levelPickOpen($(".pairsLevels"), "memory");
+    levelPickOpen($(".pairsLevels"), "memory", "pairs");
 }
 $(".pairsLevelsClose").onclick = () => {
     $(".pairsLevels").hidden = true;

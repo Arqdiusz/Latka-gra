@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.219</title>
+        <title>Łatka v0.8.220</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
-        <link rel="stylesheet" href="css/style.css?v=238" />
+        <link rel="stylesheet" href="css/style.css?v=239" />
     </head>
 
     <body>
@@ -134,9 +134,9 @@
                 <div class="pairsBoard"></div>
             </div>
             <div class="pairsLevels lvPick" hidden>
-                <div class="lvTitle"><img class="lvIcon" alt="" /><span>Znajdź pary</span></div>
+                <div class="gBar lvBar"><img class="lvIcon" alt="" /><h2>Znajdź pary</h2></div>
                 <div class="lvCard">
-                    <canvas class="lvChase" width="288" height="136" aria-hidden="true"></canvas>
+                    <canvas class="lvDog" width="160" height="160" aria-hidden="true"></canvas>
                     <h3>Wybierz poziom</h3>
                     <div class="memoGrid pairsLevelGrid"></div>
                     <button class="pairsLevelsClose lvBack btnRed">Wróć</button>
@@ -147,9 +147,9 @@
                 <div class="gBar"><span class="memoTitle gBarTtl">Zapamiętaj!</span><div class="memoTimer" aria-label="Czas">0,0 s</div><button class="memoClose" aria-label="Zakończ zabawę w motylki">✕</button></div>
             </div>
             <div class="memoLevels lvPick" hidden>
-                <div class="lvTitle"><img class="lvIcon" alt="" /><span>Pamięć motylków</span></div>
+                <div class="gBar lvBar"><img class="lvIcon" alt="" /><h2>Pamięć motylków</h2></div>
                 <div class="lvCard">
-                    <canvas class="lvChase" width="288" height="136" aria-hidden="true"></canvas>
+                    <canvas class="lvDog" width="160" height="160" aria-hidden="true"></canvas>
                     <h3>Wybierz poziom</h3>
                     <div class="memoGrid"></div>
                     <button class="memoLevelsClose lvBack btnRed">Wróć</button>
@@ -424,7 +424,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=238"></script>
+            <script src="js/loader.js?v=239"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -432,7 +432,7 @@
                     document.fonts.load("700 16px Quicksand");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=238"></script>
+            <script src="js/audio.js?v=239"></script>
             <div class="parentLock" hidden>
                 <!-- dla dziecka: obrazki, bez czytania — piesek śpi, po więcej czasu idź do rodziców -->
                 <div class="plKid">
@@ -486,21 +486,21 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=238"></script>
-        <script defer src="js/game.js?v=238"></script>
-        <script defer src="js/session.js?v=238"></script>
-        <script defer src="js/minigame-fetch.js?v=238"></script>
-        <script defer src="js/minigame-bubbles.js?v=238"></script>
-        <script defer src="js/minigame-mole.js?v=238"></script>
-        <script defer src="js/minigame-hedge.js?v=238"></script>
-        <script defer src="js/minigame-mole2.js?v=238"></script>
-        <script defer src="js/level-pick.js?v=238"></script>
-        <script defer src="js/minigame-memory.js?v=238"></script>
-        <script defer src="js/minigame-pairs.js?v=238"></script>
-        <script defer src="js/minigame-bones.js?v=238"></script>
-        <script defer src="js/event-bone-mole.js?v=238"></script>
-        <script defer src="js/event-bone-dig.js?v=238"></script>
-        <script defer src="js/games-menu.js?v=238"></script>
-        <script defer src="js/popup-guard.js?v=238"></script>
+        <script defer src="js/arc-carousel.js?v=239"></script>
+        <script defer src="js/game.js?v=239"></script>
+        <script defer src="js/session.js?v=239"></script>
+        <script defer src="js/minigame-fetch.js?v=239"></script>
+        <script defer src="js/minigame-bubbles.js?v=239"></script>
+        <script defer src="js/minigame-mole.js?v=239"></script>
+        <script defer src="js/minigame-hedge.js?v=239"></script>
+        <script defer src="js/minigame-mole2.js?v=239"></script>
+        <script defer src="js/level-pick.js?v=239"></script>
+        <script defer src="js/minigame-memory.js?v=239"></script>
+        <script defer src="js/minigame-pairs.js?v=239"></script>
+        <script defer src="js/minigame-bones.js?v=239"></script>
+        <script defer src="js/event-bone-mole.js?v=239"></script>
+        <script defer src="js/event-bone-dig.js?v=239"></script>
+        <script defer src="js/games-menu.js?v=239"></script>
+        <script defer src="js/popup-guard.js?v=239"></script>
     </body>
 </html>
