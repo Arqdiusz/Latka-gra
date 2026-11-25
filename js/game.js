@@ -1607,15 +1607,15 @@ function pawsEnd(done) {
     if (phase !== "paws-clean") return;
     pawsPtr = pawsCloth = pawsClothVis = null;
     if (done) {
-        // łapki, które nie zdążyły dostać iskierek (np. bez grudek), dostają je teraz
-        pawScreenPoints().forEach((pt, k) => !pawsDone.has(k) && sparkleBurst(pt.x, pt.y, SPARKLE_PAW, k * 90));
         pawLvl = null;
         pawDirt = 0;
         changeNeeds(ACTION_EFFECTS.paws);
         save();
-        // Brawo, czysty piesek: po chwili na iskierki — fanfary, konfetti i karta z wesołym pieskiem
+        // Brawo, czysty piesek: wstaje i spokojnie merda ogonem, wokół mignie kilka
+        // iskierek; po chwili fanfary, konfetti i karta z pieskiem
         say("heart", 2600);
-        startQueue([{ sheet: "a01", anim: 21, time: 600000 }]);
+        startQueue([{ sheet: "a01", frames: WAG, tempo: WAG_TEMPO, time: 600000 }]);
+        bodyTwinkleT = clock + 150;
         phase = "paws-end";
         stage = "paws-end";
         setTimeout(() => {
@@ -1638,8 +1638,8 @@ $("#pawsWinPopup .moleWinOk").onclick = () => {
     pawsWinDogStop();
     idle(16);
 };
-// Wesoły piesek na karcie końcowej: „Radość z powrotem” (a01), stopami w jednym miejscu,
-// a przy łapkach mrugają iskierki.
+// Piesek na karcie końcowej: stoi i merda ogonem (a01, stopami w jednym miejscu);
+// na początku kilka mignięć iskierek wokół całego ciała, potem spokój.
 let pawsWinDogT = 0;
 function pawsWinDogStop() {
     clearInterval(pawsWinDogT);
@@ -1647,13 +1647,13 @@ function pawsWinDogStop() {
 function pawsWinDogStart() {
     const cv = $("#pawsWinPopup .pawsWinDog"),
         c = cv.getContext("2d"),
-        pre = CFG.a01.presets[21],
-        seq = numbers(pre.seq),
+        seq = WAG,
         t0 = performance.now(),
+        tw0 = clock + 200,
         K = 1.5;
     const draw = () => {
         const t = performance.now() - t0,
-            f = seq[Math.floor(t / (pre.ms || 220)) % seq.length],
+            f = seq[Math.floor(t / WAG_TEMPO) % seq.length],
             cell = cells.a01[f - 1],
             b = P.meta.a01[f - 1].box,
             ox = 130 - ((b[0] + b[2]) / 2) * K,
@@ -1661,17 +1661,7 @@ function pawsWinDogStart() {
         c.clearRect(0, 0, cv.width, cv.height);
         c.imageSmoothingEnabled = false;
         if (cell) c.drawImage(cell, ox, oy, cell.width * K, cell.height * K);
-        const paws = skeleton?.a01?.[f - 1]?.paws || [];
-        paws.forEach(([px, py], i) => {
-            const ph = (t / 520 + i * 0.31) % 1,
-                a = Math.sin(Math.PI * ph),
-                kk = ["D", "A", "B"][(Math.floor(t / 520 + i * 0.31) + i) % 3],
-                [sx, sy] = SPARKLE_CELL[kk],
-                z = 1.0 + 0.7 * a;
-            c.globalAlpha = a;
-            c.drawImage(images.sparkle, sx, sy, 64, 64, Math.round(ox + px * K - 32 * z), Math.round(oy + py * K - 8 - 32 * z), 64 * z, 64 * z);
-            c.globalAlpha = 1;
-        });
+        twinkleDraw(c, 130, 190 - ((b[3] - b[1]) * K) / 2, ((b[2] - b[0]) * K) / 2 + 14, ((b[3] - b[1]) * K) / 2 + 10, tw0, 1.1);
     };
     clearInterval(pawsWinDogT);
     draw();
@@ -3411,6 +3401,45 @@ function sparklesDraw() {
     }
     ctx.restore();
 }
+// ── „Czysty piesek”: kilka mignięć iskierek wokół całego ciała, potem spokój ──
+// Po czyszczeniu łapek i po otrząśnięciu w kąpieli. Każda iskierka mignie raz,
+// po kolei, w ~2 s — potem nic już nie mruga (oczy odpoczywają).
+const WAG = [63, 27, 63, 27, 63, 27, 63, 63], // a01: stanie z merdaniem ogonem
+    WAG_TEMPO = 240,
+    TWINKLE_PTS = (() => {
+        let seed = 99;
+        const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280),
+            out = [];
+        for (let i = 0; i < 10; i++) {
+            const a = (i / 10) * Math.PI * 2 + rnd() * 0.5,
+                r = 0.75 + rnd() * 0.4;
+            out.push({ dx: Math.cos(a) * r, dy: Math.sin(a) * r, t: i * 170 + rnd() * 90, k: ["D", "A", "D", "B"][i % 4], s: 1.0 + rnd() * 0.5 });
+        }
+        return out;
+    })(),
+    TWINKLE_MS = 520;
+let bodyTwinkleT = -1e9; // start mignięć w scenie
+function twinkleDraw(c, cx, cy, rx, ry, t0, scale = 1) {
+    const t = clock - t0;
+    if (t < 0 || t > 2300 || !images.sparkle) return;
+    c.save();
+    c.imageSmoothingEnabled = false;
+    for (const p of TWINKLE_PTS) {
+        const u = (t - p.t) / TWINKLE_MS;
+        if (u <= 0 || u >= 1) continue;
+        const a = Math.sin(Math.PI * u),
+            z = p.s * scale * (0.6 + 0.4 * a),
+            [sx, sy] = SPARKLE_CELL[p.k];
+        c.globalAlpha = a;
+        c.drawImage(images.sparkle, sx, sy, 64, 64, Math.round(cx + p.dx * rx - 32 * z), Math.round(cy + p.dy * ry - 32 * z), 64 * z, 64 * z);
+    }
+    c.restore();
+}
+function bodyTwinkleDraw() {
+    if (dogHidden) return;
+    twinkleDraw(ctx, x * W, GROUND - 48, 92, 62, bodyTwinkleT);
+}
+
 // Punkty łap na ekranie (ta sama matematyka co headPosition) — dla iskierek przy czystych łapkach
 function pawScreenPoints() {
     const g = geometry(),
@@ -3444,6 +3473,7 @@ function draw(dt) {
     if (typeof boneMoleDraw === "function") boneMoleDraw();
     if (typeof boneDigDraw === "function") boneDigDraw();
     sparklesDraw();
+    bodyTwinkleDraw();
     hedgePeekDraw();
     // Jeżyk i zgubiony owoc — pierwszy plan, przed pieskiem.
     hedgeFruitDraw();
@@ -3480,6 +3510,7 @@ function draw(dt) {
     if (!$(".bubbleWinPopup").hidden) {
         bubbleWinCtx.clearRect(0, 0, 260, 210);
         drawDog(bubbleWinCtx, 130, 196, left, 0.85);
+        twinkleDraw(bubbleWinCtx, 130, 196 - 48 * 0.85, 92 * 0.85, 62 * 0.85, bodyTwinkleT, 0.9);
     }
     if (!$(".popup").hidden) {
         rewardCtx.clearRect(0, 0, 300, 300);

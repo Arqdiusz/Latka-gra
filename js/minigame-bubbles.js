@@ -303,10 +303,12 @@ function bubbleWinShow() {
     g.bubbles.length = 0;
     phase = "bubble-win";
     stage = "bubble-win";
-    // Otrząśnięcie raz, potem w pętli: rozglądanie się ↔ siad-spokojnie.
-    const calm = [];
-    for (let i = 0; i < 40; i++) calm.push(repeatPart("a01", BUBBLE_LOOK_ANIM), repeatPart("a01", BUBBLE_SIT_ANIM));
-    startQueue([repeatPart("a01", BUBBLE_WIN_ANIM), ...calm]);
+    // Otrząśnięcie raz, potem kilka mignięć iskierek wokół pieska i spokojne
+    // stanie z merdaniem ogonem (bez ciągłego mrugania).
+    startQueue([
+        { ...repeatPart("a01", BUBBLE_WIN_ANIM), onEnd: () => (bodyTwinkleT = clock) },
+        { sheet: "a01", frames: WAG, tempo: WAG_TEMPO, time: 600000 },
+    ]);
     phase = "bubble-win";
     locks();
     moleWinSpawnConfetti(".bubbleWinPopup .moleWinConfetti");
