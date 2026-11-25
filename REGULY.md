@@ -294,3 +294,4 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## 35. Wpisana liczba zostaje po przełączeniu dywanika (v0.8.217)
 - Liczba wpisana w „?” zostaje na swoim dywaniku, gdy dziecko przełączy się na drugi (bez zielonego OK). Po powrocie można ją poprawić (⌫) albo zatwierdzić. OK nadal sprawdza tylko aktualnie wybrane pole.
+- v0.8.218: jedno zielone OK sprawdza wszystkie dywaniki naraz. Dobre zostają zielone, złe mrugają na czerwono i wracają do „?” (wybrane jest wtedy pierwsze złe). Jeśli obie liczby są dobre — od razu pokazuje się działanie. Wynik działania nadal zatwierdza się własnym OK.

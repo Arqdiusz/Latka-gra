@@ -424,6 +424,7 @@ function bonesPress(k) {
     if (!d) return;
     if (k === "⌫") bonesBuf = bonesBuf.slice(0, -1);
     else if (k === "OK") {
+        if (d.classList.contains("bonesQ")) return bonesCheckPiles(); // jedno OK sprawdza oba dywaniki
         if (bonesBuf === "") return;
         if (+bonesBuf === bonesTarget) {
             bonesMark(null);
@@ -448,6 +449,53 @@ function bonesPress(k) {
         return;
     } else if (bonesBuf.length < 2) bonesBuf += k;
     d.textContent = bonesBuf || "?";
+}
+
+// Jedno OK sprawdza wszystko, co wpisano na dywanikach: dobre zostają zielone,
+// złe mrugają na czerwono i wracają do „?”.
+function bonesCheckPiles() {
+    const g = bonesGame,
+        items = [
+            ["a", g.A, "okA"],
+            ["b", g.B, "okB"],
+        ].map(([w, n, k]) => ({ w, n, k, q: $(".bonesPile." + w + " .bonesQ") })),
+        typed = items.filter((it) => !g[it.k] && /^\d+$/.test(it.q.textContent));
+    if (!typed.length) return;
+    const wrong = typed.filter((it) => +it.q.textContent !== it.n);
+    for (const it of typed.filter((it) => !wrong.includes(it))) {
+        it.q.className = "bonesQ ok";
+        g[it.k] = true;
+    }
+    bonesBuf = "";
+    if (wrong.length) {
+        for (const it of wrong) {
+            it.q.classList.remove("bad");
+            void it.q.offsetWidth;
+            it.q.classList.add("bad");
+            setTimeout(() => {
+                it.q.classList.remove("bad");
+                if (!(bonesField === it.q && bonesBuf)) it.q.textContent = "?";
+            }, 600);
+        }
+        sfx("miss");
+        // wybrane zostaje (albo przechodzi na) pierwsze złe pole
+        bonesMark(wrong[0].q);
+        bonesField = wrong[0].q;
+        bonesReact(bonesPart("no", { times: 2 }), { wait: true });
+        return;
+    }
+    sfx("good");
+    if (g.okA && g.okB) {
+        bonesMark(null);
+        bonesField = null;
+        if (BONES_LEVELS[bonesLevel].hide) document.querySelectorAll(".bonesPile").forEach((p) => p.classList.add("cover"));
+        bonesShowEq();
+    } else {
+        const left = items.find((it) => !g[it.k]);
+        bonesField = null;
+        bonesPileTap(left.w); // sam wybiera dywanik, który jeszcze czeka
+    }
+    bonesReact(bonesPart("ears", { times: 1 }), { wait: true });
 }
 
 // ── Koniec ────────────────────────────────────────────────────────
