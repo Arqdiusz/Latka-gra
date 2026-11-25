@@ -291,3 +291,6 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Łatwy: sumy 2–6, Średni: 4–8, Trudny: 6–10 (zawsze z kostkami), Sprawdzian: 6–10 bez kostek, brakuje jednej liczby. Chowanie kostek (stary „Trudny”) wypadło.
 - Dodawanie: losuje się sumę z zakresu, potem pierwszy składnik (1…suma−1). Odejmowanie: liczba, od której odejmujemy, jest z zakresu poziomu, odjemnik od 1 do tej liczby −1.
 - Ta sama para nie wypada dwa razy z rzędu. Sprawdzone 400 losowań na poziom i działanie — wszystko w zakresie.
+
+## 35. Wpisana liczba zostaje po przełączeniu dywanika (v0.8.217)
+- Liczba wpisana w „?” zostaje na swoim dywaniku, gdy dziecko przełączy się na drugi (bez zielonego OK). Po powrocie można ją poprawić (⌫) albo zatwierdzić. OK nadal sprawdza tylko aktualnie wybrane pole.

@@ -408,11 +408,11 @@ function bonesMark(el) {
 // kratkę wyniku w działaniu (bez osobnego okienka nad klawiaturą).
 let bonesField = null;
 function bonesPadOpen(target, onOk, field) {
-    // przełączenie na inne pole w trakcie wpisywania: poprzednie wraca do „?”
-    if (bonesField && bonesField !== field && !bonesField.classList.contains("ok")) bonesField.textContent = "?";
+    // przełączenie na inne pole w trakcie wpisywania: poprzednie zostaje z wpisaną liczbą
+    // (bez zatwierdzania), a po powrocie można ją poprawić albo zatwierdzić
     bonesMark(field);
     bonesField = field;
-    bonesBuf = "";
+    bonesBuf = field && !field.classList.contains("ok") && /^\d+$/.test(field.textContent) ? field.textContent : "";
     bonesTarget = target;
     bonesOnOk = onOk;
     $(".bonesPad").hidden = false;
