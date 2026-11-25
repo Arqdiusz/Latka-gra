@@ -1554,7 +1554,7 @@ function updatePawsUi() {
 }
 // Kamera na łapki: cała scena (tło + piesek) przybliżona tak, żeby łapki były na
 // środku. Dotyk dalej trafia, bo pointerXY liczy z przybliżonego prostokąta canvasu.
-const PAWS_ZOOM = 2.1;
+const PAWS_ZOOM = 1.25;
 let pawsZoomed = false;
 function pawsZoom(on) {
     if (on === pawsZoomed) return;
@@ -1563,11 +1563,12 @@ function pawsZoom(on) {
     if (!on) return (el.style.transform = "");
     const pts = pawScreenPoints();
     if (!pts.length) return (pawsZoomed = false);
-    const cx = pts.reduce((a, p) => a + p.x, 0) / pts.length,
-        cy = pts.reduce((a, p) => a + p.y, 0) / pts.length - 12,
+    const hd = headPosition(),
+        cx = (pts.reduce((a, p) => a + p.x, 0) / pts.length + hd.x) / 2, // łapki + głowa: cały piesek w kadrze
+        cy = pts.reduce((a, p) => a + p.y, 0) / pts.length + 5,
         Z = PAWS_ZOOM,
         tx = clamp((0.5 - (cx / W) * Z) * 100, (1 - Z) * 100, 0),
-        ty = clamp((0.6 - (cy / SH) * Z) * 100, (1 - Z) * 100, 0);
+        ty = clamp((0.58 - (cy / SH) * Z) * 100, (1 - Z) * 100, 0);
     el.style.transform = `translate(${tx}%, ${ty}%) scale(${Z})`;
 }
 function pawsStart() {
@@ -1576,20 +1577,27 @@ function pawsStart() {
     pawsPtr = pawsCloth = pawsClothVis = null;
     pawLvl = new Array(16).fill(pawDirt / 100);
     pawsDone = new Set();
-    startQueue([
-        {
-            sheet: "a01",
-            anim: 16,
-            time: 1800000,
-            onStart: () => {
-                phase = "paws-clean";
-                stage = "paws-clean";
-                locks();
-                pawsZoom(true);
-            },
-            onEnd: () => phase === "paws-clean" && pawsEnd(false),
+    startQueue(pawsLie());
+}
+// Piesek leży na grzbiecie, łapki do góry („11. Na grzbiecie”, a01): spokojnie
+// (39), co jakiś czas lekko się wierci (40). giggle = najpierw krótki chichot
+// z zamkniętymi oczami (45) — gdy któraś łapka zrobi się czysta.
+const PAWS_LIE = [39, 39, 39, 39, 39, 39, 40, 39, 40, 39, 39, 39, 39, 39, 39, 39];
+function pawsLie(giggle = false) {
+    const lie = {
+        sheet: "a01",
+        frames: PAWS_LIE,
+        tempo: 260,
+        time: 1800000,
+        onStart: () => {
+            phase = "paws-clean";
+            stage = "paws-clean";
+            locks();
+            setTimeout(() => pawsZoom(true), 0); // po ustawieniu klatek (punkty łap leżącego pieska)
         },
-    ]);
+        onEnd: () => phase === "paws-clean" && pawsEnd(false),
+    };
+    return giggle ? [{ sheet: "a01", frames: [45, 45, 45], tempo: 220, time: 660 }, lie] : [lie];
 }
 function pawsEnd(done) {
     if (phase !== "paws-clean") return;
@@ -1679,7 +1687,7 @@ function pawsWipe(p) {
     pawsPtr = p;
     if (!prev) return;
     // szmatka działa tylko przy łapkach (pasek przy podłodze pod pieskiem)
-    if (Math.abs(p.x - x * W) > 150 || p.y < GROUND - 90 || p.y > GROUND + 60) return;
+    if (Math.abs(p.x - x * W) > 150 || p.y < GROUND - 140 || p.y > GROUND + 60) return;
     const d = Math.min(25, Math.hypot(p.x - prev.x, p.y - prev.y)), // pojedynczy skok nie zaciera od razu wszystkiego
         cx = pawsCellX(p.x);
     let touched = false;
@@ -1706,6 +1714,7 @@ function pawsWipe(p) {
         if (!mine.length || mine.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) return;
         pawsDone.add(k);
         clothWringT = clock; // szmatka się wyżyma
+        if (pawsDone.size < pts.length) startQueue(pawsLie(true)); // piesek chichocze (nie po ostatniej — wtedy wstaje)
         sparkleBurst(pt.x, pt.y, SPARKLE_PAW);
         sfx("good");
     });
@@ -1717,7 +1726,7 @@ function pawsWipe(p) {
 // wyżymanie raz, gdy któraś łapka zrobi się czysta. Reszta klatek nieużywana.
 let clothRubT = -1e9,
     clothWringT = -1e9;
-const CLOTH_SIZE = 58; // w pikselach sceny (scena jest przybliżona ×2,1)
+const CLOTH_SIZE = 48; // w pikselach sceny (scena jest przybliżona ×1,25)
 function clothFrame() {
     const w = clock - clothWringT;
     if (w < 2 * 170) return 14 + Math.floor(w / 170);
@@ -1728,8 +1737,12 @@ function pawsClothDraw() {
     const im = images.cloth;
     if (!im) return;
     const hint = !pawsCloth,
-        tx = pawsCloth ? pawsCloth.x : x * W + Math.sin(clock / 700) * 40,
-        ty = pawsCloth ? pawsCloth.y : GROUND - 4;
+        pts = hint ? pawScreenPoints() : [],
+        mx = pts.length ? pts.reduce((a, p) => a + p.x, 0) / pts.length : x * W,
+        my = pts.length ? pts.reduce((a, p) => a + p.y, 0) / pts.length : GROUND - 4,
+        // czeka przy łapkach (leżący piesek ma je w górze), lekko się przesuwa
+        tx = pawsCloth ? pawsCloth.x : mx + Math.sin(clock / 700) * 40,
+        ty = pawsCloth ? pawsCloth.y : my + 10;
     // wygładzanie: szmatka płynnie dogania palec (bez szarpania)
     pawsClothVis = pawsClothVis ? { x: pawsClothVis.x + (tx - pawsClothVis.x) * 0.4, y: pawsClothVis.y + (ty - pawsClothVis.y) * 0.4 } : { x: tx, y: ty };
     ctx.save();
