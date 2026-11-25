@@ -1580,8 +1580,8 @@ function pawsStart() {
     startQueue(pawsLie());
 }
 // Piesek leży na grzbiecie, łapki do góry („11. Na grzbiecie”, a01): spokojnie
-// (39), co jakiś czas lekko się wierci (40). giggle = najpierw krótki chichot
-// z zamkniętymi oczami (45) — gdy któraś łapka zrobi się czysta.
+// (39), co jakiś czas lekko się wierci (40). giggle = najpierw krótkie, gęste
+// wiercenie (39↔40 szybko) — gdy któraś łapka zrobi się czysta.
 const PAWS_LIE = [39, 39, 39, 39, 39, 39, 40, 39, 40, 39, 39, 39, 39, 39, 39, 39];
 function pawsLie(giggle = false) {
     const lie = {
@@ -1597,7 +1597,7 @@ function pawsLie(giggle = false) {
         },
         onEnd: () => phase === "paws-clean" && pawsEnd(false),
     };
-    return giggle ? [{ sheet: "a01", frames: [45, 45, 45], tempo: 220, time: 660 }, lie] : [lie];
+    return giggle ? [{ sheet: "a01", frames: [39, 40, 39, 40], tempo: 130, time: 520 }, lie] : [lie];
 }
 function pawsEnd(done) {
     if (phase !== "paws-clean") return;
@@ -1726,7 +1726,7 @@ function pawsWipe(p) {
 // wyżymanie raz, gdy któraś łapka zrobi się czysta. Reszta klatek nieużywana.
 let clothRubT = -1e9,
     clothWringT = -1e9;
-const CLOTH_SIZE = 48; // w pikselach sceny (scena jest przybliżona ×1,25)
+const CLOTH_SIZE = 72; // w pikselach sceny (scena jest przybliżona ×1,25)
 function clothFrame() {
     const w = clock - clothWringT;
     if (w < 2 * 170) return 14 + Math.floor(w / 170);
@@ -1736,21 +1736,28 @@ function clothFrame() {
 function pawsClothDraw() {
     const im = images.cloth;
     if (!im) return;
+    // zanim dziecko dotknie: szmatka leży spokojnie na podłodze pod pieskiem
+    // i pulsuje wokół niej ramka (jak przy piłce); potem idzie za palcem
     const hint = !pawsCloth,
-        pts = hint ? pawScreenPoints() : [],
-        mx = pts.length ? pts.reduce((a, p) => a + p.x, 0) / pts.length : x * W,
-        my = pts.length ? pts.reduce((a, p) => a + p.y, 0) / pts.length : GROUND - 4,
-        // czeka przy łapkach (leżący piesek ma je w górze), lekko się przesuwa
-        tx = pawsCloth ? pawsCloth.x : mx + Math.sin(clock / 700) * 40,
-        ty = pawsCloth ? pawsCloth.y : my + 10;
+        tx = pawsCloth ? pawsCloth.x : x * W,
+        ty = pawsCloth ? pawsCloth.y : GROUND + 14;
     // wygładzanie: szmatka płynnie dogania palec (bez szarpania)
-    pawsClothVis = pawsClothVis ? { x: pawsClothVis.x + (tx - pawsClothVis.x) * 0.4, y: pawsClothVis.y + (ty - pawsClothVis.y) * 0.4 } : { x: tx, y: ty };
+    pawsClothVis = pawsClothVis && !hint ? { x: pawsClothVis.x + (tx - pawsClothVis.x) * 0.4, y: pawsClothVis.y + (ty - pawsClothVis.y) * 0.4 } : { x: tx, y: ty };
     ctx.save();
     ctx.translate(pawsClothVis.x, pawsClothVis.y);
-    ctx.globalAlpha = hint ? 0.8 : 1;
     ctx.imageSmoothingEnabled = false;
     const i = clothFrame() - 1;
     ctx.drawImage(im, (i % 4) * 64, Math.floor(i / 4) * 64, 64, 64, -CLOTH_SIZE / 2, -CLOTH_SIZE / 2, CLOTH_SIZE, CLOTH_SIZE);
+    if (hint) {
+        const pulse = 0.5 + 0.5 * Math.sin(clock / 220);
+        ctx.strokeStyle = `rgba(255,255,255,${0.4 + pulse * 0.55})`;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = "rgba(255,255,255,0.7)";
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(0, 0, CLOTH_SIZE * 0.42 + 4 + pulse * 8, 0, Math.PI * 2);
+        ctx.stroke();
+    }
     ctx.restore();
 }
 $(".pawsEnd").onclick = () => pawsEnd(false);
