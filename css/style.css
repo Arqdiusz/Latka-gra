@@ -2950,7 +2950,14 @@ h3,
     top: 118px;
 }
 
-/* Karta „Piesek znalazł kostkę!”: zmieniające się działania z pulsującym „?” */
+/* Karta „Piesek znalazł kostkę!”: piesek z kostką (a03) i zmieniające się działania z pulsującym „?” */
+.bmDog {
+    display: block;
+    width: 120px;
+    height: 120px;
+    margin: -4px auto 0;
+    image-rendering: pixelated;
+}
 .bmShow {
     position: relative;
     height: 64px;

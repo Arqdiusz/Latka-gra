@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.192</title>
+        <title>Łatka v0.8.193</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
-        <link rel="stylesheet" href="css/style.css?v=211" />
+        <link rel="stylesheet" href="css/style.css?v=212" />
     </head>
 
     <body>
@@ -101,7 +101,7 @@
             </div>
             <div class="molePopup" id="boneMolePopup" hidden>
                 <div class="moleCard">
-                    <img class="moleIntroIcon" alt="" />
+                    <canvas class="bmDog" width="160" height="160" aria-hidden="true"></canvas>
                     <h2>Piesek znalazł kostkę!</h2>
                     <div class="bmShow" aria-hidden="true"></div>
                     <p>Dodajemy i odejmujemy kostki. Policzymy razem?</p>
@@ -416,7 +416,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=211"></script>
+            <script src="js/loader.js?v=212"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -424,7 +424,7 @@
                     document.fonts.load("700 16px Quicksand");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=211"></script>
+            <script src="js/audio.js?v=212"></script>
         </main>
         <div class="rotate"><span>📱 ↻</span>Obróć urządzenie do pionu.<small>Gra jest wstrzymana.</small></div>
         <div class="toast" hidden role="status"></div>
@@ -447,19 +447,19 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=211"></script>
-        <script defer src="js/game.js?v=211"></script>
-        <script defer src="js/minigame-fetch.js?v=211"></script>
-        <script defer src="js/minigame-bubbles.js?v=211"></script>
-        <script defer src="js/minigame-mole.js?v=211"></script>
-        <script defer src="js/minigame-hedge.js?v=211"></script>
-        <script defer src="js/minigame-mole2.js?v=211"></script>
-        <script defer src="js/minigame-memory.js?v=211"></script>
-        <script defer src="js/minigame-pairs.js?v=211"></script>
-        <script defer src="js/minigame-bones.js?v=211"></script>
-        <script defer src="js/event-bone-mole.js?v=211"></script>
-        <script defer src="js/event-bone-dig.js?v=211"></script>
-        <script defer src="js/games-menu.js?v=211"></script>
-        <script defer src="js/popup-guard.js?v=211"></script>
+        <script defer src="js/arc-carousel.js?v=212"></script>
+        <script defer src="js/game.js?v=212"></script>
+        <script defer src="js/minigame-fetch.js?v=212"></script>
+        <script defer src="js/minigame-bubbles.js?v=212"></script>
+        <script defer src="js/minigame-mole.js?v=212"></script>
+        <script defer src="js/minigame-hedge.js?v=212"></script>
+        <script defer src="js/minigame-mole2.js?v=212"></script>
+        <script defer src="js/minigame-memory.js?v=212"></script>
+        <script defer src="js/minigame-pairs.js?v=212"></script>
+        <script defer src="js/minigame-bones.js?v=212"></script>
+        <script defer src="js/event-bone-mole.js?v=212"></script>
+        <script defer src="js/event-bone-dig.js?v=212"></script>
+        <script defer src="js/games-menu.js?v=212"></script>
+        <script defer src="js/popup-guard.js?v=212"></script>
     </body>
 </html>

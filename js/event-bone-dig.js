@@ -105,7 +105,7 @@ function boneDigDraw() {
     ctx.restore();
 }
 
-// Dotyk kostki albo pieska, gdy stoi z kostką
+// Dotyk kostki albo pieska, gdy stoi z kostką (do otwarcia karty)
 function boneDigHit(px, py) {
     const d = boneDig;
     if (!d || d.state !== "hold" || phase !== "bonedig") return false;
@@ -113,13 +113,21 @@ function boneDigHit(px, py) {
     return Math.hypot(px - c.x, py - c.y) <= BONE_DIG.hitR || petHit(px, py);
 }
 
+// Dotyk: ta sama karta co przy kreciku („Liczymy!” / „Nie teraz”), piesek w tym
+// czasie dalej stoi z kostką. Smutnego pieska odsyła sadBlocks (jak przy motylku).
 function boneDigTap() {
+    if (!boneDig) return;
+    if (sadBlocks("butterfly")) return sadRefuse();
+    boneDig.state = "popup";
+    startQueue([{ sheet: "a03", anim: 4, facing: left, time: 600000 }]);
+    boneMoleCard();
+}
+// Karta zamknięta (któryś z przycisków) — kończy zdarzenie; resztę robi handler karty
+function boneDigClose() {
     if (!boneDig) return;
     boneDig = null;
     boneDigSchedule(false);
     boneGapSet();
-    idle(16);
-    bonesTryStart(); // smutnego pieska sam odeśle (sadBlocks)
 }
 
 // DEV: od razu piesek kopie kostkę

@@ -205,7 +205,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## 23. Piesek kopie kostkę i odstęp między zdarzeniami z kostką (v0.8.192)
 - Plik `js/event-bone-dig.js`. Rzadkie zdarzenie w Łące/Ogrodzie/Podwórku, losowane na równi z innymi zwierzakami (`wlPick` ma teraz 5 pozycji). Piesek sam kopie (a03 „01”), wykopuje kostkę (a03 „02”), stoi z nią (a03 „05”) do 18 s. W tym czasie wokół kostki pulsuje okrągła ramka.
-- Dotyk kostki albo pieska otwiera wybór „Liczymy kostki”. Bez dotyku piesek odkłada kostkę (a03 „06”) i wraca do swoich spraw. Żadnego okienka ani nacisku.
+- Dotyk kostki albo pieska otwiera tę samą kartę co przy kreciku z kostką („Piesek znalazł kostkę!”, przyciski „Liczymy!” i „Nie teraz”); piesek w tym czasie dalej stoi z kostką. Bez dotyku piesek po 18 s odkłada kostkę (a03 „06”) i wraca do swoich spraw.
+- Na karcie (obu: kret i kopanie) stoi piesek z kostką (a03 „05”, klatki wyrównane stopami, bez drgania) zamiast ikony kostki (v0.8.193).
 - Startuje tylko, gdy piesek stoi między 25% a 75% szerokości, nie jest smutny ani brudny, nie ma kupki ani piachu kreta; łapki +5 brudu.
 - Wspólny odstęp `boneGapUntil` (`boneGapSet()` w `event-bone-mole.js`): kret z kostką, kopanie pieska i zakończona gra w kostki wyznaczają kilka minut bez następnego zdarzenia z kostką (po starcie ~2,5–3,5 min, po końcu ~3–5 min).
 - Kret z kostką też jest rzadszy: pierwszy 60–150 s po wejściu do pokoju, kolejny po 4–6 min.

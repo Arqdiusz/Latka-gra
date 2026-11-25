@@ -185,7 +185,7 @@ const BONE_MOLE_SLIDES = [
 ];
 let boneMoleShowT = 0;
 function boneMoleCard() {
-    $("#boneMolePopup .moleIntroIcon").src = icons.bone;
+    boneMoleDogStart();
     const box = $("#boneMolePopup .bmShow");
     box.innerHTML = BONE_MOLE_SLIDES.map(([a, op, b]) => '<div class="bmSlide"><div class="bmEq">' + a + " " + op + " " + b + ' = <i class="bmQ">?</i></div></div>').join("");
     let i = 0;
@@ -199,8 +199,32 @@ function boneMoleCard() {
     $("#boneMolePopup").hidden = false;
 }
 
+// Piesek z kostką na karcie: klatki „05. Stoi z kostką, przechyla głowę” (a03),
+// ustawione stopami w jednym miejscu (bez drgania między klatkami)
+let boneMoleDogT = 0;
+function boneMoleDogStart() {
+    const cv = $("#boneMolePopup .bmDog"),
+        c = cv.getContext("2d"),
+        seq = numbers(CFG.a03.presets[4].seq);
+    let i = 0;
+    const draw = () => {
+        const f = seq[i % seq.length],
+            cell = cells.a03[f - 1],
+            b = P.meta.a03[f - 1].box,
+            k = 1.2;
+        c.clearRect(0, 0, 160, 160);
+        c.imageSmoothingEnabled = false;
+        if (cell) c.drawImage(cell, 80 - ((b[0] + b[2]) / 2) * k, 152 - b[3] * k, cell.width * k, cell.height * k);
+        i++;
+    };
+    clearInterval(boneMoleDogT);
+    draw();
+    boneMoleDogT = setInterval(draw, 330);
+}
+
 function boneMoleEnd() {
     $("#boneMolePopup").hidden = true;
+    clearInterval(boneMoleDogT);
     clearInterval(boneMoleShowT);
     boneMole = null;
     boneMoleSchedule(false);
@@ -211,11 +235,13 @@ function boneMoleEnd() {
 
 $("#boneMolePopup .moleOk").onclick = () => {
     boneMoleEnd();
+    if (typeof boneDigClose === "function") boneDigClose();
     idle(16);
     bonesTryStart();
 };
 $("#boneMolePopup .moleCancel").onclick = () => {
     boneMoleEnd();
+    if (typeof boneDigClose === "function") boneDigClose();
     // odkłada kostkę i wraca do swoich spraw
     startQueue([{ sheet: "a03", anim: 5, facing: left, time: duration("a03", 5) }]);
 };
