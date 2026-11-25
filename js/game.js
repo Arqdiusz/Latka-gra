@@ -383,8 +383,16 @@ function bubbleThink() {
 }
 
 const NEEDS_KEY = "latka-potrzeby-v1";
-// TYMCZASOWO clean: 8 (test brudu na sierści) — normalnie 0.9
-const NEEDS_DECAY = { food: 1.1, water: 1.3, fun: 1.2, sleep: 0.8, clean: 8 };
+// Spadek potrzeb na minutę — dobrany do 15-minutowej sesji (js/session.js):
+// energia (sleep) równo od 100 do ~5 w 15 min; jedzenie, woda, zabawa i
+// czystość tak, żeby w trakcie sesji trzeba było pieska nakarmić, napoić,
+// pobawić się z nim i umyć (start nowej sesji: 75–80%).
+const NEEDS_DECAY = { food: 4.5, water: 6, fun: 5, sleep: 6.3, clean: 3 };
+// Drzemka w trakcie sesji: krótka, piesek sam się budzi (ziewa i przeciąga się),
+// energii przybywa tylko symbolicznie — sesja i tak kończy się po 15 min.
+const NAP_MS = 25000,
+    NAP_GAIN = 4;
+let napStart = 0;
 const ACTION_EFFECTS = {
     food: { food: 100, water: -3 }, // karmienie najada do pełna
     water: { water: 35 },
@@ -426,7 +434,7 @@ function saveNeeds() {
     }
 }
 function loadNeeds() {
-    Object.assign(stats, { food: 75, water: 75, fun: 70, sleep: 80, clean: 85 });
+    Object.assign(stats, { food: 75, water: 75, fun: 75, sleep: 100, clean: 80 });
     try {
         const a = JSON.parse(localStorage.getItem(NEEDS_KEY) || "null");
         if (a?.version === 1 && a.stats) {
@@ -448,13 +456,11 @@ function updateNeeds(seconds) {
         const dirt = k === "clean" ? 1 + pawDirt / 100 : 1;
         stats[k] = clamp(stats[k] - r * m * dirt * (sleeping ? 0.5 : 1), 0, 100);
     }
-    if (sleeping) {
-        stats.sleep = clamp(stats.sleep + 12 * m, 0, 100);
-        if (stats.sleep >= 100) {
-            wake();
-            say("heart", 2200);
-        }
+    if (sleeping && !(typeof session !== "undefined" && session.locked)) {
+        stats.sleep = clamp(stats.sleep + (NAP_GAIN * seconds * 1000) / NAP_MS, 0, 100);
+        if (clock - napStart >= NAP_MS) napEnd();
     }
+    if (typeof sessionTick === "function") sessionTick(seconds);
     if (poop) stats.clean = clamp(stats.clean - 0.8 * m, 0, 100);
     if (pawDirt >= 35) stats.clean = clamp(stats.clean - 0.4 * m, 0, 100); // brudne łapki trochę brudzą
     lumpUpdate(seconds);
@@ -825,6 +831,19 @@ function interrupt() {
     locks();
 }
 
+// Koniec drzemki: piesek sam się budzi — ziewa i przeciąga się (a02 „08”), potem swoje sprawy
+function napEnd() {
+    if (!sleeping) return;
+    sleeping = false;
+    queue = [];
+    segment = null;
+    phase = "activity";
+    stage = "nap-wake";
+    startQueue([repeatPart("a02", 7, 1)]);
+    locks();
+    save();
+}
+
 function wake() {
     if (!sleeping) return;
     sleeping = false;
@@ -952,6 +971,7 @@ function activity(id) {
     }
     if (id === "sleep") {
         sleeping = true;
+        napStart = clock;
         phase = "idle";
         queue = [];
         segment = null;
@@ -4050,12 +4070,14 @@ window.gameTest = {
 // Brud łapek = pawDirt (0–100). Brud sierści (0–100) to przeliczona czystość:
 // 0% przy czystości ≥ 65, 100% przy czystości 15 (jak furLevel).
 function devGet(k) {
+    if (k === "session") return session.played / 60000; // minuty sesji
     if (k === "paws") return pawDirt;
     if (k === "fur") return (furLevel() / FUR_MAX) * 100;
     return stats[k] ?? 0;
 }
 function devSet(k, v) {
     v = clamp(v, 0, 100);
+    if (k === "session") return (session.played = Math.min(v, 15) * 60000), sessionSave();
     if (k === "paws") {
         pawDirt = v;
         save();

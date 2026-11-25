@@ -3035,3 +3035,100 @@ h3,
 .bonesHint {
     font-size: 18px;
 }
+
+
+/* ═══ Blokada rodzica: po 15 minutach „Piesek śpi” (js/session.js) ═══ */
+.parentLock {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: linear-gradient(180deg, #2d3557ee, #1c2240f5);
+}
+.parentLock[hidden] {
+    display: none;
+}
+.plCard {
+    width: 300px;
+    max-width: 100%;
+    background: #fff8ea;
+    border: 5px solid white;
+    border-radius: 30px;
+    padding: 18px 20px 20px;
+    text-align: center;
+    color: #4a3626;
+    box-shadow: 0 12px 30px #0006;
+}
+.plDog {
+    display: block;
+    width: 200px;
+    height: 125px;
+    margin: 0 auto 4px;
+    image-rendering: pixelated;
+}
+.plCard h2 {
+    margin: 0 0 6px;
+    font-size: 30px;
+    color: #3d5a99;
+}
+.plCard p {
+    margin: 0 0 18px;
+    font-size: 15px;
+    line-height: 1.35;
+}
+.plForm {
+    border-top: 2px dashed #e6d9bd;
+    padding-top: 12px;
+}
+.plLabel {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #9a8466;
+    margin-bottom: 8px;
+}
+.plRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+}
+.plQ {
+    font-weight: 700;
+    font-size: 18px;
+    white-space: nowrap;
+}
+.plInput {
+    width: 64px;
+    font: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    padding: 6px 4px;
+    border: 2px solid #e6d9bd;
+    border-radius: 10px;
+    background: white;
+    color: #4a3626;
+}
+.plOk {
+    font: inherit;
+    font-weight: 700;
+    font-size: 14px;
+    border: 0;
+    border-radius: 10px;
+    padding: 9px 12px;
+    background: #3d8fd6;
+    color: white;
+    cursor: pointer;
+}
+.plForm.bad .plRow {
+    animation: plShake 0.35s;
+}
+@keyframes plShake {
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}

@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.208</title>
+        <title>Łatka v0.8.209</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
-        <link rel="stylesheet" href="css/style.css?v=227" />
+        <link rel="stylesheet" href="css/style.css?v=228" />
     </head>
 
     <body>
@@ -418,7 +418,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=227"></script>
+            <script src="js/loader.js?v=228"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -426,7 +426,22 @@
                     document.fonts.load("700 16px Quicksand");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=227"></script>
+            <script src="js/audio.js?v=228"></script>
+            <div class="parentLock" hidden>
+                <div class="plCard">
+                    <canvas class="plDog" width="240" height="150" aria-hidden="true"></canvas>
+                    <h2>Piesek śpi</h2>
+                    <p>Zmęczył się zabawą i poszedł spać. Pobawimy się znowu później!</p>
+                    <form class="plForm" autocomplete="off">
+                        <span class="plLabel">Dla rodzica</span>
+                        <div class="plRow">
+                            <label class="plQ" for="plInput">7 × 8 =</label>
+                            <input id="plInput" class="plInput" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="Wynik" />
+                            <button class="plOk" type="submit">Odblokuj</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </main>
         <div class="rotate"><span>📱 ↻</span>Obróć urządzenie do pionu.<small>Gra jest wstrzymana.</small></div>
         <div class="toast" hidden role="status"></div>
@@ -439,6 +454,7 @@
             <div class="devRow" data-stat="fun"><span>Zabawa</span><output>50</output><button data-d="-20">−20</button><button data-d="20">+20</button></div>
             <div class="devRow" data-stat="sleep"><span>Sen</span><output>50</output><button data-d="-20">−20</button><button data-d="20">+20</button></div>
             <div class="devRow" data-stat="clean"><span>Czystość</span><output>50</output><button data-d="-20">−20</button><button data-d="20">+20</button></div>
+            <div class="devRow" data-stat="session"><span>Sesja (min)</span><output>0</output><button data-d="-5">−5</button><button data-d="5">+5</button></div>
             <div class="devRow" data-stat="paws"><span>Brud łapek</span><output>0</output><button data-d="-20">−20</button><button data-d="20">+20</button></div>
             <div class="devRow" data-stat="fur"><span>Brud sierści</span><output>0</output><button data-d="-20">−20</button><button data-d="20">+20</button></div>
             <div class="devActions">
@@ -448,22 +464,25 @@
                 <button class="devCleanMole">Usuń piach</button>
                 <button class="devBoneMole">Kret z kostką</button>
                 <button class="devBoneDig">Piesek kopie</button>
+                <button class="devLockNow">Blokada rodzica</button>
+                <button class="devNewSession">Nowa sesja</button>
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=227"></script>
-        <script defer src="js/game.js?v=227"></script>
-        <script defer src="js/minigame-fetch.js?v=227"></script>
-        <script defer src="js/minigame-bubbles.js?v=227"></script>
-        <script defer src="js/minigame-mole.js?v=227"></script>
-        <script defer src="js/minigame-hedge.js?v=227"></script>
-        <script defer src="js/minigame-mole2.js?v=227"></script>
-        <script defer src="js/minigame-memory.js?v=227"></script>
-        <script defer src="js/minigame-pairs.js?v=227"></script>
-        <script defer src="js/minigame-bones.js?v=227"></script>
-        <script defer src="js/event-bone-mole.js?v=227"></script>
-        <script defer src="js/event-bone-dig.js?v=227"></script>
-        <script defer src="js/games-menu.js?v=227"></script>
-        <script defer src="js/popup-guard.js?v=227"></script>
+        <script defer src="js/arc-carousel.js?v=228"></script>
+        <script defer src="js/game.js?v=228"></script>
+        <script defer src="js/session.js?v=228"></script>
+        <script defer src="js/minigame-fetch.js?v=228"></script>
+        <script defer src="js/minigame-bubbles.js?v=228"></script>
+        <script defer src="js/minigame-mole.js?v=228"></script>
+        <script defer src="js/minigame-hedge.js?v=228"></script>
+        <script defer src="js/minigame-mole2.js?v=228"></script>
+        <script defer src="js/minigame-memory.js?v=228"></script>
+        <script defer src="js/minigame-pairs.js?v=228"></script>
+        <script defer src="js/minigame-bones.js?v=228"></script>
+        <script defer src="js/event-bone-mole.js?v=228"></script>
+        <script defer src="js/event-bone-dig.js?v=228"></script>
+        <script defer src="js/games-menu.js?v=228"></script>
+        <script defer src="js/popup-guard.js?v=228"></script>
     </body>
 </html>

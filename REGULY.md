@@ -237,7 +237,7 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 ## 27. Brud na sierści i kamera na łapki (v0.8.200)
 - Brud na sierści (`furLevel`, `furPixels`, `furOverlay` w `game.js`) liczy się z samej klatki, bez dodatkowych grafik. Zaschnięte błoto narasta od dolnych krawędzi (brzuszek, łapki od spodu, też spód ucha i podbródek) w górę, z plamistym brzegiem (szum na siatce 3 px) i jaśniejszymi okruchami. Obrys zostaje czysty.
 - Zależy od czystości: przy 65 brudu nie ma, przy 15 i mniej jest najmocniejszy. 8 poziomów, każdy jako gotowa nakładka (cache). Kąpiel w bańkach (czystość 100) zmywa wszystko.
-- **TYMCZASOWO** `NEEDS_DECAY.clean = 8` (normalnie 0.9), żeby szybko zobaczyć brud. Przed oddaniem gry przywrócić 0.9.
+- (v0.8.209) Tymczasowe przyspieszenie czystości usunięte — tempo wg sekcji 29.
 - Czyszczenie łapek: kamera lekko się zbliża (`pawsZoom`, ×1,25 od v0.8.203, wcześniej ×2,1; płynnie 0,6 s), kadr na całego pieska (łapki + głowa). Przybliżana jest cała scena (`.sceneZoom` = tło + canvas), więc dotyk szmatki trafia jak wcześniej (`pointerXY` liczy z przybliżonego prostokąta canvasu). Kamera wraca po zakończeniu lub po ✕.
 - Szmatka (v0.8.201): arkusz `animacje/szmatka.png` (4×4 po 64 px, białe tło zdjęte do obrysu, iskierki i kreski ruchu zostały). Spokojnie, mało klatek (v0.8.202): 9 — czeka; 9↔10 — trze (dopóki palec przeciera łapki, 230 ms na klatkę); 14→15 — krótkie wyżymanie raz, gdy któraś łapka zrobi się czysta. Z arkusza usunięte też jasne resztki tła przy rogach obrysu (iskierki i kreski ruchu zostały). Rozmiar 48 px sceny (scena jest przybliżona ×1,25).
 - Czyszczenie łapek na grzbiecie (v0.8.203): piesek leży na plecach z łapkami do góry („11. Na grzbiecie”, a01). Spokojnie klatka 39, co jakiś czas wierci się (40) (`PAWS_LIE`, `pawsLie`). Gdy łapka zrobi się czysta — krótkie, gęste wiercenie 39↔40 (130 ms, 0,52 s; klatka 45 odrzucona w v0.8.204), po ostatniej wstaje do „Radość z powrotem” i karty „Brawo!”. Szmatka (v0.8.204) czeka nieruchomo na podłodze pod pieskiem z pulsującą białą ramką (jak przy piłce), po dotknięciu idzie za palcem; rozmiar 72 px sceny. Strefa szmatki sięga wyżej (do GROUND−140).
@@ -250,3 +250,12 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Iskierki przy każdej czyszczonej łapce w trakcie czyszczenia zostały (krótkie, jednorazowe).
 - Poprawki (v0.8.207): na karcie piesek jest wyrównany do ramki pierwszej klatki (wcześniej ramka zmieniała się z ogonem i piesek skakał 1–2 px na boki); merdanie wolniej (300 ms). Przy szorowaniu co ~0,2 s pojawia się przy szmatce jedna mała iskierka. Gdy łapka zrobi się czysta: duży błysk (miękkie białe światło 0,35 s + 5 dużych gwiazdek, `sparkleBurst(..., flash = true)`).
 - Panel DEV (v0.8.208): wiersze „Brud łapek” (`pawDirt` 0–100) i „Brud sierści” (0–100, przeliczane na czystość: 0% przy czystości ≥ 65, 100% przy 15), ±20 jak inne potrzeby (`devGet`/`devSet`).
+
+## 29. Sesja 15 minut, potrzeby i blokada rodzica (v0.8.209)
+- Plik `js/session.js`. Sesja = 15 min gry, liczone tylko gdy gra jest otwarta i widoczna (`sessionTick` z `updateNeeds`). Stan w localStorage `latka-sesja-v1` (`played`, `locked`).
+- Spadek potrzeb na minutę (`NEEDS_DECAY`): jedzenie 4,5, woda 6, zabawa 5, energia (sen) 6,3, czystość 3. Energia spada równo od 100 do ~5% w 15 min; przy ≤10% (czerwone) piesek jest smutny (siedzi tyłem) i chce spać. Pozostałe potrzeby: w trakcie sesji trzeba pieska nakarmić, napoić, pobawić się i umyć.
+- Drzemka w trakcie sesji (`NAP_MS` 25 s, `NAP_GAIN` +4%): piesek sam się budzi — ziewa i przeciąga się (a02 „08”), potem wraca do swoich spraw. Energii przybywa tylko symbolicznie, a czas sesji i tak płynie.
+- Koniec sesji: po 15 min albo gdy energia spadnie do 3%. Trwająca zabawa (mini-gra, aport) może się dokończyć, najdłużej 2 min. Piesek zasypia, pokazuje się ekran „Piesek śpi” (śpiący piesek w legowisku, a02 „07”).
+- Odblokowuje tylko rodzic: działanie z mnożenia 6–9 × 6–9 (zła odpowiedź = drgnięcie i nowe działanie). Blokada zostaje po odświeżeniu strony.
+- Nowa sesja po odblokowaniu: energia 100%, jedzenie/woda/zabawa 75%, czystość 80%, czyste łapki, licznik od zera. Tak samo przy pierwszym uruchomieniu.
+- DEV: „Sesja (min)” ±5, przyciski „Blokada rodzica” i „Nowa sesja”.
