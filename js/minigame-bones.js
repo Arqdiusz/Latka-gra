@@ -1,7 +1,7 @@
 "use strict";
 // ═══════════════════════════════════════════════════════════════
 // LICZYMY KOSTKI — dodawanie i odejmowanie w zakresie 10 (dla 6+).
-// 1) Wybór: dodawanie / odejmowanie i poziom (sumy 2–6, 4–8, 6–10 i Sprawdzian).
+// 1) Ekran startowy (piesek, „Liczymy!”); poziom dobiera gra (bones-adapt.js).
 // 2) Kostki spadają na dwa dywaniki, a piesek w tym czasie kopie dołek
 //    (arkusz a03), wykopuje kostkę, chwilę stoi z nią spokojnie i ją odkłada.
 // 3) Dziecko dotyka dywanik i wpisuje liczbę kostek na klawiaturze
@@ -13,14 +13,7 @@
 // przesunięcia klatek jak w silniku), a pies z gry czeka pod spodem.
 // ═══════════════════════════════════════════════════════════════
 
-const BONES_LEVELS = [
-        // min–max: zakres sumy (dodawanie) albo liczby, od której odejmujemy
-        { name: "Łatwy", info: "sumy 2–6", min: 2, max: 6, hide: false },
-        { name: "Średni", info: "sumy 4–8", min: 4, max: 8, hide: false },
-        { name: "Trudny", info: "sumy 6–10", min: 6, max: 10, hide: false },
-        { name: "Sprawdzian", info: "6–10, bez kostek, czegoś brakuje", min: 6, max: 10, test: true },
-    ],
-    BONES_ROUNDS = 5,
+const BONES_ROUNDS = 5,
     BONES_DOG = { x: 192, y: 332, scale: 1.25 }, // stopy pieska na trawie, tuż nad dywanikami
     BONES_FOREVER = 600000,
     // animacje (indeksy presetów z animacje-ustawienia/*.json)
@@ -38,8 +31,9 @@ const BONES_LEVELS = [
     };
 
 let bonesGame = null,
-    bonesOp = "+",
-    bonesLevel = 0;
+    bonesOp = "+", // działanie bieżącego zadania (dobiera je bones-adapt.js)
+    bonesLv = { hide: false, test: false }, // tryb bieżącego zadania
+    bonesTask = null;
 
 // ── Animacje pieska (własny odtwarzacz na .bonesCanvas) ─────────────
 // Kolejka części: { sheet, anim, time }. Ostatnia część kręci się bez końca.
@@ -117,14 +111,15 @@ function bonesReact(...parts) {
 }
 
 // ── Wejście i ekran wyboru ────────────────────────────────────────
-function bonesTryStart() {
+// direct = true: start prosto z karty „Piesek znalazł kostkę!” (bez ekranu startowego)
+function bonesTryStart(direct) {
     if (sadBlocks("games")) return sadRefuse(); // smutny piesek nie chce się bawić
     if (!gameEntryOk()) return;
     bonesGame = {};
-    bonesBuildMenu();
     $(".bonesFull").hidden = false;
-    $(".bonesMenu").hidden = false;
+    $(".bonesMenu").hidden = !!direct;
     $(".bonesPlay").hidden = true;
+    if (!direct) bonesDogStart();
     startQueue([
         {
             sheet: "a01",
@@ -137,51 +132,16 @@ function bonesTryStart() {
             },
         },
     ]);
+    if (direct) {
+        adaptLog("start");
+        bonesBegin();
+    }
 }
 
-function bonesBuildMenu() {
-    const box = $(".bonesLevels"),
-        bar = $(".bonesLvlBar"),
-        dots = (n) => [0, 1, 2, 3].map((j) => '<i class="' + (j <= n ? "on" : "") + '"></i>').join("");
-    const refresh = () => {
-        bar.querySelector(".nm").textContent = BONES_LEVELS[bonesLevel].name;
-        bar.querySelector(".dots").innerHTML = dots(bonesLevel);
-    };
-    const toggle = (open) => {
-        box.hidden = !open;
-        bar.setAttribute("aria-expanded", open);
-        bar.parentNode.classList.toggle("open", open);
-    };
-    box.innerHTML = "";
-    BONES_LEVELS.forEach((l, i) => {
-        const b = document.createElement("button");
-        b.className = "bonesLvl";
-        b.setAttribute("aria-pressed", i === bonesLevel);
-        b.innerHTML = "<span>" + l.name + "<small>" + l.info + '</small></span><span class="dots">' + dots(i) + "</span>";
-        b.onclick = () => {
-            bonesLevel = i;
-            box.querySelectorAll(".bonesLvl").forEach((c, k) => c.setAttribute("aria-pressed", k === i));
-            refresh();
-            toggle(false);
-        };
-        box.appendChild(b);
-    });
-    bar.onclick = () => toggle(box.hidden);
-    toggle(false);
-    refresh();
-    document.querySelectorAll(".bonesOp").forEach((b) => b.setAttribute("aria-pressed", b.dataset.op === bonesOp));
-    bonesDogStart();
-}
-document.querySelectorAll(".bonesOp").forEach(
-    (b) =>
-        (b.onclick = () => {
-            bonesOp = b.dataset.op;
-            document.querySelectorAll(".bonesOp").forEach((c) => c.setAttribute("aria-pressed", c === b));
-        })
-);
 // piesek z kostką na karcie wyboru (te same klatki co na karcie kreta), stopami w jednym miejscu
 let bonesDogT = 0;
 function bonesDogStart() {
+    $(".bonesParentBtn img").src = icons.lock || "";
     const cv = $(".bonesMenuDog"),
         c = cv.getContext("2d"),
         seq = numbers(CFG.a03.presets[4].seq);
@@ -199,9 +159,18 @@ function bonesDogStart() {
     draw();
     bonesDogT = setInterval(draw, 330);
 }
-$(".bonesStart").onclick = () => bonesBegin();
-$(".bonesBack").onclick = () => bonesFinish(false);
-$(".bonesPlayClose").onclick = () => bonesFinish(false);
+$(".bonesStart").onclick = () => {
+    adaptLog("start");
+    bonesBegin();
+};
+$(".bonesBack").onclick = () => {
+    adaptLog("back");
+    bonesFinish(false);
+};
+$(".bonesPlayClose").onclick = () => {
+    adaptLog("exit");
+    bonesFinish(false);
+};
 
 function bonesBegin() {
     const g = bonesGame || (bonesGame = {});
@@ -231,32 +200,29 @@ function bonesStarsDraw() {
 
 function bonesRound() {
     const g = bonesGame,
-        lv = BONES_LEVELS[bonesLevel],
-        m = lv.max;
-    // zakres poziomu: suma (dodawanie) albo liczba, od której odejmujemy (odejmowanie);
-    // ta sama para nie wypada dwa razy z rzędu
-    for (let tries = 0; tries < 8; tries++) {
-        if (bonesOp === "+") {
-            const s = bonesRnd(lv.min, m);
-            g.A = bonesRnd(1, s - 1);
-            g.B = s - g.A;
-        } else {
-            g.A = bonesRnd(lv.min, m);
-            g.B = bonesRnd(1, g.A - 1);
-        }
-        if (g.A + "," + g.B !== g.last) break;
-    }
-    g.last = g.A + "," + g.B;
-    // sprawdzian: ta sama trójka liczb, ale w działaniu brakuje losowo jednej z nich
-    g.C = bonesOp === "+" ? g.A + g.B : g.A - g.B;
-    g.unk = lv.test ? ["a", "b", "c"][bonesRnd(0, 2)] : "c";
+        t = adaptPick(g.round); // zadanie dobrane do poziomu dziecka
+    bonesTask = t;
+    bonesOp = t.op;
+    bonesLv = { hide: t.hide, test: t.test };
+    const lv = bonesLv;
+    g.A = t.A;
+    g.B = t.B;
+    g.C = t.C;
+    g.unk = t.unk;
+    g.mistakes = 0;
+    // kolor działania: dodawanie niebieskie, odejmowanie pomarańczowe
+    $(".bonesPlay").classList.toggle("opAdd", t.op === "+");
+    $(".bonesPlay").classList.toggle("opSub", t.op === "-");
+    if (t.news) bonesBanner(t.news === "sub" ? "Nowość: odejmowanie!" : "Nowość: czego brakuje?", t.news === "sub" ? "-" : t.op);
+    else if (g.prevOp && g.prevOp !== t.op) bonesBanner(t.op === "-" ? "Teraz odejmujemy!" : "Teraz dodajemy!", t.op);
+    g.prevOp = t.op;
     document.querySelectorAll(".bonesPile").forEach((p) => (p.style.display = lv.test ? "none" : ""));
     g.okA = g.okB = false;
     g.ready = false;
     clearTimeout(g.coverT);
     clearTimeout(g.readyT);
     clearTimeout(g.dropT);
-    $(".bonesTtl").textContent = bonesOp === "+" ? "Dodawanie" : "Odejmowanie";
+    $(".bonesTtl").textContent = t.test ? "Czego brakuje?" : bonesOp === "+" ? "Dodawanie" : "Odejmowanie";
     bonesStarsDraw();
     $(".bonesEq").innerHTML = "";
     $(".bonesEq").className = "bonesEq";
@@ -296,6 +262,7 @@ function bonesRound() {
     g.readyT = setTimeout(() => {
         if (bonesGame !== g) return;
         g.ready = true;
+        g.t0 = performance.now(); // od teraz liczymy czas odpowiedzi
         if (lv.test) return bonesShowEq(); // bez kostek: od razu działanie z brakującą liczbą
         document.querySelectorAll(".bonesQ").forEach((q) => (q.style.visibility = "visible"));
         bonesPileTap("a"); // od razu wybrany lewy dywanik; można dotknąć drugi, żeby przełączyć
@@ -335,7 +302,7 @@ function bonesPileTap(which) {
         if (which === "a") g.okA = true;
         else g.okB = true;
         // trudny poziom: gdy obie liczby są wpisane, kostki się chowają — wynik w głowie
-        if (g.okA && g.okB && BONES_LEVELS[bonesLevel].hide) document.querySelectorAll(".bonesPile").forEach((p) => p.classList.add("cover"));
+        if (g.okA && g.okB && bonesLv.hide) document.querySelectorAll(".bonesPile").forEach((p) => p.classList.add("cover"));
         sfx("good");
         if (g.okA && g.okB) bonesShowEq();
         else bonesPileTap(which === "a" ? "b" : "a"); // sam wybiera drugi dywanik
@@ -349,7 +316,7 @@ function bonesShowEq() {
     const g = bonesGame,
         el = $(".bonesEq");
     clearTimeout(g.coverT);
-    const lv = BONES_LEVELS[bonesLevel],
+    const lv = bonesLv,
         vals = { a: g.A, b: g.B, c: g.C },
         target = vals[g.unk],
         slot = (k) => (k === g.unk ? '<button class="bonesRes" aria-label="Wpisz brakującą liczbę">?</button>' : '<span class="n">' + vals[k] + "</span>");
@@ -364,6 +331,7 @@ function bonesShowEq() {
             r.textContent = target;
             r.classList.add("ok");
             document.querySelectorAll(".bonesPile").forEach((p) => p.classList.remove("cover")); // kostki wracają — można sprawdzić
+            adaptResult(bonesTask, g.mistakes || 0, performance.now() - (g.t0 || performance.now()));
             g.round++;
             bonesStarsDraw();
             sfx("win"); // fanfary po każdym dobrym wyniku
@@ -381,6 +349,16 @@ function bonesShowEq() {
     openRes(); // klawiatura od razu pisze w kratkę wyniku
 }
 $(".bonesNext").onclick = () => bonesGame && bonesRound();
+
+// krótki napis przy zmianie działania („Teraz odejmujemy!”)
+let bonesBannerT = 0;
+function bonesBanner(text, op) {
+    const el = $(".bonesOpBanner");
+    el.textContent = text;
+    el.className = "bonesOpBanner " + (op === "-" ? "sub" : "add") + " show";
+    clearTimeout(bonesBannerT);
+    bonesBannerT = setTimeout(() => el.classList.remove("show"), 2600);
+}
 
 // ── Klawiatura ────────────────────────────────────────────────────
 let bonesBuf = "",
@@ -439,6 +417,7 @@ function bonesPress(k) {
             void d.offsetWidth;
             d.classList.add("bad");
             sfx("miss");
+            if (bonesGame) bonesGame.mistakes = (bonesGame.mistakes || 0) + 1;
             bonesBuf = "";
             bonesReact(bonesPart("no", { times: 2 }), { wait: true });
             setTimeout(() => {
@@ -478,6 +457,7 @@ function bonesCheckPiles() {
             }, 600);
         }
         sfx("miss");
+        g.mistakes = (g.mistakes || 0) + 1;
         // wybrane zostaje (albo przechodzi na) pierwsze złe pole
         bonesMark(wrong[0].q);
         bonesField = wrong[0].q;
@@ -488,7 +468,7 @@ function bonesCheckPiles() {
     if (g.okA && g.okB) {
         bonesMark(null);
         bonesField = null;
-        if (BONES_LEVELS[bonesLevel].hide) document.querySelectorAll(".bonesPile").forEach((p) => p.classList.add("cover"));
+        if (bonesLv.hide) document.querySelectorAll(".bonesPile").forEach((p) => p.classList.add("cover"));
         bonesShowEq();
     } else {
         const left = items.find((it) => !g[it.k]);
@@ -500,8 +480,12 @@ function bonesCheckPiles() {
 
 // ── Koniec ────────────────────────────────────────────────────────
 function bonesWin() {
-    const lv = BONES_LEVELS[bonesLevel];
-    $("#bonesWinPopup .bonesWinTxt").textContent = BONES_ROUNDS + " działań, " + (bonesOp === "+" ? "dodawanie" : "odejmowanie") + ", poziom: " + lv.name.toLowerCase() + ".";
+    $("#bonesWinPopup .bonesWinTxt").textContent = BONES_ROUNDS + " działań policzone. Super!";
+    if (!bonesGame.counted) {
+        bonesGame.counted = true;
+        adaptRoundDone();
+        adaptLog("finish");
+    }
     $("#bonesWinPopup .memoWinImg").src = icons.cup;
     moleWinSpawnConfetti("#bonesWinPopup .moleWinConfetti");
     $("#bonesWinPopup").hidden = false;
@@ -517,13 +501,6 @@ $("#bonesWinPopup .winAgain").onclick = () => {
     $("#bonesWinPopup").hidden = true;
     if (bonesGame) bonesGame.rewarded = false;
     bonesBegin();
-};
-$("#bonesWinPopup .bonesToMenu").onclick = () => {
-    $("#bonesWinPopup").hidden = true;
-    $(".bonesPlay").hidden = true;
-    $(".bonesMenu").hidden = false;
-    if (bonesGame) bonesGame.rewarded = false;
-    bonesBuildMenu();
 };
 $("#bonesWinPopup .bonesExit").onclick = () => {
     $("#bonesWinPopup").hidden = true;

@@ -185,6 +185,7 @@ const BONE_MOLE_SLIDES = [
 ];
 let boneMoleShowT = 0;
 function boneMoleCard() {
+    adaptLog("offer");
     boneMoleDogStart();
     const box = $("#boneMolePopup .bmShow");
     box.innerHTML = BONE_MOLE_SLIDES.map(([a, op, b]) => '<div class="bmSlide"><div class="bmEq">' + a + " " + op + " " + b + ' = <i class="bmQ">?</i></div></div>').join("");
@@ -237,9 +238,10 @@ $("#boneMolePopup .moleOk").onclick = () => {
     boneMoleEnd();
     if (typeof boneDigClose === "function") boneDigClose();
     idle(16);
-    bonesTryStart();
+    bonesTryStart(true); // prosto do gry — ekran startowy już był (karta kreta)
 };
 $("#boneMolePopup .moleCancel").onclick = () => {
+    adaptLog("noThanks");
     boneMoleEnd();
     if (typeof boneDigClose === "function") boneDigClose();
     // odkłada kostkę i wraca do swoich spraw
