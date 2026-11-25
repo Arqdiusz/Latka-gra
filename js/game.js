@@ -1619,8 +1619,21 @@ let pawsPtr = null, // poprzedni punkt przeciągania (do liczenia drogi)
     pawLvl = null, // poziom brudu (0–1) każdego pasa podczas czyszczenia
     pawsRate = 0, // ile brudu schodzi na piksel drogi szmatki (ustalane na starcie)
     pawsDone = new Set(); // które łapki są już czyste (każda dostaje iskierki)
+// Pasek postępu czyszczenia łapek (jak przy kąpieli): ile grudek już wytarte.
+let pawsTotal = 0, // ile grudek było na starcie
+    pawsProg = 0; // 0–1, tylko rośnie
+function pawsBadgeSet(p) {
+    pawsProg = clamp(p, 0, 1);
+    const i = $(".pawsBadge .bar i");
+    if (i) i.style.width = pawsProg * 100 + "%";
+}
 function updatePawsUi() {
-    const e = $(".pawsEnd");
+    const e = $(".pawsEnd"),
+        bd = $(".pawsBadge");
+    if (bd && !bd.hidden !== (phase === "paws-clean")) {
+        bd.hidden = phase !== "paws-clean";
+        if (!bd.hidden) bd.querySelector("img").src = icons.paw;
+    }
     if (e) e.hidden = phase !== "paws-clean";
     if (phase !== "paws-clean") pawsZoom(false);
 }
@@ -1650,6 +1663,8 @@ function pawsStart() {
     pawLvl = new Array(16).fill(pawDirt / 100);
     pawsRate = PAWS_WIPE_RATE * (pawDirt / 100); // im brudniej, tym szybciej schodzi — czas zawsze ten sam
     pawsDone = new Set();
+    pawsTotal = pawDirtBlobs("a01", PAWS_LIE[0]).filter((bl) => bl.thr < pawLvl[bl.bucket]).length;
+    pawsBadgeSet(0);
     startQueue(pawsLie());
 }
 // Czyszczenie trwa zawsze tyle samo: każdy pas łapek schodzi po ~800 px drogi szmatki.
@@ -1678,6 +1693,7 @@ function pawsEnd(done) {
     if (phase !== "paws-clean") return;
     pawsPtr = pawsCloth = pawsClothVis = null;
     if (done) {
+        pawsBadgeSet(1);
         pawLvl = null;
         pawDirt = 0;
         changeNeeds(ACTION_EFFECTS.paws);
@@ -1788,6 +1804,7 @@ function pawsWipe(p) {
         sparkleBurst(pt.x, pt.y, SPARKLE_BIG, 0, true); // duży błysk: łapka czysta!
         sfx("good");
     });
+    if (pawsTotal) pawsBadgeSet(Math.max(pawsProg, 1 - blobs.filter((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0)).length / pawsTotal));
     // koniec, gdy na bieżącej klatce nie widać już żadnej grudki
     if (!blobs.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) pawsEnd(true);
 }

@@ -318,3 +318,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Okienko pokazuje się tylko raz na umiejętność: po OK zapisuje się `adapt.seen.sub/miss` (localStorage). „Zacznij liczenie od nowa” w widoku rodzica zeruje też to, więc okienko wróci przy ponownym odblokowaniu.
 - Po OK startuje normalne zadanie. Zamiast banera „Nowość: odejmowanie!” jest teraz to okienko; baner „Teraz odejmujemy!/Teraz dodajemy!” przy zmianie działania został.
 - `.bonesNews` jest w ochronie przed „przelotem” kliknięcia (700 ms); ✕/zakończenie gry zamyka okienko i zatrzymuje animacje.
+
+## 39. Czyste łapki — pasek postępu (v0.8.223)
+- Podczas czyszczenia łapek szmatką u góry sceny jest kremowa plakietka jak przy kąpieli: ikonka łapki + zielony pasek (bez tekstu). Plakietka chowa na czas czyszczenia serduszko samopoczucia.
+- Pasek idzie za prawdziwym postępem: 1 − (grudki jeszcze widoczne ÷ grudki na starcie), nigdy się nie cofa; po ostatniej grudce 100% i fanfary. Przerwanie ✕ chowa pasek, zostaje tyle brudu, ile nie wytarto (bez zmian).
+- Ikona `icons.paw`; stan: `pawsTotal`, `pawsProg`, `pawsBadgeSet()`, widoczność w `updatePawsUi()`.
