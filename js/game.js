@@ -1712,17 +1712,17 @@ function pawsWipe(p) {
     // koniec, gdy na bieżącej klatce nie widać już żadnej grudki
     if (!blobs.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) pawsEnd(true);
 }
-// Szmatka z arkusza animacje/szmatka.png (4×4 po 64 px):
-// klatka 1 — czeka; 5–12 — trze (gdy palec przeciera łapki); 13–16 — wyżymanie
-// (raz, gdy któraś łapka zrobi się czysta).
+// Szmatka z arkusza animacje/szmatka.png (4×4 po 64 px). Spokojnie, mało klatek:
+// 9 — czeka; 9↔10 — trze (gdy palec przeciera łapki, wolno); 14→15 — krótkie
+// wyżymanie raz, gdy któraś łapka zrobi się czysta. Reszta klatek nieużywana.
 let clothRubT = -1e9,
     clothWringT = -1e9;
 const CLOTH_SIZE = 58; // w pikselach sceny (scena jest przybliżona ×2,1)
 function clothFrame() {
     const w = clock - clothWringT;
-    if (w < 4 * 120) return 13 + Math.floor(w / 120);
-    if (clock - clothRubT < 200) return 5 + (Math.floor(clock / 85) % 8);
-    return 1;
+    if (w < 2 * 170) return 14 + Math.floor(w / 170);
+    if (clock - clothRubT < 250) return 9 + (Math.floor(clock / 230) % 2);
+    return 9;
 }
 function pawsClothDraw() {
     const im = images.cloth;
