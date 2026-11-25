@@ -81,6 +81,30 @@
         s.start(t0);
     }
 
+    // Szczeknięcie: piłokształtna fala z opadającym tonem przez filtr pasmowy
+    // („pysk”) + krótkie chuchnięcie szumu na początku. Mały piesek = wyżej.
+    function woof(t0, { f0 = 640, f1 = 330, dur = 0.15, vol = 0.34, form = 1000, q = 1.4 } = {}) {
+        const o = ctx.createOscillator(),
+            f = ctx.createBiquadFilter(),
+            g = ctx.createGain();
+        o.type = "sawtooth";
+        o.frequency.setValueAtTime(f0, t0);
+        o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+        f.type = "bandpass";
+        f.frequency.setValueAtTime(form * 1.3, t0);
+        f.frequency.exponentialRampToValueAtTime(form * 0.7, t0 + dur);
+        f.Q.value = q;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.linearRampToValueAtTime(vol, t0 + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(f);
+        f.connect(g);
+        g.connect(master);
+        o.start(t0);
+        o.stop(t0 + dur + 0.03);
+        noise(t0, 0.04, { vol: vol * 0.35, freq: 1800 });
+    }
+
     const N = { C4: 262, D4: 294, E4: 330, F4: 349, G4: 392, A4: 440, B4: 494, C5: 523, D5: 587, E5: 659, G5: 784, C6: 1047 };
 
     // nazwa → [minimalny odstęp ms, funkcja(parametr)]
@@ -143,6 +167,10 @@
                 tone(t + o, f, 0.18, { type: "triangle", vol: 0.12, slideTo: f * 0.93 });
             noise(t + 0.18, 0.2, { vol: 0.1, freq: 6500 });
         }],
+        // szczekanie (a03 „07–09”): zwykłe „hau”, wesołe (wyżej, krócej), grzeczne (ciche)
+        bark: [140, () => woof(ctx.currentTime, { f0: 640, f1: 330, dur: 0.15, vol: 0.34 })],
+        barkHappy: [140, () => woof(ctx.currentTime, { f0: 780, f1: 430, dur: 0.12, vol: 0.3, form: 1150 })],
+        barkSoft: [140, () => woof(ctx.currentTime, { f0: 860, f1: 560, dur: 0.1, vol: 0.17, form: 1300, q: 1.8 })],
         // kupka / sprzątanie — "szur"
         wipe: [150, () => noise(ctx.currentTime, 0.2, { vol: 0.1, freq: 2500 })],
     };

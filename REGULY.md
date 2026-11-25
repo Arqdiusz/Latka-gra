@@ -264,3 +264,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Zdarzenia w ogrodzie wracają szybciej: motylek po 8–20 s (było 12,5–30), jeżyk 8–18 s (było 12–27), kret 6–15 s (było 7,5–22,5). Kret z kostką i kopanie: pierwsze 30–90 s / 45–110 s po wejściu do pokoju, kolejne po 2–3 min; wspólny odstęp z kostkami 1,5–2,5 min (po starcie 1,5–2 min).
 - Dymki z chęciami mają sens: gdy któraś potrzeba spada poniżej 40% (żółta), w 60% dymków piesek pokazuje tę najniższą (jedzenie, woda, piłka, sen, kąpiel). Kąpiel (bańki) pojawia się tylko przy czystości < 50%, piłka tylko przy zabawie < 75%.
 - Przy samej ścianie (głowa < 84 px od krawędzi) dymek się nie pojawia — czeka, aż piesek odejdzie (przy krawędzi dymek przygasa).
+
+## 31. Szczekanie (v0.8.211)
+- Klatki: arkusz 03, klatki 25–30 (z grafik użytkownika: przeniesione na ich siatkę pikseli 10,24 px, ok. 44×41, i przeskalowane ×2,73 do wielkości stojącego pieska; ustawione jak a01 63 — lewy brzeg x=4, stopy y=116). Tułów i nogi zawsze z jednej klatki (F4), z pozostałych tylko głowa — nic nie drga. 25 = zamknięty pysk, 26 = „hau”, 27 = wesołe (pysk otwarty), 28 = uśmiech z zamkniętymi oczami, 29 = mrugnięcie, 30 = mały pysk (grzeczne). Punkty łap w `szkielet.json` (a03, klatki 25–30) — brud na łapkach działa.
+- Animacje (a03): „07. Szczeknięcie »Hau!«” (25,25,26,25,25; 150 ms), „08. Wesołe hau” (130 ms), „09. Grzeczne hau — prośba” (140 ms). Podwójne „hau, hau” = dwa razy „07” pod rząd.
+- Dźwięki (`audio.js`, synteza): `bark` (zwykłe), `barkHappy` (wyżej, krócej), `barkSoft` (ciche). Grają na klatce, w której pysk się otwiera (`barkParts`).
+- Kiedy: dymek „szczekanie” → „hau, hau”; dymek z potrzebą (< 40%) → grzeczne hau (prośba); dotknięcie pieska → w 35% wesołe hau zamiast zwykłej reakcji; samo z siebie ok. 5% samodzielnych zachowań → „hau” lub „hau, hau”. Nie szczeka śpiący, smutny ani schowany (`bark()`).

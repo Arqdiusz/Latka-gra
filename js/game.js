@@ -338,12 +338,14 @@ let lastWish = "";
 // Dymek musi mieć sens: potrzeba w dymku tylko wtedy, gdy naprawdę spada
 // (żółta, < 40%) — wtedy piesek częściej „mówi”, czego mu brakuje. Kąpiel
 // (bańki) tylko gdy czystość < 50%, piłka tylko gdy zabawa < 75%.
+let lowNeedWish = null; // potrzeba pokazana w ostatnim dymku (piesek o nią prosi)
 const WISH_NEED_AT = 40,
     NEED_WISH_ICON = { food: "food", water: "water", fun: "fun", sleep: "sleep", clean: "bubbles" };
 function bubbleWish() {
     let low = null;
     for (const k of ["food", "water", "fun", "sleep", "clean"]) if (stats[k] < WISH_NEED_AT && (!low || stats[k] < stats[low])) low = k;
-    if (low && Math.random() < 0.6) return (lastWish = NEED_WISH_ICON[low]);
+    lowNeedWish = null;
+    if (low && Math.random() < 0.6) return (lowNeedWish = low), (lastWish = NEED_WISH_ICON[low]);
     const ctx = [];
     if (butterfly?.free && !butterfly.lure && butterfly.plan) ctx.push("butterfly");
     if (moleTeaser || moleDirts[room]) ctx.push("mole");
@@ -393,6 +395,8 @@ function bubbleThink() {
         const wish = bubbleWish();
         say(wish, R.showMs);
         if (wish === "bone" && typeof boneWishStart === "function") boneWishStart(); // „chcę kopać” — biegnie do ogrodu
+        else if (wish === "bark") bark("hau", 2); // „hau, hau!”
+        else if (NEED_WISH_ICON[lowNeedWish] === wish) bark("soft"); // grzecznie prosi o to, czego mu brakuje
     }
 }
 
@@ -1304,10 +1308,43 @@ function react() {
     if (sadBlocks("pet")) return sadRefuse();
     interrupt();
     wake();
+    say("heart");
+    if (Math.random() < 0.35 && bark("happy")) return; // czasem wesoło szczeka
     phase = "reaction";
     locks();
-    say("heart");
     startQueue([repeatPart("a01", [10, 12, 7, 15][Math.floor(Math.random() * 4)])]);
+}
+
+// ── Szczekanie (a03 „07. Szczeknięcie”, „08. Wesołe hau”, „09. Grzeczne hau”) ──
+// Dźwięk pada na klatce, w której pysk się otwiera. Podwójne „hau, hau” = dwa
+// krótkie szczeknięcia pod rząd. Piesek szczeka sam z siebie (dymek
+// „szczekanie”, czasem przy samodzielnym zachowaniu), grzecznie prosi, gdy
+// czegoś mu brakuje (dymek z potrzebą), i wesoło po dotknięciu.
+const BARK = { hau: [6, "bark"], happy: [7, "barkHappy"], soft: [8, "barkSoft"] },
+    BARK_CLOSED = 25;
+function barkParts(kind, times = 1) {
+    const [anim, snd] = BARK[kind],
+        pre = CFG.a03.presets[anim],
+        seq = numbers(pre.seq),
+        opens = seq.map((f, i) => (f !== BARK_CLOSED && (i === 0 || seq[i - 1] === BARK_CLOSED) ? i : -1)).filter((i) => i >= 0),
+        parts = [];
+    for (let t = 0; t < times; t++)
+        parts.push({
+            sheet: "a03",
+            anim,
+            time: seq.length * pre.ms,
+            onStart: () => opens.forEach((i) => setTimeout(() => phase === "bark" && sfx(snd), i * pre.ms)),
+        });
+    return parts;
+}
+function bark(kind = "hau", times = 1) {
+    if (!casual() || sleeping || sadNeed() || dogHidden) return false;
+    interrupt();
+    phase = "bark";
+    stage = "bark-" + kind;
+    locks();
+    startQueue(barkParts(kind, times));
+    return true;
 }
 
 function startPetting() {
@@ -2202,6 +2239,7 @@ function localWalk() {
 
 function autonomous() {
     const r = Math.random();
+    if (r < 0.05 && bark("hau", Math.random() < 0.5 ? 2 : 1)) return; // czasem szczeknie sam z siebie
     if (r < 0.55) localWalk();
     else if (r < 0.72) {
         phase = "pause";
