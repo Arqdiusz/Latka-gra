@@ -1655,7 +1655,7 @@ function pawsWinDogStart() {
         const t = performance.now() - t0,
             f = seq[Math.floor(t / WAG_TEMPO) % seq.length],
             cell = cells.a01[f - 1],
-            b = P.meta.a01[f - 1].box,
+            b = P.meta.a01[seq[0] - 1].box, // jedna ramka dla wszystkich klatek — piesek nie skacze na boki
             ox = 130 - ((b[0] + b[2]) / 2) * K,
             oy = 190 - b[3] * K;
         c.clearRect(0, 0, cv.width, cv.height);
@@ -1697,6 +1697,11 @@ function pawsWipe(p) {
     if (touched) {
         sfx("wipe");
         clothRubT = clock;
+        // subtelne iskierki przy szmatce: widać, że szorujemy
+        if (clock - scrubSparkT > 200) {
+            scrubSparkT = clock;
+            sparkleBurst(p.x + (Math.random() * 36 - 18), p.y + (Math.random() * 24 - 14), [[0, 0, 0, Math.random() < 0.5 ? "D" : "A", 0.75 + Math.random() * 0.3]]);
+        }
     }
     // każda wyczyszczona łapka dostaje iskierki (pierwsza, druga, …)
     const f = geometry().f,
@@ -1707,9 +1712,9 @@ function pawsWipe(p) {
         const mine = blobs.filter((bl) => bl.paw === k);
         if (!mine.length || mine.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) return;
         pawsDone.add(k);
-        clothWringT = clock; // szmatka się wyżyma
+        clothWringT = clock; // szmatka lekko podskakuje
         if (pawsDone.size < pts.length) startQueue(pawsLie(true)); // piesek chichocze (nie po ostatniej — wtedy wstaje)
-        sparkleBurst(pt.x, pt.y, SPARKLE_PAW);
+        sparkleBurst(pt.x, pt.y, SPARKLE_BIG, 0, true); // duży błysk: łapka czysta!
         sfx("good");
     });
     // koniec, gdy na bieżącej klatce nie widać już żadnej grudki
@@ -1719,7 +1724,8 @@ function pawsWipe(p) {
 // przeskakiwania klatek. Przy tarciu tylko delikatnie kołysze się o kilka
 // stopni w lewo i w prawo (płynnie narasta i gaśnie); gdy łapka zrobi się
 // czysta — małe, miękkie „podskoczenie” (lekkie powiększenie).
-let clothRubT = -1e9,
+let scrubSparkT = 0,
+    clothRubT = -1e9,
     clothWringT = -1e9,
     clothSwing = 0; // 0..1 — siła kołysania (płynnie)
 const CLOTH_SIZE = 90, // w pikselach sceny (scena jest przybliżona ×1,25)
@@ -3379,8 +3385,8 @@ const SPARKLE_CELL = { A: [0, 0], B: [64, 0], C: [0, 64], D: [64, 64] },
     SPARKLE_BIG = [[-34, -6, 0, "D", 1.4], [28, -14, 90, "A", 1.6], [-8, -34, 180, "B", 1.2], [38, 8, 270, "D", 1.2], [-30, 14, 360, "A", 1.4]],
     SPARKLE_PAW = [[-9, -4, 0, "D", 1.0], [11, -14, 110, "A", 1.1], [0, -26, 220, "B", 0.9]];
 let sparkles = [];
-function sparkleBurst(cx, cy, pts = SPARKLE_BIG, delay = 0) {
-    sparkles.push({ room, cx, cy, t0: clock + delay, pts });
+function sparkleBurst(cx, cy, pts = SPARKLE_BIG, delay = 0, flash = false) {
+    sparkles.push({ room, cx, cy, t0: clock + delay, pts, flash });
 }
 function sparklesDraw() {
     if (!sparkles.length || !images.sparkle) return;
@@ -3389,6 +3395,21 @@ function sparklesDraw() {
     ctx.imageSmoothingEnabled = false;
     for (const b of sparkles) {
         if (b.room !== room) continue;
+        if (b.flash) {
+            // duży, miękki błysk światła pod gwiazdkami (0,35 s)
+            const u = clamp((clock - b.t0) / 350, 0, 1);
+            if (u > 0 && u < 1) {
+                const r = 22 + 30 * u,
+                    gr = ctx.createRadialGradient(b.cx, b.cy, 0, b.cx, b.cy, r);
+                gr.addColorStop(0, `rgba(255,255,235,${0.85 * (1 - u)})`);
+                gr.addColorStop(1, "rgba(255,255,235,0)");
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = gr;
+                ctx.beginPath();
+                ctx.arc(b.cx, b.cy, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
         for (const [dx, dy, d, k, sc] of b.pts) {
             const u = clamp((clock - b.t0 - d) / SPARKLE_MS, 0, 1);
             if (u <= 0 || u >= 1) continue;
@@ -3405,7 +3426,7 @@ function sparklesDraw() {
 // Po czyszczeniu łapek i po otrząśnięciu w kąpieli. Każda iskierka mignie raz,
 // po kolei, w ~2 s — potem nic już nie mruga (oczy odpoczywają).
 const WAG = [63, 27, 63, 27, 63, 27, 63, 63], // a01: stanie z merdaniem ogonem
-    WAG_TEMPO = 240,
+    WAG_TEMPO = 300,
     TWINKLE_PTS = (() => {
         let seed = 99;
         const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280),

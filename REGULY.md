@@ -248,3 +248,4 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Wokół całego pieska mignie po kolei 10 iskierek (`TWINKLE_PTS`, `twinkleDraw`): każda raz, przez ~2 s, potem nic już nie mruga. W scenie (`bodyTwinkleT`), na karcie „Brawo!” po łapkach i na karcie po kąpieli. Na karcie po łapkach nie ma już ciągle mrugających iskierek przy łapach.
 - Kąpiel (`bubbleWinShow` w `minigame-bubbles.js`): otrząśnięcie raz → mignięcia → stanie z merdaniem (zamiast pętli rozglądanie ↔ siad).
 - Iskierki przy każdej czyszczonej łapce w trakcie czyszczenia zostały (krótkie, jednorazowe).
+- Poprawki (v0.8.207): na karcie piesek jest wyrównany do ramki pierwszej klatki (wcześniej ramka zmieniała się z ogonem i piesek skakał 1–2 px na boki); merdanie wolniej (300 ms). Przy szorowaniu co ~0,2 s pojawia się przy szmatce jedna mała iskierka. Gdy łapka zrobi się czysta: duży błysk (miękkie białe światło 0,35 s + 5 dużych gwiazdek, `sparkleBurst(..., flash = true)`).
