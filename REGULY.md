@@ -406,3 +406,6 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Środek koła = dolna krawędź prawdziwego ekranu (połowa koła widoczna). `resize()` liczy `--bleed` = pas świata widoczny pod układem 768 (0–150 px) i ustawia go na `#game`; dock rośnie w dół o `--bleed`, karuzela czyta go w `measure()` (wheelY = 104 + bleed).
 - Szkło R = 184 px (8 px od krawędzi), ikony R = 120, 84 px (obrazek 66), krok 56°; strzałki tuż wewnątrz brzegu (R 172, łuk 22°), zębatka R = 40. Łapanie koła: promień 194 px.
 - `#game` ma `overflow: visible` (clip psuł trafianie palcem poniżej 768); sąsiednie pokoje przycina `.world`.
+
+## §55 Większe ikony na kole (v0.8.240)
+- Ikony proporcjonalne do koła i wygodne dla 3-latków: przycisk 100 px (obrazek 78), promień ikon 122, krok 62° (boczne ikony 80 px po zmniejszeniu, ~25 px przerwy). Strzałki obracają się −62°/poz., zębatka −55,8°/poz.

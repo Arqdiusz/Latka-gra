@@ -935,7 +935,7 @@ body {
 
 /* szklane koło menu: środek na samym dole ekranu (192, 768 + --bleed; --bleed = widoczny pas
    świata pod układem 768 na wysokich telefonach), promień 184 px (prawie do krawędzi); strzałki
-   tuż wewnątrz brzegu i zębatka obracają się razem z menu (--wheel, 56° na pozycję; zębatka 0.9×) */
+   tuż wewnątrz brzegu i zębatka obracają się razem z menu (--wheel, 62° na pozycję; zębatka 0.9×) */
 .dock {
     touch-action: none;
     bottom: calc(-1 * var(--bleed, 0px));
@@ -970,7 +970,7 @@ body {
     top: calc(104px + var(--bleed, 0px));
     width: 92px;
     height: 92px;
-    transform: rotate(calc(var(--wheel, 0) * -50.4deg));
+    transform: rotate(calc(var(--wheel, 0) * -55.8deg));
 }
 
 .dockArrows {
@@ -978,7 +978,7 @@ body {
     top: calc(-36px + var(--bleed, 0px));
     width: 372px;
     height: 372px;
-    transform: rotate(calc(var(--wheel, 0) * -56deg));
+    transform: rotate(calc(var(--wheel, 0) * -62deg));
 }
 
 .menu {
@@ -1010,8 +1010,8 @@ body {
 
 .arc-menu__icon {
     display: block;
-    width: 66px;
-    height: 66px;
+    width: 78px;
+    height: 78px;
     max-width: 100%;
     max-height: 100%;
     pointer-events: none;

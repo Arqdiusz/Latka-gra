@@ -116,10 +116,10 @@
             this.width = Math.max(1, this.root.clientWidth);
             this.height = Math.max(100, this.root.clientHeight);
             // Koło (wartości z kolo.html): środek tuż pod dolną krawędzią ekranu (w układzie menu
-            // x = środek, y = 104 px + --bleed), jeden krok = 56° obrotu koła.
-            this.size = 84;
-            this.wheelR = 120;
-            this.stepRad = (56 * Math.PI) / 180;
+            // x = środek, y = 104 px + --bleed), jeden krok = 62° obrotu koła.
+            this.size = 100;
+            this.wheelR = 122;
+            this.stepRad = (62 * Math.PI) / 180;
             this.spacing = this.wheelR * this.stepRad; // długość łuku na jedną pozycję = tyle przesuwa palec
             this.wheelX = this.width / 2;
             // środek koła na samym dole ekranu: 104 px pod menu + pas świata pod układem (--bleed)
@@ -218,7 +218,7 @@
                 b.setAttribute("aria-current", String(slot.offset === 0));
                 b.setAttribute("aria-label", (slot.offset === 0 ? "Uruchom: " : "Wybierz: ") + item.label);
             }
-            // strzałki i zębatka w docku kręcą się razem z kołem (CSS: rotate(calc(var(--wheel) * -56deg)))
+            // strzałki i zębatka w docku kręcą się razem z kołem (CSS: rotate(calc(var(--wheel) * -62deg)))
             const dock = this.root.parentElement;
             if (dock) dock.style.setProperty("--wheel", this.position.toFixed(4));
         }
