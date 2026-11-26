@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<title>Prototyp koła menu</title>
+<style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; height: 100%; background: #ddd5cf; overflow: hidden; font-family: system-ui, "Segoe UI", sans-serif; }
+    #ph { position: fixed; left: 0; top: 0; width: 384px; height: 768px; transform-origin: 0 0; overflow: hidden; background: #f8eee7; touch-action: none; user-select: none; -webkit-user-select: none; }
+    #bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+    .glass { position: absolute; border-radius: 50%; border: 2px solid rgba(255,255,255,.75); box-shadow: 0 -2px 14px rgba(60,40,30,.14); pointer-events: none; }
+    .rot { position: absolute; overflow: visible; pointer-events: none; will-change: transform; }
+    .rot * { vector-effect: none; }
+    .btn { position: absolute; display: grid; place-items: center; border: 2px solid #5c4b47; border-radius: 50%; box-shadow: 0 3px rgba(0,0,0,.08); pointer-events: none; will-change: transform; }
+    .btn img { width: 78%; height: 78%; image-rendering: pixelated; display: block; }
+    #toast { position: absolute; left: 50%; top: 60px; transform: translateX(-50%); background: rgba(255,255,255,.88); color: #5c4b47; font-weight: 700; padding: 8px 16px; border-radius: 999px; opacity: 0; transition: opacity .25s; pointer-events: none; font-size: 15px; }
+    #toast.on { opacity: 1; }
+    #gearBtn { position: fixed; left: 8px; top: 8px; z-index: 50; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #5c4b47; background: #fff; font-size: 22px; cursor: pointer; }
+    #panel { position: fixed; z-index: 40; right: 0; top: 0; bottom: 0; width: min(330px, 92vw); background: rgba(255,250,245,.97); border-left: 2px solid #e1d3c8; padding: 60px 14px 20px; overflow-y: auto; transform: translateX(100%); transition: transform .25s; color: #3a2e2a; font-size: 14px; }
+    #panel.on { transform: none; }
+    #panel h2 { margin: 12px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: #8a7358; }
+    #panel label { display: grid; grid-template-columns: 1fr 52px; gap: 2px 8px; align-items: center; margin: 7px 0; }
+    #panel label input[type=range] { grid-column: 1 / -1; width: 100%; }
+    #panel output { text-align: right; font-variant-numeric: tabular-nums; color: #8a7358; }
+    #panel button, #panel select { font: inherit; padding: 8px 12px; border-radius: 10px; border: 2px solid #8a7358; background: #fff; color: #3a2e2a; cursor: pointer; margin: 4px 4px 4px 0; }
+    #panel textarea { width: 100%; height: 130px; font: 12px ui-monospace, monospace; margin-top: 6px; }
+    #panelBtn { position: fixed; right: 8px; top: 8px; z-index: 50; }
+</style>
+</head>
+<body>
+<div id="ph">
+    <img id="bg" alt="" src="tla/pelne/004.png" />
+    <div id="toast"></div>
+</div>
+<button id="gearBtn" aria-label="Ustawienia koła">⚙</button>
+<div id="panel" aria-label="Ustawienia koła"></div>
+
+<script>
+"use strict";
+// ───────── ustawienia (wszystko do strojenia w panelu ⚙) ─────────
+const DEF = {
+    glassR: 172,      // promień szklanego koła
+    cy: 752,          // wysokość środka koła (okno 768 px)
+    iconR: 120,       // promień, po którym jadą ikony
+    step: 50,         // kąt między ikonami (°)
+    icon: 76,         // rozmiar środkowej ikony (px)
+    glassA: 0.22,     // przezroczystość bieli koła
+    ticks: 1,         // znaczniki na obrzeżu (pokazują obrót)
+    tickA: 0.45,
+    arrowA: 0.5,      // przezroczystość strzałek
+    arrowW: 1.6,      // grubość strzałek
+    arrowHead: 4,     // wielkość grotów
+    arrowSpan: 20,    // długość łuku strzałki (°)
+    gearR: 30,        // promień zębatki
+    gearTeeth: 10,
+    gearRatio: 2,     // ile razy szybciej od koła kręci się zębatka (napęd)
+    gearA: 0.55,
+    friction: 0.9
+};
+let S = Object.assign({}, DEF);
+try { const j = JSON.parse(localStorage.getItem("kolo-ustawienia") || "null"); if (j) S = Object.assign(S, j); } catch (_) {}
+
+const ITEMS = [
+    ["food", "Nakarm", "#ee8885"], ["water", "Napój", "#63b2e1"], ["fun", "Zabawa", "#c7d94e"], ["sleep", "Sen", "#ae95f2"],
+    ["clean", "Mycie", "#72d3b0"], ["cloth", "Łapki", "#72d3b0"], ["brush", "Szczotkowanie", "#72d3b0"], ["cup", "Gry", "#f6d36b"]
+];
+const N = ITEMS.length, CX = 192;
+const ph = document.getElementById("ph");
+const NS = "http://www.w3.org/2000/svg";
+const mod = (v, n) => ((v % n) + n) % n;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ───────── elementy ─────────
+const glass = document.createElement("div"); glass.className = "glass"; ph.append(glass);
+const ticksSvg = document.createElementNS(NS, "svg"); ticksSvg.setAttribute("class", "rot"); ph.append(ticksSvg);
+const arrowSvg = document.createElementNS(NS, "svg"); arrowSvg.setAttribute("class", "rot"); ph.append(arrowSvg);
+const gearSvg = document.createElementNS(NS, "svg"); gearSvg.setAttribute("class", "rot"); ph.append(gearSvg);
+const POOL = 5; // przyciski r = -2..2
+const btns = [];
+for (let i = 0; i < POOL; i++) {
+    const b = document.createElement("div"); b.className = "btn"; const im = new Image(); im.alt = ""; b.append(im); ph.append(b); btns.push({ b, im, id: -1 });
+}
+const toast = document.getElementById("toast");
+
+const pol = (r, deg) => [r * Math.cos(deg * Math.PI / 180), r * Math.sin(deg * Math.PI / 180)];
+const f1 = (v) => v.toFixed(1);
+
+function buildStatic() {
+    const R = S.glassR, cy = S.cy;
+    Object.assign(glass.style, { left: CX - R + "px", top: cy - R + "px", width: 2 * R + "px", height: 2 * R + "px", background: `rgba(255,255,255,${S.glassA})` });
+    // znaczniki na obrzeżu (obracają się z kołem)
+    const tr = R - 6, tbox = tr + 10;
+    place(ticksSvg, tbox);
+    ticksSvg.innerHTML = "";
+    if (S.ticks) {
+        let d = "";
+        for (let a = 0; a < 360; a += 7.5) { const [x1, y1] = pol(tr, a), [x2, y2] = pol(tr - (a % 30 === 0 ? 9 : 5), a); d += `M${f1(x1)} ${f1(y1)}L${f1(x2)} ${f1(y2)}`; }
+        ticksSvg.innerHTML = `<path d="${d}" fill="none" stroke="rgba(255,255,255,${S.tickA})" stroke-width="1.6" stroke-linecap="round"/>`;
+    }
+    // strzałki: małe, subtelne, tuż za brzegiem koła; po jednej na każdą pozycję ikony
+    const ar = R + 11, abox = ar + 14, h = S.arrowHead;
+    place(arrowSvg, abox);
+    let d = "";
+    const per = 360 / Math.max(1, Math.round(360 / S.step));
+    for (let c = 0; c < 360; c += per) {
+        const a1 = c - S.arrowSpan / 2, a2 = c + S.arrowSpan / 2;
+        const [x1, y1] = pol(ar, a1), [x2, y2] = pol(ar, a2);
+        d += `M${f1(x1)} ${f1(y1)}A${ar} ${ar} 0 0 1 ${f1(x2)} ${f1(y2)}`;
+        // groty (V) na obu końcach, styczne do okręgu
+        for (const [a, dir] of [[a1, -1], [a2, 1]]) {
+            const [px, py] = pol(ar, a);
+            const tx = -Math.sin(a * Math.PI / 180) * dir, ty = Math.cos(a * Math.PI / 180) * dir; // kierunek ruchu na końcu
+            const nx = Math.cos(a * Math.PI / 180), ny = Math.sin(a * Math.PI / 180);
+            d += `M${f1(px - tx * h + nx * h * .8)} ${f1(py - ty * h + ny * h * .8)}L${f1(px)} ${f1(py)}L${f1(px - tx * h - nx * h * .8)} ${f1(py - ty * h - ny * h * .8)}`;
+        }
+    }
+    arrowSvg.innerHTML = `<path d="${d}" fill="none" stroke="rgba(255,255,255,${S.arrowA})" stroke-width="${S.arrowW}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    // zębatka napędowa w środku koła
+    const g = S.gearR, tn = Math.round(S.gearTeeth), gbox = g + 6;
+    place(gearSvg, gbox);
+    const pts = [];
+    for (let i = 0; i < tn; i++) {
+        const a0 = (i * 360) / tn, w = 360 / tn;
+        for (const [t, r] of [[-0.30 * w, g * 0.8], [-0.17 * w, g], [0.17 * w, g], [0.30 * w, g * 0.8]]) { const [x, y] = pol(r, a0 + t); pts.push(f1(x) + "," + f1(y)); }
+    }
+    const hole = g * 0.32;
+    gearSvg.innerHTML = `<path d="M${pts.join("L")}Z M${hole} 0A${hole} ${hole} 0 1 0 ${-hole} 0A${hole} ${hole} 0 1 0 ${hole} 0Z" fill-rule="evenodd" fill="rgba(255,255,255,${S.gearA * 0.7})" stroke="rgba(255,255,255,${Math.min(1, S.gearA + 0.3)})" stroke-width="1.5" stroke-linejoin="round"/>`;
+}
+function place(svg, box) {
+    Object.assign(svg.style, { left: CX - box + "px", top: S.cy - box + "px", width: 2 * box + "px", height: 2 * box + "px" });
+    svg.setAttribute("viewBox", `${-box} ${-box} ${2 * box} ${2 * box}`);
+}
+
+// ───────── karuzela: pozycja ciągła (jednostki = ikony), obrót = −pozycja × krok ─────────
+let pos = 3, target = 3, vel = 0, drag = null, raf = 0, lastT = 0;
+const angOf = (r) => r * S.step * Math.PI / 180;
+
+function render() {
+    const R = S.iconR, cy = S.cy, c = Math.round(pos);
+    const deg = -pos * S.step;
+    ticksSvg.style.transform = `rotate(${deg}deg)`;
+    arrowSvg.style.transform = `rotate(${deg}deg)`;
+    gearSvg.style.transform = `rotate(${deg * S.gearRatio}deg)`;
+    btns.forEach((o, i) => {
+        const logical = c + (i - 2), r = logical - pos, a = Math.abs(r), idx = mod(logical, N);
+        const ang = angOf(r), x = CX + R * Math.sin(ang), y = cy - R * Math.cos(ang);
+        const scale = 1 - 0.2 * Math.min(a, 1), fade = clamp((1.52 - a) / 0.45, 0, 1);
+        if (o.id !== idx) { o.id = idx; o.im.src = "proto/" + ITEMS[idx][0] + ".png"; o.b.style.background = ITEMS[idx][2]; }
+        const sz = S.icon;
+        Object.assign(o.b.style, { width: sz + "px", height: sz + "px", left: x + "px", top: y + "px", transform: `translate(-50%,-50%) scale(${scale})`, opacity: String((1 - 0.2 * Math.min(a, 1)) * fade), visibility: fade > 0.02 ? "visible" : "hidden", zIndex: String(Math.round(20 - a * 5)) });
+    });
+}
+function loop(t) {
+    const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
+    if (!drag) {
+        // po puszczeniu: wybieg z tarciem, potem miękkie dociągnięcie do najbliższej ikony
+        if (Math.abs(vel) > 0.6) { pos += vel * dt; vel *= Math.pow(S.friction, dt * 60); target = Math.round(pos + vel * 0.12); }
+        else { vel = 0; pos += (target - pos) * (1 - Math.exp(-dt * 14)); if (Math.abs(target - pos) < 0.0005) pos = target; }
+    }
+    render();
+    raf = requestAnimationFrame(loop);
+}
+
+// ───────── dotyk: koło obracasz łapiąc je GDZIEKOLWIEK, kąt palca względem środka = kąt koła ─────────
+let scale = 1;
+function fit() { scale = Math.min(innerWidth / 384, innerHeight / 768); ph.style.transform = `scale(${scale})`; ph.style.left = (innerWidth - 384 * scale) / 2 + "px"; ph.style.top = (innerHeight - 768 * scale) / 2 + "px"; }
+addEventListener("resize", fit); fit();
+function pt(e) { const r = ph.getBoundingClientRect(); return [(e.clientX - r.left) / scale, (e.clientY - r.top) / scale]; }
+function inWheel(x, y) { return Math.hypot(x - CX, y - S.cy) <= S.glassR + 22 && y > S.cy - S.glassR - 26; }
+const angle = (x, y) => Math.atan2(y - S.cy, x - CX);
+ph.addEventListener("pointerdown", (e) => {
+    const [x, y] = pt(e);
+    if (!inWheel(x, y)) return;
+    ph.setPointerCapture(e.pointerId);
+    drag = { id: e.pointerId, a: angle(x, y), x0: x, y0: y, t0: performance.now(), moved: 0, hist: [[performance.now(), pos]] };
+    vel = 0;
+});
+ph.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const [x, y] = pt(e);
+    let d = angle(x, y) - drag.a; if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI;
+    drag.a = angle(x, y);
+    drag.moved = Math.max(drag.moved, Math.hypot(x - drag.x0, y - drag.y0));
+    pos -= d / (S.step * Math.PI / 180); // zgodnie z palcem: ruch w prawo = koło w prawo
+    const now = performance.now(); drag.hist.push([now, pos]); while (drag.hist.length > 2 && now - drag.hist[0][0] > 90) drag.hist.shift();
+});
+function end(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const [x, y] = pt(e), d = drag; drag = null;
+    if (d.moved < 7 && performance.now() - d.t0 < 400) {
+        // stuknięcie: w środkową ikonę = uruchom, w boczną = obróć do niej
+        let best = null, bd = 1e9;
+        btns.forEach((o, i) => { const bx = parseFloat(o.b.style.left), by = parseFloat(o.b.style.top), dd = Math.hypot(x - bx, y - by); if (dd < bd && o.b.style.visibility === "visible") { bd = dd; best = i; } });
+        if (best !== null && bd < S.icon * 0.6) {
+            const off = best - 2 + (Math.round(pos) - pos) * 0; // przesunięcie w pozycjach
+            const logical = Math.round(pos) + (best - 2);
+            if (logical === Math.round(pos)) activate(mod(logical, N)); else { target = logical; vel = 0; }
+        } else target = Math.round(pos);
+        return;
+    }
+    const h = d.hist, f = h[0], l = h[h.length - 1], dtm = (l[0] - f[0]) / 1000;
+    vel = dtm > 0.01 ? clamp((l[1] - f[1]) / dtm, -9, 9) : 0;
+    if (Math.abs(vel) < 0.6) target = Math.round(pos);
+    else target = Math.round(pos + vel * 0.12);
+}
+ph.addEventListener("pointerup", end); ph.addEventListener("pointercancel", end);
+addEventListener("keydown", (e) => { if (e.key === "ArrowRight") { target = Math.round(target) + 1; vel = 0; } if (e.key === "ArrowLeft") { target = Math.round(target) - 1; vel = 0; } if (e.key === "Enter") activate(mod(Math.round(pos), N)); });
+let tt = 0;
+function activate(i) { toast.textContent = "Uruchom: " + ITEMS[i][1]; toast.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove("on"), 1200); }
+
+// ───────── panel strojenia ─────────
+const panel = document.getElementById("panel"), gb = document.getElementById("gearBtn");
+const SL = [
+    ["Koło", [["glassR", "Promień koła", 120, 230, 1], ["cy", "Wysokość środka koła", 690, 840, 1], ["glassA", "Przezroczystość bieli", 0.05, 0.6, 0.01]]],
+    ["Ikony", [["iconR", "Promień ikon", 70, 190, 1], ["step", "Kąt między ikonami (°)", 30, 80, 1], ["icon", "Rozmiar ikony", 50, 100, 1]]],
+    ["Strzałki", [["arrowA", "Widoczność", 0, 1, 0.05], ["arrowW", "Grubość", 0.5, 4, 0.1], ["arrowHead", "Groty", 2, 9, 0.5], ["arrowSpan", "Długość łuku (°)", 8, 45, 1]]],
+    ["Zębatka", [["gearR", "Promień", 14, 60, 1], ["gearTeeth", "Liczba zębów", 6, 20, 1], ["gearRatio", "Przełożenie (obroty względem koła)", -4, 4, 0.1], ["gearA", "Widoczność", 0.1, 1, 0.05]]],
+    ["Obrzeże i ruch", [["ticks", "Znaczniki na obrzeżu (0/1)", 0, 1, 1], ["tickA", "Widoczność znaczników", 0, 1, 0.05], ["friction", "Tarcie wybiegu (wyżej = dłużej)", 0.8, 0.98, 0.005]]]
+];
+function buildPanel() {
+    let h = `<button id="roomBtn">Pokój: salon</button><button id="resetBtn">Domyślne</button>`;
+    for (const [t, rows] of SL) { h += `<h2>${t}</h2>`; for (const [k, l, mn, mx, st] of rows) h += `<label><span>${l}</span><output id="o_${k}">${S[k]}</output><input type="range" id="s_${k}" min="${mn}" max="${mx}" step="${st}" value="${S[k]}"></label>`; }
+    h += `<h2>Do wysłania</h2><button id="copyBtn">Pokaż ustawienia</button><textarea id="outTxt" readonly hidden></textarea>`;
+    panel.innerHTML = h;
+    for (const [, rows] of SL) for (const [k] of rows) document.getElementById("s_" + k).addEventListener("input", (e) => { S[k] = parseFloat(e.target.value); document.getElementById("o_" + k).textContent = S[k]; apply(); });
+    const rooms = [["004", "salon"], ["002", "ogród"], ["006", "łazienka"]]; let ri = 0;
+    document.getElementById("roomBtn").onclick = (e) => { ri = (ri + 1) % rooms.length; document.getElementById("bg").src = `tla/pelne/${rooms[ri][0]}.png`; e.target.textContent = "Pokój: " + rooms[ri][1]; };
+    document.getElementById("resetBtn").onclick = () => { S = Object.assign({}, DEF); apply(); buildPanel(); };
+    document.getElementById("copyBtn").onclick = () => { const t = document.getElementById("outTxt"); t.hidden = false; t.value = JSON.stringify(S); t.focus(); t.select(); };
+}
+function apply() { try { localStorage.setItem("kolo-ustawienia", JSON.stringify(S)); } catch (_) {} buildStatic(); render(); }
+gb.onclick = () => panel.classList.toggle("on");
+buildPanel(); buildStatic(); requestAnimationFrame((t) => { lastT = t; loop(t); });
+</script>
+</body>
+</html>

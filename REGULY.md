@@ -376,3 +376,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Ikony menu jadą **po okręgu** (promień 98 px, środek koła tuż pod dolną krawędzią ekranu: x = środek, y = 790 w oknie gry), jeden krok = 52° obrotu; przesunięcie palca = długość łuku (`spacing = R·krok`), więc ikona idzie dokładnie za palcem. Reszta logiki karuzeli (3 sloty, zanikanie, przyciąganie) bez zmian.
 - **Strzałki** (7 łuków co 52°, więc zawsze któreś widać) i **zębatka** (pierścień 24 zębów tuż wewnątrz szklanego łuku) obracają się razem z kołem: `ArcCarousel.render()` ustawia na dock zmienną CSS `--wheel` (pozycja karuzeli), a CSS obraca `rotate(calc(var(--wheel) * -52deg))`.
 - Szklany łuk: koło 292 px (promień 146). Ikony pozostają pionowo (bez przechylania), żeby były czytelne.
+
+## §49 Prototyp koła menu (`kolo.html`)
+- Osobna strona poza grą (nie rusza `index.html`): https://arqdiusz.github.io/Latka-gra/kolo.html – służy do strojenia koła przed przeniesieniem do gry.
+- Koło: białe, przezroczyste szkło; małe, subtelne strzałki; mała zębatka w piaście (napęd, kręci się szybciej od koła); cały moduł (szkło, znaczniki, strzałki, zębatka, ikony) obraca się łapiąc koło w dowolnym miejscu.
+- Panel ⚙ (suwaki: promień, kąty, rozmiary, przezroczystości) + „Pokaż ustawienia” (JSON do przeniesienia do gry).
+- Ikony do prototypu: `proto/*.png` (64×64, wyciągnięte z gry).
