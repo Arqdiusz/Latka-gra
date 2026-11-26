@@ -358,3 +358,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - **Klatki biegu i marszu zależą od przebytej drogi** (36 px / 13 px na klatkę, jak w grze); trawnik przesuwa się z prędkością pieska względem ziemi (bieg 70 cqw/s, marsz 15,6 cqw/s), niebo 5× wolniej — łapy nie „ślizgają się”.
 - **Przejście bez fikołka i skoku:** bieg → hamowanie → marsz (ogród dalej płynie) → ogród staje, a piesek idzie na środek z tą samą prędkością → staje → zabawy. Ponowny bieg na ekranie startowym: krok → marsz → bieg → marsz → stop.
 - Motylek na nosie liczony tą samą geometrią co piesek.
+
+## 46. Ekran startowy — animacje wzięte z gry (v0.8.232)
+- Zestaw zabaw pieska na ekranie startowym (losowo, bez powtórki z rzędu): **stoi** (a01 „17. Spokojne stanie”), **merda ogonem** (WAG), **kopie kostkę** (a03: kopanie, wykopanie, zabawa), **przechodzi w inne miejsce** (krótko — marsz 60 px/s, dalej — bieg 300 px/s, z obrotem w stronę celu, jak `route()` w grze), **łapie motylka**. Usunięto zabawy spoza gry (siad, ziewanie, drapanie, otrząsanie).
+- **Łapanie motylka** to ten sam scenariusz co event w grze, bez klikania: piesek idzie pod ścianę (28%/72% szerokości), odwraca się, z drugiej strony leci motylek (linia y=200, sinus ±13 px, 9 s przez ekran), zawraca i ucieka (0,075 px/ms, 700 ms, zygzak) dokładnie w punkt znacznika pierwszej klatki pogoni, piesek skacze (a02 „15. Motyl — skoki i pogoń”, przesuw o 0,1 szerokości), motylek „przyklejony” do zielonego znacznika klatek (a02 „18. Motyl — ląduje przy nosie”), potem odlatuje (1 s). Rozmiar motylka w evencie 96,5 px, trzepot 180 ms/2 (spłoszony /3).
+- **Motylki-tło** jak w grze: wlot z lewej/prawej/góry po łuku, „pijane” dryfowanie w pasie nieba (marginesy 44 px, y 104–176), losowy wylot; rozmiar 96 px; jeden naraz, nowy co 5–12 s (w grze 12–30 s).
+- Piesek rysowany odbiciem lustrzanym (jak `drawDog`) z geometrią znaczników liczoną dla obu kierunków.
