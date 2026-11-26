@@ -927,14 +927,15 @@ body {
     background: transparent;
 }
 
-/* szklany łuk pod menu (środek koła poza dołem ekranu) i strzałki sugerujące obrót */
+/* szklany łuk pod menu: koło o środku (192, 790) tuż pod dołem ekranu, promień 146 px; strzałki
+   i zębatka obracają się razem z menu (--wheel = pozycja karuzeli, 52° na pozycję) */
 .dock::before {
     content: "";
     position: absolute;
-    left: 24px;
+    left: 46px;
     top: 26px;
-    width: 336px;
-    height: 336px;
+    width: 292px;
+    height: 292px;
     box-sizing: border-box;
     border-radius: 50%;
     background: rgba(255, 247, 238, 0.45);
@@ -943,14 +944,36 @@ body {
     pointer-events: none;
 }
 
+.dockGear,
 .dockArrows {
     position: absolute;
-    left: 0;
-    top: 0;
-    width: 384px;
-    height: 150px;
     overflow: visible;
     pointer-events: none;
+    transform: rotate(calc(var(--wheel, 0) * -52deg));
+    will-change: transform;
+}
+
+/* zębatka: pierścień zębów tuż wewnątrz szklanego łuku (środek koła jest poza ekranem) */
+.dockGear {
+    left: 42px; /* środek koła (192, 172) w układzie docka */
+    top: 22px;
+    width: 300px;
+    height: 300px;
+}
+
+.dockArrows {
+    left: 12px;
+    top: -8px;
+    width: 360px;
+    height: 360px;
+}
+
+.dockGear path,
+.dockGear circle {
+    fill: rgba(255, 255, 255, 0.38);
+    stroke: rgba(255, 255, 255, 0.9);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
 }
 
 .dockArrows path {

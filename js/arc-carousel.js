@@ -107,11 +107,14 @@
         measure() {
             this.width = Math.max(1, this.root.clientWidth);
             this.height = Math.max(100, this.root.clientHeight);
+            // Koło: ikony jadą po okręgu o środku tuż pod dolną krawędzią ekranu (środek koła
+            // w układzie menu: x = środek, y = 126 px). Jeden krok = 52° obrotu koła.
             this.size = 85;
-            this.spacing = this.width * 0.22;
-            this.centerX = this.width / 2;
-            this.centerY = this.height * 0.46;
-            this.arc = 10;
+            this.wheelR = 98;
+            this.stepRad = (52 * Math.PI) / 180;
+            this.spacing = this.wheelR * this.stepRad; // długość łuku na jedną pozycję = tyle przesuwa palec
+            this.wheelX = this.width / 2;
+            this.wheelY = 126;
         }
         setItems(items, { selectedId = null } = {}) {
             const parsed = this.validate(items);
@@ -181,8 +184,9 @@
                 const scale = 1 - 0.2 * Math.min(a, 1),
                     fade = clamp((1.52 - a) / 0.45, 0, 1),
                     opacity = (1 - 0.2 * Math.min(a, 1)) * fade;
-                const x = this.centerX + r * this.spacing,
-                    y = this.centerY + this.arc * Math.min(a, 1.5) ** 1.45;
+                const ang = r * this.stepRad,
+                    x = this.wheelX + this.wheelR * Math.sin(ang),
+                    y = this.wheelY - this.wheelR * Math.cos(ang);
                 if (slot.currentId !== item.id) {
                     slot.icon.innerHTML = item.svg;
                     slot.currentId = item.id;
@@ -205,6 +209,9 @@
                 b.setAttribute("aria-current", String(slot.offset === 0));
                 b.setAttribute("aria-label", (slot.offset === 0 ? "Uruchom: " : "Wybierz: ") + item.label);
             }
+            // strzałki i zębatka w docku kręcą się razem z kołem (CSS: rotate(calc(var(--wheel) * -52deg)))
+            const dock = this.root.parentElement;
+            if (dock) dock.style.setProperty("--wheel", this.position.toFixed(4));
         }
         pointerDown(e) {
             if (e.button !== 0 || this.drag || this.destroyed) return;

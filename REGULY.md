@@ -371,3 +371,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - **Kamera łapek (`pawsZoom`)** przybliża też `.world` (ten sam ruch w układzie całego okna: `ty' = ty + 106·(1−Z)`).
 - **Statusy:** pasek `.status` przezroczysty; każda potrzeba na własnej szklanej pastylce (62 px, ikona 46 px). **Menu:** dok przezroczysty, pod menu szklany łuk (koło o średnicy 336 px, środek poza dołem ekranu) i trzy białe strzałki-łuki sugerujące obrót; przyciski mniejsze (85 px, ikona 66 px, rozstaw 0,22 szerokości), menu niżej (`translateY(46px)`).
 - Dalej bez zmian: HUD sceny (pokój, serce, puchar, pełny ekran, dźwięk), strzałki pokoi, gry i okna.
+
+## 48. Menu kołowe — prototyp obracającego się koła (v0.8.234)
+- Ikony menu jadą **po okręgu** (promień 98 px, środek koła tuż pod dolną krawędzią ekranu: x = środek, y = 790 w oknie gry), jeden krok = 52° obrotu; przesunięcie palca = długość łuku (`spacing = R·krok`), więc ikona idzie dokładnie za palcem. Reszta logiki karuzeli (3 sloty, zanikanie, przyciąganie) bez zmian.
+- **Strzałki** (7 łuków co 52°, więc zawsze któreś widać) i **zębatka** (pierścień 24 zębów tuż wewnątrz szklanego łuku) obracają się razem z kołem: `ArcCarousel.render()` ustawia na dock zmienną CSS `--wheel` (pozycja karuzeli), a CSS obraca `rotate(calc(var(--wheel) * -52deg))`.
+- Szklany łuk: koło 292 px (promień 146). Ikony pozostają pionowo (bez przechylania), żeby były czytelne.
