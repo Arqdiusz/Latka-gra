@@ -4198,3 +4198,79 @@ h3,
     vertical-align: middle;
     transform: none;
 }
+
+/* ═══ Gry i okna do krawędzi ekranu (pasy nad i pod układem 768 na wysokich telefonach, --bleed) ═══
+   1) przyciemnienia i okna końcowe: samo pudełko sięga w pasy (treść dalej na środku ekranu);
+   2) ekrany gier z łąką / wodą: warstwa ::before z tłem sięga w pasy, układ gry bez zmian
+      (wysoka łąka tla/wysokie/001-gry.png = 001-gry + 150 px nieba nad i 150 px trawy pod);
+   3) listy (Gry, poziomy): pudełko w pasy + tyle samo paddingu. */
+.popup,
+.molePopup,
+.ldWarn,
+.bonesMenu,
+.plParent,
+.bonesParent,
+.bonesNews,
+.parentLock,
+.moleWinPopup {
+    top: calc(-1 * var(--bleed, 0px));
+    bottom: calc(-1 * var(--bleed, 0px));
+}
+.moleWinPopup {
+    background: #a3d45c url("../tla/wysokie/001-gry.png?b=1") center / 100% auto no-repeat;
+}
+
+.moleFull,
+.pairsFull,
+.hedgeFull,
+.mole2Full,
+.memoFull,
+.bonesPlay,
+.bubbleFull {
+    background: none;
+}
+.moleFull::before,
+.pairsFull::before,
+.hedgeFull::before,
+.mole2Full::before,
+.memoFull::before,
+.bonesPlay::before,
+.bubbleFull::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(-1 * var(--bleed, 0px));
+    bottom: calc(-1 * var(--bleed, 0px));
+    z-index: -1;
+    background: #a3d45c url("../tla/wysokie/001-gry.png?b=1") center / 100% auto no-repeat;
+    image-rendering: pixelated;
+}
+.bonesPlay {
+    z-index: 0; /* własny kontekst, żeby ::before (z −1) leżał pod jego treścią */
+}
+.bubbleFull::before {
+    background: linear-gradient(180deg, rgba(115, 195, 252, 0.5), rgba(28, 105, 188, 0.66));
+}
+
+.gamesFull,
+.memoLevels,
+.pairsLevels {
+    top: calc(-1 * var(--bleed, 0px));
+    bottom: calc(-1 * var(--bleed, 0px));
+    padding-top: calc(14px + var(--bleed, 0px));
+    padding-bottom: calc(24px + var(--bleed, 0px));
+}
+.gamesFull {
+    padding-top: calc(8% + var(--bleed, 0px));
+}
+/* belki u góry gier i dolne panele liczenia kostek sięgają kolorem do krawędzi ekranu */
+.gBar {
+    box-shadow: 0 calc(-1 * var(--bleed, 0px)) 0 0 #fff8ea;
+}
+.bonesMath {
+    box-shadow: 0 var(--bleed, 0px) 0 0 #f6ecd6;
+}
+.bonesPadCard {
+    box-shadow: 0 var(--bleed, 0px) 0 0 #fff8ea;
+}

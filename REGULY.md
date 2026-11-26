@@ -409,3 +409,10 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## §55 Większe ikony na kole (v0.8.240)
 - Ikony proporcjonalne do koła i wygodne dla 3-latków: przycisk 100 px (obrazek 78), promień ikon 122, krok 62° (boczne ikony 80 px po zmniejszeniu, ~25 px przerwy). Strzałki obracają się −62°/poz., zębatka −55,8°/poz.
+
+## §56 Gry i okna do krawędzi ekranu (v0.8.241)
+- Na wysokich telefonach gry sięgają pasów nad i pod układem 768 (`--bleed`), bez zmiany układu samych gier:
+  - ekrany gier (Kretowisko, Krety na łące, Jeżyk, Motylki, Pary, Liczymy kostki, bańki): warstwa `::before` z tłem sięga w pasy — łąka `tla/wysokie/001-gry.png` (001-gry + 150 px nieba nad i trawy pod, chmury rozrzucone, trawa przesunięta), bańki: ten sam gradient wody;
+  - belki gier `.gBar` przedłużone kolorem do górnej krawędzi (box-shadow), dolne panele liczenia kostek do dolnej;
+  - przyciemnienia i okna (popupy, „Brawo!”, ostrzeżenia, blokada rodzica) — samo pudełko w pasy (treść na środku ekranu);
+  - listy (Gry, poziomy) — pudełko w pasy + padding o tyle samo.
