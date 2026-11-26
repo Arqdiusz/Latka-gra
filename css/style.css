@@ -3903,3 +3903,20 @@ h3,
     width: 18px;
     height: 18px;
 }
+
+/* Poziomy pamięci: kolorowe motylki zamiast gwiazdek */
+.memoFlies {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0;
+    text-shadow: none;
+}
+.memoFlies img {
+    width: 58px;
+    height: 58px;
+    margin: -10px -4px;
+    object-fit: contain;
+    image-rendering: pixelated;
+}

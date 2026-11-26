@@ -46,6 +46,16 @@ function memoFmt(ms) {
     return m + ":" + (s - m * 60).toFixed(1).replace(".", ",").padStart(4, "0");
 }
 
+// tyle kolorowych motylków, ile ma poziom (zamiast gwiazdek)
+function memoFlyIcons(n) {
+    let s = "";
+    for (let k = 0; k < n; k++) {
+        const p = CFG.motyle.presets[k % CFG.motyle.presets.length],
+            cell = cells.motyle[numbers(p.seq)[0] - 1];
+        if (cell) s += '<img alt="" src="' + cell.toDataURL("image/png") + '">';
+    }
+    return s;
+}
 let memoLevelsShownAt = 0; // dotyk, który otworzył ekran poziomów, nie może wybrać kafelka
 
 function memoDone() {
@@ -145,7 +155,7 @@ function memoShowLevels() {
             last = tm.last[i] !== undefined ? '<span class="memoTileStat"><i>Ostatnio</i><b>' + memoFmt(tm.last[i]) + "</b></span>" : "";
         b.className = "memoTile";
         b.innerHTML =
-            '<span class="memoStars">' + "★".repeat(i + 1) + '</span><span class="memoTileTxt">' + lv.n + " motylki</span>" +
+            '<span class="memoStars memoFlies">' + memoFlyIcons(lv.n) + '</span><span class="memoTileTxt">' + lv.n + " motylki</span>" +
             (rec || last ? '<span class="memoTileStats">' + rec + last + "</span>" : '<span class="memoTileStats memoTileNew">Jeszcze bez wyniku</span>') +
             (done.includes(i) ? '<img class="memoTileCup" alt="Ukończony" src="' + icons.cup + '" />' : "");
         b.onclick = () => {

@@ -334,3 +334,6 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
   - Znajdź pary: dwie takie same karty (✓ „para zostaje”) / jabłko i kostka (✗ „karty się chowają”).
   - Aport: piłka ze strzałką „złap i pociągnij” / piłka w locie „puść — piesek biegnie”.
 - Przyciski kart startowych: zielony „Zaczynamy!/Liczymy!” 50% większy (102 px wysokości, 29 px napis; na karcie liczenia 90 px), czerwony „Wróć do pieska/Wróć” o 25% mniejszy (45 px).
+
+## 42. Pamięć motylków — poziomy z motylkami zamiast gwiazdek (v0.8.226)
+- Na kafelkach poziomów zamiast gwiazdek są różnokolorowe motylki (tyle, ile ma poziom: 3, 4, 5; zielony, żółty, czerwony, fioletowy, niebieski) — większe niż gwiazdki (~58 px).
