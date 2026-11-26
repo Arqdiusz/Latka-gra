@@ -556,7 +556,9 @@ function lumpDraw() {
 }
 
 function save() {
-    if (!loaded) return;
+    // zapis dopiero, gdy gra naprawdę ruszyła (po „Kontynuuj”/„Graj”) — inaczej „Zacznij od nowa”
+    // i samo otwarcie ekranu startowego tworzyłyby zapis przy zamknięciu strony
+    if (!loaded || !window.gameStarted) return;
     try {
         localStorage.setItem(KEY, JSON.stringify({ room, sleeping, left, poop, moleDirts, dishMess: dishMess?.shown ? dishMess : null, pawDirt: Math.round(pawDirt), lumps }));
     } catch (e) {}
@@ -3955,6 +3957,7 @@ async function boot() {
     // Gra gotowa — ekran ładowania pokazuje duży przycisk i czeka na dotknięcie
     // (to też gest potrzebny do pełnego ekranu). Dopiero potem rusza pętla gry.
     if (window.loadScreen) await window.loadScreen.ready();
+    window.gameStarted = true;
     $(".load").hidden = true;
     locks();
     resize();

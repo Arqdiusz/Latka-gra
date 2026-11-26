@@ -342,3 +342,12 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## 43. Ekrany końcowe — ogród zamiast przyciemnienia (v0.8.229)
 - Wszystkie okna końcowe (`.moleWinPopup`: „Brawo!”, „Prawie się udało!” w każdej grze) mają pod sobą nieprzezroczyste tło ogrodu (`tla/001-gry.png`), które zasłania grę razem z jej paskiem i czerwonym ✕. Dzieci nie mają już czego naciskać w rogu — wychodzi się tylko dużymi przyciskami („Zagraj ponownie”, „Powrót”). Zmiana tylko w CSS (jedna reguła).
+
+## 44. Ekran wczytywania i ekran startowy (v0.8.230)
+- **Wczytywanie:** piesek biegnie po ogrodzie z gry; tło zapętlone z dwóch obrazów odbitych lustrzanie (`tla/petla-niebo.png`, `tla/petla-trawnik.png`) — niebo przesuwa się wolno, trawnik szybko (efekt głębi). Zielony pasek postępu pod spodem.
+- **Logo** „Mój mały / JAMNICZEK” (czcionka Ranchers z Google Fonts, z awaryjną Baloo 2), wycentrowane, litery JAMNICZEK różnej wielkości, kolor #8a7358, biała poświata i cień, bez tła; kołysze się ±1° i lekko unosi. Szerokość „JAMNICZEK” sama dopasowuje się do ekranu.
+- **Przejście (gra gotowa):** ogród zwalnia, piesek hamuje (bieg → chód), robi fikołka w łuku i ląduje na środku ekranu; pasek zamienia się w duży przycisk „Kontynuuj” (przy pierwszym uruchomieniu bez zapisu: „Graj”), po lądowaniu pojawia się mały czerwony „Zacznij od nowa” (tylko gdy jest zapis).
+- **Ekran startowy** może trwać długo: piesek losowo (bez powtarzania tej samej zabawy z rzędu) łapie motylka, kopie kostkę, rozgląda się, ziewa, drapie się, otrząsa, siada; co jakiś czas znów rusza biegiem (ogród znów się przesuwa, ~3,5 s) i staje. Co 7–15 s przez ekran przelatuje motylek.
+- **„Zacznij od nowa”** → ostrzeżenie „Cały postęp w grze zniknie i nie da się go przywrócić” z dużym zielonym „Nie, wracam” i małym czerwonym „Tak, zacznij od nowa”. Kasuje zapis gry, potrzeby, liczenie, poziomy pamięci i par (rekordy też) i odświeża stronę. Blokada czasu dla rodzica (`latka-sesja-v1`) i wyciszenie dźwięku zostają.
+- **Pełny ekran:** „Kontynuuj/Graj” od razu włącza pełny ekran (ten sam gest); mały przełącznik w lewym górnym rogu (przekreślony = wyłączony, zapamiętany w `latka-fullscreen`) pozwala to wyłączyć. Dawny przycisk „Graj w oknie” zniknął.
+- Zapis gry powstaje dopiero po naciśnięciu „Kontynuuj/Graj” (`window.gameStarted`) — samo otwarcie i zamknięcie ekranu startowego nie tworzy zapisu.

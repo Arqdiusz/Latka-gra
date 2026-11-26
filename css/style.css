@@ -1663,114 +1663,287 @@ body.locked .gamesAccess {
     margin-bottom: 22px;
 }
 
-/* ── Ekran ładowania ─────────────────────────────────────────────── */
+/* ── Ekran ładowania i ekran startowy (js/loader.js) ─────────────────
+   Jednostki cqw = % szerokości ekranu gry (384 px). Ogród zapętlony z dwóch
+   obrazów odbitych lustrzanie; niebo przesuwa się wolno, trawnik szybko. */
 .load {
-    padding: 20px;
+    display: block;
+    padding: 0;
+    overflow: hidden;
+    container-type: inline-size;
+    background: #a3d45c;
 }
-
-.loadBox {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 18px;
-    width: min(100%, 340px);
-    color: #59485d;
-}
-
-.loadTitle {
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1.1;
-    text-align: center;
-    color: #7a5230;
-}
-
-.loadDog {
-    width: 192px;
-    height: 192px;
+.ldScene,
+.ldLawn {
+    position: absolute;
+    left: 0;
+    right: 0;
     image-rendering: pixelated;
 }
-
-.loadBar {
-    width: 100%;
-    height: 24px;
-    border-radius: 12px;
-    background: #ecdcbf;
-    border: 3px solid white;
-    box-shadow: 0 2px 6px #0002;
-    overflow: hidden;
+.ldScene {
+    top: 0;
+    height: 91cqw;
+    background: #6bc1f7 url("../tla/petla-niebo.png") 0 0 / 200cqw 91cqw repeat-x;
 }
-
-.loadBar i {
+.ldLawn {
+    top: 91cqw;
+    bottom: 0;
+    background: #a3d45c url("../tla/petla-trawnik.png") 0 0 / 200cqw 84.4cqw repeat;
+}
+.ldCv {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+.ldLogo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 11cqw;
+    margin: 0;
+    text-align: center;
+    font-family: "Ranchers", "Baloo 2", system-ui, sans-serif;
+    font-weight: 400;
+    line-height: 0.92;
+    color: #8a7358;
+    text-shadow: 0 0 1.6cqw #fff, 0 0 3.6cqw #fff, 0 1.4cqw 1.6cqw #0004;
+    animation: ldSway 4.2s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes ldSway {
+    0%,
+    100% {
+        transform: translateY(0) rotate(-1deg);
+    }
+    50% {
+        transform: translateY(-1.8cqw) rotate(1deg);
+    }
+}
+.ldL1 {
+    display: block;
+    font-size: 12cqw;
+    letter-spacing: 0.2cqw;
+}
+.ldL2 {
+    display: inline-flex;
+    align-items: flex-end;
+    justify-content: center;
+    font-size: 17cqw;
+    margin-top: 0.5cqw;
+}
+.ldL2 i {
+    font-style: normal;
+    display: inline-block;
+}
+.ldBar {
+    position: absolute;
+    left: 8cqw;
+    right: 8cqw;
+    top: 158cqw;
+    height: 7cqw;
+    border-radius: 3.6cqw;
+    background: #ecdcbf;
+    border: 0.9cqw solid #fff;
+    box-shadow: 0 0.6cqw 1.6cqw #0002;
+    overflow: hidden;
+    transition: opacity 0.3s;
+}
+.ldBar i {
     display: block;
     height: 100%;
     width: 4%;
-    border-radius: 9px;
-    background: linear-gradient(180deg, #f8b84a, #ee9a2a);
+    border-radius: 2.6cqw;
+    background: linear-gradient(180deg, #9be08a, #4fae3f);
 }
-
-.loadMsg {
-    font-size: 18px;
-    font-weight: 600;
+.ldMsg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 168cqw;
     text-align: center;
+    font-size: 4.6cqw;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0.4cqw 0 #3c7a2a;
+    transition: opacity 0.3s;
 }
-
-.loadReady {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
+.ldBar.off,
+.ldMsg.off {
+    opacity: 0;
 }
-
-.loadReady[hidden],
-.loadBar[hidden],
-.loadMsg[hidden] {
-    display: none;
-}
-
-.loadHint {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    text-align: center;
-}
-
-.loadPlay {
+.ldGo,
+.ldNew {
+    position: absolute;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    width: 100%;
-    min-height: 76px;
-    border: 4px solid white;
-    border-radius: 26px;
-    background: #6f9a52;
-    color: white;
-    font: inherit;
-    font-size: 21px;
+    border: 0;
+    color: #fff;
+    font-family: "Baloo 2", system-ui, sans-serif;
     font-weight: 800;
-    padding: 12px 18px;
-    box-shadow: 0 5px 12px #0003;
+    cursor: pointer;
+    transition: opacity 0.4s, transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.ldGo[hidden],
+.ldNew[hidden],
+.ldFs[hidden],
+.ldWarn[hidden] {
+    display: none;
+}
+.ldGo {
+    left: 8cqw;
+    right: 8cqw;
+    top: 150cqw;
+    height: 20cqw;
+    border-radius: 7cqw;
+    background: #6fb05a;
+    box-shadow: 0 1.4cqw 0 #4a8a3a;
+    font-size: 8cqw;
+    gap: 3cqw;
+    opacity: 0;
+    transform: translateY(8cqw) scale(0.9);
+    pointer-events: none;
+}
+.ldGo svg {
+    width: 9cqw;
+    height: 9cqw;
+}
+.ldGo:active {
+    transform: translateY(1cqw) scale(0.98);
+    box-shadow: 0 0.5cqw 0 #4a8a3a;
+}
+.ldNew {
+    left: 25cqw;
+    right: 25cqw;
+    top: 176cqw;
+    height: 10cqw;
+    border-radius: 3.6cqw;
+    background: #cc5a52;
+    box-shadow: 0 0.9cqw 0 #a04540;
+    font-size: 4.2cqw;
+    opacity: 0;
+    transform: translateY(6cqw);
+    pointer-events: none;
+}
+.ldGo.on,
+.ldNew.on {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+}
+.ldGo.on:active {
+    transform: translateY(1cqw) scale(0.98);
+}
+.ldFs {
+    position: absolute;
+    left: 3cqw;
+    top: 3cqw;
+    z-index: 3;
+    width: 11cqw;
+    height: 11cqw;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0.7cqw solid #fff;
+    border-radius: 3.4cqw;
+    background: #fff9e9dd;
+    color: #8a7358;
     cursor: pointer;
 }
-
-.loadPlay svg {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
+.ldFs svg {
+    width: 6.4cqw;
+    height: 6.4cqw;
 }
-
-.loadPlay:active {
-    transform: scale(0.97);
+.ldFs[aria-pressed="false"] {
+    opacity: 0.55;
+    color: #b5a58a;
 }
-
-.loadWindow {
-    min-height: 56px;
-    font-size: 19px;
-    background: #eee4cf;
-    color: #7a6a4a;
-    border-width: 3px;
-    box-shadow: none;
+.ldFs[aria-pressed="false"]::after {
+    content: "";
+    position: absolute;
+    left: 2cqw;
+    right: 2cqw;
+    top: 50%;
+    height: 0.8cqw;
+    background: #cc5a52;
+    transform: rotate(-35deg);
+    border-radius: 1cqw;
+}
+.load .muteBtn.loadMute {
+    position: absolute;
+    left: auto;
+    right: 3cqw;
+    top: 3cqw;
+    margin: 0;
+    z-index: 3;
+    width: 11cqw;
+    height: 11cqw;
+    font-size: 5.6cqw;
+    border-radius: 3.4cqw;
+}
+.ldWarn {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    background: #3b2e3ca0;
+}
+.ldWarnCard {
+    width: calc(100% - 12cqw);
+    box-sizing: border-box;
+    padding: 6cqw 5cqw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3.4cqw;
+    text-align: center;
+    background: #fff8ea;
+    border: 1.4cqw solid #fff;
+    border-radius: 7cqw;
+    color: #4a2f1d;
+    font-family: "Baloo 2", system-ui, sans-serif;
+}
+.ldWarnIc {
+    font-size: 11cqw;
+    line-height: 1;
+}
+.ldWarnCard h2 {
+    margin: 0;
+    font-size: 7.4cqw;
+    line-height: 1.05;
+    color: #3d5a24;
+}
+.ldWarnCard p {
+    margin: 0;
+    font-size: 5cqw;
+    font-weight: 600;
+}
+.ldWarnCard button {
+    border: 0;
+    color: #fff;
+    font-family: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+.ldWarnNo {
+    width: 100%;
+    height: 17cqw;
+    border-radius: 6cqw;
+    background: #6fb05a;
+    box-shadow: 0 1.2cqw 0 #4a8a3a;
+    font-size: 7cqw;
+}
+.ldWarnYes {
+    height: 9cqw;
+    padding: 0 6cqw;
+    border-radius: 3.4cqw;
+    background: #cc5a52;
+    box-shadow: 0 0.8cqw 0 #a04540;
+    font-size: 4cqw;
 }
 
 /* ── Znajdź pary (memory) ────────────────────────────────────────── */
