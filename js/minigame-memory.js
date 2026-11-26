@@ -155,9 +155,10 @@ function memoShowLevels() {
             last = tm.last[i] !== undefined ? '<span class="memoTileStat"><i>Ostatnio</i><b>' + memoFmt(tm.last[i]) + "</b></span>" : "";
         b.className = "memoTile";
         b.innerHTML =
-            '<span class="memoStars memoFlies">' + memoFlyIcons(lv.n) + '</span><span class="memoTileTxt">' + lv.n + (lv.n < 5 ? " motylki" : " motylków") + "</span>" +
-            (rec || last ? '<span class="memoTileStats">' + rec + last + "</span>" : '<span class="memoTileStats memoTileNew">Jeszcze bez wyniku</span>') +
-            (done.includes(i) ? '<img class="memoTileCup" alt="Ukończony" src="' + icons.cup + '" />' : "");
+            '<span class="memoStars memoFlies">' + memoFlyIcons(lv.n) + '</span><span class="memoTileTxt">' + lv.n + (lv.n < 5 ? " motylki" : " motylków") +
+            // puchar stoi w linii z napisem (nigdy nie nachodzi na motylki ani wyniki)
+            (done.includes(i) ? '<img class="memoTileCup" alt="Ukończony" src="' + icons.cup + '" />' : "") + "</span>" +
+            (rec || last ? '<span class="memoTileStats">' + rec + last + "</span>" : '<span class="memoTileStats memoTileNew">Jeszcze bez wyniku</span>');
         b.onclick = () => {
             if (Date.now() - memoLevelsShownAt < 700) return; // "przelot" kliknięcia z poprzedniego ekranu
             $(".memoLevels").hidden = true;
