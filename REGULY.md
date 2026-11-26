@@ -397,3 +397,7 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - `#game { overflow: clip visible }` — w poziomie przycinamy (sąsiednie pokoje), w pionie świat wychodzi w pasy. `.world` top/bottom −150 px, `transform-origin: 0 150px` (zoom łapek bez zmian).
 - Ekran wczytywania: niebo i trawnik też sięgają w pasy (`.ldScene` top −150 px, `.ldLawn` bottom −150 px).
 - Rząd z serduszkiem (wanna/pokój, pasek serduszka, puchar, pełny ekran) podniesiony o 18 px (top −9 px), wycisz 39 px, piłeczki aportu 34 px. `.scene` przycina przez `clip-path: inset(-24px 0 0 0)` zamiast `overflow: hidden`.
+
+## §53 Łazienka — płytki po przekątnej (v0.8.238)
+- Dorysowana podłoga łazienki (`tla/wysokie/006.png`) liczona prawdziwą perspektywą z oryginału: punkt zbiegu y = −365 (w px sceny 2×), szerokość płytki 0,1406·(y+365), rzędy v = A − 21930/(y+365) (rzędy coraz wyższe ku dołowi). Próbkowane są dwa ostatnie pełne rzędy oryginału naprzemiennie, więc plamki idą po przekątnej (jak na oryginale), a fugi są proste, bez schodków.
+- Obrazki tła dostają `?b=N` (wersja grafik) — po przemalowaniu podbić, żeby telefon nie trzymał starej wersji.

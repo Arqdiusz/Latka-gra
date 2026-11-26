@@ -658,7 +658,7 @@ function setOffset(v) {
 function roomSVG(r) {
     // wysokie tło 768×2136 (świat do krawędzi okna, także w pasach nad i pod grą na wysokich
     // telefonach); środek = dawna scena, góra i dół dorysowane
-    const src = ((P.assets.rooms && P.assets.rooms[r]) || "tla/001.png").replace("tla/", "tla/wysokie/");
+    const src = ((P.assets.rooms && P.assets.rooms[r]) || "tla/001.png").replace("tla/", "tla/wysokie/") + "?b=2"; // ?b = wersja grafik tła (zmień przy przemalowaniu)
     return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">`;
 }
 
