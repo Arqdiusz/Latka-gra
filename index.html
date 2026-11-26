@@ -3,21 +3,21 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.232</title>
+        <title>Łatka v0.8.233</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
         <link rel="preload" href="fonts/Ranchers-Regular.ttf" as="font" type="font/ttf" crossorigin />
-        <link rel="stylesheet" href="css/style.css?v=252" />
+        <link rel="stylesheet" href="css/style.css?v=253" />
     </head>
 
     <body>
         <main id="game" aria-label="Łatka — gra">
+            <div class="world" aria-hidden="true"><div class="roomTrack"></div></div>
             <header class="status" aria-label="Potrzeby i samopoczucie"></header>
             <section class="scene" aria-label="Pomieszczenie">
                 <div class="sceneZoom">
-                    <div class="roomTrack"></div>
                     <canvas id="sceneCanvas" width="384" height="550"></canvas>
                 </div>
                 <div class="roomBadge"><img alt="" /></div>
@@ -46,6 +46,12 @@
                 ><button class="dishAccess" hidden>Posprzątaj stłuczone naczynie</button>
             </section>
             <footer class="dock">
+                <svg class="dockArrows" viewBox="0 0 384 150" aria-hidden="true">
+                    <defs><marker id="dkHead" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1.5 1.5L7 5L1.5 8.5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></marker></defs>
+                    <path d="M34.3 95.4A186 186 0 0 1 122.3 21.5" marker-start="url(#dkHead)" marker-end="url(#dkHead)" />
+                    <path d="M147 13.5A186 186 0 0 1 237 13.5" marker-start="url(#dkHead)" marker-end="url(#dkHead)" />
+                    <path d="M261.7 21.5A186 186 0 0 1 349.7 95.4" marker-start="url(#dkHead)" marker-end="url(#dkHead)" />
+                </svg>
                 <nav class="menu" aria-label="Opieka i aktywności"></nav>
             </footer>
             <div class="bubbleFull" hidden>
@@ -475,7 +481,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=252"></script>
+            <script src="js/loader.js?v=253"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -484,7 +490,7 @@
                     document.fonts.load("40px Ranchers");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=252"></script>
+            <script src="js/audio.js?v=253"></script>
             <div class="parentLock" hidden>
                 <!-- dla dziecka: obrazki, bez czytania — piesek śpi, po więcej czasu idź do rodziców -->
                 <div class="plKid">
@@ -538,23 +544,23 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=252"></script>
-        <script defer src="js/game.js?v=252"></script>
-        <script defer src="js/session.js?v=252"></script>
-        <script defer src="js/minigame-fetch.js?v=252"></script>
-        <script defer src="js/minigame-bubbles.js?v=252"></script>
-        <script defer src="js/minigame-mole.js?v=252"></script>
-        <script defer src="js/minigame-hedge.js?v=252"></script>
-        <script defer src="js/minigame-mole2.js?v=252"></script>
-        <script defer src="js/level-pick.js?v=252"></script>
-        <script defer src="js/minigame-memory.js?v=252"></script>
-        <script defer src="js/minigame-pairs.js?v=252"></script>
-        <script defer src="js/bones-adapt.js?v=252"></script>
-        <script defer src="js/bones-parent.js?v=252"></script>
-        <script defer src="js/minigame-bones.js?v=252"></script>
-        <script defer src="js/event-bone-mole.js?v=252"></script>
-        <script defer src="js/event-bone-dig.js?v=252"></script>
-        <script defer src="js/games-menu.js?v=252"></script>
-        <script defer src="js/popup-guard.js?v=252"></script>
+        <script defer src="js/arc-carousel.js?v=253"></script>
+        <script defer src="js/game.js?v=253"></script>
+        <script defer src="js/session.js?v=253"></script>
+        <script defer src="js/minigame-fetch.js?v=253"></script>
+        <script defer src="js/minigame-bubbles.js?v=253"></script>
+        <script defer src="js/minigame-mole.js?v=253"></script>
+        <script defer src="js/minigame-hedge.js?v=253"></script>
+        <script defer src="js/minigame-mole2.js?v=253"></script>
+        <script defer src="js/level-pick.js?v=253"></script>
+        <script defer src="js/minigame-memory.js?v=253"></script>
+        <script defer src="js/minigame-pairs.js?v=253"></script>
+        <script defer src="js/bones-adapt.js?v=253"></script>
+        <script defer src="js/bones-parent.js?v=253"></script>
+        <script defer src="js/minigame-bones.js?v=253"></script>
+        <script defer src="js/event-bone-mole.js?v=253"></script>
+        <script defer src="js/event-bone-dig.js?v=253"></script>
+        <script defer src="js/games-menu.js?v=253"></script>
+        <script defer src="js/popup-guard.js?v=253"></script>
     </body>
 </html>

@@ -107,8 +107,8 @@
         measure() {
             this.width = Math.max(1, this.root.clientWidth);
             this.height = Math.max(100, this.root.clientHeight);
-            this.size = 103.4;
-            this.spacing = this.width * 0.25;
+            this.size = 85;
+            this.spacing = this.width * 0.22;
             this.centerX = this.width / 2;
             this.centerY = this.height * 0.46;
             this.arc = 10;

@@ -656,7 +656,8 @@ function setOffset(v) {
 }
 
 function roomSVG(r) {
-    const src = (P.assets.rooms && P.assets.rooms[r]) || "tla/001.png";
+    // pełne tło 768×1536 (świat do krawędzi okna); środek = dawna scena, góra i dół dorysowane
+    const src = ((P.assets.rooms && P.assets.rooms[r]) || "tla/001.png").replace("tla/", "tla/pelne/");
     return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">`;
 }
 
@@ -1647,7 +1648,8 @@ function pawsZoom(on) {
     if (on === pawsZoomed) return;
     pawsZoomed = on;
     const el = $(".sceneZoom");
-    if (!on) return (el.style.transform = "");
+    const world = $(".world");
+    if (!on) return (el.style.transform = world.style.transform = "");
     const pts = pawScreenPoints();
     if (!pts.length) return (pawsZoomed = false);
     const hd = headPosition(),
@@ -1657,6 +1659,8 @@ function pawsZoom(on) {
         tx = clamp((0.5 - (cx / W) * Z) * 100, (1 - Z) * 100, 0),
         ty = clamp((0.58 - (cy / SH) * Z) * 100, (1 - Z) * 100, 0);
     el.style.transform = `translate(${tx}%, ${ty}%) scale(${Z})`;
+    // tło sięga dalej niż scena (o 106 px w górę): ten sam ruch kamery we współrzędnych całego okna
+    world.style.transform = `translate(${(tx * 384) / 100}px, ${(ty * 550) / 100 + 106 * (1 - Z)}px) scale(${Z})`;
 }
 function pawsStart() {
     if (room !== "bathroom" || pawDirt < 3) return idle(16);
