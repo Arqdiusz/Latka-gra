@@ -3735,3 +3735,86 @@ h3,
     border-radius: 10px;
     transition: width 0.25s;
 }
+
+/* Karta startowa liczenia: opis gry w obrazkach (bez czytania) */
+.biTiles {
+    display: flex;
+    gap: 8px;
+}
+.biTile {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 6px 10px;
+    border-radius: 16px;
+    background: #e3effa;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+}
+.biRow,
+.biEq {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+.biPlate {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #e2d4b4;
+}
+.biBones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 34px;
+}
+.biBones .bnB {
+    width: 17px;
+    height: 17px;
+    image-rendering: pixelated;
+}
+.biPlus,
+.biEq b {
+    color: #3d8fd6;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+}
+.biEq {
+    position: relative;
+    gap: 4px;
+    font-size: 25px;
+    font-weight: 800;
+    line-height: 1;
+}
+.biEq .biRes {
+    color: #58b04a;
+}
+.biOk {
+    position: absolute;
+    right: -9px;
+    top: -14px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #58b04a;
+    border: 2px solid #fff;
+    display: grid;
+    place-items: center;
+}
+.biOk svg {
+    width: 14px;
+    height: 14px;
+}

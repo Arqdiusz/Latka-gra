@@ -323,3 +323,7 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Podczas czyszczenia łapek szmatką u góry sceny jest kremowa plakietka jak przy kąpieli: ikonka łapki + zielony pasek (bez tekstu). Plakietka chowa na czas czyszczenia serduszko samopoczucia.
 - Pasek idzie za prawdziwym postępem: 1 − (grudki jeszcze widoczne ÷ grudki na starcie), nigdy się nie cofa; po ostatniej grudce 100% i fanfary. Przerwanie ✕ chowa pasek, zostaje tyle brudu, ile nie wytarto (bez zmian).
 - Ikona `icons.paw`; stan: `pawsTotal`, `pawsProg`, `pawsBadgeSet()`, widoczność w `updatePawsUi()`.
+
+## 40. Liczymy kostki — karta startowa z opisem gry zamiast pieska (v0.8.224)
+- Karta „Liczymy kostki!” ma dwa kafelki jak Pamięć motylków: (1) dwa talerze z kostkami i znak „+” między nimi — „Policz kostki na talerzach”; (2) przykład `2 + 1 = 3` z zielonym znaczkiem ✓ — „Wpisz wynik i dotknij OK”. Pod spodem: „Raz dodajemy, raz odejmujemy — gra sama dobiera.”, zielone „Liczymy!”, czerwone „Wróć”, kłódka rodzica w rogu.
+- Pieska z tej karty usunięto (piesek został w okienku „Nowość” i na karcie kreta). Kostki z `icons.bone`.

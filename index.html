@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.223</title>
+        <title>Łatka v0.8.224</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
-        <link rel="stylesheet" href="css/style.css?v=242" />
+        <link rel="stylesheet" href="css/style.css?v=243" />
     </head>
 
     <body>
@@ -57,9 +57,18 @@
                 <div class="bonesMenu">
                     <div class="moleCard bonesPop">
                         <button class="bonesParentBtn" aria-label="Dla rodzica"><img alt="" /></button>
-                        <canvas class="bonesMenuDog" width="160" height="160" aria-hidden="true"></canvas>
-                        <h2>Piesek znalazł kostkę!</h2>
-                        <p>Dodajemy i odejmujemy kostki. Policzymy razem?</p>
+                        <h2>Liczymy kostki!</h2>
+                        <div class="biTiles">
+                            <div class="biTile">
+                                <div class="biRow"><span class="biPlate"><span class="biBones"><img class="bnB" alt="" /><img class="bnB" alt="" /></span></span><b class="biPlus">+</b><span class="biPlate"><span class="biBones"><img class="bnB" alt="" /></span></span></div>
+                                <span>Policz kostki na talerzach</span>
+                            </div>
+                            <div class="biTile">
+                                <div class="biEq"><span>2</span><b>+</b><span>1</span><b>=</b><span class="biRes">3</span><i class="biOk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></i></div>
+                                <span>Wpisz wynik i dotknij OK</span>
+                            </div>
+                        </div>
+                        <p>Raz dodajemy, raz odejmujemy — gra sama dobiera.</p>
                         <button class="bonesStart btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5v17l15-8.5z" fill="#fff"/></svg>Liczymy!</button>
                         <button class="bonesBack btnRed">Wróć</button>
                     </div>
@@ -443,7 +452,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=242"></script>
+            <script src="js/loader.js?v=243"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -451,7 +460,7 @@
                     document.fonts.load("700 16px Quicksand");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=242"></script>
+            <script src="js/audio.js?v=243"></script>
             <div class="parentLock" hidden>
                 <!-- dla dziecka: obrazki, bez czytania — piesek śpi, po więcej czasu idź do rodziców -->
                 <div class="plKid">
@@ -505,23 +514,23 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=242"></script>
-        <script defer src="js/game.js?v=242"></script>
-        <script defer src="js/session.js?v=242"></script>
-        <script defer src="js/minigame-fetch.js?v=242"></script>
-        <script defer src="js/minigame-bubbles.js?v=242"></script>
-        <script defer src="js/minigame-mole.js?v=242"></script>
-        <script defer src="js/minigame-hedge.js?v=242"></script>
-        <script defer src="js/minigame-mole2.js?v=242"></script>
-        <script defer src="js/level-pick.js?v=242"></script>
-        <script defer src="js/minigame-memory.js?v=242"></script>
-        <script defer src="js/minigame-pairs.js?v=242"></script>
-        <script defer src="js/bones-adapt.js?v=242"></script>
-        <script defer src="js/bones-parent.js?v=242"></script>
-        <script defer src="js/minigame-bones.js?v=242"></script>
-        <script defer src="js/event-bone-mole.js?v=242"></script>
-        <script defer src="js/event-bone-dig.js?v=242"></script>
-        <script defer src="js/games-menu.js?v=242"></script>
-        <script defer src="js/popup-guard.js?v=242"></script>
+        <script defer src="js/arc-carousel.js?v=243"></script>
+        <script defer src="js/game.js?v=243"></script>
+        <script defer src="js/session.js?v=243"></script>
+        <script defer src="js/minigame-fetch.js?v=243"></script>
+        <script defer src="js/minigame-bubbles.js?v=243"></script>
+        <script defer src="js/minigame-mole.js?v=243"></script>
+        <script defer src="js/minigame-hedge.js?v=243"></script>
+        <script defer src="js/minigame-mole2.js?v=243"></script>
+        <script defer src="js/level-pick.js?v=243"></script>
+        <script defer src="js/minigame-memory.js?v=243"></script>
+        <script defer src="js/minigame-pairs.js?v=243"></script>
+        <script defer src="js/bones-adapt.js?v=243"></script>
+        <script defer src="js/bones-parent.js?v=243"></script>
+        <script defer src="js/minigame-bones.js?v=243"></script>
+        <script defer src="js/event-bone-mole.js?v=243"></script>
+        <script defer src="js/event-bone-dig.js?v=243"></script>
+        <script defer src="js/games-menu.js?v=243"></script>
+        <script defer src="js/popup-guard.js?v=243"></script>
     </body>
 </html>

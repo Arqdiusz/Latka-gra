@@ -159,7 +159,7 @@ function bonesDogLoop(cv) {
 function bonesDogStart() {
     $(".bonesParentBtn img").src = icons.lock || "";
     clearInterval(bonesDogT);
-    bonesDogT = bonesDogLoop($(".bonesMenuDog"));
+    document.querySelectorAll(".bonesMenu .bnB").forEach((im) => (im.src = icons.bone));
 }
 
 // okienko „Nowość” (dla dzieci, które jeszcze nie czytają): znak działania, dymek pieska
