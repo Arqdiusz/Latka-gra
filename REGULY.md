@@ -339,3 +339,6 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Na kafelkach poziomów zamiast gwiazdek są różnokolorowe motylki (tyle, ile ma poziom: 3, 4, 5; zielony, żółty, czerwony, fioletowy, niebieski) — większe niż gwiazdki (~58 px).
 - v0.8.227: poprawna polszczyzna na poziomach: „3 motylki”, „4 motylki”, „5 motylków”.
 - v0.8.228: puchar ukończonego poziomu stoi w linii z napisem („5 motylków 🏆”), nie w rogu — nie nachodzi na motylki ani wyniki. Sprawdzone z rekordami i pucharami na 440×880 i 360×640.
+
+## 43. Ekrany końcowe — ogród zamiast przyciemnienia (v0.8.229)
+- Wszystkie okna końcowe (`.moleWinPopup`: „Brawo!”, „Prawie się udało!” w każdej grze) mają pod sobą nieprzezroczyste tło ogrodu (`tla/001-gry.png`), które zasłania grę razem z jej paskiem i czerwonym ✕. Dzieci nie mają już czego naciskać w rogu — wychodzi się tylko dużymi przyciskami („Zagraj ponownie”, „Powrót”). Zmiana tylko w CSS (jedna reguła).

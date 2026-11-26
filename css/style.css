@@ -635,7 +635,8 @@ body {
 .moleWinPopup {
     position: absolute;
     inset: 0;
-    background: #3b2e3c38;
+    /* ogród zasłania grę pod spodem (razem z jej paskiem i ✕) — wyjście tylko dużymi przyciskami */
+    background: #a3d45c url("../tla/001-gry.png") top center / 100% auto no-repeat;
     z-index: 26;
     display: grid;
     place-items: center;
