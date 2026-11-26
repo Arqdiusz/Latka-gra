@@ -382,3 +382,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Koło: białe, przezroczyste szkło; małe, subtelne strzałki; mała zębatka w piaście (napęd, kręci się szybciej od koła); cały moduł (szkło, znaczniki, strzałki, zębatka, ikony) obraca się łapiąc koło w dowolnym miejscu.
 - Panel ⚙ (suwaki: promień, kąty, rozmiary, przezroczystości) + „Pokaż ustawienia” (JSON do przeniesienia do gry).
 - Ikony do prototypu: `proto/*.png` (64×64, wyciągnięte z gry).
+
+## §50 Koło menu w grze (v0.8.235)
+- Ustawienia z `kolo.html` przeniesione do gry: szkło R=133 (środek 192,774, biel .32), ikony R=85 / 77 px / krok 56°, małe strzałki (.4), zębatka R=35, 12 zębów, przełożenie 0.9, bez znaczników na obrzeżu.
+- Cały moduł kręci się kątowo: koło łapie się w dowolnym miejscu szkła (`ArcCarousel.inWheel`, listener na `.dock`), kąt palca względem środka = kąt koła; wybieg z prędkością i dociągnięcie do ikony; stuknięcie w ikonę nadal uruchamia / obraca.
+- `--wheel` kręci strzałki (−56°/poz.) i zębatkę (−50.4°/poz.).

@@ -45,6 +45,14 @@
                     signal: this.abort.signal,
                 });
             on("pointerdown", (e) => this.pointerDown(e));
+            if (root.parentElement)
+                root.parentElement.addEventListener(
+                    "pointerdown",
+                    (e) => {
+                        if (!root.contains(e.target) && this.inWheel(e)) this.pointerDown(e);
+                    },
+                    { signal: this.abort.signal }
+                );
             on("pointermove", (e) => this.pointerMove(e), {
                 passive: false,
             });
@@ -107,14 +115,14 @@
         measure() {
             this.width = Math.max(1, this.root.clientWidth);
             this.height = Math.max(100, this.root.clientHeight);
-            // Koło: ikony jadą po okręgu o środku tuż pod dolną krawędzią ekranu (środek koła
-            // w układzie menu: x = środek, y = 126 px). Jeden krok = 52° obrotu koła.
-            this.size = 85;
-            this.wheelR = 98;
-            this.stepRad = (52 * Math.PI) / 180;
+            // Koło (wartości z kolo.html): środek tuż pod dolną krawędzią ekranu (w układzie menu
+            // x = środek, y = 110 px), jeden krok = 56° obrotu koła.
+            this.size = 77;
+            this.wheelR = 85;
+            this.stepRad = (56 * Math.PI) / 180;
             this.spacing = this.wheelR * this.stepRad; // długość łuku na jedną pozycję = tyle przesuwa palec
             this.wheelX = this.width / 2;
-            this.wheelY = 126;
+            this.wheelY = 110;
         }
         setItems(items, { selectedId = null } = {}) {
             const parsed = this.validate(items);
@@ -209,24 +217,36 @@
                 b.setAttribute("aria-current", String(slot.offset === 0));
                 b.setAttribute("aria-label", (slot.offset === 0 ? "Uruchom: " : "Wybierz: ") + item.label);
             }
-            // strzałki i zębatka w docku kręcą się razem z kołem (CSS: rotate(calc(var(--wheel) * -52deg)))
+            // strzałki i zębatka w docku kręcą się razem z kołem (CSS: rotate(calc(var(--wheel) * -56deg)))
             const dock = this.root.parentElement;
             if (dock) dock.style.setProperty("--wheel", this.position.toFixed(4));
         }
+        // środek koła i skala w pikselach ekranu
+        wheelCentre() {
+            const r = this.root.getBoundingClientRect(),
+                k = r.width / this.width;
+            return { x: r.left + this.wheelX * k, y: r.top + this.wheelY * k, k };
+        }
+        // koło łapiemy w dowolnym miejscu szkła (nie tylko za ikonę)
+        inWheel(e) {
+            const c = this.wheelCentre();
+            return Math.hypot(e.clientX - c.x, e.clientY - c.y) <= (133 + 14) * c.k;
+        }
         pointerDown(e) {
             if (e.button !== 0 || this.drag || this.destroyed) return;
-            const b = e.target.closest(".arc-menu__button");
+            const b = e.target.closest && e.target.closest(".arc-menu__button");
             cancelAnimationFrame(this.raf);
             this.raf = 0;
             this.focusAfterSnap = false;
+            const c = this.wheelCentre();
             this.drag = {
                 id: e.pointerId,
                 startX: e.clientX,
                 startY: e.clientY,
                 start: this.position,
+                angle: Math.atan2(e.clientY - c.y, e.clientX - c.x),
                 logical: b ? Number(b.dataset.logicalIndex) : null,
                 moved: false,
-                lastX: e.clientX,
                 lastTime: performance.now(),
                 velocity: 0,
             };
@@ -237,31 +257,28 @@
         pointerMove(e) {
             const d = this.drag;
             if (!d || d.id !== e.pointerId) return;
-            const rect = this.root.getBoundingClientRect(),
-                x = clamp(e.clientX, rect.left, rect.right),
-                dx = x - d.startX,
-                dy = e.clientY - d.startY;
-            if (d.vertical) return;
             if (!d.moved) {
-                if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
-                    d.vertical = true;
-                    return;
-                }
-                if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
+                if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) < 8) return;
                 d.moved = true;
                 this.root.classList.add("is-dragging");
             }
             e.preventDefault();
             if (this.items.length < 2) return;
+            const c = this.wheelCentre(),
+                a = Math.atan2(e.clientY - c.y, e.clientX - c.x);
+            let da = a - d.angle;
+            if (da > Math.PI) da -= 2 * Math.PI;
+            if (da < -Math.PI) da += 2 * Math.PI;
+            d.angle = a;
             const now = performance.now(),
-                dt = now - d.lastTime;
+                dt = now - d.lastTime,
+                dp = -da / this.stepRad;
             if (dt > 0) {
-                d.velocity = (x - d.lastX) / dt;
-                d.lastX = x;
+                d.velocity = 0.5 * d.velocity + 0.5 * (dp / dt);
                 d.lastTime = now;
             }
-            // Bounded gesture: moving outside the menu cannot carry the component across the page.
-            this.position = d.start + clamp(-dx / this.spacing, -2.2, 2.2);
+            // kąt palca względem środka = kąt koła: ruch w prawo = koło w prawo
+            this.position += dp;
             this.target = this.position;
             this.render();
         }
@@ -273,14 +290,9 @@
             try {
                 if (this.root.hasPointerCapture(e.pointerId)) this.root.releasePointerCapture(e.pointerId);
             } catch (_) {}
-            if (d.vertical || (!d.moved && Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 10)) {
-                this.target = Math.round(this.position);
-                this.animate();
-                return;
-            }
             if (d.moved) {
                 const v = performance.now() - d.lastTime < 90 ? d.velocity : 0;
-                this.target = Math.round(this.position + clamp((-v * 65) / this.spacing, -0.55, 0.55));
+                this.target = Math.round(this.position + clamp(v * 130, -1.4, 1.4));
                 this.animate();
             } else if (d.logical !== null) this.tap(d.logical);
             else {

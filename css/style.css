@@ -927,20 +927,24 @@ body {
     background: transparent;
 }
 
-/* szklany łuk pod menu: koło o środku (192, 790) tuż pod dołem ekranu, promień 146 px; strzałki
-   i zębatka obracają się razem z menu (--wheel = pozycja karuzeli, 52° na pozycję) */
+/* szklane koło menu: środek (192, 774) tuż pod dołem ekranu, promień 133 px; strzałki i zębatka
+   obracają się razem z menu (--wheel = pozycja karuzeli, 56° na pozycję; zębatka 0.9×). Wartości z kolo.html */
+.dock {
+    touch-action: none;
+}
+
 .dock::before {
     content: "";
     position: absolute;
-    left: 46px;
-    top: 26px;
-    width: 292px;
-    height: 292px;
+    left: 59px;
+    top: 23px;
+    width: 266px;
+    height: 266px;
     box-sizing: border-box;
     border-radius: 50%;
-    background: rgba(255, 247, 238, 0.45);
-    border: 3px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 -3px 14px rgba(60, 40, 30, 0.2);
+    background: rgba(255, 255, 255, 0.32);
+    border: 2px solid rgba(255, 255, 255, 0.75);
+    box-shadow: 0 -2px 14px rgba(60, 40, 30, 0.14);
     pointer-events: none;
 }
 
@@ -949,39 +953,23 @@ body {
     position: absolute;
     overflow: visible;
     pointer-events: none;
-    transform: rotate(calc(var(--wheel, 0) * -52deg));
     will-change: transform;
 }
 
-/* zębatka: pierścień zębów tuż wewnątrz szklanego łuku (środek koła jest poza ekranem) */
 .dockGear {
-    left: 42px; /* środek koła (192, 172) w układzie docka */
-    top: 22px;
-    width: 300px;
-    height: 300px;
+    left: 151px; /* środek koła (192, 156) w układzie docka */
+    top: 115px;
+    width: 82px;
+    height: 82px;
+    transform: rotate(calc(var(--wheel, 0) * -50.4deg));
 }
 
 .dockArrows {
-    left: 12px;
-    top: -8px;
-    width: 360px;
-    height: 360px;
-}
-
-.dockGear path,
-.dockGear circle {
-    fill: rgba(255, 255, 255, 0.38);
-    stroke: rgba(255, 255, 255, 0.9);
-    stroke-width: 1.5;
-    stroke-linejoin: round;
-}
-
-.dockArrows path {
-    fill: none;
-    stroke: #fff;
-    stroke-width: 3;
-    stroke-linecap: round;
-    filter: drop-shadow(0 1px 2px rgba(60, 40, 30, 0.45));
+    left: 34px;
+    top: -2px;
+    width: 316px;
+    height: 316px;
+    transform: rotate(calc(var(--wheel, 0) * -56deg));
 }
 
 .menu {
@@ -991,7 +979,7 @@ body {
     transform: translateY(46px);
     overflow: visible;
     z-index: 2;
-    touch-action: pan-y;
+    touch-action: none;
     user-select: none;
     -webkit-user-select: none;
     isolation: isolate;
@@ -1008,13 +996,13 @@ body {
     background: var(--item-color);
     box-shadow: 0 3px #0001;
     cursor: pointer;
-    touch-action: pan-y;
+    touch-action: none;
 }
 
 .arc-menu__icon {
     display: block;
-    width: 66px;
-    height: 66px;
+    width: 60px;
+    height: 60px;
     max-width: 100%;
     max-height: 100%;
     pointer-events: none;
