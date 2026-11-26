@@ -351,3 +351,10 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - **„Zacznij od nowa”** → ostrzeżenie „Cały postęp w grze zniknie i nie da się go przywrócić” z dużym zielonym „Nie, wracam” i małym czerwonym „Tak, zacznij od nowa”. Kasuje zapis gry, potrzeby, liczenie, poziomy pamięci i par (rekordy też) i odświeża stronę. Blokada czasu dla rodzica (`latka-sesja-v1`) i wyciszenie dźwięku zostają.
 - **Pełny ekran:** „Kontynuuj/Graj” od razu włącza pełny ekran (ten sam gest); mały przełącznik w lewym górnym rogu (przekreślony = wyłączony, zapamiętany w `latka-fullscreen`) pozwala to wyłączyć. Dawny przycisk „Graj w oknie” zniknął.
 - Zapis gry powstaje dopiero po naciśnięciu „Kontynuuj/Graj” (`window.gameStarted`) — samo otwarcie i zamknięcie ekranu startowego nie tworzy zapisu.
+
+## 45. Czcionka osadzona i ruch pieska na ekranie wczytywania (v0.8.231)
+- **Ranchers w grze:** plik `fonts/Ranchers-Regular.ttf` (+ licencja `fonts/OFL.txt`), `@font-face` na początku `css/style.css`, `<link rel="preload">` w `index.html`. Z Google Fonts zostały tylko Baloo 2 i Quicksand — logo nie zależy już od sieci.
+- **Piesek na wczytywaniu/starcie rysowany jak w grze** (a nie surową klatką): łapy na linii gruntu klatki (113 z 128 px), skala 2,35×0,7 (bieg ×1,04), przesunięcia klatek z `config.json`. Koniec z podskakiwaniem (bobem) — rytm daje sama animacja.
+- **Klatki biegu i marszu zależą od przebytej drogi** (36 px / 13 px na klatkę, jak w grze); trawnik przesuwa się z prędkością pieska względem ziemi (bieg 70 cqw/s, marsz 15,6 cqw/s), niebo 5× wolniej — łapy nie „ślizgają się”.
+- **Przejście bez fikołka i skoku:** bieg → hamowanie → marsz (ogród dalej płynie) → ogród staje, a piesek idzie na środek z tą samą prędkością → staje → zabawy. Ponowny bieg na ekranie startowym: krok → marsz → bieg → marsz → stop.
+- Motylek na nosie liczony tą samą geometrią co piesek.

@@ -5,8 +5,8 @@
 //
 //  1. ŁADOWANIE: piesek biegnie po ogrodzie (tło zapętlone: niebo wolno, trawnik
 //     szybko), zielony pasek postępu, logo „Mój mały JAMNICZEK” kołysze się na niebie.
-//  2. PRZEJŚCIE (gdy gra gotowa): ogród zwalnia, piesek hamuje, robi fikołka i
-//     ląduje na środku; pasek zamienia się w duży przycisk „Kontynuuj”/„Graj”,
+//  2. PRZEJŚCIE (gdy gra gotowa): ogród zwalnia, piesek przechodzi z biegu w marsz
+//     (tak jak w grze między pokojami), ogród staje, piesek idzie na środek; pasek zamienia się w duży przycisk „Kontynuuj”/„Graj”,
 //     potem pojawia się mały „Zacznij od nowa”.
 //  3. STARTOWY (może trwać długo): piesek na zmianę łapie motylka, kopie kostkę,
 //     ziewa, drapie się, otrząsa, siada… co jakiś czas znów rusza biegiem, a przez
@@ -36,10 +36,16 @@
         RESET_KEYS = [SAVE_KEY, "latka-potrzeby-v1", "latka-liczenie-v1", "memoLevelsDone", "memoTimes", "pairsLevelsDone", "pairsRecords"],
         U = cv.width / 100, // pikseli płótna na 1 cqw
         CELL = 128,
-        DOG = 60, // rozmiar klatki pieska (cqw)
-        FEET = 129, // wysokość łap na trawniku (cqw)
-        SPEED_SCENE = 9, // cqw/s przy pełnym biegu
-        SPEED_LAWN = 46;
+        // rysowanie pieska jak w grze: łapy na linii gruntu klatki (113 px z 128), skala 2,35×0,7
+        // (bieg ×1,04), przesunięcia klatek z config.json; 1 px gry = 1/3,84 cqw
+        GROUND_PX = 113,
+        K = (2.35 * 0.7) / 3.84, // cqw na 1 px klatki
+        FEET = 127, // wysokość łap na trawniku (cqw)
+        V_RUN = 70, // cqw/s — bieg po ogrodzie (w grze 300 px/s ≈ 78 cqw/s)
+        V_WALK = 15.6, // marsz (w grze 60 px/s)
+        SKY = 0.2; // niebo przewija się wolniej niż trawnik
+    // przesunięcia klatek [x, y, skala%] z data/config.json (tylko użyte klatki)
+    const OFF = {"a01":{"1":[0,0,100],"3":[0,0,100],"4":[0,0,100],"7":[0,0,100],"8":[0,0,100],"9":[0,0,100],"10":[0,0,100],"15":[0,0,100],"16":[0,0,100],"21":[0,0,100],"25":[0,-1,100],"26":[0,0,100],"29":[0,0,100],"32":[0,-1,100],"43":[0,0,100],"49":[0,0,100],"50":[0,0,100],"51":[0,0,100],"52":[0,0,100],"55":[0,0,100],"56":[0,0,100],"57":[0,0,100],"58":[0,0,100],"61":[0,0,100]},"a02":{"1":[0,0,100],"8":[0,0,100],"27":[0,0,100],"28":[0,0,100],"33":[0,0,100],"34":[0,0,100],"53":[0,0,100],"54":[0,0,100],"59":[0,0,100],"63":[0,0,100],"64":[0,0,100],"65":[0,0,100],"66":[0,8,100],"69":[0,0,100],"70":[0,0,100],"71":[0,-4,100],"72":[0,-2,100]},"a03":{"1":[0,0,100],"4":[0,0,100],"5":[0,0,100],"6":[0,0,100],"9":[0,0,100],"10":[0,0,100],"12":[0,0,100],"13":[0,0,100],"14":[0,0,100],"16":[0,0,100],"17":[0,0,100],"18":[0,0,100],"20":[0,0,100],"21":[0,0,100],"22":[0,0,100],"23":[0,0,100],"24":[0,-6,100]}};
 
     // ── logo: JAMNICZEK literami różnej wielkości ──
     const SIZES = [0.8, 0.84, 1, 1, 0.72, 1.1, 1, 1, 1];
@@ -106,9 +112,9 @@
 
     // ── animacje pieska: arkusz + klatki + czas klatki (ms) ──
     const A = {
-        run: { s: "a01", f: [3, 4, 9, 10], ms: 110 },
-        walk: { s: "a01", f: [25, 26, 32], ms: 170 },
-        roll: { s: "a01", f: [9, 7, 15, 16, 21, 43, 1, 8], ms: 190 }, // „Turlanie A” — fikołek
+        // bieg i marsz: klatki zależą od przebytej drogi (jak w grze: 36 px / 13 px na klatkę)
+        run: { s: "a01", f: [3, 4, 9, 10], stride: 36 / 3.84, boost: 1.04 },
+        walk: { s: "a01", f: [25, 26, 32], stride: 13 / 3.84 },
         sit: { s: "a01", f: [29, 29, 29, 61, 29, 29, 29, 49], ms: 650 },
         shake: { s: "a01", f: [51, 52, 57, 52, 57, 58], ms: 280 },
         scratch: { s: "a01", f: [49, 50, 55, 49, 50, 49, 50, 56], ms: 280 },
@@ -139,12 +145,12 @@
         ready = false,
         resolve = null,
         stopped = false,
-        phase = "load", // load → brake → roll → idle
+        phase = "load", // load → brake → walk → idle
         pt = 0, // czas w bieżącej fazie (s)
         scroll = 0, // przesunięcie trawnika (cqw)
-        speed = 1, // 0..1 (mnożnik prędkości przewijania)
+        v = V_RUN, // prędkość pieska względem ogrodu (cqw/s)
+        dist = 0, // przebyta droga (cqw) — z niej klatki biegu/marszu
         dogX = 26,
-        dogY = 0, // uniesienie nad ziemię (cqw, fikołek)
         cur = A.run,
         curT = 0, // czas od początku bieżącej animacji (s)
         act = null, // bieżąca zabawa
@@ -193,26 +199,22 @@
     function idleStep(dt) {
         if (!act) pickAct();
         if (act.run) {
-            // znów biegnie: rozpędza się (0,9 s), biegnie ok. 3,5 s, zwalnia (1,3 s), staje
+            // znów rusza jak w grze: krok → marsz → bieg (ok. 3,5 s) → marsz → staje
             runT += dt;
-            if (runPh === 0) {
-                setAnim(A.run);
-                speed = ease(runT / 0.9);
-                if (runT >= 0.9) (runPh = 1), (runT = 0);
-            } else if (runPh === 1) {
-                speed = 1;
-                if (runT >= 3.5) (runPh = 2), (runT = 0);
-            } else {
-                speed = 1 - eo(runT / 1.3);
-                if (runT > 0.6) setAnim(A.walk);
-                if (runT >= 1.3) {
-                    speed = 0;
-                    pickAct();
-                }
+            const t = runT;
+            if (t < 0.5) v = V_WALK * ease(t / 0.5);
+            else if (t < 1.4) v = V_WALK;
+            else if (t < 2.1) v = lerp(V_WALK, V_RUN, ease((t - 1.4) / 0.7));
+            else if (t < 5.6) v = V_RUN;
+            else if (t < 6.6) v = lerp(V_RUN, V_WALK, ease((t - 5.6) / 1));
+            else if (t < 7.4) v = V_WALK * (1 - ease((t - 6.6) / 0.8));
+            else {
+                v = 0;
+                pickAct();
             }
             return;
         }
-        speed = 0;
+        v = 0;
         actT += dt;
         if (actT >= act.seg[actI][1]) {
             actT = 0;
@@ -229,21 +231,18 @@
             shown += (target - shown) * Math.min(1, dt * 7);
             if (target - shown < 0.002) shown = target;
             fill.style.width = Math.max(4, shown * 100) + "%";
-            speed = 1;
-            setAnim(A.run);
+            v = V_RUN;
             if (ready && shown >= 0.995) {
                 phase = "brake";
                 pt = 0;
             }
         } else if (phase === "brake") {
-            // ogród zwalnia, piesek przechodzi z biegu w chód
-            speed = 1 - eo(pt / 1.6);
-            if (pt > 0.8) setAnim(A.walk);
-            if (pt >= 1.6) {
-                speed = 0;
-                phase = "roll";
+            // zwalnia z biegu do marszu (ogród dalej przesuwa się, piesek stoi w miejscu)
+            v = lerp(V_RUN, V_WALK, ease(pt / 1.3));
+            if (pt >= 1.3) {
+                v = V_WALK;
+                phase = "walk";
                 pt = 0;
-                setAnim(A.roll);
                 // pasek zamienia się w przycisk
                 bar.classList.add("off");
                 msg.classList.add("off");
@@ -252,18 +251,16 @@
                 void go.offsetWidth;
                 go.classList.add("on");
             }
-        } else if (phase === "roll") {
-            // fikołek w łuku na środek ekranu
-            const D = 1.55,
-                p = Math.min(1, pt / D);
-            speed = 0;
-            dogX = lerp(26, 50, ease(p));
-            dogY = 26 * 4 * p * (1 - p);
-            if (pt >= D) {
-                dogY = 0;
+        } else if (phase === "walk") {
+            // ogród staje, a piesek idzie spokojnie na środek ekranu (ta sama prędkość względem ziemi)
+            v = V_WALK;
+            dogX += V_WALK * dt;
+            if (dogX >= 50) {
+                dogX = 50;
+                v = 0;
                 phase = "idle";
                 pt = 0;
-                setAnim(A.sit);
+                setAnim(A.stand);
                 if (hasSave) {
                     // bez zapisu nie ma czego zerować — „Zacznij od nowa” tylko przy istniejącej grze
                     newBtn.hidden = false;
@@ -273,10 +270,14 @@
                 bfTimer(4);
             }
         } else {
-            if (pt > 0.8) idleStep(dt);
+            if (pt > 0.9) idleStep(dt);
         }
-        scroll += speed * SPEED_LAWN * dt;
-        sceneEl.style.backgroundPositionX = -((scroll * SPEED_SCENE) / SPEED_LAWN) % 200 + "cqw";
+        dist += v * dt;
+        // bieg albo marsz zależnie od prędkości
+        if (phase === "load" || phase === "brake" || phase === "walk" || (act && act.run)) cur = v >= 34 ? A.run : A.walk;
+        const lawnV = phase === "walk" ? 0 : v;
+        scroll += lawnV * dt;
+        sceneEl.style.backgroundPositionX = -((scroll * SKY) % 200) + "cqw";
         lawnEl.style.backgroundPositionX = -(scroll % 200) + "cqw";
         // motylki przelatujące przez ekran
         if (phase === "idle") {
@@ -305,20 +306,23 @@
         c.drawImage(im, (f % 3) * 64, Math.floor(f / 3) * 64, 64, 64, (x - size / 2) * U, (y - size / 2) * U, size * U, size * U);
     }
 
+    // piesek jak w grze: łapy na FEET, klatka wyrównana linią gruntu i przesunięciem z config.json
+    function place(sheet, f, boost) {
+        const o = OFF[sheet][f] || [0, 0, 100],
+            k = (K * o[2]) / 100 * (boost || 1); // cqw na 1 px klatki
+        return { k, left: dogX - (CELL / 2) * k + (o[0] * 2.35) / 3.84, top: FEET - GROUND_PX * k + (o[1] * 2.35) / 3.84 };
+    }
     function draw(t) {
         c.clearRect(0, 0, cv.width, cv.height);
         c.imageSmoothingEnabled = false;
-        const fi = Math.floor((curT * 1000) / cur.ms) % cur.f.length,
-            cl = cell(cur.s, cur.f[fi]);
-        let by = 0;
-        if (phase === "load" || (phase === "idle" && act && act.run && runPh === 1)) by = Math.sin(t / 110) * 0.5; // lekkie podskakiwanie
-        const S = DOG * U,
-            left = dogX * U - S / 2,
-            top = (FEET - DOG * 0.93 - dogY + by) * U;
-        if (cl) c.drawImage(cl.cv, left, top, S, S);
+        const fi = cur.stride ? Math.floor(dist / cur.stride) % cur.f.length : Math.floor((curT * 1000) / cur.ms) % cur.f.length,
+            f = cur.f[fi],
+            cl = cell(cur.s, f),
+            g = place(cur.s, f, cur.boost);
+        if (cl) c.drawImage(cl.cv, g.left * U, g.top * U, CELL * g.k * U, CELL * g.k * U);
         // motylek „na nosie” według znacznika klatki (jak w grze) albo krążący, gdy klatka go nie ma
         if (phase === "idle" && act && act.bf) {
-            if (cl && cl.marker) butterfly(dogX + (cl.marker.x / CELL - 0.5) * DOG, FEET - DOG * 0.93 + (cl.marker.y / CELL) * DOG, 2, t / 1000, 16);
+            if (cl && cl.marker) butterfly(g.left + cl.marker.x * g.k, g.top + cl.marker.y * g.k, 2, t / 1000, 16);
             else butterfly(dogX + 22 + Math.sin((t / 1000) * 1.9) * 9, 70 + Math.cos((t / 1000) * 2.4) * 5, 2, t / 1000, 16);
         }
         for (const b of butterflies) butterfly(b.x, b.y + Math.sin(b.t * 2.6 + b.ph) * 7, b.col, b.t + b.ph, 12);
