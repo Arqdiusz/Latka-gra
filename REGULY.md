@@ -391,3 +391,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 ## §51 Ekran wczytywania — bieg po środku i fikołek (v0.8.236)
 - Piesek od początku biegnie na środku ekranu (dogX = 50). Gdy gra jest gotowa: fikołek („05. Turlanie A”, klatki 9,7,15,16,21,43,1,8 po 190 ms, jeden obrót), a przez cały obrót ogród zwalnia do zera (ease). Potem stoi i przechodzi w zabawy; przycisk „Kontynuuj/Graj” (i „Zacznij od nowa”) pojawia się po fikołku.
 - Usunięte fazy hamowania i marszu na środek.
+
+## §52 Świat w pasach nad i pod grą + serduszko wyżej (v0.8.237)
+- Wysokie telefony (np. 19,5:9) miały szare pasy nad i pod grą (gra ma stałe 384×768 = 1:2). Tła pokoi są teraz 768×2136 (`tla/wysokie/00N.png`, zastępują `tla/pelne/`): po 150 px świata gry nad i pod układem (ściana z rombami / niebo z chmurami w górę, podłoga / trawa / kafelki w dół — przesunięcia, bez odbić). Wystarcza do proporcji ok. 2,78:1.
+- `#game { overflow: clip visible }` — w poziomie przycinamy (sąsiednie pokoje), w pionie świat wychodzi w pasy. `.world` top/bottom −150 px, `transform-origin: 0 150px` (zoom łapek bez zmian).
+- Ekran wczytywania: niebo i trawnik też sięgają w pasy (`.ldScene` top −150 px, `.ldLawn` bottom −150 px).
+- Rząd z serduszkiem (wanna/pokój, pasek serduszka, puchar, pełny ekran) podniesiony o 18 px (top −9 px), wycisz 39 px, piłeczki aportu 34 px. `.scene` przycina przez `clip-path: inset(-24px 0 0 0)` zamiast `overflow: hidden`.

@@ -656,8 +656,9 @@ function setOffset(v) {
 }
 
 function roomSVG(r) {
-    // pełne tło 768×1536 (świat do krawędzi okna); środek = dawna scena, góra i dół dorysowane
-    const src = ((P.assets.rooms && P.assets.rooms[r]) || "tla/001.png").replace("tla/", "tla/pelne/");
+    // wysokie tło 768×2136 (świat do krawędzi okna, także w pasach nad i pod grą na wysokich
+    // telefonach); środek = dawna scena, góra i dół dorysowane
+    const src = ((P.assets.rooms && P.assets.rooms[r]) || "tla/001.png").replace("tla/", "tla/wysokie/");
     return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">`;
 }
 
