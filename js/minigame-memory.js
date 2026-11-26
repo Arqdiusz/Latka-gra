@@ -293,10 +293,7 @@ function memoLoseShow() {
     memoEndOpen("#memoLosePopup", g.level);
 }
 
-$("#memoWinPopup .memoExit").onclick = () => {
-    $("#memoWinPopup").hidden = true;
-    memoFinish(true);
-};
+
 // Powrót do ekranu wyboru poziomów (po wygranej i po przegranej)
 function memoToLevels(rewarded) {
     memoFinish(rewarded);
@@ -314,14 +311,10 @@ function memoToLevels(rewarded) {
     ]);
     memoShowLevels();
 }
-$("#memoWinPopup .memoNext").onclick = () => {
-    // "Wybierz poziom": nagroda za wygraną i powrót do ekranu poziomów
+// „Powrót” po wygranej i po przegranej prowadzi do ekranu wyboru poziomów (nie do pieska)
+$("#memoWinPopup .memoExit").onclick = () => {
     $("#memoWinPopup").hidden = true;
     memoToLevels(true);
-};
-$("#memoLosePopup .memoPick").onclick = () => {
-    $("#memoLosePopup").hidden = true;
-    memoToLevels(false);
 };
 $("#memoWinPopup .winAgain").onclick = () => {
     $("#memoWinPopup").hidden = true;
@@ -331,7 +324,7 @@ $("#memoWinPopup .winAgain").onclick = () => {
 };
 $("#memoLosePopup .memoExit").onclick = () => {
     $("#memoLosePopup").hidden = true;
-    memoFinish(false);
+    memoToLevels(false);
 };
 $("#memoLosePopup .memoTry").onclick = () => {
     $("#memoLosePopup").hidden = true;

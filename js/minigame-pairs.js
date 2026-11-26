@@ -354,11 +354,7 @@ function pairsWinShow() {
     $("#pairsWinPopup").hidden = false;
 }
 $("#pairsWinPopup .memoExit").onclick = () => {
-    $("#pairsWinPopup").hidden = true;
-    pairsFinish(true);
-};
-$("#pairsWinPopup .memoNext").onclick = () => {
-    // "Wybierz poziom": nagroda za wygraną i powrót do ekranu poziomów
+    // „Powrót”: nagroda za wygraną i powrót do ekranu wyboru poziomów (nie do pieska)
     $("#pairsWinPopup").hidden = true;
     pairsFinish(true);
     startQueue([

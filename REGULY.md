@@ -416,3 +416,6 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
   - belki gier `.gBar` przedłużone kolorem do górnej krawędzi (box-shadow), dolne panele liczenia kostek do dolnej;
   - przyciemnienia i okna (popupy, „Brawo!”, ostrzeżenia, blokada rodzica) — samo pudełko w pasy (treść na środku ekranu);
   - listy (Gry, poziomy) — pudełko w pasy + padding o tyle samo.
+
+## §57 Koniec gry z poziomami → ekran wyboru poziomu (v0.8.242)
+- Motylki i Pary: z okien wygranej/przegranej usunięty przycisk „Wybierz poziom”. Zostają „Zagraj ponownie”/„Jeszcze raz” i „Powrót”, a „Powrót” prowadzi do ekranu wyboru poziomu (nagroda za wygraną jak wcześniej). Do pieska wraca się z ekranu poziomów („Wróć”).
