@@ -387,3 +387,7 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Ustawienia z `kolo.html` przeniesione do gry: szkło R=133 (środek 192,774, biel .32), ikony R=85 / 77 px / krok 56°, małe strzałki (.4), zębatka R=35, 12 zębów, przełożenie 0.9, bez znaczników na obrzeżu.
 - Cały moduł kręci się kątowo: koło łapie się w dowolnym miejscu szkła (`ArcCarousel.inWheel`, listener na `.dock`), kąt palca względem środka = kąt koła; wybieg z prędkością i dociągnięcie do ikony; stuknięcie w ikonę nadal uruchamia / obraca.
 - `--wheel` kręci strzałki (−56°/poz.) i zębatkę (−50.4°/poz.).
+
+## §51 Ekran wczytywania — bieg po środku i fikołek (v0.8.236)
+- Piesek od początku biegnie na środku ekranu (dogX = 50). Gdy gra jest gotowa: fikołek („05. Turlanie A”, klatki 9,7,15,16,21,43,1,8 po 190 ms, jeden obrót), a przez cały obrót ogród zwalnia do zera (ease). Potem stoi i przechodzi w zabawy; przycisk „Kontynuuj/Graj” (i „Zacznij od nowa”) pojawia się po fikołku.
+- Usunięte fazy hamowania i marszu na środek.

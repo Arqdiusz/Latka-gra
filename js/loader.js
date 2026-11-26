@@ -5,9 +5,9 @@
 //
 //  1. ŁADOWANIE: piesek biegnie po ogrodzie (tło zapętlone: niebo wolno, trawnik
 //     szybko), zielony pasek postępu, logo „Mój mały JAMNICZEK” kołysze się na niebie.
-//  2. PRZEJŚCIE (gdy gra gotowa): ogród zwalnia, piesek przechodzi z biegu w marsz
-//     (tak jak w grze między pokojami), ogród staje, piesek idzie na środek; pasek zamienia się w duży przycisk „Kontynuuj”/„Graj”,
-//     potem pojawia się mały „Zacznij od nowa”.
+//  2. PRZEJŚCIE (gdy gra gotowa): piesek biegnie po środku; robi fikołka, ogród
+//     zwalnia do zera, piesek przechodzi w zabawy; pasek zamienia się w duży przycisk
+//     „Kontynuuj”/„Graj”, potem pojawia się mały „Zacznij od nowa”.
 //  3. STARTOWY (może trwać długo): piesek losowo, animacjami z gry: stoi, merda ogonem,
 //     kopie kostkę, przechodzi w inne miejsce (marsz/bieg) albo „łapie motylka” dokładnie
 //     jak w evencie w grze (bez klikania); przez niebo lata motylek-tło (też jak w grze).
@@ -118,6 +118,7 @@
         // bieg i marsz: klatki zależą od przebytej drogi (jak w grze: 36 px / 13 px na klatkę)
         run: { s: "a01", f: [3, 4, 9, 10], stride: 36 / PX, boost: 1.04 },
         walk: { s: "a01", f: [25, 26, 32], stride: 13 / PX },
+        roll: { s: "a01", f: [9, 7, 15, 16, 21, 43, 1, 8], ms: 190 }, // „05. Turlanie A” — fikołek
         stand: { s: "a01", f: [63, 27, 63, 65, 63, 27, 65], ms: 380 }, // „17. Spokojne stanie”
         wag: { s: "a01", f: [63, 27, 63, 27, 63, 27, 63, 63], ms: 300 }, // stanie z merdaniem ogonem (WAG)
         dig1: { s: "a03", f: [10, 4, 9, 5, 1], ms: 333 }, // kopanie dołka
@@ -135,12 +136,12 @@
         ready = false,
         resolve = null,
         stopped = false,
-        phase = "load", // load → brake → walk → idle
+        phase = "load", // load → roll (fikołek, tło zwalnia) → idle
         pt = 0, // czas w bieżącej fazie (s)
         scroll = 0, // przesunięcie trawnika (cqw)
         v = V_RUN, // prędkość pieska względem ogrodu przy przewijaniu (cqw/s)
         dist = 0, // przebyta droga (cqw) — z niej klatki biegu/marszu
-        dogX = 26,
+        dogX = 50, // piesek biegnie po środku ekranu
         flip = false, // piesek zwrócony w lewo
         cur = A.run,
         curT = 0, // czas od początku bieżącej animacji (s)
@@ -351,16 +352,19 @@
             fill.style.width = Math.max(4, shown * 100) + "%";
             v = V_RUN;
             if (ready && shown >= 0.995) {
-                phase = "brake";
+                phase = "roll";
                 pt = 0;
+                setAnim(A.roll);
             }
-        } else if (phase === "brake") {
-            // zwalnia z biegu do marszu (ogród dalej przesuwa się, piesek stoi w miejscu)
-            v = lerp(V_RUN, V_WALK, ease(pt / 1.3));
-            if (pt >= 1.3) {
-                v = V_WALK;
-                phase = "walk";
+        } else if (phase === "roll") {
+            // fikołek na środku: ogród zwalnia do zera przez cały obrót, potem piesek przechodzi w zabawy
+            const T = (A.roll.f.length * A.roll.ms) / 1000;
+            v = lerp(V_RUN, 0, ease(pt / T));
+            if (pt >= T) {
+                v = 0;
+                phase = "idle";
                 pt = 0;
+                setAnim(A.stand);
                 // pasek zamienia się w przycisk
                 bar.classList.add("off");
                 msg.classList.add("off");
@@ -368,17 +372,6 @@
                 fsBtn.hidden = false;
                 void go.offsetWidth;
                 go.classList.add("on");
-            }
-        } else if (phase === "walk") {
-            // ogród staje, a piesek idzie spokojnie na środek ekranu (ta sama prędkość względem ziemi)
-            v = V_WALK;
-            dogX += V_WALK * dt;
-            if (dogX >= 50) {
-                dogX = 50;
-                v = 0;
-                phase = "idle";
-                pt = 0;
-                setAnim(A.stand);
                 if (hasSave) {
                     // bez zapisu nie ma czego zerować — „Zacznij od nowa” tylko przy istniejącej grze
                     newBtn.hidden = false;
@@ -393,15 +386,16 @@
                 else actStep(dt);
             }
         }
-        if (phase !== "idle") {
+        if (phase === "load") {
             dist += v * dt;
-            // bieg albo marsz zależnie od prędkości
-            cur = v >= 34 ? A.run : A.walk;
+            cur = A.run;
+        } else if (phase === "roll") {
+            dist += v * dt;
         } else if (act && act.steps[si].k === "m") {
             const S = act.steps[si];
             cur = S.speed > V_WALK ? A.run : A.walk;
         }
-        const lawnV = phase === "walk" ? 0 : v;
+        const lawnV = v;
         scroll += lawnV * dt;
         sceneEl.style.backgroundPositionX = -((scroll * SKY) % 200) + "cqw";
         lawnEl.style.backgroundPositionX = -(scroll % 200) + "cqw";
