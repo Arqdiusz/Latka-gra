@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.224</title>
+        <title>Łatka v0.8.225</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
-        <link rel="stylesheet" href="css/style.css?v=243" />
+        <link rel="stylesheet" href="css/style.css?v=244" />
     </head>
 
     <body>
@@ -273,7 +273,11 @@
                 <div class="moleCard">
                     <img class="moleIntroIcon" alt="" />
                     <h2>Krety na łące!</h2>
-                    <p>Na trawie wyrastają kopce. Stuknij kreta, gdy wyjdzie cały! Tracisz punkt za puste kopce i za kreta, który nie wyszedł cały. Zbierz 10.</p>
+                    <div class="bubbleTut">
+                        <div class="bubbleTutItem"><canvas class="moleTutFull" width="96" height="96"></canvas><span class="bubbleTutMark ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg></span><span>Cały kret —<br />stukaj!</span></div>
+                        <div class="bubbleTutItem"><canvas class="moleTutHalf" width="96" height="96"></canvas><span class="bubbleTutMark no" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" /></svg></span><span>W połowie schowany<br />— nie stukaj</span></div>
+                    </div>
+                    <p>Puste kopce też nie. Zbierz 10!</p>
                     <button class="moleOk btnGreen">Zaczynamy!</button>
                     <button class="moleCancel btnRed">Wróć do pieska</button>
                 </div>
@@ -311,8 +315,11 @@
                 <div class="moleCard">
                     <img class="moleIntroIcon" alt="" />
                     <h2>Znajdź pary!</h2>
-                    <div class="pairsTutCards" aria-hidden="true"></div>
-                    <p>Odkrywaj po dwie karty. Gdy obrazki są takie same — para zostaje!</p>
+                    <div class="bubbleTut">
+                        <div class="bubbleTutItem"><div class="pairsTutCards pairsTutGood" aria-hidden="true"></div><span class="bubbleTutMark ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg></span><span>Takie same —<br />para zostaje!</span></div>
+                        <div class="bubbleTutItem"><div class="pairsTutCards pairsTutBad" aria-hidden="true"></div><span class="bubbleTutMark no" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" /></svg></span><span>Różne — karty<br />się chowają</span></div>
+                    </div>
+                    <p>Odkrywaj po dwie karty i znajdź wszystkie pary.</p>
                     <button class="moleOk btnGreen">Zaczynamy!</button>
                     <button class="moleCancel btnRed">Wróć do pieska</button>
                 </div>
@@ -386,7 +393,11 @@
                 <div class="moleCard">
                     <img class="moleIntroIcon" alt="" />
                     <h2>Znajdź 10 kretów!</h2>
-                    <p>Dotykaj palcem kretów, które wyskakują z kopczyków — im szybciej, tym lepiej!</p>
+                    <div class="bubbleTut">
+                        <div class="bubbleTutItem"><canvas class="moleTutFull" width="96" height="96"></canvas><span class="bubbleTutMark ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg></span><span>Cały kret —<br />stukaj!</span></div>
+                        <div class="bubbleTutItem"><canvas class="moleTutHalf" width="96" height="96"></canvas><span class="bubbleTutMark no" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" /></svg></span><span>W połowie schowany<br />— nie stukaj</span></div>
+                    </div>
+                    <p>Zbierz 10 kretów — im szybciej, tym lepiej!</p>
                     <button class="moleOk btnGreen">Zaczynamy!</button>
                     <button class="moleCancel btnRed">Wróć do pieska</button>
                 </div>
@@ -418,7 +429,11 @@
                 <div class="moleCard">
                     <img class="ballIcon moleIntroIcon" alt="" />
                     <h2>Aport!</h2>
-                    <p>Złap piłkę przy piesku, pociągnij palcem i puść. Poleci tam, gdzie ją rzucisz, a piesek po nią pobiegnie!</p>
+                    <div class="bubbleTut">
+                        <div class="bubbleTutItem"><div class="ballPic"><img class="ballTutImg" alt="" /><svg class="ballArrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M10 40 L30 20" fill="none" stroke="#3d8fd6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 8"/><path d="M30 20 L30 30 M30 20 L20 20" fill="none" stroke="#3d8fd6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span>Złap piłkę<br />i pociągnij</span></div>
+                        <div class="bubbleTutItem"><div class="ballPic"><img class="ballTutImg far" alt="" /><svg class="ballArrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 36 Q22 6 42 14" fill="none" stroke="#3d8fd6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 8"/><path d="M42 14 L36 8 M42 14 L35 19" fill="none" stroke="#3d8fd6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span>Puść — piłka leci,<br />piesek biegnie</span></div>
+                    </div>
+                    <p>Rzucaj, gdzie chcesz!</p>
                     <button class="ballOk moleOk btnGreen">Zaczynamy!</button>
                     <button class="ballCancel moleCancel btnRed">Wróć do pieska</button>
                 </div>
@@ -452,7 +467,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=243"></script>
+            <script src="js/loader.js?v=244"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -460,7 +475,7 @@
                     document.fonts.load("700 16px Quicksand");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=243"></script>
+            <script src="js/audio.js?v=244"></script>
             <div class="parentLock" hidden>
                 <!-- dla dziecka: obrazki, bez czytania — piesek śpi, po więcej czasu idź do rodziców -->
                 <div class="plKid">
@@ -514,23 +529,23 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=243"></script>
-        <script defer src="js/game.js?v=243"></script>
-        <script defer src="js/session.js?v=243"></script>
-        <script defer src="js/minigame-fetch.js?v=243"></script>
-        <script defer src="js/minigame-bubbles.js?v=243"></script>
-        <script defer src="js/minigame-mole.js?v=243"></script>
-        <script defer src="js/minigame-hedge.js?v=243"></script>
-        <script defer src="js/minigame-mole2.js?v=243"></script>
-        <script defer src="js/level-pick.js?v=243"></script>
-        <script defer src="js/minigame-memory.js?v=243"></script>
-        <script defer src="js/minigame-pairs.js?v=243"></script>
-        <script defer src="js/bones-adapt.js?v=243"></script>
-        <script defer src="js/bones-parent.js?v=243"></script>
-        <script defer src="js/minigame-bones.js?v=243"></script>
-        <script defer src="js/event-bone-mole.js?v=243"></script>
-        <script defer src="js/event-bone-dig.js?v=243"></script>
-        <script defer src="js/games-menu.js?v=243"></script>
-        <script defer src="js/popup-guard.js?v=243"></script>
+        <script defer src="js/arc-carousel.js?v=244"></script>
+        <script defer src="js/game.js?v=244"></script>
+        <script defer src="js/session.js?v=244"></script>
+        <script defer src="js/minigame-fetch.js?v=244"></script>
+        <script defer src="js/minigame-bubbles.js?v=244"></script>
+        <script defer src="js/minigame-mole.js?v=244"></script>
+        <script defer src="js/minigame-hedge.js?v=244"></script>
+        <script defer src="js/minigame-mole2.js?v=244"></script>
+        <script defer src="js/level-pick.js?v=244"></script>
+        <script defer src="js/minigame-memory.js?v=244"></script>
+        <script defer src="js/minigame-pairs.js?v=244"></script>
+        <script defer src="js/bones-adapt.js?v=244"></script>
+        <script defer src="js/bones-parent.js?v=244"></script>
+        <script defer src="js/minigame-bones.js?v=244"></script>
+        <script defer src="js/event-bone-mole.js?v=244"></script>
+        <script defer src="js/event-bone-dig.js?v=244"></script>
+        <script defer src="js/games-menu.js?v=244"></script>
+        <script defer src="js/popup-guard.js?v=244"></script>
     </body>
 </html>

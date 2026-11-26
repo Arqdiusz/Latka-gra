@@ -39,6 +39,7 @@ function mole2TryStart() {
     // potrzeby pilnuje smutek (≤10%) — gameEntryOk() / sadBlocks("games")
     mole2IntroResume = mole2Start;
     $("#mole2Popup .moleIntroIcon").src = icons.mole;
+    moleTutDraw("#mole2Popup");
     $("#mole2Popup").hidden = false;
     startQueue([
         {

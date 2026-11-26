@@ -110,6 +110,7 @@ let ballIntroResume = null;
 function ballIntroShow(onOk) {
     ballIntroResume = onOk;
     $(".ballIcon").src = icons.fun;
+    document.querySelectorAll(".ballTutImg").forEach((im) => (im.src = icons.fun));
     $(".ballPopup").hidden = false;
     startQueue([
         {

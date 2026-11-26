@@ -87,8 +87,10 @@ function pairsTryStart() {
     const pool = pairsBuildPool(),
         apple = pool.find((p) => p.id === "food-5") || pool[0];
     $("#pairsPopup .moleIntroIcon").src = icons.memory;
-    $("#pairsPopup .pairsTutCards").innerHTML =
-        '<span class="pairsMini back"></span><span class="pairsMini"><img alt="" src="' + apple.src + '"></span><span class="pairsMini"><img alt="" src="' + apple.src + '"></span>';
+    const other = pool.find((p) => p.id === "ui-bone") || pool.find((p) => p !== apple && p.id !== apple.id),
+        mini = (s) => '<span class="pairsMini"><img alt="" src="' + s + '"></span>';
+    $("#pairsPopup .pairsTutGood").innerHTML = mini(apple.src) + mini(apple.src);
+    $("#pairsPopup .pairsTutBad").innerHTML = mini(apple.src) + mini(other.src);
     $("#pairsPopup").hidden = false;
     startQueue([
         {

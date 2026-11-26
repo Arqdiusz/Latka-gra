@@ -66,9 +66,23 @@ $(".moleBack").onclick = () => {
 };
 
 /* ── Pop-up z instrukcją przed startem — wzorzec jak .ballPopup ─── */
+// dwa kafelki instrukcji dla obu gier z kretem: cały kret = dobrze, w połowie schowany = źle
+function moleTutDraw(popup) {
+    const put = (sel, f) => {
+        const cv = $(popup + " " + sel),
+            c = cv.getContext("2d");
+        c.clearRect(0, 0, cv.width, cv.height);
+        c.imageSmoothingEnabled = false;
+        if (cells.kret[f - 1]) c.drawImage(cells.kret[f - 1], 0, 0, cv.width, cv.height);
+    };
+    const em = numbers(CFG.kret.presets[1].seq);
+    put(".moleTutFull", numbers(CFG.kret.presets[2].seq)[0]);
+    put(".moleTutHalf", em[Math.round((em.length - 1) * 0.5)]);
+}
 let moleIntroResume = null;
 function moleIntroShow(onOk) {
     moleIntroResume = onOk;
+    moleTutDraw("#molePopup");
     $("#molePopup .moleIntroIcon").src = icons.mole;
     $("#molePopup").hidden = false;
     startQueue([

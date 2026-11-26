@@ -327,3 +327,10 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 ## 40. Liczymy kostki — karta startowa z opisem gry zamiast pieska (v0.8.224)
 - Karta „Liczymy kostki!” ma dwa kafelki jak Pamięć motylków: (1) dwa talerze z kostkami i znak „+” między nimi — „Policz kostki na talerzach”; (2) przykład `2 + 1 = 3` z zielonym znaczkiem ✓ — „Wpisz wynik i dotknij OK”. Pod spodem: „Raz dodajemy, raz odejmujemy — gra sama dobiera.”, zielone „Liczymy!”, czerwone „Wróć”, kłódka rodzica w rogu.
 - Pieska z tej karty usunięto (piesek został w okienku „Nowość” i na karcie kreta). Kostki z `icons.bone`.
+
+## 41. Karty startowe gier — kafelki z obrazkami i większy „start” (v0.8.225)
+- Wszystkie gry mają teraz na karcie startowej dwa kafelki z obrazkami (dobrze ✓ / źle ✗ albo dwa kroki):
+  - Krety na łące i Znajdź 10 kretów: cały kret (✓ „stukaj”) / w połowie schowany (✗ „nie stukaj”) — klatki z arkusza kreta (preset „alert” i połowa „wychodzenia”).
+  - Znajdź pary: dwie takie same karty (✓ „para zostaje”) / jabłko i kostka (✗ „karty się chowają”).
+  - Aport: piłka ze strzałką „złap i pociągnij” / piłka w locie „puść — piesek biegnie”.
+- Przyciski kart startowych: zielony „Zaczynamy!/Liczymy!” 50% większy (102 px wysokości, 29 px napis; na karcie liczenia 90 px), czerwony „Wróć do pieska/Wróć” o 25% mniejszy (45 px).
