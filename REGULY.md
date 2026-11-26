@@ -337,3 +337,4 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## 42. Pamięć motylków — poziomy z motylkami zamiast gwiazdek (v0.8.226)
 - Na kafelkach poziomów zamiast gwiazdek są różnokolorowe motylki (tyle, ile ma poziom: 3, 4, 5; zielony, żółty, czerwony, fioletowy, niebieski) — większe niż gwiazdki (~58 px).
+- v0.8.227: poprawna polszczyzna na poziomach: „3 motylki”, „4 motylki”, „5 motylków”.

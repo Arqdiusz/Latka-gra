@@ -155,7 +155,7 @@ function memoShowLevels() {
             last = tm.last[i] !== undefined ? '<span class="memoTileStat"><i>Ostatnio</i><b>' + memoFmt(tm.last[i]) + "</b></span>" : "";
         b.className = "memoTile";
         b.innerHTML =
-            '<span class="memoStars memoFlies">' + memoFlyIcons(lv.n) + '</span><span class="memoTileTxt">' + lv.n + " motylki</span>" +
+            '<span class="memoStars memoFlies">' + memoFlyIcons(lv.n) + '</span><span class="memoTileTxt">' + lv.n + (lv.n < 5 ? " motylki" : " motylków") + "</span>" +
             (rec || last ? '<span class="memoTileStats">' + rec + last + "</span>" : '<span class="memoTileStats memoTileNew">Jeszcze bez wyniku</span>') +
             (done.includes(i) ? '<img class="memoTileCup" alt="Ukończony" src="' + icons.cup + '" />' : "");
         b.onclick = () => {
