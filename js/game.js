@@ -612,6 +612,14 @@ function resize() {
     g.style.transform = `scale(${scale})`;
     g.style.left = (v?.offsetLeft || 0) + (vw - W * scale) / 2 + "px";
     g.style.top = (v?.offsetTop || 0) + (vh - H * scale) / 2 + "px";
+    // pas świata widoczny pod układem 768 na wysokich telefonach — koło menu siada na samym dole ekranu
+    g.style.setProperty("--bleed", Math.max(0, Math.min(150, (vh / scale - H) / 2)).toFixed(1) + "px");
+    try {
+        if (menu) {
+            menu.measure();
+            menu.render();
+        }
+    } catch (_) {}
     orientationPaused = matchMedia("(orientation:landscape) and (pointer:coarse)").matches;
     if (orientationPaused && gesture) {
         if (gesture.kind === "pet") stopPetting();

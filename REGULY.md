@@ -401,3 +401,8 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 ## §53 Łazienka — płytki po przekątnej (v0.8.238)
 - Dorysowana podłoga łazienki (`tla/wysokie/006.png`) liczona prawdziwą perspektywą z oryginału: punkt zbiegu y = −365 (w px sceny 2×), szerokość płytki 0,1406·(y+365), rzędy v = A − 21930/(y+365) (rzędy coraz wyższe ku dołowi). Próbkowane są dwa ostatnie pełne rzędy oryginału naprzemiennie, więc plamki idą po przekątnej (jak na oryginale), a fugi są proste, bez schodków.
 - Obrazki tła dostają `?b=N` (wersja grafik) — po przemalowaniu podbić, żeby telefon nie trzymał starej wersji.
+
+## §54 Koło menu na samym dole ekranu, większe (v0.8.239)
+- Środek koła = dolna krawędź prawdziwego ekranu (połowa koła widoczna). `resize()` liczy `--bleed` = pas świata widoczny pod układem 768 (0–150 px) i ustawia go na `#game`; dock rośnie w dół o `--bleed`, karuzela czyta go w `measure()` (wheelY = 104 + bleed).
+- Szkło R = 184 px (8 px od krawędzi), ikony R = 120, 84 px (obrazek 66), krok 56°; strzałki tuż wewnątrz brzegu (R 172, łuk 22°), zębatka R = 40. Łapanie koła: promień 194 px.
+- `#game` ma `overflow: visible` (clip psuł trafianie palcem poniżej 768); sąsiednie pokoje przycina `.world`.

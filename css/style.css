@@ -34,9 +34,9 @@ body {
     background: #f8eee7;
     display: grid;
     grid-template-rows: 106px 550px;
-    overflow: hidden;
-    /* na boki przycinamy (sąsiednie pokoje), w pionie świat wychodzi w pasy nad i pod grą */
-    overflow: clip visible;
+    /* bez przycinania: świat wychodzi w pasy nad i pod grą (sąsiednie pokoje przycina .world);
+       overflow: clip psuł trafianie palcem poniżej układu 768 (koło menu) */
+    overflow: visible;
 }
 
 /* Świat gry sięga do krawędzi okna (tło pokoju 768×1536 pod wszystkim); statusy i menu to lekkie,
@@ -933,19 +933,22 @@ body {
     background: transparent;
 }
 
-/* szklane koło menu: środek (192, 774) tuż pod dołem ekranu, promień 133 px; strzałki i zębatka
-   obracają się razem z menu (--wheel = pozycja karuzeli, 56° na pozycję; zębatka 0.9×). Wartości z kolo.html */
+/* szklane koło menu: środek na samym dole ekranu (192, 768 + --bleed; --bleed = widoczny pas
+   świata pod układem 768 na wysokich telefonach), promień 184 px (prawie do krawędzi); strzałki
+   tuż wewnątrz brzegu i zębatka obracają się razem z menu (--wheel, 56° na pozycję; zębatka 0.9×) */
 .dock {
     touch-action: none;
+    bottom: calc(-1 * var(--bleed, 0px));
+    height: calc(150px + var(--bleed, 0px));
 }
 
 .dock::before {
     content: "";
     position: absolute;
-    left: 59px;
-    top: 23px;
-    width: 266px;
-    height: 266px;
+    left: 8px;
+    top: calc(150px + var(--bleed, 0px) - 184px);
+    width: 368px;
+    height: 368px;
     box-sizing: border-box;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.32);
@@ -963,18 +966,18 @@ body {
 }
 
 .dockGear {
-    left: 151px; /* środek koła (192, 156) w układzie docka */
-    top: 115px;
-    width: 82px;
-    height: 82px;
+    left: 146px; /* środek koła (192, 150 + --bleed) w układzie docka */
+    top: calc(104px + var(--bleed, 0px));
+    width: 92px;
+    height: 92px;
     transform: rotate(calc(var(--wheel, 0) * -50.4deg));
 }
 
 .dockArrows {
-    left: 34px;
-    top: -2px;
-    width: 316px;
-    height: 316px;
+    left: 6px;
+    top: calc(-36px + var(--bleed, 0px));
+    width: 372px;
+    height: 372px;
     transform: rotate(calc(var(--wheel, 0) * -56deg));
 }
 
@@ -1007,8 +1010,8 @@ body {
 
 .arc-menu__icon {
     display: block;
-    width: 60px;
-    height: 60px;
+    width: 66px;
+    height: 66px;
     max-width: 100%;
     max-height: 100%;
     pointer-events: none;
