@@ -80,6 +80,9 @@
         im.src = u;
         IMG[key] = im;
         window.artImgs[u] = im;
+        // rozkodowanie poza głównym wątkiem; do tego czasu cell() nie rysuje (inaczej pierwsze
+        // drawImage dekodowałoby arkusz na głównym wątku i animacja by się zacinała)
+        (im.decode ? im.decode() : Promise.resolve()).catch(() => {}).then(() => (im.dec = true));
     };
     load("a01", "assets/sprites/latka-animacje-01.webp");
     load("a02", "assets/sprites/latka-animacje-02-X.webp");
@@ -91,7 +94,7 @@
         const k = sheet + f;
         if (CELLS[k]) return CELLS[k];
         const im = IMG[sheet];
-        if (!im.complete || !im.naturalWidth) return null;
+        if (!im.complete || !im.naturalWidth || !im.dec) return null;
         const cc = document.createElement("canvas");
         cc.width = cc.height = CELL;
         const x = cc.getContext("2d");

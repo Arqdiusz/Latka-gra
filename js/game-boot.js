@@ -13,6 +13,11 @@ function loadImage(src) {
 // Adres grafiki = ścieżka + wersja grafik (window.ART_V, ustawiana w index.html). Dzięki temu
 // grafika zostaje w pamięci przeglądarki, a po jej zmianie wystarczy podbić ART_V.
 const artUrl = (s) => (window.artUrl ? window.artUrl(s) : s);
+// decode() rozkodowuje obraz poza głównym wątkiem — inaczej pierwsze drawImage() robi to na głównym
+// wątku i na telefonie animacja ładowania staje na kilkaset ms. Błąd dekodowania nie przeszkadza.
+const decoded = (im) => (im.decode ? im.decode().catch(() => {}) : Promise.resolve());
+// oddaje sterowanie przeglądarce (rysuje klatkę animacji ładowania) między porcjami pracy w boot()
+const yieldUI = () => new Promise((ok) => setTimeout(ok, 0));
 async function loadImageNow(src) {
     const url = artUrl(src),
         shared = window.artImgs && window.artImgs[url]; // ten sam plik już pobrał ekran wczytywania
@@ -22,7 +27,10 @@ async function loadImageNow(src) {
                 shared.addEventListener("load", ok, { once: true });
                 shared.addEventListener("error", ok, { once: true });
             });
-        if (shared.naturalWidth) return shared;
+        if (shared.naturalWidth) {
+            await decoded(shared);
+            return shared;
+        }
     }
     const im = new Image();
     await new Promise((ok, bad) => {
@@ -30,7 +38,32 @@ async function loadImageNow(src) {
         im.onerror = () => bad(Error("Nie można odczytać grafiki."));
         im.src = url;
     });
+    await decoded(im);
     return im;
+}
+// Piksele arkusza z canvasa w pamięci procesora (willReadFrequently), czytane pasami po jednym
+// wierszu klatek. Osobny getImageData dla każdej z ~290 klatek wymuszał ~290 odczytów z karty
+// graficznej — na telefonie to były setki ms; pasy są tanie i można między nimi oddać sterowanie.
+function sheetPixels(im) {
+    const c = document.createElement("canvas");
+    c.width = im.width;
+    c.height = im.height;
+    const x = c.getContext("2d", { willReadFrequently: true });
+    x.drawImage(im, 0, 0);
+    return { x, w: c.width, band: null, bandY: -1 };
+}
+// kopia pikseli jednej klatki (x0, y0, w, h) z arkusza; pas (cały wiersz klatek) czytamy raz
+function framePixels(s, x0, y0, w, h) {
+    if (s.bandY !== y0) {
+        s.band = s.x.getImageData(0, y0, s.w, h).data;
+        s.bandY = y0;
+    }
+    const out = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++) {
+        const from = (y * s.w + x0) * 4;
+        out.set(s.band.subarray(from, from + w * 4), y * w * 4);
+    }
+    return out;
 }
 
 // Szuka w danych klatki (RGBA, w×h) nasyconego zielonego znacznika #00ff43
@@ -196,33 +229,39 @@ async function boot() {
             }
         }
     }
+    await yieldUI();
     if (P.assets.bubbleStar) images.bubbleStar = await loadImage(P.assets.bubbleStar);
     if (P.assets.bubbleWrong) images.bubbleWrong = await loadImage(P.assets.bubbleWrong);
     for (const key of ["a01", "a02", "a03", "ui"]) {
         const rows = key === "ui" ? 6 : 12,
             im = images[key],
             w = im.width / 6,
-            h = im.height / rows;
+            h = im.height / rows,
+            sheet = key === "ui" ? null : sheetPixels(im); // piksele arkusza (poza ikonami) — jeden odczyt
         for (let f = 0; f < rows * 6; f++) {
             const c = document.createElement("canvas");
             c.width = w;
             c.height = h;
             const cx = c.getContext("2d");
             cx.drawImage(im, (f % 6) * w, Math.floor(f / 6) * h, w, h, 0, 0, w, h);
-            if (key === "a02") {
-                // Klatki biorące udział w butterflyEvent() mają wstawiony
-                // zielony znacznik (#00ff43) w miejscu, gdzie ma się
-                // pojawić motylek — wykrywamy go, zapamiętujemy środek
-                // i usuwamy z finalnej grafiki (patrz catchMarkerPos()).
-                const imgData = cx.getImageData(0, 0, w, h),
-                    marker = extractMarker(imgData.data, w, h);
-                if (marker) {
-                    catchMarker[f + 1] = marker;
-                    cx.putImageData(imgData, 0, 0);
+            if (sheet) {
+                let data = framePixels(sheet, (f % 6) * w, Math.floor(f / 6) * h, w, h);
+                if (key === "a02") {
+                    // Klatki biorące udział w butterflyEvent() mają wstawiony
+                    // zielony znacznik (#00ff43) w miejscu, gdzie ma się
+                    // pojawić motylek — wykrywamy go, zapamiętujemy środek
+                    // i usuwamy z finalnej grafiki (patrz catchMarkerPos()).
+                    const marker = extractMarker(data, w, h);
+                    if (marker) {
+                        catchMarker[f + 1] = marker;
+                        cx.putImageData(new ImageData(data, w, h), 0, 0);
+                        data = cx.getImageData(0, 0, w, h).data; // jak dawniej: piksele po usunięciu znacznika (tylko kilka klatek)
+                    }
                 }
+                pixels[key].push(data);
             }
             cells[key].push(c);
-            if (key !== "ui") pixels[key].push(cx.getImageData(0, 0, w, h).data);
+            if (f % 6 === 5) await yieldUI(); // porcja = wiersz 6 klatek — animacja ładowania nie staje
         }
     }
     // Arkusz a03 (kopanie kostek) nie ma gotowych „meta” w config.json —
@@ -246,7 +285,9 @@ async function boot() {
             if (x1 < x0) return { box: [4, 32, 124, 116], head: [95.2, 34] };
             return { box: [x0, y0, x1 + 1, y1 + 1], head: [x0 + 0.76 * (x1 + 1 - x0), y0 + 2] };
         });
+    await yieldUI();
     for (const [key, n] of Object.entries(UI.map)) icons[key] = cells.ui[n - 1].toDataURL("image/png");
+    await yieldUI();
     loadNeeds();
     statusBuild();
     statusUpdate();
