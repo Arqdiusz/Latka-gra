@@ -429,3 +429,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - Ekran wczytywania i gra używają TYCH SAMYCH obiektów `<img>` (`window.artImgs`, adres z `artUrl()`): arkusze `a01`, `a02-X`, `a03` i motyle są pobierane raz (wcześniej dwa razy, 1,8 MB). Loader ładuje teraz `motyle-new.png` (jak gra) zamiast identycznej kopii `motyle-001-animacje.png`.
 - Tła pokoi: z góry ładowane są właściwe `tla/wysokie/00N.png` — pokój startowy i sąsiednie (czekamy na nie), pozostałe po starcie w tle (2,5 s po „Graj”). Stare `tla/00N.png` (768×1024) zostają w repozytorium jako źródła/archiwum, ale nie są już pobierane. `roomSVG()` używa tego samego adresu (`roomSrc()` + `artUrl()`), więc nie ma drugiego pobrania.
 - `a03`, `naczynia`, `star-check`, `szmatka` dołączone do wspólnej, równoległej partii wczytywania (wcześniej ładowały się po kolei na końcu).
+
+## §60 Czcionki osadzone, bez Google Fonts (v0.8.245)
+- Baloo 2 i Quicksand są teraz u nas: `fonts/Baloo2-VF.woff` (45 KB) i `fonts/Quicksand-VF.woff` (35 KB) — czcionki zmienne (waga płynnie: Baloo 400–800, Quicksand 300–700) przycięte do łaciny z polskimi znakami i znaków używanych w grze (cudzysłowy „ ”, „–”, „…”, strzałki itp.). Pełne źródła: `fonts/zrodla/*.ttf`, licencje OFL: `fonts/OFL-Baloo2.txt`, `fonts/OFL-Quicksand.txt`.
+- `@font-face` na początku `css/style.css`, preload trzech czcionek w `index.html`; usunięte `preconnect` i arkusz Google Fonts (zero zewnętrznych żądań: gra działa offline, nic nie blokuje pierwszego wyświetlenia, adres IP dziecka nie trafia do Google).
+- Canvas rysuje wagę 900 → przy czcionce zmiennej Baloo 2 to 800 (tak samo jak wcześniej, gdy Google serwował do 800).
+- Nowy znak spoza zestawu (np. inny alfabet) → przyciąć ponownie ze źródeł w `fonts/zrodla/` (fonttools `pyftsubset`).

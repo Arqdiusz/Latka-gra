@@ -1,8 +1,24 @@
-/* Ranchers (logo) — osadzona w grze, licencja OFL w fonts/OFL.txt; nie zależy od Google Fonts */
+/* Czcionki gry — wszystkie osadzone, bez Google Fonts (działają offline, brak zewnętrznych połączeń).
+   Licencje OFL: fonts/OFL.txt (Ranchers), OFL-Baloo2.txt, OFL-Quicksand.txt. Pliki .woff to czcionki
+   zmienne (waga płynnie) przycięte do łaciny z polskimi znakami; pełne źródła w fonts/zrodla/. */
 @font-face {
-    font-family: "Ranchers";
+    font-family: "Ranchers"; /* logo */
     src: url("../fonts/Ranchers-Regular.ttf") format("truetype");
     font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Baloo 2"; /* tytuły, przyciski, liczby, napisy w mini-grach */
+    src: url("../fonts/Baloo2-VF.woff") format("woff");
+    font-weight: 400 800;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Quicksand"; /* opisy i dymki */
+    src: url("../fonts/Quicksand-VF.woff") format("woff");
+    font-weight: 300 700;
     font-style: normal;
     font-display: swap;
 }
