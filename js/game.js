@@ -663,10 +663,12 @@ function setOffset(v) {
     $(".roomTrack").style.transform = `translateX(${v}px)`;
 }
 
+// Plik tła pokoju: wysokie tło 768×2136 (świat do krawędzi okna, także w pasach nad i pod grą na
+// wysokich telefonach); środek = dawna scena, góra i dół dorysowane. Stare tla/00N.png (768×1024)
+// zostają w repozytorium jako źródła, ale nie są już pobierane.
+const roomSrc = (r) => ((P.assets.rooms && P.assets.rooms[r]) || "tla/001.png").replace("tla/", "tla/wysokie/");
 function roomSVG(r) {
-    // wysokie tło 768×2136 (świat do krawędzi okna, także w pasach nad i pod grą na wysokich
-    // telefonach); środek = dawna scena, góra i dół dorysowane
-    const src = ((P.assets.rooms && P.assets.rooms[r]) || "tla/001.png").replace("tla/", "tla/wysokie/") + "?b=2"; // ?b = wersja grafik tła (zmień przy przemalowaniu)
+    const src = artUrl(roomSrc(r)); // ten sam adres co przy wczytywaniu z góry (boot) → jedno pobranie
     return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">`;
 }
 
@@ -3704,15 +3706,25 @@ function loadImage(src) {
     if (!imgCache.has(src)) imgCache.set(src, loadImageNow(src));
     return imgCache.get(src);
 }
+// Adres grafiki = ścieżka + wersja grafik (window.ART_V, ustawiana w index.html). Dzięki temu
+// grafika zostaje w pamięci przeglądarki, a po jej zmianie wystarczy podbić ART_V.
+const artUrl = (s) => (window.artUrl ? window.artUrl(s) : s);
 async function loadImageNow(src) {
+    const url = artUrl(src),
+        shared = window.artImgs && window.artImgs[url]; // ten sam plik już pobrał ekran wczytywania
+    if (shared) {
+        if (!shared.complete)
+            await new Promise((ok) => {
+                shared.addEventListener("load", ok, { once: true });
+                shared.addEventListener("error", ok, { once: true });
+            });
+        if (shared.naturalWidth) return shared;
+    }
     const im = new Image();
     await new Promise((ok, bad) => {
         im.onload = ok;
         im.onerror = () => bad(Error("Nie można odczytać grafiki."));
-        // Cache-bust — tak samo jak przy JSON-ach z animacjami (fresh()
-        // powyżej), żeby podmieniona grafika była widoczna od razu, bez
-        // czyszczenia cache przeglądarki.
-        im.src = src + (src.includes("?") ? "&" : "?") + "t=" + Date.now();
+        im.src = url;
     });
     return im;
 }
@@ -3774,9 +3786,14 @@ async function boot() {
     lp(0.16);
     // Wszystkie grafiki naraz (tła pokoi też — żeby nic nie "doskakiwało" w grze);
     // pasek ładowania rośnie z każdą wczytaną grafiką.
+    // pokój, w którym zaczynamy, i sąsiednie (widać je przy przejściu) — czekamy na nie; resztę dociągamy w tle
+    const nearRooms = () => {
+        const i = order.indexOf(room);
+        return order.slice(Math.max(0, i - 1), i + 2);
+    };
     {
         const a = P.assets,
-            urls = [a.a01, a.a02, a.ui, a.poop, a.motyle, a.kret, a.hedgehog, a.hedgehogGame, a.bubbleStar, a.bubbleWrong, ...(a.balls || []), ...(a.bubbles || []), ...Object.values(a.rooms || {})].filter(Boolean);
+            urls = ["animacje/latka-animacje-03.png", "animacje/naczynia.png", "animacje/star-check.png", "animacje/szmatka.png", a.a01, a.a02, a.ui, a.poop, a.motyle, a.kret, a.hedgehog, a.hedgehogGame, a.bubbleStar, a.bubbleWrong, ...(a.balls || []), ...(a.bubbles || []), ...nearRooms().map(roomSrc)].filter(Boolean);
         let done = 0;
         window.bootImages = Promise.all(
             urls.map((u) =>
@@ -3970,6 +3987,10 @@ async function boot() {
     // Gra gotowa — ekran ładowania pokazuje duży przycisk i czeka na dotknięcie
     // (to też gest potrzebny do pełnego ekranu). Dopiero potem rusza pętla gry.
     if (window.loadScreen) await window.loadScreen.ready();
+    // pozostałe pokoje: pobranie w tle po starcie (bez trzymania w pamięci — potem wczyta je cache przeglądarki)
+    setTimeout(() => {
+        for (const r of order) if (!nearRooms().includes(r)) new Image().src = artUrl(roomSrc(r));
+    }, 2500);
     window.gameStarted = true;
     $(".load").hidden = true;
     locks();

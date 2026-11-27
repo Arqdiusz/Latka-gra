@@ -423,3 +423,9 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 ## §58 Przyciski końca gry ujednolicone + karta przegranej w Motylkach (v0.8.243; zastępuje §57)
 - Wszędzie: „Zagraj ponownie” / „Jeszcze raz” → w grach z poziomami (Motylki, Pary) ekran wyboru poziomu, w pozostałych od razu nowa gra; „Powrót” → wyjście z gry do pieska. Bez osobnego „Wybierz poziom”.
 - Motylki, przegrana: zamiast tańczących motylków jeden smutny (przechylony, przygaszony) motylek w kolorze tego, którego zabrakło, z czerwonym ✕ w miejscu zielonego ✓ z karty wygranej; tytuł czerwony „Ups! Nie udało się”, tekst „Motylek odleciał. Spróbuj jeszcze raz!”.
+
+## §59 Ładowanie grafik: jedno pobranie, pamięć przeglądarki (v0.8.244)
+- Usunięty cache-bust `?t=<czas>` z `loadImage()` — przeglądarka zachowuje grafiki między wizytami (wcześniej ~3,1 MB pobierane przy każdym wejściu). Zamiast tego adres grafiki ma wersję grafik: `window.ART_V` (inline w `index.html`, przed `loader.js`), dopisywana jako `?a=N`. **Zmieniasz/przemalowujesz plik graficzny → podbij `ART_V` o 1** (zmiana samego kodu nie wymusza ponownego pobrania grafik).
+- Ekran wczytywania i gra używają TYCH SAMYCH obiektów `<img>` (`window.artImgs`, adres z `artUrl()`): arkusze `a01`, `a02-X`, `a03` i motyle są pobierane raz (wcześniej dwa razy, 1,8 MB). Loader ładuje teraz `motyle-new.png` (jak gra) zamiast identycznej kopii `motyle-001-animacje.png`.
+- Tła pokoi: z góry ładowane są właściwe `tla/wysokie/00N.png` — pokój startowy i sąsiednie (czekamy na nie), pozostałe po starcie w tle (2,5 s po „Graj”). Stare `tla/00N.png` (768×1024) zostają w repozytorium jako źródła/archiwum, ale nie są już pobierane. `roomSVG()` używa tego samego adresu (`roomSrc()` + `artUrl()`), więc nie ma drugiego pobrania.
+- `a03`, `naczynia`, `star-check`, `szmatka` dołączone do wspólnej, równoległej partii wczytywania (wcześniej ładowały się po kolei na końcu).

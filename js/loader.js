@@ -68,16 +68,23 @@
     } catch (_) {}
 
     // ── grafiki ──
+    // Jeden adres = jedno pobranie: loader i gra używają TYCH SAMYCH obiektów <img> (window.artImgs),
+    // a adres ma wersję grafik (window.ART_V z index.html) zamiast czasu, więc zostaje w pamięci przeglądarki.
+    const artUrl = (s) => s + (s.includes("?") ? "&" : "?") + "a=" + (window.ART_V || 0);
+    window.artUrl = artUrl;
+    window.artImgs = {};
     const IMG = {};
     const load = (key, src) => {
-        const im = new Image();
-        im.src = src;
+        const im = new Image(),
+            u = artUrl(src);
+        im.src = u;
         IMG[key] = im;
+        window.artImgs[u] = im;
     };
     load("a01", "animacje/latka-animacje-01.png");
     load("a02", "animacje/latka-animacje-02-X.png");
     load("a03", "animacje/latka-animacje-03.png");
-    load("mot", "animacje/motyle-001-animacje.png");
+    load("mot", "animacje/motyle-new.png"); // ten sam plik co w grze (config.json → assets.motyle)
     // klatka (z wycięciem zielonego znacznika motylka, jak w grze) — z pamięcią podręczną
     const CELLS = {};
     function cell(sheet, f) {
