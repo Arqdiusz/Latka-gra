@@ -4,7 +4,7 @@
 // unika słodyczy (−1). Wejście: mordka jeżyka wystająca z rogu Łąki
 // (hedgePeekDraw / hedgePeekHit), potem tutorial, pełnoekranowa nakładka
 // (.hedgeFull) z własnym canvasem i karta końcowa jak przy kreciku.
-// Wczytywany PO game.js (korzysta ze wspólnego stanu i funkcji).
+// Wczytywany PO game-*.js (korzysta ze wspólnego stanu i funkcji).
 // ═══════════════════════════════════════════════════════════════
 
 let hedgeGame = null; // { need, caught, collected:[], items:[], effects:[], hx, tx, ... }

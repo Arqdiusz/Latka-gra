@@ -1,9 +1,9 @@
 "use strict";
 // ═══════════════════════════════════════════════════════════════
 // APORT — mini-gra w rzucanie piłki.
-// Wydzielone z game.js dla czytelności (patrz też minigame-bubbles.js).
-// Korzysta ze wspólnego stanu/funkcji zadeklarowanych w game.js
-// (musi być wczytany PO game.js w index.html).
+// Wydzielone z game-*.js dla czytelności (patrz też minigame-bubbles.js).
+// Korzysta ze wspólnego stanu/funkcji zadeklarowanych w game-*.js
+// (musi być wczytany PO game-*.js w index.html).
 // ═══════════════════════════════════════════════════════════════
 
 // Sygnalizacja rzutów (3 piłeczki) + przyciski końca/resetu zabawy —

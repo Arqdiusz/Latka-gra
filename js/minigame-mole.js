@@ -1,9 +1,9 @@
 "use strict";
 // ═══════════════════════════════════════════════════════════════
 // KRET W OGRODZIE — mini-gra typu "uderz kreta" (whack-a-mole).
-// Wydzielone z game.js dla czytelności (patrz też minigame-fetch.js,
+// Wydzielone z game-*.js dla czytelności (patrz też minigame-fetch.js,
 // minigame-bubbles.js). Korzysta ze wspólnego stanu/funkcji
-// zadeklarowanych w game.js (musi być wczytany PO game.js w
+// zadeklarowanych w game-*.js (musi być wczytany PO game-*.js w
 // index.html) — w tym z grafiki kreta (cells.kret, CFG.kret)
 // wczytanej razem z motylkami w boot().
 //
@@ -423,7 +423,7 @@ function moleReadySegment() {
 }
 
 // ── Start zabawy ──────────────────────────────────────────────
-// Wejście z zapowiedzi na Łące (patrz moleTeaserTap() w game.js) — te same
+// Wejście z zapowiedzi na Łące (patrz moleTeaserTap() w game-wildlife.js) — te same
 // ograniczenia co przy aporcie/zabawie z budą (fun/den w activity()):
 // zbyt spragniony/niewyspany piesek najpierw potrzebuje tamtego, a kupka w
 // pokoju blokuje każdą aktywność. Sprawdzane TU, przed pokazaniem pop-upu

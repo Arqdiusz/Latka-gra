@@ -1,9 +1,9 @@
 "use strict";
 // ═══════════════════════════════════════════════════════════════
 // MYCIE — mini-gra w łapanie baniek.
-// Wydzielone z game.js dla czytelności (patrz też minigame-fetch.js).
-// Korzysta ze wspólnego stanu/funkcji zadeklarowanych w game.js
-// (musi być wczytany PO game.js w index.html).
+// Wydzielone z game-*.js dla czytelności (patrz też minigame-fetch.js).
+// Korzysta ze wspólnego stanu/funkcji zadeklarowanych w game-*.js
+// (musi być wczytany PO game-*.js w index.html).
 // ═══════════════════════════════════════════════════════════════
 
 let bubbleGame = null; // { need, caught, bubbles:[], effects:[], nextSpawn, lastCatch }

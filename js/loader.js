@@ -14,7 +14,7 @@
 //
 // „Zacznij od nowa” (po ostrzeżeniu) czyści zapis gry i odświeża stronę; blokada
 // czasu dla rodzica (latka-sesja-v1) i wyciszenie zostają.
-// game.js: loadScreen.progress(0..1), .ready() (obietnica rozwiązuje się po
+// game-boot.js: loadScreen.progress(0..1), .ready() (obietnica rozwiązuje się po
 // dotknięciu „Kontynuuj”/„Graj”), .error(msg).
 // ═══════════════════════════════════════════════════════════════
 (() => {
@@ -209,7 +209,7 @@
 
     // „Chwytanie motylka” jak w evencie w grze (bez klikania): piesek idzie pod ścianę, odwraca się,
     // z drugiej strony nadlatuje motylek, zawraca i ucieka, piesek skacze za nim i go łapie
-    // na nosie, a motylek odlatuje. Liczby (prędkości, czasy, rozmiar 96,5 px) jak w game.js.
+    // na nosie, a motylek odlatuje. Liczby (prędkości, czasy, rozmiar 96,5 px) jak w game-*.js.
     const EV_SIZE = 96.5 / PX, // rozmiar motylka w evencie (cqw)
         EV_Y = 200, // linia lotu (y gry)
         EV_CROSS = 9000, // przelot przez ekran (ms)

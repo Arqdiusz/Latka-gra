@@ -473,3 +473,26 @@ Przeniesione przez `git mv` (historia plików zachowana), nic nie skasowane. Gra
 - `archive/` (nieużywane, zostaje jako archiwum): `workflows/` (stare `latka-menu.yml`, `latka-update-once.yml` — poza `.github/workflows/` nie mogą się uruchomić; GitHub Pages publikuje z gałęzi bez nich), `kolo/` (prototyp koła `kolo.html` + `proto/`), `settings/` (nieużywane `Latka-ustawienia.json`, `latka-animacje.json`), `animacje/` (stare `motyl-1/2`, `motyle-001*.png`).
 - Nowe narzędzie `tools/png-to-webp.py` (mapowanie `source/` → `assets/`, bezstratnie, z kontrolą pikseli; `--all` = wszystko). Edytor animacji przyjmuje też pliki `.webp`. `szkielet.py` i `tlo-gry.py` czytają/zapisują w `source/`.
 - Nowa grafika → patrz §61 i `README.md` (PNG do `source/`, `png-to-webp.py`, wpis w `MAP`, ewentualnie podbicie `ART_V`).
+
+## §64 Podział `game.js` na pliki tematyczne (v0.8.249)
+- Dawny `js/game.js` (4190 linii) rozcięty na 13 plików `js/game-*.js` **dokładnie w kolejności kodu** (złączenie fragmentów = oryginał, sprawdzone). Pliki nie są modułami: dzielą jeden zasięg globalny, tak jak dotąd, a w `index.html` ładują się jeden po drugim w tym samym miejscu, w którym był `game.js` (**kolejność tagów `<script>` jest istotna**). Każdy plik zaczyna się od `"use strict";`.
+- Sprawdzenie parserem (acorn): żaden kod wykonywany przy wczytaniu nie woła funkcji z późniejszego pliku (jedyny ślad — `resize()` → `stopPetting()` — jest za warunkiem `gesture`, który przy starcie jest pusty).
+- Zawartość:
+
+| Plik | Zawartość |
+|---|---|
+| `game-state.js` | stan gry, stałe, obiekty DOM, ustawienia startowe |
+| `game-needs.js` | smutny piesek, dymki życzeń/myślenia, potrzeby (spadek, efekty akcji, zapis), grudki w domu, zapis gry, odmowy |
+| `game-rooms.js` | `resize`, animacja (`setAnim`…), pokoje (`roomSVG`, `buildRooms`, `setRoom`), pasek statusu, menu |
+| `game-engine.js` | bramki (`casual`, `locks`), kolejka animacji (`startQueue`…), aktywności, podróże (`arrowTravel`, `route`), `action`, `react` |
+| `game-dog.js` | szczekanie, głaskanie, `drawDog`, brud na sierści i łapkach |
+| `game-paws.js` | czyszczenie łapek szmatką w łazience |
+| `game-input.js` | trafianie w obiekty, kupka, obsługa dotyku (`pointer*`) |
+| `game-autonomy.js` | samodzielne wędrówki, harmonogram zdarzeń w tle, motylek do złapania |
+| `game-wildlife.js` | motylki w tle, kret i kopce, naczynia, jeżyk i owoce |
+| `game-bubbles.js` | rysowanie dymków i ikon, iskierki |
+| `game-draw.js` | mignięcia „czystego pieska”, `draw()`, `loopFrame()` |
+| `game-boot.js` | wczytywanie grafik, `boot()`, nasłuchiwacze globalne, haczyk testowy `window.gameTest` |
+| `game-dev.js` | panel deweloperski (5 stuknięć w serduszko → przycisk DEV) |
+- Stary plik zostaje w `archive/game-monolit-v0.8.248.js`. W starszych paragrafach „`js/game.js`” = jeden z plików `game-*.js` (szukaj funkcji po nazwie: `grep -n "function nazwa" js/game-*.js`).
+- **Nowy kod** dopisuj do pliku o pasującej tematyce; nowy plik `game-*.js` dodaj w `index.html` w odpowiednim miejscu kolejności (przed `session.js`), ze `"use strict";` na początku. Kod wykonywany przy wczytaniu (np. `$(".x").onclick = …`) może wołać tylko funkcje z tego samego lub wcześniejszych plików.

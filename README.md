@@ -14,7 +14,7 @@ python3 -m http.server 8793      # w katalogu głównym repozytorium
 | Katalog | Zawartość |
 |---|---|
 | `index.html`, `css/style.css` | strona i style (czcionki osadzone, bez Google Fonts) |
-| `js/` | kod gry: `game.js` (rdzeń), `loader.js` (ekran startowy), `minigame-*.js` (gry), `event-*.js`, `arc-carousel.js` (koło menu), … |
+| `js/` | kod gry: `game-*.js` (rdzeń gry podzielony tematycznie, wczytywany w tej kolejności co w `index.html`), `loader.js` (ekran startowy), `minigame-*.js` (gry), `event-*.js`, `arc-carousel.js` (koło menu), … |
 | `assets/sprites/` | arkusze animacji pieska i zwierząt, piłki, bańki, szmatka, kupka — **WebP** |
 | `assets/ui/` | atlas ikon |
 | `assets/backgrounds/` | `rooms/` (tła pokoi 768×2136), `games/` (łąka gier), `start-sky/lawn` (ekran startowy) |
