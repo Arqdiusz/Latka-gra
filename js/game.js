@@ -657,10 +657,10 @@ function setOffset(v) {
     $(".roomTrack").style.transform = `translateX(${v}px)`;
 }
 
-// Plik tła pokoju: wysokie tło 768×2136 (świat do krawędzi okna, także w pasach nad i pod grą na
-// wysokich telefonach); środek = dawna scena, góra i dół dorysowane. Stare tla/00N.png (768×1024)
-// zostają w repozytorium jako źródła, ale nie są już pobierane.
-const roomSrc = (r) => ((P.assets.rooms && P.assets.rooms[r]) || "tla/001.png").replace("tla/", "tla/wysokie/").replace(/\.png$/, ".webp");
+// Plik tła pokoju (data/config.json → assets.rooms): wysokie tło 768×2136 (świat do krawędzi okna,
+// także w pasach nad i pod grą na wysokich telefonach); środek = dawna scena, góra i dół dorysowane.
+// Źródła PNG (w tym stare 768×1024) leżą w source/tla/ i nie są pobierane przez grę.
+const roomSrc = (r) => (P.assets.rooms && P.assets.rooms[r]) || "assets/backgrounds/rooms/001.webp";
 function roomSVG(r) {
     const src = artUrl(roomSrc(r)); // ten sam adres co przy wczytywaniu z góry (boot) → jedno pobranie
     return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">`;
@@ -1529,8 +1529,8 @@ const PAW_BUCKET = 14, // szerokość „pasa” brudu w pikselach komórki arku
     PAW_DIRT_COLORS = ["#c9a066", "#6a4524", "#a56a3a", "#d9b87f", "#4a2e17"],
     pawDirtCache = {};
 // Brud sypie się wokół punktów łap z ręcznie narysowanych siatek
-// (animacje/latka-animacje-0N-lapki-nos-ogon.png → szkielet.json, patrz
-// narzedzia/szkielet.py). W animacjach, w których łapy się nie ruszają, punkty są
+// (source/animacje/latka-animacje-0N-lapki-nos-ogon.png → data/animations/szkielet.json,
+// patrz tools/szkielet.py). W animacjach, w których łapy się nie ruszają, punkty są
 // wspólne dla wszystkich klatek, więc brud stoi w miejscu; w fikołku i przy
 // uniesionej łapie jedzie razem z punktem. Klatki bez punktów łap — bez brudu.
 // Wzorzec grudek (przesunięcia, kolory, kolejność znikania) jest stały dla łapy.
@@ -1819,7 +1819,7 @@ function pawsWipe(p) {
     // koniec, gdy na bieżącej klatce nie widać już żadnej grudki
     if (!blobs.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) pawsEnd(true);
 }
-// Szmatka: jedna klatka z arkusza animacje/szmatka.webp (9 — 4×4 po 64 px), bez
+// Szmatka: jedna klatka z arkusza assets/sprites/szmatka.webp (9 — 4×4 po 64 px), bez
 // przeskakiwania klatek. Przy tarciu tylko delikatnie kołysze się o kilka
 // stopni w lewo i w prawo (płynnie narasta i gaśnie); gdy łapka zrobi się
 // czysta — małe, miękkie „podskoczenie” (lekkie powiększenie).
@@ -3080,7 +3080,7 @@ function catchOverlayDraw() {
    Czasem niesie na kolcach coś dobrego (owoc z hedgehog-game.webp, dolny
    rząd — słodycze z górnego rzędu są "złe", więc nigdy ich nie niesie).
    Działa w czasie rzeczywistym tylko na mapach plenerowych (GARDEN_ROOMS), niezależnie od pieska;
-   nie jest klikalny. Presety: animacje-ustawienia/hedgehog-animacje.json.
+   nie jest klikalny. Presety: data/animations/hedgehog-animacje.json.
    ═══════════════════════════════════════════════════════════════ */
 const HEDGEHOG_LINE_Y = 488, // y stóp jeżyka — pierwszy plan, przed pieskiem
     HEDGEHOG_SIZE = 140, // jak w grze z jeżykiem
@@ -3425,7 +3425,7 @@ function bubbleBodyCenter(type) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ISKIERKI PO SPRZĄTANIU (grafika animacje/star-check.webp, arkusz 2×2: 64 px)
+   ISKIERKI PO SPRZĄTANIU (grafika assets/sprites/star-check.webp, arkusz 2×2: 64 px)
    Kupka, piach kreta, naczynie, grudka i czyste łapki: w tym miejscu zapalają
    się po kolei gwiazdki, unoszą się i gasną (~1,1 s). Tylko ozdoba.
    ═══════════════════════════════════════════════════════════════ */
@@ -3713,17 +3713,17 @@ async function boot() {
     lp(0.04);
     P = await fresh("data/config.json");
     lp(0.1);
-    // Załaduj animacje z plików edytora (animacje-ustawienia/)
+    // Załaduj animacje z plików edytora (data/animations/)
     // — te pliki są źródłem prawdy; config.json trzyma resztę ustawień
     const [anim01, anim02, anim03, motyleAnim, kretAnim, hedgehogAnim, hedgehogGameAnim, skel] = await Promise.all([
-        fresh("animacje-ustawienia/latka-animacje-01.json"),
-        fresh("animacje-ustawienia/latka-animacje-02.json"),
-        fresh("animacje-ustawienia/latka-animacje-03.json"), // kopanie kostek (mini gra z liczeniem)
-        fresh("animacje-ustawienia/motyle-001-animacje.json"),
-        fresh("animacje-ustawienia/kret-animacje.json"),
-        fresh("animacje-ustawienia/hedgehog-animacje.json"),
-        fresh("animacje-ustawienia/hedgehog-game-animacje.json"),
-        fresh("animacje-ustawienia/szkielet.json").catch(() => null), // punkty łap/nosa/ogona (brud na łapkach)
+        fresh("data/animations/latka-animacje-01.json"),
+        fresh("data/animations/latka-animacje-02.json"),
+        fresh("data/animations/latka-animacje-03.json"), // kopanie kostek (mini gra z liczeniem)
+        fresh("data/animations/motyle-001-animacje.json"),
+        fresh("data/animations/kret-animacje.json"),
+        fresh("data/animations/hedgehog-animacje.json"),
+        fresh("data/animations/hedgehog-game-animacje.json"),
+        fresh("data/animations/szkielet.json").catch(() => null), // punkty łap/nosa/ogona (brud na łapkach)
     ]);
     skeleton = skel;
     lp(0.16);
@@ -3736,7 +3736,7 @@ async function boot() {
     };
     {
         const a = P.assets,
-            urls = ["animacje/latka-animacje-03.webp", "animacje/naczynia.webp", "animacje/star-check.webp", "animacje/szmatka.webp", a.a01, a.a02, a.ui, a.poop, a.motyle, a.kret, a.hedgehog, a.hedgehogGame, a.bubbleStar, a.bubbleWrong, ...(a.balls || []), ...(a.bubbles || []), ...nearRooms().map(roomSrc)].filter(Boolean);
+            urls = ["assets/sprites/latka-animacje-03.webp", "assets/sprites/naczynia.webp", "assets/sprites/star-check.webp", "assets/sprites/szmatka.webp", a.a01, a.a02, a.ui, a.poop, a.motyle, a.kret, a.hedgehog, a.hedgehogGame, a.bubbleStar, a.bubbleWrong, ...(a.balls || []), ...(a.bubbles || []), ...nearRooms().map(roomSrc)].filter(Boolean);
         let done = 0;
         window.bootImages = Promise.all(
             urls.map((u) =>
@@ -3757,10 +3757,10 @@ async function boot() {
     CFG.hedgehogGame = hedgehogGameAnim;
     UI = CFG.ui;
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
-    images.a03 = await loadImage("animacje/latka-animacje-03.webp");
-    images.dish = await loadImage("animacje/naczynia.webp");
-    images.sparkle = await loadImage("animacje/star-check.webp");
-    images.cloth = await loadImage("animacje/szmatka.webp");
+    images.a03 = await loadImage("assets/sprites/latka-animacje-03.webp");
+    images.dish = await loadImage("assets/sprites/naczynia.webp");
+    images.sparkle = await loadImage("assets/sprites/star-check.webp");
+    images.cloth = await loadImage("assets/sprites/szmatka.webp");
     // Cały butterflyEvent() lata jedną, spójną grafiką z motyle-new
     // (patrz eventButterflyCell()); dawne motyl-1/motyl-2 zostały w archiwum.
     if (P.assets.motyle) {

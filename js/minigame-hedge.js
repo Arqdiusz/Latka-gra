@@ -325,8 +325,8 @@ function hedgeBg() {
             bg.fill = `rgb(${d[0]},${d[1]},${d[2]})`;
         } catch (_) {}
     };
-    // tło gier: Łąka wydłużona o powtórzoną trawę i kwiatki (narzedzia/tlo-gry.py)
-    img.src = "tla/001-gry.webp";
+    // tło gier: Łąka wydłużona o powtórzoną trawę i kwiatki (tools/tlo-gry.py)
+    img.src = "assets/backgrounds/games/meadow-games.webp";
     return (hedgeBgCache = bg);
 }
 

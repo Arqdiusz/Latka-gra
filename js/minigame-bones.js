@@ -16,7 +16,7 @@
 const BONES_ROUNDS = 5,
     BONES_DOG = { x: 192, y: 332, scale: 1.25 }, // stopy pieska na trawie, tuż nad dywanikami
     BONES_FOREVER = 600000,
-    // animacje (indeksy presetów z animacje-ustawienia/*.json)
+    // animacje (indeksy presetów z data/animations/*.json)
     BONES_ANIM = {
         dig: ["a03", 0], // 01. Kopanie dołka
         unearth: ["a03", 1], // 02. Wykopuje kostkę

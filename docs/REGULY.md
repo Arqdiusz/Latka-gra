@@ -1,5 +1,7 @@
 # Łatka — reguły gry (wersja wyjściowa, do strojenia)
 
+> **Uwaga o ścieżkach:** starsze paragrafy opisują układ sprzed v0.8.248 (`animacje/`, `tla/`, `ikony/`, `fonts/`, `animacje-ustawienia/`, `narzedzia/`). Dzisiejsze odpowiedniki — tabela w §63.
+
 Wszystkie liczby są w kodzie w jednym miejscu (`js/game.js`): `BUBBLE_RULES`,
 `NEEDS_DECAY`, `ACTION_EFFECTS`, `SAD_THRESHOLD`, `SAD_ALLOWS`. Zmieniamy je tam.
 
@@ -451,3 +453,23 @@ Usunięte tylko to, co sprawdzone jako nieużywane (grep po `js/`, `index.html`,
 - `data/config.json` (−495 linii): `config.a01/a02` (nadpisywane na starcie plikami z `animacje-ustawienia/`), `config.version/activeTab/reference`, nieużywane pola `config.ui` (`name, preview, needs, statusSize, menuSize, bubbleIcon, menuGroup, topH, bottomH, heartMode`), `assets.butterflies`, `cleanup`. Zostają `config.ui` (`cols, rows, map, bubbleType, bubbleSize, bubbleSymbolSize`), `assets`, `meta` (ramki a01/a02), `bubbleCenters`.
 - Panel DEV (5 stuknięć w serduszko) **zostaje** — decyzja właściciela.
 - Nie ruszone celowo: zdublowane selektory w CSS (49 selektorów w kilku miejscach) — kolejność reguł jest częścią kaskady, scalanie bez pełnego przeglądu wizualnego grozi zmianą wyglądu.
+
+## §63 Nowy układ katalogów, archiwum, README (v0.8.248)
+Przeniesione przez `git mv` (historia plików zachowana), nic nie skasowane. Gra pobiera tylko `assets/` i `data/`.
+
+| Było | Jest |
+|---|---|
+| `animacje/*.webp` (arkusze, zwierzęta, piłki, bańki, `star-check`, `wrong-check`, `naczynia`, `szmatka`) | `assets/sprites/` (te same nazwy) |
+| `inne/kupka.webp` | `assets/sprites/kupka.webp` |
+| `ikony/latka-ikony.webp` | `assets/ui/latka-ikony.webp` |
+| `tla/wysokie/00N.webp` | `assets/backgrounds/rooms/00N.webp` (ścieżki w `data/config.json → assets.rooms`, `roomSrc()` bierze je wprost) |
+| `tla/001-gry.webp`, `tla/wysokie/001-gry.webp`, `tla/001.webp` | `assets/backgrounds/games/meadow-games.webp`, `meadow-games-tall.webp`, `meadow-room.webp` |
+| `tla/petla-niebo.webp`, `tla/petla-trawnik.webp` | `assets/backgrounds/start-sky.webp`, `start-lawn.webp` |
+| `fonts/*` (czcionki, OFL) | `assets/fonts/` (pełne źródła TTF: `source/fonts/`) |
+| `animacje-ustawienia/*.json` | `data/animations/` |
+| PNG z `animacje/`, `ikony/`, `inne/`, `tla/` | `source/` (te same podkatalogi i nazwy) |
+| `narzedzia/*` | `tools/` |
+| `REGULY.md`, `AUDYT.md` | `docs/` |
+- `archive/` (nieużywane, zostaje jako archiwum): `workflows/` (stare `latka-menu.yml`, `latka-update-once.yml` — poza `.github/workflows/` nie mogą się uruchomić; GitHub Pages publikuje z gałęzi bez nich), `kolo/` (prototyp koła `kolo.html` + `proto/`), `settings/` (nieużywane `Latka-ustawienia.json`, `latka-animacje.json`), `animacje/` (stare `motyl-1/2`, `motyle-001*.png`).
+- Nowe narzędzie `tools/png-to-webp.py` (mapowanie `source/` → `assets/`, bezstratnie, z kontrolą pikseli; `--all` = wszystko). Edytor animacji przyjmuje też pliki `.webp`. `szkielet.py` i `tlo-gry.py` czytają/zapisują w `source/`.
+- Nowa grafika → patrz §61 i `README.md` (PNG do `source/`, `png-to-webp.py`, wpis w `MAP`, ewentualnie podbicie `ART_V`).

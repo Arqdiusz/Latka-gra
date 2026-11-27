@@ -81,10 +81,10 @@
         IMG[key] = im;
         window.artImgs[u] = im;
     };
-    load("a01", "animacje/latka-animacje-01.webp");
-    load("a02", "animacje/latka-animacje-02-X.webp");
-    load("a03", "animacje/latka-animacje-03.webp");
-    load("mot", "animacje/motyle-new.webp"); // ten sam plik co w grze (config.json → assets.motyle)
+    load("a01", "assets/sprites/latka-animacje-01.webp");
+    load("a02", "assets/sprites/latka-animacje-02-X.webp");
+    load("a03", "assets/sprites/latka-animacje-03.webp");
+    load("mot", "assets/sprites/motyle-new.webp"); // ten sam plik co w grze (config.json → assets.motyle)
     // klatka (z wycięciem zielonego znacznika motylka, jak w grze) — z pamięcią podręczną
     const CELLS = {};
     function cell(sheet, f) {

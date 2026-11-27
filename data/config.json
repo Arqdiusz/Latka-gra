@@ -47,33 +47,33 @@
     }
   },
   "assets": {
-    "a01": "animacje/latka-animacje-01.webp",
-    "a02": "animacje/latka-animacje-02-X.webp",
-    "ui": "ikony/latka-ikony.webp",
-    "motyle": "animacje/motyle-new.webp",
-    "kret": "animacje/kret.webp",
-        "hedgehog": "animacje/hedgehog.webp",
-        "hedgehogGame": "animacje/hedgehog-game.webp",
+    "a01": "assets/sprites/latka-animacje-01.webp",
+    "a02": "assets/sprites/latka-animacje-02-X.webp",
+    "ui": "assets/ui/latka-ikony.webp",
+    "motyle": "assets/sprites/motyle-new.webp",
+    "kret": "assets/sprites/kret.webp",
+        "hedgehog": "assets/sprites/hedgehog.webp",
+        "hedgehogGame": "assets/sprites/hedgehog-game.webp",
     "balls": [
-      "animacje/ball-1.webp",
-      "animacje/ball-2.webp",
-      "animacje/ball-3.webp",
-      "animacje/ball-4.webp"
+      "assets/sprites/ball-1.webp",
+      "assets/sprites/ball-2.webp",
+      "assets/sprites/ball-3.webp",
+      "assets/sprites/ball-4.webp"
     ],
     "bubbles": [
-      "animacje/bubble-001.webp",
-      "animacje/bubble-002.webp"
+      "assets/sprites/bubble-001.webp",
+      "assets/sprites/bubble-002.webp"
     ],
-    "bubbleStar": "animacje/star-check.webp",
-    "bubbleWrong": "animacje/wrong-check.webp",
-    "poop": "inne/kupka.webp",
+    "bubbleStar": "assets/sprites/star-check.webp",
+    "bubbleWrong": "assets/sprites/wrong-check.webp",
+    "poop": "assets/sprites/kupka.webp",
     "rooms": {
-      "living": "tla/004.png",
-      "kitchen": "tla/005.png",
-      "bathroom": "tla/006.png",
-      "garden": "tla/002.png",
-      "yard": "tla/003.png",
-      "meadow": "tla/001.png"
+      "living": "assets/backgrounds/rooms/004.webp",
+      "kitchen": "assets/backgrounds/rooms/005.webp",
+      "bathroom": "assets/backgrounds/rooms/006.webp",
+      "garden": "assets/backgrounds/rooms/002.webp",
+      "yard": "assets/backgrounds/rooms/003.webp",
+      "meadow": "assets/backgrounds/rooms/001.webp"
     }
   },
   "meta": {

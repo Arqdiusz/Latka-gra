@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Wylicza z siatek punktów (animacje/latka-animacje-0N-lapki-nos-ogon.png)
-pozycje łap/nosa/ogona każdej klatki -> animacje-ustawienia/szkielet.json.
+"""Wylicza z siatek punktów (source/animacje/latka-animacje-0N-lapki-nos-ogon.png)
+pozycje łap/nosa/ogona każdej klatki -> data/animations/szkielet.json.
 Magenta #FF00FF = łapy, zieleń #00FF00 = nos, niebieski #0000FF = ogon.
 Gdy w animacji piesek nie rusza łapami (punkty różnią się o <= TOL px), wszystkie
 klatki dostają pozycję z pierwszej klatki (żeby brud nie drgał o 1–2 px).
-Uruchom po każdej zmianie siatek:  python3 narzedzia/szkielet.py"""
+Uruchom po każdej zmianie siatek:  python3 tools/szkielet.py   (z katalogu głównego repozytorium)"""
 import json
 from PIL import Image
 
@@ -39,8 +39,8 @@ def same(a, b):
 
 result = {}
 for sh, n in (("a01", "01"), ("a02", "02")):
-    im = Image.open(f"animacje/latka-animacje-{n}-lapki-nos-ogon.png").convert("RGBA")
-    cfg = json.load(open(f"animacje-ustawienia/latka-animacje-{n}.json"))
+    im = Image.open(f"source/animacje/latka-animacje-{n}-lapki-nos-ogon.png").convert("RGBA")
+    cfg = json.load(open(f"data/animations/latka-animacje-{n}.json"))
     cols, rows = cfg["cols"], cfg["rows"]
     pix = im.load()
     frames = []
@@ -65,4 +65,4 @@ for sh, n in (("a01", "01"), ("a02", "02")):
                 fixed.add(f)
     result[sh] = frames
     print(sh, "klatek:", len(frames), "z łapami:", sum(1 for f in frames if f["paws"]), "przyklejonych do 1. klatki:", len(fixed))
-json.dump(result, open("animacje-ustawienia/szkielet.json", "w"), separators=(",", ":"))
+json.dump(result, open("data/animations/szkielet.json", "w"), separators=(",", ":"))

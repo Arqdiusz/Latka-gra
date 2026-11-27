@@ -1,5 +1,7 @@
 # Audyt gry „Mój mały jamniczek” — 27.11.2026 (v0.8.243)
 
+> Stan z v0.8.243 — ścieżki w tym dokumencie są sprzed reorganizacji (v0.8.248), mapowanie: `REGULY.md` §63.
+
 Audyt tylko opisuje stan i rekomendacje — **nic w grze nie zostało zmienione**.
 Pomiary: Chromium (Playwright), lokalny serwer, sieć ograniczona narzędziem przeglądarki
 („4G” = 9 Mb/s i 170 ms opóźnienia, „wolne 4G” = 1,6 Mb/s i 150 ms). Rozmiary tekstu

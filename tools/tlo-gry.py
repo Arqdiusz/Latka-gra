@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Generuje tla/001-gry.png: tło Łąki (768x1024) wydłużone do 768x1536 (pełna wysokość
-planszy gier). Jednolity dół zastępuje powtórzony pas trawy z przesunięciem + kwiatki."""
+"""Generuje source/tla/001-gry.png: tło Łąki (768x1024) wydłużone do 768x1536 (pełna wysokość
+planszy gier). Jednolity dół zastępuje powtórzony pas trawy z przesunięciem + kwiatki.
+Uruchom z katalogu głównego repozytorium, potem: python3 tools/png-to-webp.py"""
 from PIL import Image
 import random
 random.seed(11)
-im = Image.open('tla/001.png').convert('RGBA')
+im = Image.open('source/tla/001.png').convert('RGBA')
 W, H = im.size
 TOP = 704
 strip = im.crop((0, TOP, W, H)); SH = strip.size[1]
@@ -34,4 +35,4 @@ for n in range(11):
     placed.append((px, py))
     if random.random() < 0.5: sp = sp.transpose(Image.FLIP_LEFT_RIGHT)
     out.alpha_composite(sp, (px, py))
-out.convert('RGB').quantize(colors=64, dither=Image.NONE).save('tla/001-gry.png', optimize=True)
+out.convert('RGB').quantize(colors=64, dither=Image.NONE).save('source/tla/001-gry.png', optimize=True)

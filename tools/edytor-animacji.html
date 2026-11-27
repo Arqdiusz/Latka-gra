@@ -115,7 +115,7 @@ input[type=range]{width:100%;accent-color:#a060c8;margin:3px 0}
   <button class="hbtn" id="btnLoadFiles">📂 Wczytaj PNG + JSON</button>
   <button class="hbtn" id="btnSaveJson">💾 Zapisz JSON</button>
   <button class="hbtn" id="btnSaveAll">💾 Zapisz wszystkie</button>
-  <input id="fileInput" type="file" accept="image/png,application/json,.json" multiple hidden>
+  <input id="fileInput" type="file" accept="image/png,image/webp,application/json,.json" multiple hidden>
 </header>
 
 <div class="app">
@@ -270,7 +270,7 @@ $('#fileInput').onchange = async e => {
   e.target.value = '';
   if (!files.length) return;
 
-  const pngs = files.filter(f => f.name.endsWith('.png'));
+  const pngs = files.filter(f => /\.(png|webp)$/i.test(f.name));
   const jsons = files.filter(f => f.name.endsWith('.json'));
 
   for (const f of pngs) {
@@ -358,7 +358,7 @@ function renderSheetTabs() {
   for (const [id, s] of sheets) {
     const btn = document.createElement('button');
     btn.className = 'sheet-tab' + (id === activeSheetId ? ' active' : '');
-    btn.textContent = s.name.replace('latka-animacje-', '').replace('.png', '') + (s.dirty ? ' ●' : '');
+    btn.textContent = s.name.replace('latka-animacje-', '').replace(/\.(png|webp)$/, '') + (s.dirty ? ' ●' : '');
     btn.onclick = () => { activeSheetId = id; activePresetIdx = sheets.get(id).presets.length ? 0 : null; stopAnim(); renderAll(); };
     el.append(btn);
   }

@@ -1,23 +1,23 @@
 /* Czcionki gry — wszystkie osadzone, bez Google Fonts (działają offline, brak zewnętrznych połączeń).
-   Licencje OFL: fonts/OFL.txt (Ranchers), OFL-Baloo2.txt, OFL-Quicksand.txt. Pliki .woff to czcionki
-   zmienne (waga płynnie) przycięte do łaciny z polskimi znakami; pełne źródła w fonts/zrodla/. */
+   Licencje OFL: assets/fonts/OFL.txt (Ranchers), OFL-Baloo2.txt, OFL-Quicksand.txt. Pliki .woff to czcionki
+   zmienne (waga płynnie) przycięte do łaciny z polskimi znakami; pełne źródła w source/fonts/. */
 @font-face {
     font-family: "Ranchers"; /* logo */
-    src: url("../fonts/Ranchers-Regular.ttf") format("truetype");
+    src: url("../assets/fonts/Ranchers-Regular.ttf") format("truetype");
     font-weight: 400;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: "Baloo 2"; /* tytuły, przyciski, liczby, napisy w mini-grach */
-    src: url("../fonts/Baloo2-VF.woff") format("woff");
+    src: url("../assets/fonts/Baloo2-VF.woff") format("woff");
     font-weight: 400 800;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: "Quicksand"; /* opisy i dymki */
-    src: url("../fonts/Quicksand-VF.woff") format("woff");
+    src: url("../assets/fonts/Quicksand-VF.woff") format("woff");
     font-weight: 300 700;
     font-style: normal;
     font-display: swap;
@@ -696,7 +696,7 @@ body {
     position: absolute;
     inset: 0;
     /* ogród zasłania grę pod spodem (razem z jej paskiem i ✕) — wyjście tylko dużymi przyciskami */
-    background: #a3d45c url("../tla/001-gry.webp") top center / 100% auto no-repeat;
+    background: #a3d45c url("../assets/backgrounds/games/meadow-games.webp") top center / 100% auto no-repeat;
     z-index: 26;
     display: grid;
     place-items: center;
@@ -1792,12 +1792,12 @@ body.locked .gamesAccess {
 .ldScene {
     top: -150px;
     height: calc(91cqw + 150px);
-    background: #6bc3f7 url("../tla/petla-niebo.webp") 0 150px / 200cqw 91cqw repeat-x;
+    background: #6bc3f7 url("../assets/backgrounds/start-sky.webp") 0 150px / 200cqw 91cqw repeat-x;
 }
 .ldLawn {
     top: 91cqw;
     bottom: -150px;
-    background: #a3d45c url("../tla/petla-trawnik.webp") 0 0 / 200cqw 84.4cqw repeat;
+    background: #a3d45c url("../assets/backgrounds/start-lawn.webp") 0 0 / 200cqw 84.4cqw repeat;
 }
 .ldCv {
     position: absolute;
@@ -2060,7 +2060,7 @@ body.locked .gamesAccess {
     position: absolute;
     inset: 0;
     z-index: 15;
-    background: #a3d45c url("../tla/001.webp") top center / 100% auto no-repeat;
+    background: #a3d45c url("../assets/backgrounds/games/meadow-room.webp") top center / 100% auto no-repeat;
 }
 
 .pairsFull[hidden] {
@@ -2466,7 +2466,7 @@ body.sadLock .arrow {
 /* ═══ Kretowisko w stylu pozostałych gier: ta sama Łąka w tle, tytuł z
    zielonym cieniem po lewej, czerwony ✕ po prawej, biały panel postępu ═══ */
 .moleFull {
-    background: #a6d45c url("../tla/001-gry.webp") top center / 100% auto no-repeat;
+    background: #a6d45c url("../assets/backgrounds/games/meadow-games.webp") top center / 100% auto no-repeat;
     image-rendering: pixelated;
 }
 .moleHeader {
@@ -2650,7 +2650,7 @@ h3,
 
 /* Znajdź pary: pasek wyników pod tytułem (czas, próby, pary) i rekordy */
 .pairsFull {
-    background-image: url("../tla/001-gry.webp");
+    background-image: url("../assets/backgrounds/games/meadow-games.webp");
 }
 .pairsHud {
     position: absolute;
@@ -2790,7 +2790,7 @@ h3,
     inset: 0;
     pointer-events: auto;
     /* własne okno gry: łąka z mini gier, piesek rysowany na .bonesCanvas */
-    background: #a3d45c url("../tla/001-gry.webp") top center / 100% auto no-repeat;
+    background: #a3d45c url("../assets/backgrounds/games/meadow-games.webp") top center / 100% auto no-repeat;
 }
 .bonesCanvas {
     position: absolute;
@@ -3456,7 +3456,7 @@ h3,
     gap: 0;
     padding-top: 84px;
     overflow: visible;
-    background: #a3d45c url("../tla/001-gry.webp") top center / 100% auto no-repeat;
+    background: #a3d45c url("../assets/backgrounds/games/meadow-games.webp") top center / 100% auto no-repeat;
     font-family: "Baloo 2", "Quicksand", sans-serif;
 }
 .lvPick[hidden] {
@@ -4180,7 +4180,7 @@ h3,
 /* ═══ Gry i okna do krawędzi ekranu (pasy nad i pod układem 768 na wysokich telefonach, --bleed) ═══
    1) przyciemnienia i okna końcowe: samo pudełko sięga w pasy (treść dalej na środku ekranu);
    2) ekrany gier z łąką / wodą: warstwa ::before z tłem sięga w pasy, układ gry bez zmian
-      (wysoka łąka tla/wysokie/001-gry.png = 001-gry + 150 px nieba nad i 150 px trawy pod);
+      (wysoka łąka assets/backgrounds/games/meadow-games-tall = 001-gry + 150 px nieba nad i 150 px trawy pod);
    3) listy (Gry, poziomy): pudełko w pasy + tyle samo paddingu. */
 .popup,
 .molePopup,
@@ -4195,7 +4195,7 @@ h3,
     bottom: calc(-1 * var(--bleed, 0px));
 }
 .moleWinPopup {
-    background: #a3d45c url("../tla/wysokie/001-gry.webp?b=1") center / 100% auto no-repeat;
+    background: #a3d45c url("../assets/backgrounds/games/meadow-games-tall.webp?b=1") center / 100% auto no-repeat;
 }
 
 .moleFull,
@@ -4221,7 +4221,7 @@ h3,
     top: calc(-1 * var(--bleed, 0px));
     bottom: calc(-1 * var(--bleed, 0px));
     z-index: -1;
-    background: #a3d45c url("../tla/wysokie/001-gry.webp?b=1") center / 100% auto no-repeat;
+    background: #a3d45c url("../assets/backgrounds/games/meadow-games-tall.webp?b=1") center / 100% auto no-repeat;
     image-rendering: pixelated;
 }
 .bonesPlay {
