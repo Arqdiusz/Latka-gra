@@ -3,12 +3,21 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.249</title>
+        <title>Łatka v0.8.250</title>
+        <!-- Ikona gry na ekranie głównym telefonu (manifest.webmanifest, assets/icons/; tools/make-icons.py) -->
+        <link rel="manifest" href="manifest.webmanifest" />
+        <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png" />
+        <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+        <meta name="theme-color" content="#6bc3f7" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="Jamniczek" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <!-- Czcionki gry są osadzone (assets/fonts/, @font-face w css/style.css) — bez Google Fonts, działają offline -->
         <link rel="preload" href="assets/fonts/Ranchers-Regular.ttf" as="font" type="font/ttf" crossorigin />
         <link rel="preload" href="assets/fonts/Baloo2-VF.woff" as="font" type="font/woff" crossorigin />
         <link rel="preload" href="assets/fonts/Quicksand-VF.woff" as="font" type="font/woff" crossorigin />
-        <link rel="stylesheet" href="css/style.css?v=269" />
+        <link rel="stylesheet" href="css/style.css?v=270" />
     </head>
 
     <body>
@@ -484,7 +493,7 @@
                 // przy zmianach samego kodu grafiki zostają w pamięci przeglądarki (nie pobierają się od nowa).
                 window.ART_V = 1;
             </script>
-            <script src="js/loader.js?v=269"></script>
+            <script src="js/loader.js?v=270"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -493,7 +502,7 @@
                     document.fonts.load("40px Ranchers");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=269"></script>
+            <script src="js/audio.js?v=270"></script>
             <div class="parentLock" hidden>
                 <!-- dla dziecka: obrazki, bez czytania — piesek śpi, po więcej czasu idź do rodziców -->
                 <div class="plKid">
@@ -547,35 +556,35 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=269"></script>
-        <script defer src="js/game-state.js?v=269"></script>
-        <script defer src="js/game-needs.js?v=269"></script>
-        <script defer src="js/game-rooms.js?v=269"></script>
-        <script defer src="js/game-engine.js?v=269"></script>
-        <script defer src="js/game-dog.js?v=269"></script>
-        <script defer src="js/game-paws.js?v=269"></script>
-        <script defer src="js/game-input.js?v=269"></script>
-        <script defer src="js/game-autonomy.js?v=269"></script>
-        <script defer src="js/game-wildlife.js?v=269"></script>
-        <script defer src="js/game-bubbles.js?v=269"></script>
-        <script defer src="js/game-draw.js?v=269"></script>
-        <script defer src="js/game-boot.js?v=269"></script>
-        <script defer src="js/game-dev.js?v=269"></script>
-        <script defer src="js/session.js?v=269"></script>
-        <script defer src="js/minigame-fetch.js?v=269"></script>
-        <script defer src="js/minigame-bubbles.js?v=269"></script>
-        <script defer src="js/minigame-mole.js?v=269"></script>
-        <script defer src="js/minigame-hedge.js?v=269"></script>
-        <script defer src="js/minigame-mole2.js?v=269"></script>
-        <script defer src="js/level-pick.js?v=269"></script>
-        <script defer src="js/minigame-memory.js?v=269"></script>
-        <script defer src="js/minigame-pairs.js?v=269"></script>
-        <script defer src="js/bones-adapt.js?v=269"></script>
-        <script defer src="js/bones-parent.js?v=269"></script>
-        <script defer src="js/minigame-bones.js?v=269"></script>
-        <script defer src="js/event-bone-mole.js?v=269"></script>
-        <script defer src="js/event-bone-dig.js?v=269"></script>
-        <script defer src="js/games-menu.js?v=269"></script>
-        <script defer src="js/popup-guard.js?v=269"></script>
+        <script defer src="js/arc-carousel.js?v=270"></script>
+        <script defer src="js/game-state.js?v=270"></script>
+        <script defer src="js/game-needs.js?v=270"></script>
+        <script defer src="js/game-rooms.js?v=270"></script>
+        <script defer src="js/game-engine.js?v=270"></script>
+        <script defer src="js/game-dog.js?v=270"></script>
+        <script defer src="js/game-paws.js?v=270"></script>
+        <script defer src="js/game-input.js?v=270"></script>
+        <script defer src="js/game-autonomy.js?v=270"></script>
+        <script defer src="js/game-wildlife.js?v=270"></script>
+        <script defer src="js/game-bubbles.js?v=270"></script>
+        <script defer src="js/game-draw.js?v=270"></script>
+        <script defer src="js/game-boot.js?v=270"></script>
+        <script defer src="js/game-dev.js?v=270"></script>
+        <script defer src="js/session.js?v=270"></script>
+        <script defer src="js/minigame-fetch.js?v=270"></script>
+        <script defer src="js/minigame-bubbles.js?v=270"></script>
+        <script defer src="js/minigame-mole.js?v=270"></script>
+        <script defer src="js/minigame-hedge.js?v=270"></script>
+        <script defer src="js/minigame-mole2.js?v=270"></script>
+        <script defer src="js/level-pick.js?v=270"></script>
+        <script defer src="js/minigame-memory.js?v=270"></script>
+        <script defer src="js/minigame-pairs.js?v=270"></script>
+        <script defer src="js/bones-adapt.js?v=270"></script>
+        <script defer src="js/bones-parent.js?v=270"></script>
+        <script defer src="js/minigame-bones.js?v=270"></script>
+        <script defer src="js/event-bone-mole.js?v=270"></script>
+        <script defer src="js/event-bone-dig.js?v=270"></script>
+        <script defer src="js/games-menu.js?v=270"></script>
+        <script defer src="js/popup-guard.js?v=270"></script>
     </body>
 </html>

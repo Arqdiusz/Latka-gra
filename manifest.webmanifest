@@ -1,0 +1,17 @@
+{
+  "name": "Mój mały jamniczek",
+  "short_name": "Jamniczek",
+  "description": "Gra w stylu tamagotchi z pikselowym jamnikiem — dla małych dzieci.",
+  "lang": "pl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#6bc3f7",
+  "background_color": "#6bc3f7",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

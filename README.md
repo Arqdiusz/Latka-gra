@@ -17,12 +17,13 @@ python3 -m http.server 8793      # w katalogu głównym repozytorium
 | `js/` | kod gry: `game-*.js` (rdzeń gry podzielony tematycznie, wczytywany w tej kolejności co w `index.html`), `loader.js` (ekran startowy), `minigame-*.js` (gry), `event-*.js`, `arc-carousel.js` (koło menu), … |
 | `assets/sprites/` | arkusze animacji pieska i zwierząt, piłki, bańki, szmatka, kupka — **WebP** |
 | `assets/ui/` | atlas ikon |
+| `assets/icons/`, `manifest.webmanifest` | ikona gry na ekranie głównym telefonu („Jamniczek”) i faviconka |
 | `assets/backgrounds/` | `rooms/` (tła pokoi 768×2136), `games/` (łąka gier), `start-sky/lawn` (ekran startowy) |
 | `assets/fonts/` | Ranchers, Baloo 2, Quicksand (+ licencje OFL) |
 | `data/config.json` | ścieżki grafik, ikony, ramki animacji (`meta`), środki dymków |
 | `data/animations/` | ustawienia animacji z edytora (klatki, presety, `szkielet.json` = punkty łap) |
 | `source/` | **źródłowe PNG** (z tych powstają pliki w `assets/`), pełne czcionki |
-| `tools/` | edytor animacji, `png-to-webp.py`, `szkielet.py`, `tlo-gry.py` |
+| `tools/` | edytor animacji, `png-to-webp.py`, `make-icons.py`, `szkielet.py`, `tlo-gry.py` |
 | `docs/` | `REGULY.md` (zasady i dziennik zmian), `AUDYT.md` (audyt z 27.11.2026) |
 | `archive/` | stare, nieużywane pliki (workflow, prototyp koła, stare arkusze) — zostają jako archiwum |
 
