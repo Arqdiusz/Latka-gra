@@ -30,10 +30,23 @@ function stopAutoTrip() {
     return false; // dalej w łańcuchu || wykonuje właściwą akcję
 }
 
+// Długie wycieczki do innych pokoi są rzadkie: piesek ma dłużej zostawać na planszy,
+// żeby dziecko zdążyło coś zrobić, zanim sam pobiegnie (v0.8.253).
+// (pierwsza wycieczka najwcześniej po 50 s od startu — `nextTrip` w game-state.js)
+const TRIP_GAP_MS = 60000, // po każdym biegu (też strzałką/akcją) przerwa: GAP … GAP + SPREAD
+    TRIP_GAP_SPREAD_MS = 60000,
+    TRIP_QUIET_MS = 20000; // po dotknięciu ekranu piesek nigdzie sam nie biegnie przez tyle ms
+let lastInput = -1e9;
+document.addEventListener("pointerdown", () => (lastInput = clock), true);
+
 function autoTrip(target = chooseDestination()) {
     if (!casual() || sleeping || gesture || menu.drag) return false;
     if (worldBusy()) {
         nextTrip = clock + 3000;
+        return false;
+    }
+    if (clock - lastInput < TRIP_QUIET_MS) {
+        nextTrip = clock + 5000; // dziecko właśnie gra — sprawdź ponownie za chwilę
         return false;
     }
     if (sadNeed()) return false; // smutny piesek nigdzie sam nie idzie
@@ -46,44 +59,93 @@ function localWalk() {
     if (!casual()) return;
     interrupt();
     phase = "roam";
-    const dest = x <= 0.5 ? 0.58 : 0.42,
-        dist = Math.abs(dest - x) * W;
-    if (dist < 2) {
+    const seg = walkSegment();
+    if (!seg) {
         idle();
         return;
     }
     locks();
-    startQueue([
-        {
-            sheet: "a01",
-            anim: 6,
-            motion: "walk",
-            to: dest,
-            time: (dist / 60) * 1000,
+    startQueue([seg]);
+}
+
+// Krótki spacer na drugą stronę środka planszy (null, gdy piesek już tam stoi)
+function walkSegment() {
+    const dest = x <= 0.5 ? 0.58 : 0.42,
+        dist = Math.abs(dest - x) * W;
+    if (dist < 2) return null;
+    return { sheet: "a01", anim: 6, motion: "walk", to: dest, time: (dist / 60) * 1000 };
+}
+
+// ── Pula samodzielnych zachowań pieska na planszy (v0.8.253) ──────────────
+// Zamiast „spacer / chwila stania / rozejrzenie” piesek losuje z większej puli
+// istniejących animacji (arkusze a01, a02). Częstość się nie zmienia — tylko
+// różnorodność: ta sama czynność nie pada dwa razy z rzędu, a trzy ostatnie są
+// losowane rzadziej (idleHistory). `wt` lekko faworyzuje to, co pasuje do stanu
+// pieska i miejsca (ziewa, gdy śpiący; węszy w ogrodzie; drapie się, gdy brudny).
+// Każda czynność trwa min. ok. 2 s — żadnych migających co sekundę drobiazgów.
+// Celowo pominięte: otrząsanie (kropelki — tylko po kąpieli), toaleta, smutek,
+// „NIE”, piłka i motyl (osobne zdarzenia).
+const outdoors = () => ["meadow", "garden", "yard"].includes(room);
+const IDLE_POOL = [
+    { id: "walk", w: 17, run: () => localWalk() },
+    { id: "stand", w: 9, run: () => idle(16) }, // a01 „17. Spokojne stanie”
+    { id: "calm", w: 7, run: () => idle(18) }, // a01 „Siad — spokojnie”
+    { id: "look", w: 9, parts: () => [repeatPart("a01", 3)] }, // „04. Rozglądanie się”
+    { id: "ears", w: 7, parts: () => [repeatPart("a01", 7, 2)] }, // „08. Uszy / mrugnięcie”
+    { id: "sit", w: 8, parts: () => [repeatPart("a01", 8), { ...repeatPart("a01", 18), time: 3200 + Math.random() * 1800 }] }, // siada i odpoczywa
+    {
+        id: "sniff", // węszy (bez klatek toalety 47/48), czasem robi potem krok
+        w: 7,
+        wt: () => (outdoors() ? 2.5 : 0.6),
+        parts: () => {
+            const walk = Math.random() < 0.4 ? walkSegment() : null;
+            return [{ sheet: "a01", frames: [20, 41, 41, 42, 42, 41, 41, 20], tempo: 380, time: 3000 + Math.random() * 1200 }, ...(walk ? [walk] : [])];
         },
-    ]);
+    },
+    { id: "lookup", w: 6, parts: () => [repeatPart("a01", 15, 2)] }, // „16. Patrzenie w górę / łapa”
+    { id: "scratch", w: 5, wt: () => (stats.clean < 60 ? 2.5 : 1), parts: () => [repeatPart("a01", 12)] }, // „13. Drapanie”
+    { id: "back", w: 4, wt: () => (["kitchen", "bathroom"].includes(room) ? 0 : 1), parts: () => [repeatPart("a01", 10)] }, // „11. Na grzbiecie”
+    { id: "yawn", w: 5, wt: () => (stats.sleep < 50 ? 3 : stats.sleep > 85 ? 0.3 : 1), parts: () => [{ ...repeatPart("a02", 7), tempo: 560, time: 560 * 4 }] }, // ziewanie i przeciąganie (wolniej niż w drzemce)
+    { id: "joy", w: 5, wt: () => (stats.fun > 70 ? 1.8 : 1), parts: () => [repeatPart("a01", 17, 2)] }, // „18. Radość / podskok”
+    { id: "hop", w: 3, parts: () => [repeatPart("a01", 0, 3)] }, // „01. Skok / podskok”
+    { id: "hau", w: 4, run: () => bark("hau", Math.random() < 0.5 ? 2 : 1) },
+];
+const idleHistory = [];
+let lastIdleId = "";
+
+function pickIdle() {
+    const cands = [];
+    let total = 0;
+    for (const e of IDLE_POOL) {
+        let w = e.w * (e.wt ? e.wt() : 1);
+        const k = idleHistory.lastIndexOf(e.id);
+        if (k >= 0 && k === idleHistory.length - 1) w = 0; // ta sama czynność nie dwa razy z rzędu
+        else if (k >= 0) w *= 0.3;
+        if (w > 0) {
+            total += w;
+            cands.push([e, w]);
+        }
+    }
+    let n = Math.random() * total;
+    for (const [e, w] of cands) {
+        n -= w;
+        if (n <= 0) return e;
+    }
+    return cands[cands.length - 1][0];
 }
 
 function autonomous() {
-    const r = Math.random();
-    if (r < 0.05 && bark("hau", Math.random() < 0.5 ? 2 : 1)) return; // czasem szczeknie sam z siebie
-    if (r < 0.55) localWalk();
-    else if (r < 0.72) {
-        phase = "pause";
-        locks();
-        startQueue([
-            {
-                sheet,
-                frames: [currentFrame()],
-                tempo: 1000,
-                time: 1000 + Math.random() * 900,
-            },
-        ]);
-    } else if (r < 0.86) {
-        phase = "look";
-        locks();
-        startQueue([repeatPart("a01", Math.random() < 0.5 ? 3 : 7)]);
-    } else idle();
+    const e = pickIdle();
+    idleHistory.push(e.id);
+    if (idleHistory.length > 3) idleHistory.shift();
+    lastIdleId = e.id;
+    if (e.run) {
+        if (e.run() === false) idle(); // np. szczekanie zablokowane — zwykłe stanie
+        return;
+    }
+    phase = "look";
+    locks();
+    startQueue(e.parts());
 }
 
 /* ═══════════════════════════════════════════════════════════════

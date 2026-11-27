@@ -272,7 +272,7 @@ function chooseVariant() {
 }
 
 function finishTravel(id) {
-    nextTrip = clock + 15000 + Math.random() * 15000;
+    nextTrip = clock + TRIP_GAP_MS + Math.random() * TRIP_GAP_SPREAD_MS; // rzadkie wycieczki (game-autonomy.js)
     if (id) activity(id);
     else {
         idle(16);

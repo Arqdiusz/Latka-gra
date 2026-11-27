@@ -48,6 +48,9 @@ function boneWishUpdate() {
         if (clock < w.at || dirty() || wildlifeBusy("boneDig")) return;
         const here = order.indexOf(room),
             near = GARDEN_ROOMS.slice().sort((a, b) => Math.abs(order.indexOf(a) - here) - Math.abs(order.indexOf(b) - here))[0];
+        // bieg do INNEGO pokoju dopiero, gdy dziecko chwilę nie dotyka ekranu (TRIP_QUIET_MS) — inaczej
+        // dymek wygasa (expire) i piesek zostaje na planszy
+        if (near !== room && clock - lastInput < TRIP_QUIET_MS) return;
         w.state = "go";
         route(near, null, "auto"); // także w tym samym pokoju: podejdzie na środek
     } else if (GARDEN_ROOMS.includes(room) && x >= BONE_DIG.xMin && x <= BONE_DIG.xMax && !wildlifeBusy("boneDig") && !moleDirts[room]) {
