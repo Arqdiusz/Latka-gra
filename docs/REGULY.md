@@ -464,7 +464,7 @@ Przeniesione przez `git mv` (historia plików zachowana), nic nie skasowane. Gra
 | `ikony/latka-ikony.webp` | `assets/ui/latka-ikony.webp` |
 | `tla/wysokie/00N.webp` | `assets/backgrounds/rooms/00N.webp` (ścieżki w `data/config.json → assets.rooms`, `roomSrc()` bierze je wprost) |
 | `tla/001-gry.webp`, `tla/wysokie/001-gry.webp`, `tla/001.webp` | `assets/backgrounds/games/meadow-games.webp`, `meadow-games-tall.webp`, `meadow-room.webp` |
-| `tla/petla-niebo.webp`, `tla/petla-trawnik.webp` | `assets/backgrounds/start-sky.webp`, `start-lawn.webp` |
+| `tla/petla-niebo.webp`, `tla/petla-trawnik-sciezka.webp` (od v0.8.252) | `assets/backgrounds/start-sky.webp`, `start-lawn-sciezka.webp` |
 | `fonts/*` (czcionki, OFL) | `assets/fonts/` (pełne źródła TTF: `source/fonts/`) |
 | `animacje-ustawienia/*.json` | `data/animations/` |
 | PNG z `animacje/`, `ikony/`, `inne/`, `tla/` | `source/` (te same podkatalogi i nazwy) |
@@ -514,3 +514,10 @@ Przeniesione przez `git mv` (historia plików zachowana), nic nie skasowane. Gra
 - **Piksele bez zmian** — sprawdzone testem: wszystkie klatki a01/a02/a03 (razem ~290) bajt w bajt takie same jak przed zmianą, markery motylka (a02) te same. Zostaje niewielki, nieusuwalny koszt pierwszego parsowania skryptów (~0,1–0,4 s na wolnym telefonie).
 - **Niebieski pasek na dole** (ekran z ikony, Android): to obszar poza stroną (pasek gestów), który system maluje kolorem z manifestu. Zmieniono `theme_color` i `background_color` w `manifest.webmanifest` oraz `<meta name="theme-color">` z nieba `#6bc3f7` na kolor trawy `#a5d35e` (najczęstszy kolor trawnika), bo na dole ekranu jest trawa. **Skrót trzeba usunąć i dodać ponownie** — Android czyta manifest w chwili dodawania.
 - Gdyby pasek mimo to zostawał: ostatnia deska ratunku to `"display": "fullscreen"` (ryzyko: wcięcie kamery/pasek gestów mogą zasłonić dół ekranu).
+
+## §67 Nowy trawnik na ekranie startowym — ścieżka (v0.8.252)
+- Poprzedni trawnik (jednolity, rzadkie blade kępki na kratce, odbity lustrzanie, pół-rozmiarowe piksele, poziome szwy na łączeniu z niebem i przy powtórzeniu w pionie) zastąpiony kaflem **C – piaszczysta ścieżka** wybranym przez właściciela spośród trzech propozycji (A – kwiecista łąka, B – trawnik w pasy, C – ścieżka). Piesek biegnie i siedzi na ścieżce, wokół trawa z plamami, kępkami (3 rozmiary — większe bliżej dołu), koniczynkami i gromadkami kwiatków.
+- **Zasady kafla:** „grube piksele” 192×152 powiększone ×8 → 1536×1216 (ten sam rozmiar piksela co niebo `petla-niebo`); zapętla się **tylko poziomo** (`repeat-x`, torus w osi X — brak lustrzanych kopii), wysokość `158,33cqw` starcza na najwyższy ekran z `--bleed`, więc brak szwu w pionie; rzędy 0–2 mają kolor ostatniego rzędu nieba (`#98ca50`) i 4 stopnie rozjaśniania do trawy (bez twardej linii na horyzoncie). Kolor tła pod kaflem i `theme-color` = `#a5d35e` (baza trawnika), więc pasek systemowy pod grą zlewa się z trawą.
+- **Pliki:** generator `tools/make-lawn.py` (warianty A/B/C; stałe ziarna → powtarzalny wynik; `python3 tools/make-lawn.py C`) → `source/tla/petla-trawnik-sciezka.png` → `python3 tools/png-to-webp.py` → `assets/backgrounds/start-lawn-sciezka.webp` (5 KB zamiast 129 KB). Nowa nazwa pliku (nie nadpisanie) — przeglądarka nie pokaże starej wersji z pamięci podręcznej. Poprzedni trawnik zostaje w `archive/tla/` (`petla-trawnik-v0.8.250.png`, `start-lawn-v0.8.250.webp`).
+- Zmiana wyglądu: edytuj `make()` w `tools/make-lawn.py` (np. `top`/`bot` = położenie i szerokość ścieżki, liczby kwiatków w `cluster(...)`), uruchom dwa polecenia wyżej, podbij `?v=` w `index.html`.
+- Sprawdzone: 410×838, 360×640, 390×1000 (wysoki), 768×1024, 900×520; złączenie kafla poziomo bez szwu; bez błędów i 404.

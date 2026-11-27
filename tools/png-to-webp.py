@@ -28,7 +28,7 @@ MAP = {
     S + "tla/001-gry.png": A + "backgrounds/games/meadow-games.webp",
     S + "tla/001.png": A + "backgrounds/games/meadow-room.webp",
     S + "tla/petla-niebo.png": A + "backgrounds/start-sky.webp",
-    S + "tla/petla-trawnik.png": A + "backgrounds/start-lawn.webp",
+    S + "tla/petla-trawnik-sciezka.png": A + "backgrounds/start-lawn-sciezka.webp",
 }
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]

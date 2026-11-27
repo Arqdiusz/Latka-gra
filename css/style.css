@@ -1773,14 +1773,15 @@ body.locked .gamesAccess {
 
 /* ── Ekran ładowania i ekran startowy (js/loader.js) ─────────────────
    Jednostki cqw = % szerokości ekranu gry (384 px). Ogród zapętlony z dwóch
-   obrazów odbitych lustrzanie; niebo przesuwa się wolno, trawnik szybko. */
+   obrazów odbitych lustrzanie; niebo przesuwa się wolno, trawnik (kafel ze
+   ścieżką, tools/make-lawn.py) szybko. */
 .load {
     display: block;
     padding: 0;
     overflow: hidden;
     overflow: clip visible; /* niebo i trawnik sięgają w pasy nad i pod grą */
     container-type: inline-size;
-    background: #a3d45c;
+    background: #a5d35e;
 }
 .ldScene,
 .ldLawn {
@@ -1797,7 +1798,9 @@ body.locked .gamesAccess {
 .ldLawn {
     top: 91cqw;
     bottom: -150px;
-    background: #a3d45c url("../assets/backgrounds/start-lawn.webp") 0 0 / 200cqw 84.4cqw repeat;
+    /* kafel 1536×1216 (grube piksele jak niebo) zapętla się tylko poziomo; 158,33 cqw
+       wysokości starcza na najwyższy ekran z --bleed, więc bez szwu w pionie */
+    background: #a5d35e url("../assets/backgrounds/start-lawn-sciezka.webp") 0 0 / 200cqw 158.33cqw repeat-x;
 }
 .ldCv {
     position: absolute;
