@@ -532,30 +532,30 @@
     "reference": null
   },
   "assets": {
-    "a01": "animacje/latka-animacje-01.png",
-    "a02": "animacje/latka-animacje-02-X.png",
-    "ui": "ikony/latka-ikony.png",
+    "a01": "animacje/latka-animacje-01.webp",
+    "a02": "animacje/latka-animacje-02-X.webp",
+    "ui": "ikony/latka-ikony.webp",
     "butterflies": [
       "animacje/motyl-1.png",
       "animacje/motyl-2.png"
     ],
-    "motyle": "animacje/motyle-new.png",
-    "kret": "animacje/kret.png",
-        "hedgehog": "animacje/hedgehog.png",
-        "hedgehogGame": "animacje/hedgehog-game.png",
+    "motyle": "animacje/motyle-new.webp",
+    "kret": "animacje/kret.webp",
+        "hedgehog": "animacje/hedgehog.webp",
+        "hedgehogGame": "animacje/hedgehog-game.webp",
     "balls": [
-      "animacje/ball-1.png",
-      "animacje/ball-2.png",
-      "animacje/ball-3.png",
-      "animacje/ball-4.png"
+      "animacje/ball-1.webp",
+      "animacje/ball-2.webp",
+      "animacje/ball-3.webp",
+      "animacje/ball-4.webp"
     ],
     "bubbles": [
-      "animacje/bubble-001.png",
-      "animacje/bubble-002.png"
+      "animacje/bubble-001.webp",
+      "animacje/bubble-002.webp"
     ],
-    "bubbleStar": "animacje/star-check.png",
-    "bubbleWrong": "animacje/wrong-check.png",
-    "poop": "inne/kupka.png",
+    "bubbleStar": "animacje/star-check.webp",
+    "bubbleWrong": "animacje/wrong-check.webp",
+    "poop": "inne/kupka.webp",
     "rooms": {
       "living": "tla/004.png",
       "kitchen": "tla/005.png",

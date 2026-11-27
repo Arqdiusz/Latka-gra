@@ -326,7 +326,7 @@ function hedgeBg() {
         } catch (_) {}
     };
     // tło gier: Łąka wydłużona o powtórzoną trawę i kwiatki (narzedzia/tlo-gry.py)
-    img.src = "tla/001-gry.png";
+    img.src = "tla/001-gry.webp";
     return (hedgeBgCache = bg);
 }
 

@@ -696,7 +696,7 @@ body {
     position: absolute;
     inset: 0;
     /* ogród zasłania grę pod spodem (razem z jej paskiem i ✕) — wyjście tylko dużymi przyciskami */
-    background: #a3d45c url("../tla/001-gry.png") top center / 100% auto no-repeat;
+    background: #a3d45c url("../tla/001-gry.webp") top center / 100% auto no-repeat;
     z-index: 26;
     display: grid;
     place-items: center;
@@ -1792,12 +1792,12 @@ body.locked .gamesAccess {
 .ldScene {
     top: -150px;
     height: calc(91cqw + 150px);
-    background: #6bc3f7 url("../tla/petla-niebo.png") 0 150px / 200cqw 91cqw repeat-x;
+    background: #6bc3f7 url("../tla/petla-niebo.webp") 0 150px / 200cqw 91cqw repeat-x;
 }
 .ldLawn {
     top: 91cqw;
     bottom: -150px;
-    background: #a3d45c url("../tla/petla-trawnik.png") 0 0 / 200cqw 84.4cqw repeat;
+    background: #a3d45c url("../tla/petla-trawnik.webp") 0 0 / 200cqw 84.4cqw repeat;
 }
 .ldCv {
     position: absolute;
@@ -2060,7 +2060,7 @@ body.locked .gamesAccess {
     position: absolute;
     inset: 0;
     z-index: 15;
-    background: #a3d45c url("../tla/001.png") top center / 100% auto no-repeat;
+    background: #a3d45c url("../tla/001.webp") top center / 100% auto no-repeat;
 }
 
 .pairsFull[hidden] {
@@ -2467,7 +2467,7 @@ body.sadLock .arrow {
 /* ═══ Kretowisko w stylu pozostałych gier: ta sama Łąka w tle, tytuł z
    zielonym cieniem po lewej, czerwony ✕ po prawej, biały panel postępu ═══ */
 .moleFull {
-    background: #a6d45c url("../tla/001-gry.png") top center / 100% auto no-repeat;
+    background: #a6d45c url("../tla/001-gry.webp") top center / 100% auto no-repeat;
     image-rendering: pixelated;
 }
 .moleHeader {
@@ -2652,7 +2652,7 @@ h3,
 
 /* Znajdź pary: pasek wyników pod tytułem (czas, próby, pary) i rekordy */
 .pairsFull {
-    background-image: url("../tla/001-gry.png");
+    background-image: url("../tla/001-gry.webp");
 }
 .pairsHud {
     position: absolute;
@@ -2828,7 +2828,7 @@ h3,
     inset: 0;
     pointer-events: auto;
     /* własne okno gry: łąka z mini gier, piesek rysowany na .bonesCanvas */
-    background: #a3d45c url("../tla/001-gry.png") top center / 100% auto no-repeat;
+    background: #a3d45c url("../tla/001-gry.webp") top center / 100% auto no-repeat;
 }
 .bonesCanvas {
     position: absolute;
@@ -3494,7 +3494,7 @@ h3,
     gap: 0;
     padding-top: 84px;
     overflow: visible;
-    background: #a3d45c url("../tla/001-gry.png") top center / 100% auto no-repeat;
+    background: #a3d45c url("../tla/001-gry.webp") top center / 100% auto no-repeat;
     font-family: "Baloo 2", "Quicksand", sans-serif;
 }
 .lvPick[hidden] {
@@ -4233,7 +4233,7 @@ h3,
     bottom: calc(-1 * var(--bleed, 0px));
 }
 .moleWinPopup {
-    background: #a3d45c url("../tla/wysokie/001-gry.png?b=1") center / 100% auto no-repeat;
+    background: #a3d45c url("../tla/wysokie/001-gry.webp?b=1") center / 100% auto no-repeat;
 }
 
 .moleFull,
@@ -4259,7 +4259,7 @@ h3,
     top: calc(-1 * var(--bleed, 0px));
     bottom: calc(-1 * var(--bleed, 0px));
     z-index: -1;
-    background: #a3d45c url("../tla/wysokie/001-gry.png?b=1") center / 100% auto no-repeat;
+    background: #a3d45c url("../tla/wysokie/001-gry.webp?b=1") center / 100% auto no-repeat;
     image-rendering: pixelated;
 }
 .bonesPlay {

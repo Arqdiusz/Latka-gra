@@ -666,7 +666,7 @@ function setOffset(v) {
 // Plik tła pokoju: wysokie tło 768×2136 (świat do krawędzi okna, także w pasach nad i pod grą na
 // wysokich telefonach); środek = dawna scena, góra i dół dorysowane. Stare tla/00N.png (768×1024)
 // zostają w repozytorium jako źródła, ale nie są już pobierane.
-const roomSrc = (r) => ((P.assets.rooms && P.assets.rooms[r]) || "tla/001.png").replace("tla/", "tla/wysokie/");
+const roomSrc = (r) => ((P.assets.rooms && P.assets.rooms[r]) || "tla/001.png").replace("tla/", "tla/wysokie/").replace(/\.png$/, ".webp");
 function roomSVG(r) {
     const src = artUrl(roomSrc(r)); // ten sam adres co przy wczytywaniu z góry (boot) → jedno pobranie
     return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">`;
@@ -1825,7 +1825,7 @@ function pawsWipe(p) {
     // koniec, gdy na bieżącej klatce nie widać już żadnej grudki
     if (!blobs.some((bl) => bl.thr < (pawLvl[bl.bucket] ?? 0))) pawsEnd(true);
 }
-// Szmatka: jedna klatka z arkusza animacje/szmatka.png (9 — 4×4 po 64 px), bez
+// Szmatka: jedna klatka z arkusza animacje/szmatka.webp (9 — 4×4 po 64 px), bez
 // przeskakiwania klatek. Przy tarciu tylko delikatnie kołysze się o kilka
 // stopni w lewo i w prawo (płynnie narasta i gaśnie); gdy łapka zrobi się
 // czysta — małe, miękkie „podskoczenie” (lekkie powiększenie).
@@ -3134,7 +3134,7 @@ function catchOverlayDraw() {
    JEŻYK — spacerowicz w tle (za pieskiem)
    Od czasu do czasu wchodzi, wolno się przechadza po stałej "linii spaceru"
    (HEDGEHOG_LINE_Y, wyżej niż łapy pieska), co jakiś czas przystaje.
-   Czasem niesie na kolcach coś dobrego (owoc z hedgehog-game.png, dolny
+   Czasem niesie na kolcach coś dobrego (owoc z hedgehog-game.webp, dolny
    rząd — słodycze z górnego rzędu są "złe", więc nigdy ich nie niesie).
    Działa w czasie rzeczywistym tylko na mapach plenerowych (GARDEN_ROOMS), niezależnie od pieska;
    nie jest klikalny. Presety: animacje-ustawienia/hedgehog-animacje.json.
@@ -3482,7 +3482,7 @@ function bubbleBodyCenter(type) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ISKIERKI PO SPRZĄTANIU (grafika animacje/star-check.png, arkusz 2×2: 64 px)
+   ISKIERKI PO SPRZĄTANIU (grafika animacje/star-check.webp, arkusz 2×2: 64 px)
    Kupka, piach kreta, naczynie, grudka i czyste łapki: w tym miejscu zapalają
    się po kolei gwiazdki, unoszą się i gasną (~1,1 s). Tylko ozdoba.
    ═══════════════════════════════════════════════════════════════ */
@@ -3793,7 +3793,7 @@ async function boot() {
     };
     {
         const a = P.assets,
-            urls = ["animacje/latka-animacje-03.png", "animacje/naczynia.png", "animacje/star-check.png", "animacje/szmatka.png", a.a01, a.a02, a.ui, a.poop, a.motyle, a.kret, a.hedgehog, a.hedgehogGame, a.bubbleStar, a.bubbleWrong, ...(a.balls || []), ...(a.bubbles || []), ...nearRooms().map(roomSrc)].filter(Boolean);
+            urls = ["animacje/latka-animacje-03.webp", "animacje/naczynia.webp", "animacje/star-check.webp", "animacje/szmatka.webp", a.a01, a.a02, a.ui, a.poop, a.motyle, a.kret, a.hedgehog, a.hedgehogGame, a.bubbleStar, a.bubbleWrong, ...(a.balls || []), ...(a.bubbles || []), ...nearRooms().map(roomSrc)].filter(Boolean);
         let done = 0;
         window.bootImages = Promise.all(
             urls.map((u) =>
@@ -3814,10 +3814,10 @@ async function boot() {
     CFG.hedgehogGame = hedgehogGameAnim;
     UI = CFG.ui;
     for (const k of ["a01", "a02", "ui", "poop"]) images[k] = await loadImage(P.assets[k]);
-    images.a03 = await loadImage("animacje/latka-animacje-03.png");
-    images.dish = await loadImage("animacje/naczynia.png");
-    images.sparkle = await loadImage("animacje/star-check.png");
-    images.cloth = await loadImage("animacje/szmatka.png");
+    images.a03 = await loadImage("animacje/latka-animacje-03.webp");
+    images.dish = await loadImage("animacje/naczynia.webp");
+    images.sparkle = await loadImage("animacje/star-check.webp");
+    images.cloth = await loadImage("animacje/szmatka.webp");
     // Stary dwuklatkowy motyl-1.png/motyl-2.png (P.assets.butterflies) nie
     // jest już używany — cały butterflyEvent() lata teraz jedną, spójną
     // grafiką z motyle-new.png (patrz eventButterflyCell()).

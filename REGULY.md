@@ -435,3 +435,10 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - `@font-face` na początku `css/style.css`, preload trzech czcionek w `index.html`; usunięte `preconnect` i arkusz Google Fonts (zero zewnętrznych żądań: gra działa offline, nic nie blokuje pierwszego wyświetlenia, adres IP dziecka nie trafia do Google).
 - Canvas rysuje wagę 900 → przy czcionce zmiennej Baloo 2 to 800 (tak samo jak wcześniej, gdy Google serwował do 800).
 - Nowy znak spoza zestawu (np. inny alfabet) → przyciąć ponownie ze źródeł w `fonts/zrodla/` (fonttools `pyftsubset`).
+
+## §61 Grafiki w WebP (v0.8.246)
+- Wszystkie grafiki używane w grze są teraz **bezstratnym WebP** (`.webp` obok oryginalnego `.png`, piksele identyczne — sprawdzone porównaniem każdego pliku): arkusze animacji pieska (`latka-animacje-01/02-X/03`), zwierzęta (`kret`, `hedgehog`, `hedgehog-game`, `motyle-new`), piłki, bańki, `star-check`, `wrong-check`, `naczynia`, `szmatka`, atlas ikon `ikony/latka-ikony`, `inne/kupka`, tła pokoi `tla/wysokie/001–006`, łąka gier `tla/001-gry` i `tla/wysokie/001-gry`, pętla ekranu startowego `tla/petla-niebo`, `tla/petla-trawnik`, `tla/001`. Razem 5,7 MB → 4,1 MB (−28 %), arkusze i tła ok. −25…40 %.
+- Ścieżki w `data/config.json`, `js/game.js`, `js/loader.js`, `js/minigame-hedge.js` i `css/style.css` wskazują na `.webp`. **Pliki PNG zostają w repozytorium jako archiwum/źródła** (nic nie skasowano); gra ich już nie pobiera. `roomSrc()` zamienia `tla/00N.png` z konfiguracji na `tla/wysokie/00N.webp`.
+- WebP działa na wszystkich aktualnych telefonach (iOS 14+, Android/Chrome); gra i tak wymaga iOS 16+ (jednostki `cqw`).
+- **Nowa/przemalowana grafika:** zrób PNG jak dotąd, potem przekonwertuj bezstratnie (Pillow, bez nowych bibliotek):
+  `Image.open("x.png").save("x.webp", lossless=True, quality=100, method=6, exact=True)` (`exact=True` zachowuje kolor w przezroczystych pikselach), wpisz ścieżkę `.webp` w kodzie/konfiguracji i podbij `ART_V` (§59), jeśli podmieniasz plik o tej samej nazwie.
