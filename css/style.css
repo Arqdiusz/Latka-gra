@@ -4274,3 +4274,18 @@ h3,
 .bonesPadCard {
     box-shadow: 0 var(--bleed, 0px) 0 0 #fff8ea;
 }
+
+/* karta przegranej w Motylkach: smutny motylek z czerwonym ✕ (lustro pucharu z zielonym ✓) */
+.memoLoseWrap .memoLosePic {
+    max-width: none;
+    height: 100%;
+    margin: 0;
+}
+.memoLoseX {
+    background: #e0524a;
+}
+#memoLosePopup .memoLoseTtl {
+    color: #d0453c;
+    font-size: 30px;
+    white-space: nowrap;
+}

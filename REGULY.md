@@ -419,3 +419,7 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 
 ## §57 Koniec gry z poziomami → ekran wyboru poziomu (v0.8.242)
 - Motylki i Pary: z okien wygranej/przegranej usunięty przycisk „Wybierz poziom”. Zostają „Zagraj ponownie”/„Jeszcze raz” i „Powrót”, a „Powrót” prowadzi do ekranu wyboru poziomu (nagroda za wygraną jak wcześniej). Do pieska wraca się z ekranu poziomów („Wróć”).
+
+## §58 Przyciski końca gry ujednolicone + karta przegranej w Motylkach (v0.8.243; zastępuje §57)
+- Wszędzie: „Zagraj ponownie” / „Jeszcze raz” → w grach z poziomami (Motylki, Pary) ekran wyboru poziomu, w pozostałych od razu nowa gra; „Powrót” → wyjście z gry do pieska. Bez osobnego „Wybierz poziom”.
+- Motylki, przegrana: zamiast tańczących motylków jeden smutny (przechylony, przygaszony) motylek w kolorze tego, którego zabrakło, z czerwonym ✕ w miejscu zielonego ✓ z karty wygranej; tytuł czerwony „Ups! Nie udało się”, tekst „Motylek odleciał. Spróbuj jeszcze raz!”.

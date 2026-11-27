@@ -288,6 +288,8 @@ function memoLoseShow() {
     if (!g || g.over) return;
     g.over = true;
     sfx("lose");
+    // na karcie: motylek, którego zabrakło (ten, który był do złapania)
+    memoLoseColor = g.seq && g.seq[g.step] != null ? g.seq[g.step] : Math.floor(Math.random() * CFG.motyle.presets.length);
     g.flies.length = 0;
     startQueue([{ sheet: "a01", anim: 16, time: 600000 }]);
     memoEndOpen("#memoLosePopup", g.level);
@@ -311,42 +313,44 @@ function memoToLevels(rewarded) {
     ]);
     memoShowLevels();
 }
-// „Powrót” po wygranej i po przegranej prowadzi do ekranu wyboru poziomów (nie do pieska)
+// Jednakowo we wszystkich grach: „Zagraj ponownie” / „Jeszcze raz” → wybór poziomu, „Powrót” → do pieska
 $("#memoWinPopup .memoExit").onclick = () => {
     $("#memoWinPopup").hidden = true;
-    memoToLevels(true);
+    memoFinish(true);
 };
 $("#memoWinPopup .winAgain").onclick = () => {
     $("#memoWinPopup").hidden = true;
-    const l = memoLastLevel;
-    memoFinish(true);
-    memoStart(l);
+    memoToLevels(true);
 };
 $("#memoLosePopup .memoExit").onclick = () => {
     $("#memoLosePopup").hidden = true;
-    memoToLevels(false);
+    memoFinish(false);
 };
 $("#memoLosePopup .memoTry").onclick = () => {
     $("#memoLosePopup").hidden = true;
-    const l = memoLastLevel;
-    memoFinish(false);
-    memoStart(l);
+    memoToLevels(false);
 };
 
-// Motylki tańczące na karcie "Prawie się udało"
+// Karta przegranej: jeden smutny motylek (wolno macha, lekko opada i się kołysze) + czerwony ✕
 const memoLoseCtx = $("#memoLosePopup .memoLosePic").getContext("2d");
 function memoEndDraw() {
     if ($("#memoLosePopup").hidden) return;
     const c = memoLoseCtx,
-        t = clock - memoEndT0;
-    c.clearRect(0, 0, 260, 110);
+        t = clock - memoEndT0,
+        cell = memoCell(memoLoseColor, t, 4),
+        S = 250, // klatka motylka ma duży margines — sam motylek ok. 60% kadru
+        y = -18 + Math.sin(t / 700) * 6;
+    c.clearRect(0, 0, 200, 200);
     c.imageSmoothingEnabled = false;
-    [0, 1, 2, 3, 4].forEach((col, i) => {
-        const cell = memoCell(col, t + i * 90),
-            y = 22 + Math.sin(t / 380 + i * 1.3) * 10;
-        if (cell) c.drawImage(cell, 4 + i * 50, y, 52, 52);
-    });
+    if (!cell) return;
+    c.save();
+    c.translate(100, y + S / 2);
+    c.rotate(Math.sin(t / 900) * 0.12 + 0.18); // przechylony, „zmartwiony”
+    c.filter = "saturate(0.55)";
+    c.drawImage(cell, -S / 2, -S / 2, S, S);
+    c.restore();
 }
+let memoLoseColor = 0;
 
 // ── Przebieg gry ─────────────────────────────────────────────────
 function memoSpawnFlies(g) {

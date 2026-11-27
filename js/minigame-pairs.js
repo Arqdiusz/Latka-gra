@@ -354,7 +354,12 @@ function pairsWinShow() {
     $("#pairsWinPopup").hidden = false;
 }
 $("#pairsWinPopup .memoExit").onclick = () => {
-    // „Powrót”: nagroda za wygraną i powrót do ekranu wyboru poziomów (nie do pieska)
+    // „Powrót” → do pieska (nagroda za wygraną)
+    $("#pairsWinPopup").hidden = true;
+    pairsFinish(true);
+};
+$("#pairsWinPopup .winAgain").onclick = () => {
+    // „Zagraj ponownie” → wybór poziomu (jednakowo we wszystkich grach z poziomami)
     $("#pairsWinPopup").hidden = true;
     pairsFinish(true);
     startQueue([
@@ -371,9 +376,4 @@ $("#pairsWinPopup .memoExit").onclick = () => {
     ]);
     pairsShowLevels();
 };
-$("#pairsWinPopup .winAgain").onclick = () => {
-    $("#pairsWinPopup").hidden = true;
-    const l = pairsLastLevel;
-    pairsFinish(true);
-    pairsStart(l);
-};
+

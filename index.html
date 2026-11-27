@@ -3,13 +3,13 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <title>Łatka v0.8.242</title>
+        <title>Łatka v0.8.243</title>
         <!-- Czcionki gry: Baloo 2 (tytuły, przyciski, liczby) + Quicksand (teksty). Gdy brak sieci — czcionka systemowa. -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" />
         <link rel="preload" href="fonts/Ranchers-Regular.ttf" as="font" type="font/ttf" crossorigin />
-        <link rel="stylesheet" href="css/style.css?v=262" />
+        <link rel="stylesheet" href="css/style.css?v=263" />
     </head>
 
     <body>
@@ -382,9 +382,14 @@
             </div>
             <div class="moleWinPopup" id="memoLosePopup" hidden>
                 <div class="moleWinCard">
-                    <canvas class="memoLosePic" width="260" height="110"></canvas>
-                    <h2>Prawie się udało!</h2>
-                    <p>Spróbujmy jeszcze raz — motylki czekają.</p>
+                    <div class="moleWinTrophyWrap memoLoseWrap">
+                        <canvas class="memoLosePic" width="200" height="200"></canvas>
+                        <div class="moleWinCheck memoLoseX" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round" /></svg>
+                        </div>
+                    </div>
+                    <h2 class="memoLoseTtl">Ups! Nie udało się</h2>
+                    <p>Motylek odleciał. Spróbuj jeszcze raz!</p>
                     <button class="winAgain memoTry btnGreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor" /></svg>Jeszcze raz</button>
                     <button class="moleWinOk memoExit btnRed">Powrót</button>
                 </div>
@@ -474,7 +479,7 @@
                     </div>
                 </div>
             </div>
-            <script src="js/loader.js?v=262"></script>
+            <script src="js/loader.js?v=263"></script>
             <script>
                 // canvas rysuje tekst dopiero, gdy czcionka jest wczytana — poproś o nią od razu
                 try {
@@ -483,7 +488,7 @@
                     document.fonts.load("40px Ranchers");
                 } catch (_) {}
             </script>
-            <script src="js/audio.js?v=262"></script>
+            <script src="js/audio.js?v=263"></script>
             <div class="parentLock" hidden>
                 <!-- dla dziecka: obrazki, bez czytania — piesek śpi, po więcej czasu idź do rodziców -->
                 <div class="plKid">
@@ -537,23 +542,23 @@
             </div>
         </div>
 
-        <script defer src="js/arc-carousel.js?v=262"></script>
-        <script defer src="js/game.js?v=262"></script>
-        <script defer src="js/session.js?v=262"></script>
-        <script defer src="js/minigame-fetch.js?v=262"></script>
-        <script defer src="js/minigame-bubbles.js?v=262"></script>
-        <script defer src="js/minigame-mole.js?v=262"></script>
-        <script defer src="js/minigame-hedge.js?v=262"></script>
-        <script defer src="js/minigame-mole2.js?v=262"></script>
-        <script defer src="js/level-pick.js?v=262"></script>
-        <script defer src="js/minigame-memory.js?v=262"></script>
-        <script defer src="js/minigame-pairs.js?v=262"></script>
-        <script defer src="js/bones-adapt.js?v=262"></script>
-        <script defer src="js/bones-parent.js?v=262"></script>
-        <script defer src="js/minigame-bones.js?v=262"></script>
-        <script defer src="js/event-bone-mole.js?v=262"></script>
-        <script defer src="js/event-bone-dig.js?v=262"></script>
-        <script defer src="js/games-menu.js?v=262"></script>
-        <script defer src="js/popup-guard.js?v=262"></script>
+        <script defer src="js/arc-carousel.js?v=263"></script>
+        <script defer src="js/game.js?v=263"></script>
+        <script defer src="js/session.js?v=263"></script>
+        <script defer src="js/minigame-fetch.js?v=263"></script>
+        <script defer src="js/minigame-bubbles.js?v=263"></script>
+        <script defer src="js/minigame-mole.js?v=263"></script>
+        <script defer src="js/minigame-hedge.js?v=263"></script>
+        <script defer src="js/minigame-mole2.js?v=263"></script>
+        <script defer src="js/level-pick.js?v=263"></script>
+        <script defer src="js/minigame-memory.js?v=263"></script>
+        <script defer src="js/minigame-pairs.js?v=263"></script>
+        <script defer src="js/bones-adapt.js?v=263"></script>
+        <script defer src="js/bones-parent.js?v=263"></script>
+        <script defer src="js/minigame-bones.js?v=263"></script>
+        <script defer src="js/event-bone-mole.js?v=263"></script>
+        <script defer src="js/event-bone-dig.js?v=263"></script>
+        <script defer src="js/games-menu.js?v=263"></script>
+        <script defer src="js/popup-guard.js?v=263"></script>
     </body>
 </html>
