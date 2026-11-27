@@ -442,3 +442,12 @@ Przy 10% i niżej piesek jest smutny (patrz pkt 1).
 - WebP działa na wszystkich aktualnych telefonach (iOS 14+, Android/Chrome); gra i tak wymaga iOS 16+ (jednostki `cqw`).
 - **Nowa/przemalowana grafika:** zrób PNG jak dotąd, potem przekonwertuj bezstratnie (Pillow, bez nowych bibliotek):
   `Image.open("x.png").save("x.webp", lossless=True, quality=100, method=6, exact=True)` (`exact=True` zachowuje kolor w przezroczystych pikselach), wpisz ścieżkę `.webp` w kodzie/konfiguracji i podbij `ART_V` (§59), jeśli podmieniasz plik o tej samej nazwie.
+
+## §62 Sprzątanie martwego kodu (v0.8.247)
+Usunięte tylko to, co sprawdzone jako nieużywane (grep po `js/`, `index.html`, `css/`, także dynamiczne wywołania i komentarze):
+- `game.js`: `previewSwipe`, `settleSwipe` (podgląd przeciągania pokoi był wyłączony; gest „swipe” → `stepRoom()` **działa dalej**), wszystkie warunki `phase === "swipe-preview"` (faza nigdy nie była ustawiana), stałe `NEED_GENITIVE`, `BUTTERFLY_SPEED`.
+- `minigame-fetch.js`: `ballExitIndex`, `worldOf`, `BALL_ZONES` (opis stref w komentarzu zastąpiony prawdziwym opisem toru). `minigame-memory.js`: `memoShuffle`.
+- CSS: `.ballCard`, `.loadTitle`, `.pairsTileStats*`, `.bonesMenuDog`.
+- `data/config.json` (−495 linii): `config.a01/a02` (nadpisywane na starcie plikami z `animacje-ustawienia/`), `config.version/activeTab/reference`, nieużywane pola `config.ui` (`name, preview, needs, statusSize, menuSize, bubbleIcon, menuGroup, topH, bottomH, heartMode`), `assets.butterflies`, `cleanup`. Zostają `config.ui` (`cols, rows, map, bubbleType, bubbleSize, bubbleSymbolSize`), `assets`, `meta` (ramki a01/a02), `bubbleCenters`.
+- Panel DEV (5 stuknięć w serduszko) **zostaje** — decyzja właściciela.
+- Nie ruszone celowo: zdublowane selektory w CSS (49 selektorów w kilku miejscach) — kolejność reguł jest częścią kaskady, scalanie bez pełnego przeglądu wizualnego grozi zmianą wyglądu.

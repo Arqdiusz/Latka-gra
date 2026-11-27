@@ -263,7 +263,6 @@ function sadBlocks(id) {
     return !!sadNeed();
 }
 
-const NEED_GENITIVE = { food: "jedzenia", water: "wody", fun: "zabawy", sleep: "snu", clean: "mycia" };
 // Odmowa: kręci głową „NIE”, ikonka w dymku mocniej pulsuje, potem znów smutek
 function sadRefuse() {
     const id = sadNeed();
@@ -623,11 +622,6 @@ function resize() {
     orientationPaused = matchMedia("(orientation:landscape) and (pointer:coarse)").matches;
     if (orientationPaused && gesture) {
         if (gesture.kind === "pet") stopPetting();
-        if (phase === "swipe-preview") {
-            phase = "idle";
-            setOffset(0);
-            locks();
-        }
         gesture = null;
     }
     last = 0;
@@ -2024,54 +2018,6 @@ function pointerXY(e) {
     };
 }
 
-function previewSwipe(dx) {
-    const dir = dx < 0 ? 1 : -1,
-        n = order.indexOf(room) + dir,
-        valid = n >= 0 && n < order.length;
-    setOffset(valid ? clamp(dx / scale, -W * 0.94, W * 0.94) : clamp((dx / scale) * 0.15, -36, 36));
-}
-
-function settleSwipe(dir, commit) {
-    const n = order.indexOf(room) + dir,
-        valid = commit && n >= 0 && n < order.length,
-        origin = roomOffset,
-        end = valid ? -dir * W : 0,
-        target = valid ? order[n] : room;
-    phase = "travel";
-    travelMode = "swipe";
-    stage = valid ? "swipe-slide" : "swipe-cancel";
-    locks();
-    const time = reduced ? 180 : clamp((Math.abs(end - origin) / W) * 820 + 150, 240, 950);
-    if (valid) {
-        wake();
-        left = dir < 0;
-        bubble = null;
-    }
-    startQueue([
-        {
-            sheet: "a01",
-            anim: valid ? 1 : 16,
-            tempo: 180,
-            facing: valid ? dir < 0 : left,
-            time,
-            onStart: () => (stage = valid ? "swipe-slide" : "swipe-cancel"),
-            update: (p) => {
-                const eased = 1 - Math.pow(1 - p, 3);
-                setOffset(origin + (end - origin) * eased);
-            },
-            onEnd: () => {
-                if (valid) setRoom(target);
-                else setOffset(0);
-            },
-        },
-        {
-            sheet: "a01",
-            anim: 16,
-            time: 200,
-            onEnd: () => finishTravel(null),
-        },
-    ]);
-}
 canvas.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
     if (gesture) {
@@ -2080,7 +2026,6 @@ canvas.addEventListener("pointerdown", (e) => {
         // jeden palec), NIE połykamy nowego dotyku — po prostu zaczynamy od nowa.
         const stale = gesture.id !== e.pointerId && e.isPrimary;
         if (gesture.kind === "pet") stopPetting();
-        if (phase === "swipe-preview") { phase = "idle"; setOffset(0); }
         gesture = null;
         if (!stale) return;
     }
@@ -2144,7 +2089,6 @@ canvas.addEventListener("pointermove", (e) => {
             g.kind = "swipe";
         }
     }
-    if (g.kind === "swipe") { /* podgląd wyłączony — używamy animacji strzałek */ }
     if (g.kind === "pet") {
         e.preventDefault();
         petLast = clock;
@@ -2373,7 +2317,6 @@ function butterflyEmerge() {
 }
 
 // Lot przed kliknięciem i ucieczka po kliknięciu — wołane co klatkę z loopFrame().
-const BUTTERFLY_SPEED = (W + 50) / BUTTERFLY_CROSS_MS; // px/ms
 const BUTTERFLY_FLEE_SPEED = 0.075; // px/ms — spłoszony ucieka trochę szybciej
 const CATCH_MIN_WAIT = 150; // ms patrzenia na motylka tuż przed skokiem
 
@@ -3654,7 +3597,7 @@ function loopFrame(t) {
     if (loaded && !document.hidden && !orientationPaused) {
         clock += dt;
         updateNeeds(dt / 1000);
-        if (phase !== "swipe-preview") frameIndex = Math.floor((clock - animStart) / ms) % frames.length;
+        frameIndex = Math.floor((clock - animStart) / ms) % frames.length;
         if (segment) {
             const p = clamp((clock - segment.started) / segment.time, 0, 1);
             if (segment.to !== undefined) x = segment.origin + (segment.to - segment.origin) * p;
@@ -3818,9 +3761,8 @@ async function boot() {
     images.dish = await loadImage("animacje/naczynia.webp");
     images.sparkle = await loadImage("animacje/star-check.webp");
     images.cloth = await loadImage("animacje/szmatka.webp");
-    // Stary dwuklatkowy motyl-1.png/motyl-2.png (P.assets.butterflies) nie
-    // jest już używany — cały butterflyEvent() lata teraz jedną, spójną
-    // grafiką z motyle-new.png (patrz eventButterflyCell()).
+    // Cały butterflyEvent() lata jedną, spójną grafiką z motyle-new
+    // (patrz eventButterflyCell()); dawne motyl-1/motyl-2 zostały w archiwum.
     if (P.assets.motyle) {
         // Arkusz motyle-001.png: siatka cols×rows (patrz CFG.motyle), po
         // jednym wierszu na kolor — tniemy na osobne klatki, tak jak banki
@@ -4044,11 +3986,6 @@ document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
         save();
         if (gesture?.kind === "pet") stopPetting();
-        if (phase === "swipe-preview") {
-            phase = "idle";
-            setOffset(0);
-            locks();
-        }
         gesture = null;
     }
 });

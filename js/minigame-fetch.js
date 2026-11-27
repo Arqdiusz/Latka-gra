@@ -79,9 +79,6 @@ function ballScreenX() {
     return ball.x * W + diff * W + roomOffset;
 }
 
-// Świat liczony w sposób ciągły: indeks pokoju + pozycja w pokoju
-const worldOf = (r, px) => order.indexOf(r) + px;
-
 function worldSplit(w) {
     const lo = 0,
         hi = order.length - 1 + 0.999;
@@ -239,12 +236,9 @@ $("#ballWinPopup .ballAgain").onclick = () => {
 // końcach świata). Tor liczymy raz, z góry, w "świecie" (wszystkie pokoje
 // obok siebie) — ballSimulate().
 //
-// Wylot z ekranu klasyfikujemy do 8 stref (BALL_ZONES): po 3 na lewej i
-// prawej krawędzi (nisko / środek / wysoko) i 2 u góry (lewa / prawa
-// połowa). Strefa mówi, JAK piłka wpada do pokoju, w którym wyląduje:
-// z boku nisko — wtacza się, z boku wyżej — wpada łukiem i się odbija,
-// z góry — spada z nieba. Ponieważ tor jest ciągły, wejście w drugim
-// pokoju to dokładne przedłużenie wylotu (ta sama wysokość i prędkość).
+// Ponieważ tor jest ciągły, wejście w drugim pokoju to dokładne
+// przedłużenie wylotu (ta sama wysokość i prędkość): z boku nisko piłka
+// się wtacza, z boku wyżej wpada łukiem i się odbija, z góry spada z nieba.
 //
 // Drugi pokój odgrywamy jak dotąd: piłka wpada dopiero, gdy kamera (pies)
 // tam dociera — pies jest wtedy chwilę "za kadrem" (dogHidden).
@@ -255,7 +249,6 @@ const BALL_G = 1150, // grawitacja [px/s²] w pikselach sceny
     BALL_WALL_BOUNCE = 0.3, // odbicie od ściany na końcu świata
     BALL_GRAB_R = 52, // promień "chwytu" piłki palcem
     BALL_EDGE_MARGIN = 0.14; // piłka nie spoczywa tuż przy granicy pokoju
-const BALL_ZONES = ["lewo-nisko", "lewo-środek", "lewo-wysoko", "góra-lewo", "góra-prawo", "prawo-wysoko", "prawo-środek", "prawo-nisko"];
 let ballFlight = null; // { path, t0, tRest } — piłka w ruchu, pozycja z toru
 
 function ballSize() {
@@ -455,12 +448,6 @@ function ballSolveVx(X0, hb0, vh, targetX) {
         else hi = mid;
     }
     return dir * lo;
-}
-
-// Indeks próbki, w której piłka znika z kadru pokoju ri (bok albo góra)
-function ballExitIndex(path, ri) {
-    for (let i = 1; i < path.length; i++) if (!ballVisibleIn(path[i], ri)) return i;
-    return -1;
 }
 
 function ballLaunch(fvx, fvh) {

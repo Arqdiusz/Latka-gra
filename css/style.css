@@ -2380,8 +2380,7 @@ body.sadLock .arrow {
 .moleCard > button,
 .bonesPop > button,
 .moleWinCard > button.winAgain,
-.moleWinCard > button.moleWinOk,
-.ballCard > button {
+.moleWinCard > button.moleWinOk {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2532,7 +2531,6 @@ h3,
 .moleCount,
 .moleMsg,
 .bubbleTitle,
-.loadTitle,
 .memoStars,
 .gamesTile span,
 .gamesHeader h2 {
@@ -2699,35 +2697,6 @@ h3,
 .pairsBoard {
     top: 104px;
 }
-.pairsTileStats {
-    display: grid;
-    grid-template-columns: auto auto auto;
-    gap: 1px 18px;
-    margin-top: 4px;
-    align-items: baseline;
-    justify-items: center;
-}
-.pairsTileStats i {
-    font-style: normal;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #8b7a90;
-    justify-self: start;
-}
-.pairsTileStats i:nth-child(2),
-.pairsTileStats i:nth-child(3) {
-    justify-self: center;
-}
-.pairsTileStats b {
-    font-size: 18px;
-    color: #59485d;
-    font-variant-numeric: tabular-nums;
-}
-.pairsTileStats b.rec {
-    color: #d8861a;
-}
 .pairsSticker {
     font-size: 15px;
     right: -26px;
@@ -2796,13 +2765,6 @@ h3,
     margin: 0;
     font-size: 15px;
     line-height: 1.3;
-}
-.bonesMenuDog {
-    display: block;
-    width: 120px;
-    height: 120px;
-    margin: 0 auto -6px;
-    image-rendering: pixelated;
 }
 .bonesPop > button.bonesStart,
 .bonesPop > button.bonesBack {

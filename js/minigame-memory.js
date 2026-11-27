@@ -176,14 +176,6 @@ $(".memoLevelsClose").onclick = () => {
 };
 
 // ── Start / koniec ───────────────────────────────────────────────
-function memoShuffle(a) {
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-}
-
 function memoNewSeq(lv) {
     const total = CFG.motyle.presets.length,
         seq = Array.from({ length: lv.n }, () => Math.floor(Math.random() * total));
