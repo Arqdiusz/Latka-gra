@@ -179,6 +179,7 @@ canvas.addEventListener("pointerdown", (e) => {
         sx: e.clientX,
         sy: e.clientY,
         kind: null,
+        t0: e.timeStamp,
         dog: petHit(p.x, p.y),
         poop: poopHit(p.x, p.y),
         moleDirt: moleDirtHit(p.x, p.y),
@@ -223,6 +224,12 @@ canvas.addEventListener("pointermove", (e) => {
             g.kind = "swipe";
         }
     }
+    if (g.kind === "swipe") {
+        e.preventDefault();
+        (g.trail ||= []).push([e.timeStamp, e.clientX]); // ostatnie próbki — do wyliczenia szybkości machnięcia
+        if (g.trail.length > 8) g.trail.shift();
+        peekApply(peekOffset(dx), false); // pokój jedzie za palcem, ale tylko „na zajawkę”
+    }
     if (g.kind === "pet") {
         e.preventDefault();
         petLast = clock;
@@ -230,6 +237,33 @@ canvas.addEventListener("pointermove", (e) => {
         if (!bubble || bubble.until < clock + 1000) say("heart", 2500);
     }
 });
+
+// ── Zajawka sąsiedniego pokoju przy przeciąganiu palcem (v0.8.254) ──────────
+// Palec przesuwa scenę (tło pokoju + piesek) tylko o kawałek — z oporem jak guma, maks. PEEK.max
+// szerokości — i zza krawędzi wyłania się sąsiedni pokój (jego panel już jest w .roomTrack). Dopiero
+// „zdecydowany” ruch (dalej niż PEEK.commit szerokości albo szybkie machnięcie) zmienia pokój tą
+// samą animacją co strzałki (piesek biegnie do krawędzi i wskakuje); inaczej zajawka wraca na miejsce.
+// Używamy własności CSS `translate` (nie `transform`), żeby nie kolidować z setOffset()/zoomem.
+const PEEK = {
+    max: 0.15, // maks. wysunięcie sąsiedniego pokoju (ułamek szerokości gry)
+    endMax: 0.025, // na końcu świata (brak sąsiada) / smutny piesek: tylko lekkie „nie”
+    commit: 0.24, // ułamek szerokości gry, od którego puszczenie palca zmienia pokój
+    flickPx: 40, // …albo krótszy (≥ flickPx), ale szybki ruch:
+    flickV: 0.3, // szybkość palca ≥ 0,3 px gry/ms (300 px/s) tuż przed puszczeniem — łagodnie dla małej ręki
+};
+function peekOffset(dxCss) {
+    const d = dxCss / scale,
+        n = order.indexOf(room) + (d < 0 ? 1 : -1),
+        ok = n >= 0 && n < order.length && !(sadNeed() && !sleeping),
+        max = (ok ? PEEK.max : PEEK.endMax) * W;
+    return Math.sign(d) * max * (1 - Math.exp(-Math.abs(d) / (max * 1.2))); // opór jak guma: im dalej, tym trudniej
+}
+function peekApply(px, settle) {
+    for (const el of [$(".roomTrack"), canvas]) {
+        el.style.transition = settle && !reduced ? "translate 0.18s ease-out" : "none";
+        el.style.translate = px ? px.toFixed(1) + "px" : "";
+    }
+}
 
 function pointerEnd(e, cancel = false) {
     const g = gesture;
@@ -254,12 +288,19 @@ function pointerEnd(e, cancel = false) {
         return;
     }
     if (g.kind === "swipe") {
-        if (!cancel && Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-            setOffset(0);
-            stepRoom(dx < 0 ? 1 : -1);
-        } else {
-            setOffset(0);
+        const d = Math.abs(dx) / scale; // w pikselach gry (nie ekranu)
+        let v = 0; // szybkość palca w ostatnich ~100 ms przed puszczeniem [px gry / ms]
+        const tr = g.trail || [];
+        if (tr.length > 1) {
+            const [t1, x1] = tr[tr.length - 1];
+            let k = tr.length - 2;
+            while (k > 0 && t1 - tr[k][0] < 100) k--;
+            v = (x1 - tr[k][1]) / Math.max(1, t1 - tr[k][0]) / scale;
         }
+        const fast = d >= PEEK.flickPx && Math.abs(v) >= PEEK.flickV && Math.sign(v) === Math.sign(dx);
+        const go = !cancel && (d >= PEEK.commit * W || fast) && Math.abs(dx) > Math.abs(dy) * 1.2;
+        peekApply(0, true); // zajawka wraca; przy „zdecydowanym” ruchu piesek biegnie jak dotąd
+        if (go) stepRoom(dx < 0 ? 1 : -1);
         return;
     }
     if (cancel) return;
